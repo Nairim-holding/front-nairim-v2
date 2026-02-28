@@ -21,7 +21,7 @@ const Form = forwardRef<HTMLFormElement, FormProps>(({
   return (
     <div className="flex flex-col">
       {title && (
-        <h1 className="flex items-center gap-2 my-2 text-[#4236C5] text-[24px] font-poppins">
+        <h1 className="flex items-center gap-2 my-2 text-brand-logo text-[24px] font-poppins">
           {svg && svg}
           <span>{title}</span>
         </h1>

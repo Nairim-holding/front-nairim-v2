@@ -273,10 +273,10 @@ export default function Input({
             text-[14px]
             font-normal
             no-spinner
-            border-[#CCCCCC]
-            text-[#111111B2]
-            placeholder-[#CCC]
-            ${disabled && 'bg-[#EDEDED] cursor-not-allowed'}
+            border-ui-border
+            text-content-secondary
+            placeholder:text-content-placeholder
+            ${disabled && 'bg-surface-muted cursor-not-allowed'}
             ${password && 'pr-10'}
             ${showIncrementButtons && type === 'number' && 'pr-12'}
           `}
@@ -285,7 +285,7 @@ export default function Input({
         {password && (
           <button
             type="button"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 outline-none text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 outline-none text-content-muted hover:text-content-secondary"
             onClick={() => setShowPassword(!showPassword)}
             tabIndex={-1}
           >
@@ -298,18 +298,18 @@ export default function Input({
             <button
               type="button"
               onClick={handleIncrement}
-              className="text-lg font-bold text-[#555] hover:text-black transition duration-150 ease-in-out"
+              className="text-lg font-bold text-content-muted hover:text-content transition duration-150 ease-in-out"
               tabIndex={-1}
             >
-              <ChevronUp  size={18} color="#666" />
+              <ChevronUp  size={18} color="var(--color-text-muted)" />
             </button>
             <button
               type="button"
               onClick={handleDecrement}
-              className="text-lg font-bold text-[#555] hover:text-black transition duration-150 ease-in-out"
+              className="text-lg font-bold text-content-muted hover:text-content transition duration-150 ease-in-out"
               tabIndex={-1}
             >
-              <ChevronDown  size={18} color="#666" />
+              <ChevronDown  size={18} color="var(--color-text-muted)" />
             </button>
           </div>
         )}

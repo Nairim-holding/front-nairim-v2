@@ -9,12 +9,12 @@ import NumericCard from "@/components/NumericCard";
 
 const SkeletonLoader = ({ height = "h-[240px]" }: { height?: string }) => (
   <div
-    className={`bg-white rounded-lg p-4 border border-[#DDE1E6] shadow-chart w-full cursor-pointer transition-all duration-300 flex flex-col justify-between animate-pulse ${height}`}
+    className={`bg-surface rounded-lg p-4 border border-ui-border-strong shadow-chart w-full cursor-pointer transition-all duration-300 flex flex-col justify-between animate-pulse ${height}`}
   >
     <div className="flex flex-col gap-3 flex-1">
-      <div className="h-5 w-2/5 bg-gray-200 rounded-md"></div>
-      <div className="h-4 w-1/3 bg-gray-100 rounded-md"></div>
-      <div className="flex-1 bg-gray-100 rounded-md mt-3"></div>
+      <div className="h-5 w-2/5 bg-surface-subtle rounded-md"></div>
+      <div className="h-4 w-1/3 bg-surface-subtle rounded-md"></div>
+      <div className="flex-1 bg-surface-subtle rounded-md mt-3"></div>
     </div>
   </div>
 );

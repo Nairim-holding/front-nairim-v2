@@ -6,6 +6,7 @@ import { PopupProvider } from "@/contexts/PopupContext";
 import { MessageProvider } from "@/contexts/MessageContext";
 import GlobalNotifications from "@/components/GlobalNotifications";
 import { FilterProvider } from "./context";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,21 +31,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeBootstrapScript = `(function(){try{var saved=localStorage.getItem('nairim.theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var dark=saved==='dark'||(!saved&&prefersDark);if(dark){document.body.classList.add('dark');}else{document.body.classList.remove('dark');}}catch(e){}})();`;
+
   return (
     <html lang="pt-br">
       <body
+        suppressHydrationWarning
         className={`antialiased ${poppins.variable}  ${poppins.className}`}
       >
-        <AuthProvider>
-          <PopupProvider>
-            <MessageProvider>
-              <FilterProvider>
-              {children}
-              </FilterProvider>
-              <GlobalNotifications />
-            </MessageProvider>
-          </PopupProvider>
-        </AuthProvider>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        <ThemeProvider>
+          <AuthProvider>
+            <PopupProvider>
+              <MessageProvider>
+                <FilterProvider>
+                {children}
+                </FilterProvider>
+                <GlobalNotifications />
+              </MessageProvider>
+            </PopupProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

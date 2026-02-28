@@ -116,21 +116,21 @@ export default function NumericCard({
   // Skeleton loading state
   if (loading) {
     return (
-      <div className="p-4 bg-white rounded-lg shadow-chart border border-[#DDE1E6] flex flex-col justify-start items-start relative animate-pulse flex-grow min-w-[300px]">
+      <div className="p-4 bg-surface rounded-lg shadow-chart border border-ui-border-strong flex flex-col justify-start items-start relative animate-pulse flex-grow min-w-[300px]">
         <div className="text-sm w-full">
-          <div className="h-5 bg-gray-200 rounded w-2/5 mb-2"></div>
+          <div className="h-5 bg-surface-subtle rounded w-2/5 mb-2"></div>
         </div>
-        <div className="h-7 bg-gray-200 rounded w-1/2 mb-2"></div>
+        <div className="h-7 bg-surface-subtle rounded w-1/2 mb-2"></div>
         
         {/* Skeleton for variation indicator */}
-        <div className="absolute bg-gray-200 rounded-xl px-1 shadow-chart w-[70px] h-[25px] flex items-center justify-center gap-2 left-[70%] top-[50px] animate-pulse">
-          <div className="h-3 bg-gray-300 rounded w-8"></div>
-          <div className="h-3 w-3 bg-gray-300 rounded"></div>
+        <div className="absolute bg-surface-subtle rounded-xl px-1 shadow-chart w-[70px] h-[25px] flex items-center justify-center gap-2 left-[70%] top-[50px] animate-pulse">
+          <div className="h-3 bg-surface-muted rounded w-8"></div>
+          <div className="h-3 w-3 bg-surface-muted rounded"></div>
         </div>
         
         {/* Skeleton for chart */}
         {data && (
-          <div className="mt-2 h-12 w-full bg-gray-200 rounded"></div>
+          <div className="mt-2 h-12 w-full bg-surface-subtle rounded"></div>
         )}
       </div>
     );
@@ -219,13 +219,13 @@ export default function NumericCard({
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-chart border border-[#DDE1E6] flex flex-col justify-start items-start relative group hover:shadow-lg transition-all duration-300 flex-grow min-w-[300px]">
+    <div className="p-4 bg-surface rounded-lg shadow-chart border border-ui-border-strong flex flex-col justify-start items-start relative group hover:shadow-lg transition-all duration-300 flex-grow min-w-[300px]">
       
       {/* Ícone de detalhes - aparece apenas se houver detailData */}
       {detailData && detailData.length > 0 && (
         <button
           onClick={() => setIsModalOpen(true)}
-          className="absolute top-3 right-3 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition z-10"
+          className="absolute top-3 right-3 p-2 rounded-full bg-surface-subtle hover:bg-surface-subtle transition z-10"
           title="Ver detalhes"
         >
           <svg 
@@ -246,15 +246,15 @@ export default function NumericCard({
       )}
       
       <div className="text-sm w-full">
-        <h3 className="text-lg text-[#697077] mb-2 text-start">
+        <h3 className="text-lg text-content-secondary mb-2 text-start">
           {label}
         </h3>
       </div>
       
       {/* Variation Indicator */}
       {variation !== undefined && (
-        <div className="absolute bg-[#EBEBEB] rounded-xl px-1 shadow-chart w-[70px] h-[25px] flex items-center justify-center gap-2 left-[70%] top-[50px]">
-          <p className="text-[#525252] font-roboto">{Math.round(Number(variation)) + '%'}</p>
+        <div className="absolute bg-surface-muted rounded-xl px-1 shadow-chart w-[70px] h-[25px] flex items-center justify-center gap-2 left-[70%] top-[50px]">
+          <p className="text-content-muted font-roboto">{Math.round(Number(variation)) + '%'}</p>
           {positive == true ? (
             <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M0.583668 8.7344H11.0837C11.19 8.73406 11.2942 8.70474 11.3851 8.64959C11.4759 8.59444 11.5501 8.51555 11.5994 8.42141C11.6488 8.32726 11.6716 8.22144 11.6653 8.11531C11.659 8.00919 11.6239 7.9068 11.5638 7.81915L6.31375 0.235812C6.09617 -0.0786042 5.57233 -0.0786042 5.35417 0.235812L0.104168 7.81915C0.0433992 7.90661 0.00776293 8.00906 0.00113104 8.11536C-0.00550085 8.22166 0.0171253 8.32774 0.0665511 8.42208C0.115977 8.51643 0.190312 8.59542 0.28148 8.65048C0.372649 8.70554 0.477163 8.73456 0.583668 8.7344Z" fill="#00C30D"/>
@@ -272,7 +272,7 @@ export default function NumericCard({
       )}
       
       {/* Main Value */}
-      <div className="text-2xl font-bold text-[#21272A]">
+      <div className="text-2xl font-bold text-content">
         {renderMainValue()}
       </div>
       

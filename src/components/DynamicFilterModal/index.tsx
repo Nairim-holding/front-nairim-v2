@@ -544,7 +544,7 @@ export default function DynamicFilterModal({
   const getFilterIcon = (field: string) => {
     if (FIELD_ICONS[field]) {
       const Icon = FIELD_ICONS[field];
-      return <Icon size={16} className="text-gray-500" />;
+      return <Icon size={16} className="text-content-muted" />;
     }
     
     const fieldLower = field.toLowerCase();
@@ -601,13 +601,13 @@ export default function DynamicFilterModal({
       for (const keyword of mapping.keywords) {
         if (fieldLower.includes(keyword)) {
           const Icon = mapping.icon;
-          return <Icon size={16} className="text-gray-500" />;
+          return <Icon size={16} className="text-content-muted" />;
         }
       }
     }
     
     const Icon = FIELD_ICONS['default'] || Type;
-    return <Icon size={16} className="text-gray-500" />;
+    return <Icon size={16} className="text-content-muted" />;
   };
 
   const getFilteredSuggestions = (field: string) => {
@@ -653,7 +653,7 @@ export default function DynamicFilterModal({
     
     return (
       <div className="relative min-h-[90px]" key={filter.field}>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-content-secondary mb-1">
           <div className="flex items-center gap-2">
             {Icon}
             <span className="truncate">{filter.label}</span>
@@ -665,7 +665,7 @@ export default function DynamicFilterModal({
             <div>
               <input
                 type="date"
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:[#8b5cf6] focus:border-transparent"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 value={filterValue.value || ''}
                 onChange={(e) => updateFilterValue(filter.field, 'value', e.target.value)}
                 min={filter.min}
@@ -675,7 +675,7 @@ export default function DynamicFilterModal({
             <div>
               <input
                 type="date"
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:border-transparent"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 value={filterValue.value2 || ''}
                 onChange={(e) => updateFilterValue(filter.field, 'value2', e.target.value)}
                 min={filterValue.value || filter.min}
@@ -693,7 +693,7 @@ export default function DynamicFilterModal({
                   }
                 }}
                 type={filter.inputType || 'text'}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:border-transparent pr-10"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
                 // IMPORTANTE: Para campos de telefone com opções, mostra o valor como veio do back-end (já formatado)
                 // Para inputs livres de telefone, aplica formatação
                 value={isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm)}
@@ -780,7 +780,7 @@ export default function DynamicFilterModal({
                   onMouseDown={(e) => e.preventDefault()}
                 >
                   <svg 
-                    className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+                    className={`w-4 h-4 text-content-placeholder transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -798,7 +798,7 @@ export default function DynamicFilterModal({
                     dropdownRefs.current[filter.field] = el;
                   }
                 }}
-                className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                className="absolute z-50 w-full mt-1 bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {hasSuggestions ? (
@@ -808,7 +808,7 @@ export default function DynamicFilterModal({
                       return (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -829,7 +829,7 @@ export default function DynamicFilterModal({
                     return (
                       <div
                         key={index}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -847,7 +847,7 @@ export default function DynamicFilterModal({
                     );
                   })
                 ) : (
-                  <div className="px-3 py-2 text-sm text-gray-500">
+                  <div className="px-3 py-2 text-sm text-content-muted">
                     Nenhuma opção disponível
                   </div>
                 )}
@@ -857,7 +857,7 @@ export default function DynamicFilterModal({
         )}
         
         {filter.description && (
-          <p className="text-xs text-gray-500 mt-1 truncate">{filter.description}</p>
+          <p className="text-xs text-content-muted mt-1 truncate">{filter.description}</p>
         )}
       </div>
     );
@@ -877,11 +877,11 @@ export default function DynamicFilterModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setVisible(false)} />
+      <div className="fixed inset-0 z-40 bg-layer-overlay-soft" onClick={() => setVisible(false)} />
       
       <div 
         ref={modalRef}
-        className="absolute top-[40%] sm:top-full left-0 z-50 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200"
+        className="absolute top-[40%] sm:top-full left-0 z-50 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft"
         style={{
           width: 'min(95vw, 1000px)',
           maxHeight: 'min(90vh, 400px)',
@@ -891,8 +891,8 @@ export default function DynamicFilterModal({
         <div className="p-4 w-full h-full flex flex-col">
           <div className="flex justify-between items-center mb-4 flex-shrink-0">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Filtrar {title}</h3>
-              <p className="text-sm text-gray-500 mt-1">
+              <h3 className="text-lg font-semibold text-content">Filtrar {title}</h3>
+              <p className="text-sm text-content-muted mt-1">
                 {getActiveFilterCount() > 0 
                   ? `${getActiveFilterCount()} filtro(s) ativo(s)` 
                   : "Selecione os critérios de filtro"}
@@ -900,10 +900,10 @@ export default function DynamicFilterModal({
             </div>
             <button 
               onClick={() => setVisible(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              className="p-2 hover:bg-surface-subtle rounded-lg transition-colors flex-shrink-0"
               aria-label="Fechar filtro"
             >
-              <X size={20} className="text-gray-600" />
+              <X size={20} className="text-content-secondary" />
             </button>
           </div>
           
@@ -917,16 +917,16 @@ export default function DynamicFilterModal({
             {visibleFilters.map((filter) => renderFilterInput(filter))}
           </div>
           
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-ui-border-soft flex-shrink-0">
             <button 
               onClick={handleClear}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
             >
               Limpar tudo
             </button>
             <button 
               onClick={handleApply}
-              className="px-4 py-2 bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+              className="px-4 py-2 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
             >
               <Check size={16} />
               Aplicar filtros

@@ -108,14 +108,14 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-2xl p-6 relative w-full max-w-6xl h-[90vh] flex flex-col"
+            className="bg-surface rounded-2xl p-6 relative w-full max-w-6xl h-[90vh] flex flex-col"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-[#21272A]">
+              <h3 className="text-xl font-semibold text-content">
                 {title} - Detalhes ({data.length} itens)
               </h3>
               <button
@@ -129,18 +129,18 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
             {/* Content */}
             <div className="flex-1 overflow-auto">
               {data.length === 0 ? (
-                <div className="flex justify-center items-center h-full text-gray-500">
+                <div className="flex justify-center items-center h-full text-content-muted">
                   Nenhum dado disponível
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0">
+                  <table className="min-w-full divide-y divide-ui-border-soft">
+                    <thead className="bg-surface-subtle sticky top-0">
                       <tr>
                         {normalizedColumns.map((column) => (
                           <th
                             key={column.key}
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-content-muted uppercase tracking-wider"
                             style={{ width: column.width || 'auto' }}
                           >
                             {column.label}
@@ -148,13 +148,13 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-surface divide-y divide-ui-border-soft">
                       {data.map((item, index) => (
-                        <tr key={item.id || index} className="hover:bg-gray-50">
+                        <tr key={item.id || index} className="hover:bg-surface-subtle">
                           {normalizedColumns.map((column) => (
                             <td
                               key={column.key}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                              className="px-6 py-4 whitespace-nowrap text-sm text-content-muted"
                             >
                               {column.format 
                                 ? column.format(item[column.key]) 
@@ -171,8 +171,8 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-500">
+            <div className="flex justify-between items-center mt-4 pt-4 border-t border-ui-border-soft">
+              <span className="text-sm text-content-muted">
                 Total: {data.length} registros
               </span>
               <button

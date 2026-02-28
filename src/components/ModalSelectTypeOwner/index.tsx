@@ -35,7 +35,7 @@ export default function ModalSelectTypeOwner({
       <div 
         ref={dropdownRef}
         className={`
-          w-72 bg-white rounded-lg shadow-xl 
+          w-72 bg-surface rounded-lg shadow-xl 
           border border-gray-200 
           animate-in slide-in-from-top-2 duration-200
           ${className}

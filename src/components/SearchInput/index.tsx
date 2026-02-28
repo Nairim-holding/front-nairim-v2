@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState, useRef, ChangeEvent, useEffect, useCallback, memo } from "react";
+import { useState, useRef, ChangeEvent, useEffect, memo } from "react";
 import { Search } from "lucide-react";
 
 interface SearchInputProps {
@@ -96,10 +96,10 @@ function SearchInputComponent({
   };
 
   return (
-    <div className="flex border py-2 px-3 rounded-lg border-[#CCCCCC] w-full gap-3">
+    <div className="flex border py-2 px-3 rounded-lg border-ui-border w-full gap-3">
       <input
         ref={inputRef}
-        className="border-none outline-none w-full text-[14px] font-normal text-[#111111B2] bg-transparent"
+        className="border-none outline-none w-full text-[14px] font-normal text-content-secondary bg-transparent"
         type="search"
         placeholder={placeholder}
         value={inputValue}
@@ -109,14 +109,14 @@ function SearchInputComponent({
       {inputValue ? (
         <button 
           onClick={handleClear}
-          className="text-gray-400 hover:text-gray-600 text-sm"
+          className="text-content-placeholder hover:text-content-secondary text-sm"
           type="button"
           aria-label="Limpar busca"
         >
           ✕
         </button>
       ) : (
-        <Search size={20} color="#666" />
+        <Search size={20} color="var(--color-text-muted)" />
       )}
     </div>
   );

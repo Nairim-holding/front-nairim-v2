@@ -96,22 +96,22 @@ export default function LoginPage() {
         />
       </section>
 
-      <section className="flex flex-col justify-center items-center bg-[#F0F0F0] w-full px-6 sm:px-10 md:px-16 lg:px-32 xl:px-40 2xl:px-60 py-10 sm:rounded-t-3xl lg:rounded-none shadow-lg  h-full">
+      <section className="flex flex-col justify-center items-center bg-surface-subtle w-full px-6 sm:px-10 md:px-16 lg:px-32 xl:px-40 2xl:px-60 py-10 sm:rounded-t-3xl lg:rounded-none shadow-lg  h-full">
         <div className="flex items-start w-full max-w-md mb-10 flex-col">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 w-full text-center">
+          <h1 className="text-3xl font-bold text-content mb-2 w-full text-center">
             Bem vindo de volta!
           </h1>
-          <span className="text-gray-600 text-lg w-full text-center">Faça login</span>
+          <span className="text-content-muted text-lg w-full text-center">Faça login</span>
         </div>
 
         <form className="flex flex-col gap-6 w-full max-w-md" onSubmit={onSubmit}>
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-content-placeholder" size={20} />
             <input
               type="email"
               name="email"
               placeholder="exemplo@gmail.com"
-              className="h-[56px] text-[#333333] w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-full focus:border-[#4D209A] focus:ring-1 focus:ring-[#4D209A] outline-none transition-all duration-200 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-[56px] text-content w-full pl-12 pr-4 py-3 bg-surface border border-ui-border rounded-full focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all duration-200 placeholder:text-content-placeholder disabled:opacity-50 disabled:cursor-not-allowed"
               required
               disabled={isLoading}
               aria-label="Email"
@@ -120,12 +120,12 @@ export default function LoginPage() {
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-content-placeholder" size={20} />
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="senha"
-              className="h-[56px] text-[#333333] w-full pl-12 pr-12 py-3 bg-white border border-gray-300 rounded-full focus:border-[#4D209A] focus:ring-1 focus:ring-[#4D209A] outline-none transition-all duration-200 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-[56px] text-content w-full pl-12 pr-12 py-3 bg-surface border border-ui-border rounded-full focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all duration-200 placeholder:text-content-placeholder disabled:opacity-50 disabled:cursor-not-allowed"
               required
               disabled={isLoading}
               aria-label="Senha"
@@ -134,7 +134,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={togglePassword}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#4D209A] transition-colors duration-200 disabled:opacity-50"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-content-placeholder hover:text-brand transition-colors duration-200 disabled:opacity-50"
               disabled={isLoading}
               aria-label="Mostrar senha"
             >
@@ -152,7 +152,7 @@ export default function LoginPage() {
             type="submit"
             disabled={isLoading}
             className="
-              bg-[#4D209A] hover:bg-[#3A1877]
+              bg-brand hover:bg-brand-hover
               text-white font-normal rounded-full py-3 px-6
               transition-all duration-200
               disabled:opacity-50 disabled:cursor-not-allowed
@@ -173,7 +173,7 @@ export default function LoginPage() {
 
         <Link 
           href="/forgot-password" 
-          className="text-sm underline text-center text-gray-500 hover:text-[#4D209A] transition-colors duration-200 mt-8"
+          className="text-sm underline text-center text-content-muted hover:text-brand transition-colors duration-200 mt-8"
         >
           Esqueci a senha
         </Link> 

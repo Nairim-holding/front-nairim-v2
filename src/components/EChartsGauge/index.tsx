@@ -5,6 +5,8 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as echarts from "echarts";
 import DataModal from "../DataModal";
 import { MetricDataItem } from "@/types/types";
+import { useTheme } from "@/contexts/ThemeContext";
+import { getThemeTokens } from "@/util/getThemeTokens";
 
 interface GaugeCardProps {
   value: number;
@@ -20,7 +22,7 @@ export default function EChartsGauge({
   value,
   max = 100,
   label = "",
-  color = "#8B5CF6",
+  color,
   detailData = [],
   detailColumns = []
 }: GaugeCardProps) {
@@ -30,8 +32,11 @@ export default function EChartsGauge({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState(false);
   const chartInstance = useRef<echarts.ECharts | null>(null);
+  useTheme();
+  const tokens = getThemeTokens();
 
   const percentage = Math.min(Math.max(value / max, 0), 1) * 100;
+  const gaugeColor = color || tokens.brandPrimary;
 
   const initChart = useCallback((container: HTMLDivElement, isLarge = false) => {
     const chart = echarts.init(container);
@@ -44,25 +49,25 @@ export default function EChartsGauge({
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        formatter: `<div style="padding: 8px 12px; background: #1f2937; border-radius: 8px; border-left: 4px solid ${color}; min-width: 180px;">
-          <div style="font-weight: 600; color: #fff; margin-bottom: 6px; font-size: 14px;">${label}</div>
+        formatter: `<div style="padding: 8px 12px; background: ${tokens.textPrimary}; border-radius: 8px; border-left: 4px solid ${gaugeColor}; min-width: 180px;">
+          <div style="font-weight: 600; color: ${tokens.textInverse}; margin-bottom: 6px; font-size: 14px;">${label}</div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="color: #d1d5db; font-size: 13px;">Percentual:</span>
-            <span style="color: ${color}; font-weight: 600; font-size: 13px;">${percentage.toFixed(1)}%</span>
+            <span style="color: ${tokens.textSecondary}; font-size: 13px;">Percentual:</span>
+            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${percentage.toFixed(1)}%</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
-            <span style="color: #d1d5db; font-size: 13px;">Valor:</span>
-            <span style="color: ${color}; font-weight: 600; font-size: 13px;">${value.toFixed(2)}/${max}</span>
+            <span style="color: ${tokens.textSecondary}; font-size: 13px;">Valor:</span>
+            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${value.toFixed(2)}/${max}</span>
           </div>
-          <div style="color: #9ca3af; font-size: 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #374151;">
+          <div style="color: ${tokens.textMuted}; font-size: 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid ${tokens.borderSoft};">
             Clique no percentual para ver detalhes
           </div>
         </div>`,
         backgroundColor: 'transparent',
         borderWidth: 0,
-        extraCssText: 'box-shadow: 0 8px 30px rgba(0,0,0,0.25);',
+        extraCssText: 'box-shadow: none;',
         textStyle: {
-          color: '#fff'
+          color: tokens.textInverse
         }
       },
       series: [
@@ -79,10 +84,10 @@ export default function EChartsGauge({
             lineStyle: {
               width: isLarge ? (isMobile ? 20 : 25) : 22,
               color: [
-                [percentage / 100, color],
-                [1, '#e5e7eb']
+                [percentage / 100, gaugeColor],
+                [1, tokens.borderSoft]
               ],
-              shadowColor: 'rgba(0, 0, 0, 0.1)',
+              shadowColor: tokens.overlay,
               shadowBlur: 4
             }
           },
@@ -90,8 +95,8 @@ export default function EChartsGauge({
             show: true,
             width: isLarge ? (isMobile ? 20 : 25) : 22,
             itemStyle: {
-              color: color,
-              shadowColor: color,
+              color: gaugeColor,
+              shadowColor: gaugeColor,
               shadowBlur: 6
             }
           },
@@ -100,8 +105,8 @@ export default function EChartsGauge({
             length: isLarge ? (isMobile ? '70%' : '75%') : '65%',
             width: isLarge ? (isMobile ? 4 : 5) : 4,
             itemStyle: {
-              color: '#374151',
-              shadowColor: 'rgba(0, 0, 0, 0.2)',
+              color: tokens.textPrimary,
+              shadowColor: tokens.overlay,
               shadowBlur: 2
             }
           },
@@ -111,7 +116,7 @@ export default function EChartsGauge({
             length: isLarge ? (isMobile ? 5 : 6) : 6,
             splitNumber: isLarge ? (isMobile ? 5 : 10) : 10,
             lineStyle: {
-              color: '#9ca3af',
+              color: tokens.textMuted,
               width: 1
             }
           },
@@ -120,14 +125,14 @@ export default function EChartsGauge({
             distance: isLarge ? (isMobile ? -35 : -40) : -40,
             length: isLarge ? (isMobile ? 8 : 10) : 10,
             lineStyle: {
-              color: '#9ca3af',
+              color: tokens.textMuted,
               width: 2
             }
           },
           axisLabel: {
             show: isLarge,
             distance: isLarge ? (isMobile ? -25 : -28) : -28,
-            color: '#6b7280',
+            color: tokens.textMuted,
             fontSize: isLarge ? (isMobile ? 10 : 12) : 12,
             formatter: (val: number) => `${val}`
           },
@@ -136,7 +141,7 @@ export default function EChartsGauge({
             size: 5,
             itemStyle: {
               borderWidth: 2,
-              borderColor: color
+              borderColor: gaugeColor
             }
           },
           title: {
@@ -146,16 +151,16 @@ export default function EChartsGauge({
             show: true,
             valueAnimation: true,
             formatter: '{value}%',
-            color: color,
+            color: gaugeColor,
             fontSize: isLarge ? (isMobile ? 22 : 28) : 24,
             fontWeight: 'bold',
             offsetCenter: [0, isLarge ? (isMobile ? '10%' : '5%') : '0%'],
-            backgroundColor: isLarge ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isLarge ? 'transparent' : color,
+            backgroundColor: isLarge ? 'transparent' : tokens.bgSurface,
+            borderColor: isLarge ? 'transparent' : gaugeColor,
             borderWidth: isLarge ? 0 : 1,
             borderRadius: isLarge ? 0 : 20,
             padding: isLarge ? 0 : [6, 12],
-            shadowColor: isLarge ? 'transparent' : 'rgba(0, 0, 0, 0.1)',
+            shadowColor: isLarge ? 'transparent' : tokens.overlay,
             shadowBlur: isLarge ? 0 : 6,
             // Adicionando estilo de cursor pointer para indicar que é clicável
             ...(!isLarge && {
@@ -199,7 +204,7 @@ export default function EChartsGauge({
     }
 
     return chart;
-  }, [value, max, label, color, percentage, detailData]);
+  }, [value, max, label, gaugeColor, percentage, detailData, tokens]);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -270,16 +275,16 @@ export default function EChartsGauge({
   return (
     <>
       {/* Card do Gauge */}
-      <div className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#8B5CF6]/20 group h-full">
+      <div className="bg-surface rounded-xl p-4 border border-ui-border-soft shadow-sm hover:shadow-md transition-all duration-300 hover:border-brand group h-full">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-base font-semibold text-[#1F2937] text-start truncate">
+          <h3 className="text-base font-semibold text-content text-start truncate">
             {label}
           </h3>
           
           <div className="flex gap-1">
             <button
               onClick={() => setIsFullscreenModalOpen(true)}
-              className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-md text-content-muted hover:text-content-secondary hover:bg-surface-subtle transition-colors"
               title="Expandir gráfico"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -290,7 +295,7 @@ export default function EChartsGauge({
             {detailData && detailData.length > 0 && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-1.5 rounded-md text-content-muted hover:text-content-secondary hover:bg-surface-subtle transition-colors"
                 title="Ver dados detalhados"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -325,16 +330,16 @@ export default function EChartsGauge({
       {/* Modal Fullscreen do Gauge - Responsivo */}
       {isFullscreenModalOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4"
           onClick={() => setIsFullscreenModalOpen(false)}
         >
           <div 
-            className="bg-white rounded-xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4"
+            className="bg-surface rounded-xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-gray-200 gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-ui-border-soft gap-3 sm:gap-0">
               <div className="w-full sm:w-auto">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{label}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-content">{label}</h2>
               </div>
               
               <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
@@ -344,7 +349,7 @@ export default function EChartsGauge({
                       setIsFullscreenModalOpen(false);
                       setTimeout(() => setIsModalOpen(true), 300);
                     }}
-                    className="px-3 sm:px-4 py-2 bg-[#8B5CF6] text-white rounded-lg hover:bg-[#7C3AED] transition-colors flex items-center gap-2 text-sm font-medium w-full sm:w-auto justify-center"
+                    className="px-3 sm:px-4 py-2 bg-brand text-content-inverse rounded-lg hover:bg-brand-hover transition-colors flex items-center gap-2 text-sm font-medium w-full sm:w-auto justify-center"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
@@ -357,7 +362,7 @@ export default function EChartsGauge({
                 
                 <button
                   onClick={() => setIsFullscreenModalOpen(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+                  className="p-2 rounded-lg hover:bg-surface-subtle transition-colors text-content-muted hover:text-content-secondary"
                   title="Fechar"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

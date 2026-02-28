@@ -595,7 +595,7 @@ export default function DynamicFormManager({
               type={field.type}
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
 
@@ -628,11 +628,11 @@ export default function DynamicFormManager({
                 />
                 {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
                 {field.validation?.patternMessage && !error && !(field as any).renderBottom && (
-                  <p className="text-gray-500 text-xs mt-1">
+                  <p className="text-content-muted text-xs mt-1">
                     {field.validation.patternMessage}
                   </p>
                 )}
-                {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                {error && <p className="text-state-error text-sm mt-1">{error}</p>}
               </div>
               
               <div className="min-w-0 flex-1">
@@ -649,7 +649,7 @@ export default function DynamicFormManager({
                     handleChange(confirmField.field, e.target.value)
                   }
                 />
-                {errors[confirmField.field] && <p className="text-red-500 text-sm mt-1">{errors[confirmField.field]}</p>}
+                {errors[confirmField.field] && <p className="text-state-error text-sm mt-1">{errors[confirmField.field]}</p>}
               </div>
             </div>
           );
@@ -668,7 +668,7 @@ export default function DynamicFormManager({
               password
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
 
@@ -692,7 +692,7 @@ export default function DynamicFormManager({
               searchable={(field as any).searchable}
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
 
@@ -739,9 +739,9 @@ export default function DynamicFormManager({
               }
               disabled={shouldDisable}
               readOnly={isReadOnly}
-              className="h-4 w-4 text-[#8b5cf6] border-gray-300 rounded focus:ring-[#8b5cf6]"
+              className="h-4 w-4 text-brand border-ui-border rounded focus:ring-brand"
             />
-            <label htmlFor={field.field} className="ml-2 block text-sm text-gray-700">
+            <label htmlFor={field.field} className="ml-2 block text-sm text-content-secondary">
               {field.label}
             </label>
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
@@ -779,7 +779,7 @@ export default function DynamicFormManager({
             key={`${field.field}-${index}`} 
             className={`${field.className || 'w-full'}`}
           >
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-content-secondary mb-1">
               {field.label}
             </label>
             <div className="mt-1">
@@ -800,7 +800,7 @@ export default function DynamicFormManager({
               type="text"
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
     }
@@ -813,13 +813,13 @@ export default function DynamicFormManager({
         href={basePath} 
         hrefText="Voltar"
       >
-        <div className="bg-[#fff] p-5 rounded-xl" style={{ boxShadow: '0px 4px 8px 3px rgba(0, 0, 0, 0.15)' }}>
+        <div className="bg-surface p-5 rounded-xl" style={{ boxShadow: '0px 4px 8px 3px var(--color-shadow-soft)' }}>
           <div className="animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="h-6 bg-ui-border-soft rounded w-1/4 mb-6"></div>
             <div className="space-y-4">
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-10 bg-ui-border-soft rounded"></div>
+              <div className="h-10 bg-ui-border-soft rounded"></div>
+              <div className="h-10 bg-ui-border-soft rounded"></div>
             </div>
           </div>
         </div>
@@ -836,7 +836,7 @@ export default function DynamicFormManager({
       href={basePath} 
       hrefText="Voltar"
     >
-      <div className="bg-[#fff] p-5 rounded-xl" style={{ boxShadow: '0px 4px 8px 3px rgba(0, 0, 0, 0.15)' }}>
+      <div className="bg-surface p-5 rounded-xl" style={{ boxShadow: '0px 4px 8px 3px var(--color-shadow-soft)' }}>
         {hasSteps && (
           <ProgressBar
             steps={steps!.map((step, index) => ({
@@ -862,18 +862,18 @@ export default function DynamicFormManager({
               {visibleFields.map((field, index) => renderField(field, index))}
             </div>
           ) : (
-            <div className="col-span-full text-center py-8 text-gray-500">
+            <div className="col-span-full text-center py-8 text-content-muted">
               Nenhum campo configurado para este passo.
             </div>
           )}
 
           <div className="w-full flex justify-end">
             {isViewMode ? (
-              <div className="flex items-center gap-5 mt-8 border-t-2 pt-6 border-[#11111180] w-full justify-end">
+              <div className="flex items-center gap-5 mt-8 border-t-2 pt-6 border-ui-border w-full justify-end">
                 <button
                   type="button"
                   onClick={() => router.push(`${basePath}/editar/${id}`)}
-                  className="flex justify-center gap-3 items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-lg text-[16px] font-medium text-white border border-[#8B5CF6] drop-shadow-purple-soft"
+                  className="flex justify-center gap-3 items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-brand to-brand-hover rounded-lg text-[16px] font-medium text-content-inverse border border-brand drop-shadow-purple-soft"
                 >
                   Editar
                 </button>
@@ -884,7 +884,7 @@ export default function DynamicFormManager({
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="flex justify-center items-center max-w-[150px] w-full h-[50px] bg-gray-300 rounded-lg text-[16px] font-medium text-gray-700 mr-4"
+                    className="flex justify-center items-center max-w-[150px] w-full h-[50px] bg-ui-border rounded-lg text-[16px] font-medium text-content-secondary mr-4"
                   >
                     Cancelar
                   </button>
@@ -894,7 +894,7 @@ export default function DynamicFormManager({
                   textSubmitButton={mode === 'create' ? 'Cadastrar' : 'Salvar Alterações'}
                   svg={
                     <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M9.5 15H11.5V11H15.5V9H11.5V5H9.5V9H5.5V11H9.5V15ZM10.5 20C9.11667 20 7.81667 19.7375 6.6 19.2125C5.38333 18.6875 4.325 17.975 3.425 17.075C2.525 16.175 1.8125 15.1167 1.2875 13.9C0.7625 12.6833 0.5 11.3833 0.5 10C0.5 8.61667 0.7625 7.31667 1.2875 6.1C1.8125 4.88333 2.525 3.825 3.425 2.925C4.325 2.025 5.38333 1.3125 6.6 0.7875C7.81667 0.2625 9.11667 0 10.5 0C11.8833 0 13.1833 0.2625 14.4 0.7875C15.6167 1.3125 16.675 2.025 17.575 2.925C18.475 3.825 19.1875 4.88333 19.7125 6.1C20.2375 7.31667 20.5 8.61667 20.5 10C20.5 11.3833 20.2375 12.6833 19.7125 13.9C19.1875 15.1167 18.475 16.175 17.575 17.075C16.675 17.975 15.6167 18.6875 14.4 19.2125C13.1833 19.7375 11.8833 20 10.5 20ZM10.5 18C12.7333 18 14.625 17.225 16.175 15.675C17.725 14.125 18.5 12.2333 18.5 10C18.5 7.76667 17.725 5.875 16.175 4.325C14.625 2.775 12.7333 2 10.5 2C8.26667 2 6.375 2.775 4.825 4.325C3.275 5.875 2.5 7.76667 2.5 10C2.5 12.2333 3.275 14.125 4.825 15.675C6.375 17.225 8.26667 18 10.5 18Z" fill="#F0F0F0" />
+                      <path d="M9.5 15H11.5V11H15.5V9H11.5V5H9.5V9H5.5V11H9.5V15ZM10.5 20C9.11667 20 7.81667 19.7375 6.6 19.2125C5.38333 18.6875 4.325 17.975 3.425 17.075C2.525 16.175 1.8125 15.1167 1.2875 13.9C0.7625 12.6833 0.5 11.3833 0.5 10C0.5 8.61667 0.7625 7.31667 1.2875 6.1C1.8125 4.88333 2.525 3.825 3.425 2.925C4.325 2.025 5.38333 1.3125 6.6 0.7875C7.81667 0.2625 9.11667 0 10.5 0C11.8833 0 13.1833 0.2625 14.4 0.7875C15.6167 1.3125 16.675 2.025 17.575 2.925C18.475 3.825 19.1875 4.88333 19.7125 6.1C20.2375 7.31667 20.5 8.61667 20.5 10C20.5 11.3833 20.2375 12.6833 19.7125 13.9C19.1875 15.1167 18.475 16.175 17.575 17.075C16.675 17.975 15.6167 18.6875 14.4 19.2125C13.1833 19.7375 11.8833 20 10.5 20ZM10.5 18C12.7333 18 14.625 17.225 16.175 15.675C17.725 14.125 18.5 12.2333 18.5 10C18.5 7.76667 17.725 5.875 16.175 4.325C14.625 2.775 12.7333 2 10.5 2C8.26667 2 6.375 2.775 4.825 4.325C3.275 5.875 2.5 7.76667 2.5 10C2.5 12.2333 3.275 14.125 4.825 15.675C6.375 17.225 8.26667 18 10.5 18Z" fill="var(--color-bg-subtle)" />
                     </svg>
                   }
                   loading={submitting}

@@ -150,12 +150,12 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
             key={idx} 
             className={`relative rounded-xl p-4 shadow-sm transition-shadow group border ${
               readOnly 
-                ? 'bg-[#ededed] border-[#ccc]' 
-                : 'bg-white border-gray-200 hover:shadow-md'
+                ? 'bg-surface-muted border-ui-border' 
+                : 'bg-surface border-ui-border-soft hover:shadow-md'
             }`}
           >
             <div className="flex justify-between items-start mb-3">
-              <div className="font-semibold text-gray-800 flex items-center gap-2 truncate pr-2 w-full">
+              <div className="font-semibold text-content flex items-center gap-2 truncate pr-2 w-full">
                 <div className="bg-purple-100 p-1.5 rounded-full shrink-0">
                   <User size={16} className="text-purple-600" />
                 </div>
@@ -167,7 +167,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                   <button 
                     type="button"
                     onClick={() => openModal('edit', idx)}
-                    className="text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50"
+                    className="text-content-placeholder hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50"
                     title="Editar"
                   >
                     <Edit2 size={14} />
@@ -175,7 +175,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                   <button 
                     type="button"
                     onClick={() => handleRemoveContact(idx)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50"
+                    className="text-content-placeholder hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50"
                     title="Remover"
                   >
                     <Trash2 size={14} />
@@ -186,15 +186,15 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
             
             <div className="space-y-2">
               {(c.cellphone || c.phone) && (
-                <div className={`text-xs text-gray-600 flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-white/50' : 'bg-gray-50'}`}>
-                  {c.cellphone ? <Smartphone size={13} className="text-gray-400" /> : <Phone size={13} className="text-gray-400" />}
+                <div className={`text-xs text-content-muted flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'}`}>
+                  {c.cellphone ? <Smartphone size={13} className="text-content-placeholder" /> : <Phone size={13} className="text-content-placeholder" />}
                   <span className="truncate">{c.cellphone ? formatPhone(c.cellphone) : formatPhone(c.phone || '')}</span>
                 </div>
               )}
               
               {c.email && (
-                <div className={`text-xs text-gray-600 flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-white/50' : 'bg-gray-50'}`}>
-                  <Mail size={13} className="text-gray-400" />
+                <div className={`text-xs text-content-muted flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'}`}>
+                  <Mail size={13} className="text-content-placeholder" />
                   <span className="truncate" title={c.email}>{c.email}</span>
                 </div>
               )}
@@ -206,9 +206,9 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
           <button
             type="button"
             onClick={() => openModal('add')}
-            className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-300 rounded-xl p-4 text-gray-500 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all min-h-[130px] group"
+            className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-ui-border rounded-xl p-4 text-content-muted hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all min-h-[130px] group"
           >
-            <div className="bg-gray-100 group-hover:bg-purple-200 p-3 rounded-full transition-colors">
+            <div className="bg-surface-subtle group-hover:bg-purple-200 p-3 rounded-full transition-colors">
               <Plus size={24} />
             </div>
             <span className="font-medium text-sm">Adicionar Contato</span>
@@ -219,11 +219,11 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
       {isModalOpen && !readOnly && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div 
-            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft bg-surface-subtle/50">
+              <h3 className="text-lg font-semibold text-content flex items-center gap-2">
                 {editingIndex !== null ? (
                   <>
                     <Edit2 size={20} className="text-purple-600" />
@@ -239,21 +239,21 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
               <button 
                 type="button" 
                 onClick={closeModal} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-content-placeholder hover:text-content-muted hover:bg-surface-subtle rounded-full transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
             {editingIndex === null && (
-              <div className="flex border-b border-gray-200">
+              <div className="flex border-b border-ui-border-soft">
                 <button
                   type="button"
                   onClick={() => setActiveTab('new')}
                   className={`flex-1 py-3 text-sm font-medium text-center transition-colors border-b-2 ${
                     activeTab === 'new' 
                       ? 'border-purple-600 text-purple-700 bg-purple-50/50' 
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      : 'border-transparent text-content-muted hover:text-content-secondary hover:bg-surface-subtle'
                   }`}
                 >
                   Novo Contato Manual
@@ -264,7 +264,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                   className={`flex-1 py-3 text-sm font-medium text-center transition-colors border-b-2 ${
                     activeTab === 'existing' 
                       ? 'border-purple-600 text-purple-700 bg-purple-50/50' 
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      : 'border-transparent text-content-muted hover:text-content-secondary hover:bg-surface-subtle'
                   }`}
                 >
                   Buscar Existente
@@ -277,45 +277,45 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                 <div className="space-y-5 animate-in fade-in slide-in-from-left-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome Completo *</label>
+                      <label className="block text-sm font-medium text-content-secondary mb-1.5">Nome Completo *</label>
                       <input
                         type="text"
                         value={tempContact.contact || ''}
                         onChange={(e) => setTempContact({...tempContact, contact: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="Ex: Maria Silva"
                         autoFocus
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Celular</label>
+                      <label className="block text-sm font-medium text-content-secondary mb-1.5">Celular</label>
                       <input
                         type="tel"
                         value={maskPhoneInput(tempContact.cellphone || '')}
                         onChange={(e) => setTempContact({...tempContact, cellphone: maskPhoneInput(e.target.value)})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="(00) 00000-0000"
                         maxLength={15}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefone Fixo</label>
+                      <label className="block text-sm font-medium text-content-secondary mb-1.5">Telefone Fixo</label>
                       <input
                         type="tel"
                         value={maskPhoneInput(tempContact.phone || '')}
                         onChange={(e) => setTempContact({...tempContact, phone: maskPhoneInput(e.target.value)})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="(00) 0000-0000"
                         maxLength={14}
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
+                      <label className="block text-sm font-medium text-content-secondary mb-1.5">E-mail</label>
                       <input
                         type="email"
                         value={tempContact.email || ''}
                         onChange={(e) => setTempContact({...tempContact, email: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="email@exemplo.com"
                       />
                     </div>
@@ -327,11 +327,11 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 h-full flex flex-col">
                   <div className="relative shrink-0">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search className="h-5 w-5 text-gray-400" />
+                      <Search className="h-5 w-5 text-content-placeholder" />
                     </div>
                     <input
                       type="text"
-                      className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm"
+                      className="block w-full pl-10 pr-4 py-3 border border-ui-border rounded-lg leading-5 bg-surface placeholder-content-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm"
                       placeholder="Pesquisar por nome, telefone ou email..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -352,7 +352,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                             key={contact.id || index}
                             type="button"
                             onClick={() => handleSelectExisting(contact)}
-                            className="flex flex-col text-left bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-lg p-3 transition-all duration-200 group h-full relative"
+                            className="flex flex-col text-left bg-surface-subtle hover:bg-purple-50 border border-ui-border-soft hover:border-purple-200 rounded-lg p-3 transition-all duration-200 group h-full relative"
                           >
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <div className="bg-purple-600 text-white p-1 rounded-full">
@@ -361,23 +361,23 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                             </div>
 
                             <div className="flex items-center gap-2 mb-2 w-full pr-6">
-                              <div className="bg-white p-1.5 rounded-full border border-gray-100 group-hover:border-purple-100">
-                                <User size={14} className="text-gray-500 group-hover:text-purple-600" />
+                              <div className="bg-surface p-1.5 rounded-full border border-ui-border-soft group-hover:border-purple-100">
+                                <User size={14} className="text-content-muted group-hover:text-purple-600" />
                               </div>
-                              <span className="font-semibold text-gray-800 text-sm truncate w-full">
+                              <span className="font-semibold text-content text-sm truncate w-full">
                                 {contact.contact}
                               </span>
                             </div>
                             
                             <div className="space-y-1 w-full">
                               {(contact.cellphone || contact.phone) && (
-                                <div className="flex items-center gap-1.5 text-xs text-gray-500 group-hover:text-gray-700">
+                                <div className="flex items-center gap-1.5 text-xs text-content-muted group-hover:text-content-secondary">
                                   <Phone size={12} />
                                   <span className="truncate">{contact.cellphone ? formatPhone(contact.cellphone) : formatPhone(contact.phone || '')}</span>
                                 </div>
                               )}
                               {contact.email && (
-                                <div className="flex items-center gap-1.5 text-xs text-gray-500 group-hover:text-gray-700">
+                                <div className="flex items-center gap-1.5 text-xs text-content-muted group-hover:text-content-secondary">
                                   <Mail size={12} />
                                   <span className="truncate">{contact.email}</span>
                                 </div>
@@ -387,10 +387,10 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                         ))}
                       </div>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                        <Search className="mx-auto h-10 w-10 text-gray-300 mb-2" />
-                        <p className="text-gray-500 font-medium">Nenhum contato encontrado.</p>
-                        <p className="text-gray-400 text-sm mt-1">Tente buscar por outro termo.</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-10 bg-surface-subtle rounded-lg border border-dashed border-ui-border">
+                        <Search className="mx-auto h-10 w-10 text-content-placeholder mb-2" />
+                        <p className="text-content-muted font-medium">Nenhum contato encontrado.</p>
+                        <p className="text-content-placeholder text-sm mt-1">Tente buscar por outro termo.</p>
                       </div>
                     )}
                   </div>
@@ -398,11 +398,11 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
               )}
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-surface-subtle border-t border-ui-border-soft flex justify-end gap-3">
               <button
                 type="button"
                 onClick={closeModal}
-                className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                className="px-5 py-2.5 text-content-secondary bg-surface border border-ui-border rounded-lg hover:bg-surface-subtle font-medium transition-colors"
               >
                 Cancelar
               </button>

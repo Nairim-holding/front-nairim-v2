@@ -296,7 +296,7 @@ export default function ApartamentosLocacao() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {[...Array(8)].map((_, index) => (
-                            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                            <div key={index} className="bg-surface rounded-xl shadow-lg overflow-hidden animate-pulse">
                                 <div className="h-48 bg-gray-300"></div>
                                 <div className="p-5">
                                     <div className="h-6 bg-gray-300 rounded mb-4"></div>
@@ -404,7 +404,7 @@ export default function ApartamentosLocacao() {
                     )}
                     
                     {/* Contador de resultados */}
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 p-4 bg-white rounded-lg shadow-sm">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 p-4 bg-surface rounded-lg shadow-sm">
                         <div>
                             <p className="text-gray-800 font-medium">
                                 {totalResults} {totalResults === 1 ? 'apartamento encontrado' : 'apartamentos encontrados'}
@@ -444,7 +444,7 @@ export default function ApartamentosLocacao() {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {apartamentos.map((apartamento) => (
-                                <div key={apartamento.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100">
+                                <div key={apartamento.id} className="bg-surface rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100">
                                     {/* Imagem */}
                                     <div className="relative h-48 overflow-hidden">
                                         {apartamento.imagem && apartamento.imagem !== "/CasasLocacao.jpg" ? (
@@ -664,7 +664,7 @@ export default function ApartamentosLocacao() {
                     </>
                 ) : (
                     !loading && (
-                        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+                        <div className="text-center py-12 bg-surface rounded-xl shadow-sm">
                             <Icon icon="mingcute:building-2-line" className="w-24 h-24 text-gray-300 mx-auto mb-6" />
                             <h3 className="text-2xl font-medium text-gray-600 mb-3">Nenhum apartamento encontrado</h3>
                             <p className="text-gray-500 mb-8 max-w-md mx-auto">

@@ -21,17 +21,18 @@ import {
 } from "lucide-react";
 import Logo from "../Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Aside() {
   const [openAside, setOpenAside] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [isDarkModeAnimating, setIsDarkModeAnimating] = useState(false);
   const [activeItem, setActiveItem] = useState("/dashboard");
   const submenuRef = useRef<HTMLDivElement>(null);
   const menuItemsRef = useRef<HTMLUListElement>(null);
 
   const { logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -70,7 +71,7 @@ export default function Aside() {
 
   const handleDarkModeToggle = () => {
     setIsDarkModeAnimating(true);
-    setDarkMode(!darkMode);
+    toggleTheme();
     
     setTimeout(() => {
       setIsDarkModeAnimating(false);
@@ -105,22 +106,22 @@ export default function Aside() {
   return (
     <>
       <button
-        className={`fixed top-[8px] left-[10px] z-[1100] bg-white p-2 rounded-md shadow-md transition-all duration-300 hover:opacity-100 ${
-          darkMode ? "bg-gray-800 text-white" : "text-[#111]"
+        className={`fixed top-[8px] left-[10px] z-[1100] bg-page p-2 rounded-md shadow-md transition-all duration-300 hover:opacity-100 ${
+          isDark ? "bg-surface text-content-inverse" : "text-content"
         } ${openAside ? "left-[14.25rem]" : "left-[10px]"}`}
         onClick={() => setOpenAside(!openAside)}
       >
         {openAside ? (
-          <X size={25} className={darkMode ? "text-black" : ""} />
+          <X size={25} className={isDark ? "text-content-inverse" : ""} />
         ) : (
-          <Menu size={25} className={darkMode ? "text-black" : ""} />
+          <Menu size={25} className={isDark ? "text-content-inverse" : ""} />
         )}
       </button>
 
       {/* Overlay */}
       {openAside && (
         <div
-          className="fixed inset-0 bg-black/50 z-[999] transition-opacity duration-300"
+          className="fixed inset-0 bg-layer-overlay z-[999] transition-opacity duration-300"
           onClick={() => {
             setOpenAside(false);
             setOpenSubmenu(false);
@@ -131,13 +132,13 @@ export default function Aside() {
       {/* Aside */}
       <aside
         className={`fixed top-0 left-0 h-full w-[300px] z-[1000] shadow-lg transform transition-transform duration-300 ease-in-out ${
-          darkMode ? "bg-[#12101D]" : "bg-white"
+          isDark ? "bg-surface" : "bg-page"
         } ${openAside ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex flex-col h-full pt-5 px-5 pb-3 items-start">
           <div className="mb-4">
             <Link href="/dashboard">
-              <Logo darkMode={darkMode} />
+              <Logo className={isDark ? "text-content-inverse" : "text-brand-logo"} />
             </Link>
           </div>
 
@@ -156,12 +157,12 @@ export default function Aside() {
                           onClick={handleCadastroClick}
                           className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                             openSubmenu
-                              ? darkMode 
-                                ? "bg-purple-600 text-white" 
-                                : "bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white"
-                              : darkMode
-                              ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                              : "text-[#666666] hover:bg-gradient-to-r hover:from-[#8B5CF6] hover:to-[#6D28D9] hover:text-white"
+                              ? isDark 
+                                ? "bg-brand text-content-inverse" 
+                                : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
+                              : isDark
+                              ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                              : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                           }`}
                         >
                           <item.icon size={22} className="min-w-[25px]" />
@@ -178,7 +179,7 @@ export default function Aside() {
 
                         {openSubmenu && openAside && (
                           <div className={`mt-1 ${
-                            darkMode ? "bg-gray-800" : "bg-[#e8e8e8]"
+                            isDark ? "bg-surface-strong" : "bg-surface-muted"
                           } rounded-lg shadow-lg overflow-hidden`}>
                             <ul className="space-y-1">
                               {item.submenu.map((subItem) => (
@@ -192,12 +193,12 @@ export default function Aside() {
                                     }}
                                     className={`flex items-center p-3 rounded text-sm transition-colors ${
                                       activeItem === subItem.href
-                                        ? darkMode
-                                          ? "bg-gray-700 text-white"
-                                          : "bg-gray-100 text-gray-900"
-                                        : darkMode
-                                        ? "text-gray-300 hover:bg-gray-700 hover:text-white"
-                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                        ? isDark
+                                          ? "bg-surface-muted text-content-inverse"
+                                          : "bg-surface-subtle text-content"
+                                        : isDark
+                                        ? "text-content-muted hover:bg-surface-muted hover:text-content-inverse"
+                                        : "text-content-secondary hover:bg-surface-subtle hover:text-content"
                                     }`}
                                   >
                                     <subItem.icon size={18} className="mr-3" />
@@ -215,12 +216,12 @@ export default function Aside() {
                         onClick={() => handleItemClick(item.href)}
                         className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                           activeItem === item.href
-                            ? darkMode 
-                              ? "bg-purple-600 text-white" 
-                              : "bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white"
-                            : darkMode
-                            ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                            : "text-[#666666] hover:bg-gradient-to-r hover:from-[#8B5CF6] hover:to-[#6D28D9] hover:text-white"
+                            ? isDark 
+                              ? "bg-brand text-content-inverse" 
+                              : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
+                            : isDark
+                            ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                            : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                         }`}
                       >
                         <item.icon size={22} className="min-w-[25px]" />
@@ -235,9 +236,9 @@ export default function Aside() {
                   <button
                     onClick={handleLogout}
                     className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                      darkMode
-                        ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                        : "text-[#666666] hover:bg-gradient-to-r hover:from-[#8B5CF6] hover:to-[#6D28D9] hover:text-white"
+                      isDark
+                        ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                        : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                     }`}
                   >
                     <LogOut size={22} className="min-w-[25px]" />
@@ -249,33 +250,33 @@ export default function Aside() {
           </div>
 
           {/* Dark Mode Toggle - Fixo na parte inferior */}
-          <div className="w-full pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+          <div className="w-full pt-4 border-t border-ui-border-soft mt-4">
             <div className="flex items-center justify-between">
               {openAside && (
                 <>
                   <div className="flex items-center gap-3">
-                    {darkMode ? (
-                      <Moon size={20} className="text-white" />
+                    {isDark ? (
+                      <Moon size={20} className="text-content-inverse" />
                     ) : (
-                      <Sun size={20} className="text-gray-700" />
+                      <Sun size={20} className="text-content-secondary" />
                     )}
-                    <span className={darkMode ? "text-white" : "text-gray-700"}>
-                      {darkMode ? "Dark Mode" : "Light Mode"}
+                    <span className={isDark ? "text-content-inverse" : "text-content-secondary"}>
+                      {isDark ? "Dark Mode" : "Light Mode"}
                     </span>
                   </div>
                   <button
                     onClick={handleDarkModeToggle}
-                    className="relative w-12 h-6 rounded-full bg-[#37373B] transition-all duration-300 hover:opacity-80"
+                    className="relative w-12 h-6 rounded-full bg-surface-strong transition-all duration-300 hover:opacity-80"
                   >
                     <div
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 flex items-center justify-center ${
-                        darkMode ? "left-7" : "left-1"
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-surface transition-all duration-300 flex items-center justify-center ${
+                        isDark ? "left-7" : "left-1"
                       } ${
                         isDarkModeAnimating ? "scale-110" : "scale-100"
                       }`}
                     >
-                      {darkMode ? (
-                        <Moon size={10} className="text-gray-800 transition-all duration-300" />
+                      {isDark ? (
+                        <Moon size={10} className="text-content transition-all duration-300" />
                       ) : (
                         <Sun size={10} className="text-yellow-500 transition-all duration-300" />
                       )}
@@ -291,7 +292,7 @@ export default function Aside() {
         <style jsx>{`
           .custom-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: ${darkMode ? '#4B5563 #1F2937' : '#D1D5DB #F3F4F6'};
+            scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
           }
           
           .custom-scrollbar::-webkit-scrollbar {
@@ -299,17 +300,17 @@ export default function Aside() {
           }
           
           .custom-scrollbar::-webkit-scrollbar-track {
-            background: ${darkMode ? '#1F2937' : '#F3F4F6'};
+            background: var(--color-scrollbar-track);
             border-radius: 3px;
           }
           
           .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: ${darkMode ? '#4B5563' : '#D1D5DB'};
+            background: var(--color-scrollbar-thumb);
             border-radius: 3px;
           }
           
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: ${darkMode ? '#6B7280' : '#9CA3AF'};
+            background: var(--color-scrollbar-thumb-hover);
           }
         `}</style>
       </aside>

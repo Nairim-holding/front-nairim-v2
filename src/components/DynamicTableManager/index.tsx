@@ -228,7 +228,7 @@ export default function DynamicTableManager({
                 const formattedValue = formatValue(rawValue, column);
                 return (
                   <div key={index} className="flex items-center justify-start whitespace-nowrap text-xs h-[20px]">
-                     <span className={!rawValue ? "text-gray-300 truncate w-full" : "truncate w-full"}>
+                     <span className={!rawValue ? "text-content-muted truncate w-full" : "truncate w-full"}>
                         {formattedValue !== '-' ? formattedValue : '-'}
                      </span>
                   </div>
@@ -466,8 +466,8 @@ export default function DynamicTableManager({
   if (!items || !Array.isArray(items)) {
     return (
       <div className="flex justify-center items-center my-3">
-        <div className="bg-[#D9D9D9] py-4 px-6 rounded-sm flex items-center gap-3">
-          <p className="text-gray-700">Erro ao carregar dados da tabela</p>
+        <div className="bg-surface-subtle py-4 px-6 rounded-sm flex items-center gap-3">
+          <p className="text-content-secondary">Erro ao carregar dados da tabela</p>
         </div>
       </div>
     );
@@ -483,11 +483,11 @@ export default function DynamicTableManager({
                 <div className="relative">
                   <button
                     onClick={() => setShowOwnerTypeModal(true)}
-                    className="bg-[#D9D9D9] p-2 rounded hover:bg-gray-300 transition-colors relative group"
+                    className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors relative group"
                     title={`Adicionar novo ${title.toLowerCase()}`}
                   >
-                    <Plus size={20} color="#666" />
-                    <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">↓</span>
+                    <Plus size={20} color="var(--color-text-muted)" />
+                    <span className="absolute -top-2 -right-2 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">↓</span>
                   </button>
                   {showOwnerTypeModal && (
                     <ModalSelectTypeOwner
@@ -502,23 +502,23 @@ export default function DynamicTableManager({
               ) : (
                 <Link 
                   href={`${basePath}/cadastrar`} 
-                  className="bg-[#D9D9D9] p-2 rounded hover:bg-gray-300 transition-colors"
+                  className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"
                   title={`Adicionar novo ${title.toLowerCase()}`}
                 >
-                  <Plus size={20} color="#666" />
+                  <Plus size={20} color="var(--color-text-muted)" />
                 </Link>
               )
             )}
             <div className="relative">
               <button 
                 onClick={() => setFilterVisible(!filterVisible)}
-                className="p-2 hover:bg-gray-100 rounded transition-colors"
+                className="p-2 hover:bg-surface-subtle rounded transition-colors"
                 title="Filtrar registros"
               >
-                <Filter size={20} color={hasActiveFilters ? "#8b5cf6" : "#666"} />
+                <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
               </button>
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 bg-[#8b5cf6] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -526,11 +526,11 @@ export default function DynamicTableManager({
             {enableDelete && (
               <button 
                 onClick={handleDeleteClick}
-                className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Excluir selecionados"
                 disabled={!selectedCheckboxes.length}
               >
-                <Trash2 size={20} color="#666" />
+                <Trash2 size={20} color="var(--color-text-muted)" />
               </button>
             )}
           </div>
@@ -558,7 +558,7 @@ export default function DynamicTableManager({
 
         <SelectLimit limit={state.limit} onLimitChange={handleLimitChange} />
 
-        <p className="text-[16px] font-normal text-[#111111B2] laptop:relative tablet:text-center tablet:w-full">
+        <p className="text-[16px] font-normal text-content-secondary laptop:relative tablet:text-center tablet:w-full">
           {meta && meta.total > 0 
             ? `Exibindo ${tableData.start} a ${tableData.end} de ${meta.total} registros` 
             : 'Nenhum registro encontrado'}
@@ -591,7 +591,7 @@ export default function DynamicTableManager({
           {items.map((item: any) => (
             <tr
               key={item.id}
-              className="bg-white hover:bg-gray-50 border-b border-gray-100 text-[#111111B2] cursor-pointer h-[26px]"
+              className="bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary cursor-pointer h-[26px]"
               onClick={() => onRowClick?.(item)}
             >
               {dataColumns.map((col, index) => {
@@ -600,7 +600,7 @@ export default function DynamicTableManager({
                 return (
                   <td 
                     key={col.field} 
-                    className={`align-middle border-r border-gray-100 p-0 ${isFirst ? 'sticky left-0 bg-white z-20' : ''}`}
+                    className={`align-middle border-r border-ui-border-soft p-0 ${isFirst ? 'sticky left-0 bg-surface z-20' : ''}`}
                     style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                   >
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 ${isFirst ? 'justify-start' : 'justify-center'}`}>
@@ -608,7 +608,7 @@ export default function DynamicTableManager({
                         <div className="mr-2 flex shrink-0 items-center justify-center">
                           <input 
                             type="checkbox" 
-                            className="inp-checkbox-select rounded border-gray-300" 
+                            className="inp-checkbox-select rounded border-ui-border" 
                             value={item.id} 
                             checked={selectedCheckboxes.includes(item.id)}
                             onClick={(e) => e.stopPropagation()}
@@ -628,13 +628,13 @@ export default function DynamicTableManager({
               })}
 
               {(enableView || enableEdit) && (
-                <td className="px-2 sticky right-0 bg-white z-20 border-l border-gray-100 align-middle w-[80px] min-w-[80px] max-w-[80px] p-0 h-[26px]">
+                <td className="px-2 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[80px] min-w-[80px] max-w-[80px] p-0 h-[26px]">
                   <div className="flex items-center justify-center gap-2 h-full min-h-[26px]">
                     {enableView && (
                       <Link 
                         href={`${basePath}/visualizar/${item.id}`} 
                         title="Visualizar"
-                        className="p-1 hover:bg-blue-50 rounded transition-colors text-[#8b5cf6]"
+                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Eye size={16} />
@@ -644,7 +644,7 @@ export default function DynamicTableManager({
                       <Link 
                         href={`${basePath}/editar/${item.id}`} 
                         title="Editar"
-                        className="p-1 hover:bg-green-50 rounded transition-colors text-[#8b5cf6]"
+                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Edit size={16} />

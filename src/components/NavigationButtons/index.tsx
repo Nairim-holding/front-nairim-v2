@@ -35,12 +35,12 @@ export default function NavigationButtons({
   isLastStep,
 }: NavigationButtonsProps) {
   return (
-    <div className="flex items-center gap-5 mt-3 border-t-2 pt-3 border-[#11111180] w-full justify-end">
+    <div className="flex items-center gap-5 mt-3 border-t-2 pt-3 border-ui-border w-full justify-end">
       {showPrevious && (
         <button
           type="button"
           onClick={onPrevious}
-          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg text-[16px] font-medium text-white border border-gray-400 drop-shadow-soft"
+          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-content-placeholder to-content-muted rounded-lg text-[16px] font-medium text-content-inverse border border-ui-border drop-shadow-soft"
         >
           Anterior
         </button>
@@ -50,7 +50,7 @@ export default function NavigationButtons({
         <button
           type="button"
           onClick={onNext}
-          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-lg text-[16px] font-medium text-white border border-[#8B5CF6] drop-shadow-purple-soft"
+          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-brand to-brand-hover rounded-lg text-[16px] font-medium text-content-inverse border border-brand drop-shadow-purple-soft"
         >
           Próximo
         </button>
@@ -61,7 +61,7 @@ export default function NavigationButtons({
           tabIndex={tabIndex}
           disabled={loading || formComplete}
           type="submit"
-          className={`flex justify-center gap-3 items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-lg text-[16px] font-medium text-white border border-[#8B5CF6] drop-shadow-purple-soft ${(loading || formComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`flex justify-center gap-3 items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-brand to-brand-hover rounded-lg text-[16px] font-medium text-content-inverse border border-brand drop-shadow-purple-soft ${(loading || formComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {svg}
           <p>{loading ? textLoading : textSubmitButton}</p>
@@ -71,7 +71,7 @@ export default function NavigationButtons({
       {nextUrl && (
         <Link
           href={nextUrl}
-          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-lg text-[16px] font-medium text-white border border-[#8B5CF6] drop-shadow-purple-soft"
+          className="flex justify-center items-center max-w-[250px] w-full h-[50px] bg-gradient-to-r from-brand to-brand-hover rounded-lg text-[16px] font-medium text-content-inverse border border-brand drop-shadow-purple-soft"
         >
           Próximo
         </Link>

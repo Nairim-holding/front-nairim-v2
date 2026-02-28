@@ -504,7 +504,7 @@ export default function CasasLocacao() {
             {[...Array(4)].map((_, index) => (
               <div
                 key={index}
-                className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse"
+                className="bg-surface rounded-xl shadow-lg overflow-hidden animate-pulse"
               >
                 <div className="h-48 bg-gray-300"></div>
                 <div className="p-5">
@@ -615,7 +615,7 @@ export default function CasasLocacao() {
           )}
 
           {/* Contador de resultados */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 p-4 bg-white rounded-lg shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 p-4 bg-surface rounded-lg shadow-sm">
             <div>
               <p className="text-gray-800 font-medium">
                 {totalResults} {totalResults === 1 ? "casa encontrada" : "casas encontradas"}
@@ -668,7 +668,7 @@ export default function CasasLocacao() {
               {casas.map((casa) => (
                 <div
                   key={casa.id}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100"
+                  className="bg-surface rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100"
                 >
                   {/* Imagem */}
                   <div className="relative h-48 overflow-hidden">
@@ -973,7 +973,7 @@ export default function CasasLocacao() {
           </>
         ) : (
           !loading && (
-            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+            <div className="text-center py-12 bg-surface rounded-xl shadow-sm">
               <Icon icon="mingcute:home-2-line" className="w-24 h-24 text-gray-300 mx-auto mb-6" />
               <h3 className="text-2xl font-medium text-gray-600 mb-3">
                 Nenhuma casa encontrada

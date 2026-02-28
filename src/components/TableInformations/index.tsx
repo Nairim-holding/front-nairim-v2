@@ -34,8 +34,8 @@ export default function TableInformations({
   if (isEmpty) {
     return (
       <div className="flex justify-center items-center my-3">
-        <div className="bg-[#D9D9D9] py-4 px-6 rounded-sm flex items-center gap-3">
-          <p className="text-gray-700">{emptyMessage}</p>
+        <div className="bg-surface-subtle py-4 px-6 rounded-sm flex items-center gap-3">
+          <p className="text-content-secondary">{emptyMessage}</p>
         </div>
       </div>
     );
@@ -44,8 +44,8 @@ export default function TableInformations({
   const dataHeaders = headers.filter(header => header.field !== "actions");
 
   return (
-    <table className="min-w-full text-sm text-left text-gray-700" style={{ tableLayout: 'fixed' }}>
-      <thead className="bg-[#ABABAB] uppercase text-[#111111B2] font-semibold border-b border-gray-200">
+    <table className="min-w-full text-sm text-left text-content-secondary" style={{ tableLayout: 'fixed' }}>
+      <thead className="bg-surface-muted uppercase text-content-secondary font-semibold border-b border-ui-border-soft">
         <tr className="h-[36px]">
           {dataHeaders.map((header, idx) => {
             const isSortable = header?.sortParam && header.field !== "actions";
@@ -57,8 +57,8 @@ export default function TableInformations({
               <th
                 key={idx}
                 className={`py-1 px-2 font-normal text-[13px] whitespace-nowrap relative
-                  ${isFirstColumn ? "sticky left-0 bg-[#ABABAB] z-20" : ""}
-                  ${isSortable ? "cursor-pointer hover:bg-gray-100 transition-colors" : ""}
+                  ${isFirstColumn ? "sticky left-0 bg-surface-muted z-20" : ""}
+                  ${isSortable ? "cursor-pointer hover:bg-surface-subtle transition-colors" : ""}
                 `}
                 style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                 onClick={isSortable ? () => onSort(header.sortParam!) : undefined}
@@ -80,7 +80,7 @@ export default function TableInformations({
                         displayOrder === "desc" ? "rotate-180" : ""
                       }`}
                     >
-                      <ArrowUpDown size={14} className="text-[#111111B2]" />
+                      <ArrowUpDown size={14} className="text-content-secondary" />
                     </span>
                   )}
                 </div>
@@ -89,10 +89,10 @@ export default function TableInformations({
                 {onMouseDownResize && (
                   <div
                     onMouseDown={(e) => onMouseDownResize(e, header.field)}
-                    className="absolute right-0 top-0 bottom-0 w-[10px] cursor-col-resize hover:bg-gray-400 z-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                    className="absolute right-0 top-0 bottom-0 w-[10px] cursor-col-resize hover:bg-ui-border-muted z-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <GripVertical size={14} color="#555" />
+                    <GripVertical size={14} color="var(--color-text-muted)" />
                   </div>
                 )}
               </th>
@@ -102,7 +102,7 @@ export default function TableInformations({
           {hasActions && (
             <th
               key="actions"
-              className="py-1 px-2 font-normal text-[13px] whitespace-nowrap sticky right-0 bg-[#ABABAB] z-20 w-[80px] min-w-[80px] max-w-[80px]"
+              className="py-1 px-2 font-normal text-[13px] whitespace-nowrap sticky right-0 bg-surface-muted z-20 w-[80px] min-w-[80px] max-w-[80px]"
             >
               <div className="flex items-center justify-center gap-1 capitalize">
                 <span>Ação</span>

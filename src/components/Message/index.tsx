@@ -30,7 +30,7 @@ export default function Message({ message, type, visible, onClose }: MessageProp
         <p className={`text-sm font-medium flex-1 ${textColor}`}>{message}</p>
         <button 
           onClick={onClose}
-          className="p-1 hover:bg-white/50 rounded transition-colors"
+          className="p-1 hover:bg-surface/50 rounded transition-colors"
           aria-label="Fechar mensagem"
         >
           <X size={16} className={textColor} />

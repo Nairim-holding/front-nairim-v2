@@ -52,7 +52,7 @@ export default function ProgressBar({
   };
 
   return (
-    <div className="flex border-b-2 pb-3 border-[#11111180]">
+    <div className="flex border-b-2 pb-3 border-ui-border">
       <ul className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
         {steps.map((step, index) => {
           const status = getStepStatus(index);
@@ -66,17 +66,17 @@ export default function ProgressBar({
                 onClick={() => handleStepClick(index)}
                 disabled={!isClickable}
                 className={`
-                  flex items-center gap-2 px-5 py-3 border border-[#E0E0E0] rounded-xl drop-shadow-custom-black
+                  flex items-center gap-2 px-5 py-3 border border-ui-border-muted rounded-xl drop-shadow-custom-black
                   transition-all duration-200
                   ${isClickable ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed'}
                   ${status === 'active' || status === 'completed'
-                    ? 'bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] drop-shadow-purple-soft text-white'
-                    : 'bg-[#F0F0F0] text-[#666666] opacity-50'
+                    ? 'bg-gradient-to-r from-brand to-brand-hover drop-shadow-purple-soft text-content-inverse'
+                    : 'bg-surface-subtle text-content-muted opacity-50'
                   }
                 `}
               >
                 <div className={`
-                  ${status === 'active' || status === 'completed' ? 'text-white' : 'text-[#666]'}
+                  ${status === 'active' || status === 'completed' ? 'text-content-inverse' : 'text-content-muted'}
                 `}>
                   {step.icon}
                 </div>

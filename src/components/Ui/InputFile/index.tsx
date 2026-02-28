@@ -374,7 +374,7 @@ export default function InputFile({
     return (
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          <h4 className="text-sm font-medium text-content-secondary whitespace-nowrap">
             Mídias ({mediaItems.length})
           </h4>
         </div>
@@ -385,7 +385,7 @@ export default function InputFile({
             return (
             <div
               key={preview.id || `media-${index}`}
-              className="group relative border rounded-lg overflow-hidden bg-black hover:border-[#8B5CF6] transition-all duration-200"
+              className="group relative border rounded-lg overflow-hidden bg-black hover:border-brand transition-all duration-200"
             >
               {isEditMode && (
                 <button
@@ -426,19 +426,19 @@ export default function InputFile({
                 </div>
               </div>
               
-              <div className="p-3 bg-white">
-                <p className="text-xs font-medium text-gray-800 truncate mb-1">
+              <div className="p-3 bg-surface">
+                <p className="text-xs font-medium text-content truncate mb-1">
                   {getDisplayName(preview)}
                 </p>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-content-muted">
                     {preview.file && formatFileSize(preview.file.size)}
                   </span>
                   {!isEditMode && (
                     <button
                       type="button"
                       onClick={() => handleDownload(preview)}
-                      className="text-xs text-[#10B981] hover:text-[#059669] hover:underline flex items-center gap-1"
+                      className="text-xs text-state-success hover:text-green-700 hover:underline flex items-center gap-1"
                     >
                       <Download size={12} />
                       Baixar
@@ -459,7 +459,7 @@ export default function InputFile({
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          <h4 className="text-sm font-medium text-content-secondary whitespace-nowrap">
             Documentos ({documents.length})
           </h4>
         </div>
@@ -470,7 +470,7 @@ export default function InputFile({
             return (
               <div
                 key={preview.id || `doc-${index}`}
-                className="group relative border rounded-lg p-4 bg-white hover:border-[#8B5CF6] transition-all duration-200"
+                className="group relative border rounded-lg p-4 bg-surface hover:border-brand transition-all duration-200"
               >
                 {isEditMode && (
                   <button
@@ -490,18 +490,18 @@ export default function InputFile({
                         <FileText size={24} className="text-red-500" />
                       </div>
                     ) : (
-                      <div className="p-2 bg-gray-50 rounded-lg">
-                        <FileText size={24} className="text-gray-500" />
+                      <div className="p-2 bg-surface-subtle rounded-lg">
+                        <FileText size={24} className="text-content-muted" />
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate mb-1">
+                    <p className="text-sm font-medium text-content truncate mb-1">
                       {getDisplayName(preview)}
                     </p>
                     {preview.file && (
-                      <p className="text-xs text-gray-500 mb-2">
+                      <p className="text-xs text-content-muted mb-2">
                         {formatFileSize(preview.file.size)}
                       </p>
                     )}
@@ -510,7 +510,7 @@ export default function InputFile({
                       <button
                         type="button"
                         onClick={() => handleOpenFile(preview)}
-                        className="text-xs text-[#8B5CF6] hover:text-[#7C3AED] hover:underline flex items-center gap-1"
+                        className="text-xs text-brand hover:text-brand-hover hover:underline flex items-center gap-1"
                       >
                         <Eye size={12} />
                         Visualizar
@@ -519,7 +519,7 @@ export default function InputFile({
                         <button
                           type="button"
                           onClick={() => handleDownload(preview)}
-                          className="text-xs text-[#10B981] hover:text-[#059669] hover:underline flex items-center gap-1"
+                          className="text-xs text-state-success hover:text-green-700 hover:underline flex items-center gap-1"
                         >
                           <Download size={12} />
                           Baixar
@@ -543,7 +543,7 @@ export default function InputFile({
           <div className="relative max-w-6xl max-h-[90vh] w-full flex flex-col items-center">
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
+              className="absolute top-4 right-4 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
             >
               <X size={24} />
             </button>
@@ -552,7 +552,7 @@ export default function InputFile({
               <button
                 onClick={prevMedia}
                 type="button"
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
               >
                 <ChevronLeft size={24} />
               </button>
@@ -581,7 +581,7 @@ export default function InputFile({
               <button
                 onClick={nextMedia}
                 type="button"  
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
               >
                 <ChevronRight size={24} />
               </button>
@@ -599,7 +599,7 @@ export default function InputFile({
                     type="button"
                     className={`relative w-12 h-12 flex-shrink-0 rounded overflow-hidden border-2 bg-black ${
                       index === currentMediaIndex 
-                        ? 'border-[#8B5CF6]' 
+                        ? 'border-brand' 
                         : 'border-transparent'
                     }`}
                   >
@@ -631,10 +631,10 @@ export default function InputFile({
       <div className={`
         flex flex-col w-full p-5 border-2 ${isViewMode ? 'border-solid' : 'border-dashed'} rounded-lg
         ${disabled 
-          ? 'bg-[#EDEDED] border-[#CCCCCC]' 
+          ? 'bg-surface-muted border-ui-border' 
           : isLimitReached
             ? 'bg-red-50 border-red-500'
-            : 'bg-white border-[#CCCCCC] hover:border-[#8B5CF6]'}
+            : 'bg-surface border-ui-border hover:border-brand'}
         transition-colors duration-200 h-full
       `}>
         {isEditMode && (
@@ -648,8 +648,8 @@ export default function InputFile({
                 text-[16px] font-medium transition-all duration-200
                 whitespace-nowrap flex-shrink-0
                 ${isUploadDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white hover:shadow-lg hover:shadow-purple-500/25'
+                  ? 'bg-surface-muted text-content-muted cursor-not-allowed'
+                  : 'bg-gradient-to-r from-brand to-brand-hover text-white hover:shadow-lg hover:shadow-purple-500/25'
                 }
               `}
             >
@@ -670,20 +670,20 @@ export default function InputFile({
 
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <p className={`text-[14px] font-medium truncate ${isLimitReached ? 'text-red-600' : 'text-[#666666]'}`}>
+                <p className={`text-[14px] font-medium truncate ${isLimitReached ? 'text-red-600' : 'text-content-muted'}`}>
                   {currentCount > 0 
                     ? `${currentCount} arquivo(s) selecionado(s)` 
                     : placeholder
                   }
                 </p>
                 {multiple && maxFiles > 0 && (
-                  <span className={`inline-block whitespace-nowrap min-w-max flex-shrink-0 text-[12px] px-2 py-0.5 rounded-full font-semibold ${isLimitReached ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`inline-block whitespace-nowrap min-w-max flex-shrink-0 text-[12px] px-2 py-0.5 rounded-full font-semibold ${isLimitReached ? 'bg-red-100 text-red-600' : 'bg-surface-subtle text-content-muted'}`}>
                     {currentCount}&nbsp;/&nbsp;{maxFiles}
                   </span>
                 )}
               </div>
               {accept && (
-                <p className="text-[12px] text-[#999999] mt-1">
+                <p className="text-[12px] text-content-placeholder mt-1">
                   Formatos aceitos: {accept.replace(/,video\/(mp4|webm)/g, ' + vídeos')}
                 </p>
               )}
@@ -707,9 +707,9 @@ export default function InputFile({
         ) : (
           <div className="text-center py-8">
             <div className="mb-4">
-              <ImageIcon className={`mx-auto h-12 w-12 ${isLimitReached ? 'text-red-300' : 'text-gray-400'}`} />
+              <ImageIcon className={`mx-auto h-12 w-12 ${isLimitReached ? 'text-red-300' : 'text-content-placeholder'}`} />
             </div>
-            <p className={`text-sm ${isLimitReached ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+            <p className={`text-sm ${isLimitReached ? 'text-red-600 font-medium' : 'text-content-muted'}`}>
               {isViewMode ? 'Nenhum arquivo anexado' : placeholder}
             </p>
           </div>

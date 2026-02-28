@@ -49,8 +49,8 @@ export default function Header() {
       <header 
         className={`fixed w-full z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-white shadow-lg py-3' 
-            : 'bg-white py-4 md:bg-white/95 md:backdrop-blur-sm'
+            ? 'bg-surface shadow-lg py-3' 
+            : 'bg-surface py-4 md:bg-surface/95 md:backdrop-blur-sm'
         }`}
         ref={menuRef}
       >
@@ -70,24 +70,24 @@ export default function Header() {
 
             {/* Menu Desktop */}
             <nav className="hidden md:flex items-center space-x-8">
-              <ul className="flex gap-6 lg:gap-8 text-black/60 items-center">
-                <li className="text-sm lg:text-base font-medium hover:text-black transition-colors duration-300 font-roboto">
+              <ul className="flex gap-6 lg:gap-8 text-content-secondary items-center">
+                <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
                   <Link href="/">Início</Link>
                 </li>
-                <li className="text-sm lg:text-base font-medium hover:text-black transition-colors duration-300 font-roboto">
+                <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
                   <Link href="/imoveis">Imóveis</Link>
                 </li>
-                <li className="text-sm lg:text-base font-medium hover:text-black transition-colors duration-300 font-roboto">
+                <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
                   <Link href="/sobre">Sobre</Link>
                 </li>
-                <li className="text-sm lg:text-base font-medium hover:text-black transition-colors duration-300 font-roboto">
+                <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
                   <Link href="/contato">Contato</Link>
                 </li>
               </ul>
               
               <Link 
                 href="/login" 
-                className="bg-purple-900 px-6 py-2.5 rounded-lg text-white flex items-center justify-center font-medium font-roboto border border-purple-900 transition-all duration-300 hover:text-purple-900 hover:bg-transparent ml-4"
+                className="bg-brand-hover px-6 py-2.5 rounded-lg text-content-inverse flex items-center justify-center font-medium font-roboto border border-brand-hover transition-all duration-300 hover:text-brand-hover hover:bg-transparent ml-4"
               >
                 Login
               </Link>
@@ -102,7 +102,7 @@ export default function Header() {
             >
               <Icon 
                 icon={isMenuOpen ? "mingcute:close-line" : "mingcute:menu-line"} 
-                className="w-6 h-6 text-gray-800" 
+                className="w-6 h-6 text-content" 
               />
             </button>
           </div>
@@ -117,18 +117,18 @@ export default function Header() {
               }
             `}
           >
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 py-4">
+            <div className="bg-surface rounded-lg shadow-lg border border-ui-border-soft py-4">
               <nav>
                 <ul className="space-y-3">
                   <li>
                     <Link 
                       href="/" 
-                      className="flex items-center px-4 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-900 transition-colors duration-200 rounded-lg group"
+                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                       onClick={handleLinkClick}
                     >
                       <Icon 
                         icon="mingcute:home-line" 
-                        className="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-600" 
+                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
                       />
                       <span className="font-medium font-roboto">Início</span>
                     </Link>
@@ -136,12 +136,12 @@ export default function Header() {
                   <li>
                     <Link 
                       href="/imoveis" 
-                      className="flex items-center px-4 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-900 transition-colors duration-200 rounded-lg group"
+                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                       onClick={handleLinkClick}
                     >
                       <Icon 
                         icon="mingcute:building-2-line" 
-                        className="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-600" 
+                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
                       />
                       <span className="font-medium font-roboto">Imóveis</span>
                     </Link>
@@ -149,12 +149,12 @@ export default function Header() {
                   <li>
                     <Link 
                       href="/sobre" 
-                      className="flex items-center px-4 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-900 transition-colors duration-200 rounded-lg group"
+                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                       onClick={handleLinkClick}
                     >
                       <Icon 
                         icon="mingcute:information-line" 
-                        className="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-600" 
+                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
                       />
                       <span className="font-medium font-roboto">Sobre</span>
                     </Link>
@@ -162,20 +162,20 @@ export default function Header() {
                   <li>
                     <Link 
                       href="/contato" 
-                      className="flex items-center px-4 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-900 transition-colors duration-200 rounded-lg group"
+                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                       onClick={handleLinkClick}
                     >
                       <Icon 
                         icon="mingcute:phone-line" 
-                        className="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-600" 
+                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
                       />
                       <span className="font-medium font-roboto">Contato</span>
                     </Link>
                   </li>
-                  <li className="border-t border-gray-200 pt-3 mt-3">
+                  <li className="border-t border-ui-border-soft pt-3 mt-3">
                     <Link 
                       href="/login" 
-                      className="flex justify-center items-center w-full bg-purple-900 text-white text-center font-medium py-3 rounded-lg border border-purple-900 transition-all duration-300 hover:bg-purple-800"
+                      className="flex justify-center items-center w-full bg-brand-hover text-content-inverse text-center font-medium py-3 rounded-lg border border-brand-hover transition-all duration-300 hover:bg-brand"
                       onClick={handleLinkClick}
                     >
                       Login

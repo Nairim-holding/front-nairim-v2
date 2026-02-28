@@ -69,7 +69,7 @@ export default function Filter() {
       {/* Container Principal com position absolute apenas no desktop */}
       <div className="w-full max-w-4xl mx-auto my-10 md:absolute md:top-500px md:left-1/2 md:-translate-y-1/2 md:-translate-x-1/2 md:z-10 md:my-0 md:w-[95%] md:max-w-6xl">
         {/* Barra de Pesquisa Principal */}
-        <div className="bg-white rounded-xl shadow-lg p-4 md:shadow-2xl md:border md:border-gray-200">
+        <div className="bg-surface rounded-xl shadow-lg p-4 md:shadow-2xl md:border md:border-ui-border-soft">
           <div className="flex flex-col md:flex-row items-center gap-3">
             {/* Toggle Compra/Aluguel */}
             <div className="flex w-full md:w-auto border rounded-lg overflow-hidden shrink-0">
@@ -79,7 +79,7 @@ export default function Filter() {
                 className={`flex-1 md:flex-none px-4 py-3 font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                   filters.transactionType === "comprar"
                     ? "bg-purple-900 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-subtle text-content-secondary hover:bg-surface-muted"
                 }`}
                 aria-pressed={filters.transactionType === "comprar"}
               >
@@ -95,7 +95,7 @@ export default function Filter() {
                 className={`flex-1 md:flex-none px-4 py-3 font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                   filters.transactionType === "alugar"
                     ? "bg-purple-900 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-subtle text-content-secondary hover:bg-surface-muted"
                 }`}
                 aria-pressed={filters.transactionType === "alugar"}
               >
@@ -112,7 +112,7 @@ export default function Filter() {
               <div className="relative">
                 <Icon
                   icon="mingcute:search-line"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-content-placeholder w-4 h-4 md:w-5 md:h-5"
                 />
                 <input
                   id="search-input"
@@ -121,7 +121,7 @@ export default function Filter() {
                   placeholder={`Buscar imóveis para ${filters.transactionType === "comprar" ? "comprar" : "alugar"}...`}
                   value={filters.location}
                   onChange={(e) => handleFilterChange("location", e.target.value)}
-                  className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm text-gray-400 focus:text-black md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm text-content-placeholder focus:text-content md:text-base border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   aria-label="Buscar imóveis por localização"
                 />
@@ -132,7 +132,7 @@ export default function Filter() {
             <button
               type="button"
               onClick={() => setIsFilterOpen(true)}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shrink-0"
+              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-surface-subtle text-content-secondary rounded-lg font-medium hover:bg-surface-muted transition-colors flex items-center justify-center gap-2 shrink-0"
               aria-label={`Abrir filtros avançados (${activeFiltersCount} filtros ativos)`}
               aria-expanded={isFilterOpen}
             >
@@ -170,20 +170,20 @@ export default function Filter() {
           />
 
           {/* Painel de Filtros Mobile */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <div className="fixed bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
             {/* Barra de arrastar */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+              <div className="w-12 h-1.5 bg-surface-muted rounded-full"></div>
             </div>
 
             {/* Cabeçalho */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
+            <div className="sticky top-0 bg-surface border-b border-ui-border-soft p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold text-gray-800">Filtros Avançados</h2>
+                <h2 className="text-lg font-bold text-content">Filtros Avançados</h2>
                 <button
                   type="button"
                   onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  className="text-content-placeholder hover:text-content-muted transition-colors p-1"
                   aria-label="Fechar filtros"
                 >
                   <Icon icon="mingcute:close-line" className="w-6 h-6" />
@@ -194,7 +194,7 @@ export default function Filter() {
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="px-3 py-1.5 text-xs text-gray-600 hover:text-purple-900 transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 text-xs text-content-muted hover:text-purple-900 transition-colors flex items-center gap-1"
                 >
                   <Icon icon="mingcute:refresh-line" className="w-3 h-3" />
                   Limpar todos
@@ -211,7 +211,7 @@ export default function Filter() {
             </div>
 
             {/* Menu lateral de seções (mobile) */}
-            <div className="border-b border-gray-200 overflow-x-auto">
+            <div className="border-b border-ui-border-soft overflow-x-auto">
               <div className="flex px-4">
                 {[
                   { id: "valores", label: "Valores", icon: "mingcute:coin-line" },
@@ -227,7 +227,7 @@ export default function Filter() {
                     className={`flex flex-col items-center px-3 py-2 min-w-[80px] transition-colors ${
                       activeSection === section.id
                         ? "text-purple-900 border-b-2 border-purple-900"
-                        : "text-gray-500"
+                        : "text-content-muted"
                     }`}
                     aria-selected={activeSection === section.id}
                     role="tab"
@@ -243,10 +243,10 @@ export default function Filter() {
             <div className="flex-1 overflow-y-auto p-4">
               {activeSection === "valores" && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Valores (R$)</h3>
+                  <h3 className="text-sm font-semibold text-content mb-2">Valores (R$)</h3>
                   <div className="space-y-3">
                     <div>
-                      <label htmlFor="valor-min-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="valor-min-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Valor mínimo
                       </label>
                       <input
@@ -256,11 +256,11 @@ export default function Filter() {
                         placeholder="0,00"
                         value={filters.valorMin}
                         onChange={(e) => handleFilterChange("valorMin", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
-                      <label htmlFor="valor-max-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="valor-max-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Valor máximo
                       </label>
                       <input
@@ -270,7 +270,7 @@ export default function Filter() {
                         placeholder="0,00"
                         value={filters.valorMax}
                         onChange={(e) => handleFilterChange("valorMax", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -279,10 +279,10 @@ export default function Filter() {
 
               {activeSection === "caracteristicas" && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Características</h3>
+                  <h3 className="text-sm font-semibold text-content mb-2">Características</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="property-type-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="property-type-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Tipo de Imóvel
                       </label>
                       <select
@@ -290,7 +290,7 @@ export default function Filter() {
                         name="propertyType"
                         value={filters.propertyType || "all"}
                         onChange={(e) => handleFilterChange("propertyType", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="all">Todos</option>
                         <option value="apartment">Apartamento</option>
@@ -299,7 +299,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="quartos-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="quartos-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Quartos
                       </label>
                       <select
@@ -307,7 +307,7 @@ export default function Filter() {
                         name="quartos"
                         value={filters.quartos}
                         onChange={(e) => handleFilterChange("quartos", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 quarto</option>
@@ -318,7 +318,7 @@ export default function Filter() {
                     </div>
                     
                     <div>
-                      <label htmlFor="banheiros-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="banheiros-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Banheiros
                       </label>
                       <select
@@ -326,7 +326,7 @@ export default function Filter() {
                         name="banheiros"
                         value={filters.banheiros}
                         onChange={(e) => handleFilterChange("banheiros", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 banheiro</option>
@@ -336,7 +336,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="vagas-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="vagas-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Vagas
                       </label>
                       <select
@@ -344,7 +344,7 @@ export default function Filter() {
                         name="vagas"
                         value={filters.vagas}
                         onChange={(e) => handleFilterChange("vagas", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 vaga</option>
@@ -354,7 +354,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="garagem-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="garagem-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Garagem
                       </label>
                       <select
@@ -362,7 +362,7 @@ export default function Filter() {
                         name="garagem"
                         value={filters.garagem}
                         onChange={(e) => handleFilterChange("garagem", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 carro</option>
@@ -372,7 +372,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="lavabo-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="lavabo-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Lavabo
                       </label>
                       <select
@@ -380,7 +380,7 @@ export default function Filter() {
                         name="lavabo"
                         value={filters.lavabo}
                         onChange={(e) => handleFilterChange("lavabo", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 lavabo</option>
@@ -389,7 +389,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="andares-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="andares-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Andares
                       </label>
                       <select
@@ -397,7 +397,7 @@ export default function Filter() {
                         name="andares"
                         value={filters.andares}
                         onChange={(e) => handleFilterChange("andares", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 andar</option>
@@ -411,10 +411,10 @@ export default function Filter() {
 
               {activeSection === "area" && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Área (m²)</h3>
+                  <h3 className="text-sm font-semibold text-content mb-2">Área (m²)</h3>
                   <div className="space-y-3">
                     <div>
-                      <label htmlFor="area-min-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="area-min-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Área mínima
                       </label>
                       <input
@@ -424,11 +424,11 @@ export default function Filter() {
                         placeholder="0 m²"
                         value={filters.areaMin}
                         onChange={(e) => handleFilterChange("areaMin", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
-                      <label htmlFor="area-max-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="area-max-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Área máxima
                       </label>
                       <input
@@ -438,7 +438,7 @@ export default function Filter() {
                         placeholder="0 m²"
                         value={filters.areaMax}
                         onChange={(e) => handleFilterChange("areaMax", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -447,10 +447,10 @@ export default function Filter() {
 
               {activeSection === "localizacao" && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Localização</h3>
+                  <h3 className="text-sm font-semibold text-content mb-2">Localização</h3>
                   <div className="space-y-3">
                     <div>
-                      <label htmlFor="endereco-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="endereco-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Endereço
                       </label>
                       <input
@@ -460,13 +460,13 @@ export default function Filter() {
                         placeholder="Rua, número"
                         value={filters.endereco}
                         onChange={(e) => handleFilterChange("endereco", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="bairro-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="bairro-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                           Bairro
                         </label>
                         <input
@@ -476,11 +476,11 @@ export default function Filter() {
                           placeholder="Nome do bairro"
                           value={filters.bairro}
                           onChange={(e) => handleFilterChange("bairro", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
-                        <label htmlFor="cep-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="cep-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                           CEP
                         </label>
                         <input
@@ -490,13 +490,13 @@ export default function Filter() {
                           placeholder="00000-000"
                           value={filters.cep}
                           onChange={(e) => handleFilterChange("cep", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="uf-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="uf-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Estado (UF)
                       </label>
                       <select
@@ -504,7 +504,7 @@ export default function Filter() {
                         name="uf"
                         value={filters.uf}
                         onChange={(e) => handleFilterChange("uf", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Selecione um estado</option>
                         {estadosBrasileiros.map((uf) => (
@@ -520,11 +520,11 @@ export default function Filter() {
 
               {activeSection === "outros" && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Outros</h3>
+                  <h3 className="text-sm font-semibold text-content mb-2">Outros</h3>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="data-inicio-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="data-inicio-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                           Data início
                         </label>
                         <input
@@ -533,11 +533,11 @@ export default function Filter() {
                           type="date"
                           value={filters.dataInicio}
                           onChange={(e) => handleFilterChange("dataInicio", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
-                        <label htmlFor="data-fim-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="data-fim-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                           Data fim
                         </label>
                         <input
@@ -546,13 +546,13 @@ export default function Filter() {
                           type="date"
                           value={filters.dataFim}
                           onChange={(e) => handleFilterChange("dataFim", e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="fachada-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="fachada-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Fachada
                       </label>
                       <select
@@ -560,7 +560,7 @@ export default function Filter() {
                         name="fachada"
                         value={filters.fachada}
                         onChange={(e) => handleFilterChange("fachada", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="nova">Nova</option>
@@ -570,7 +570,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="mobilia-mobile" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="mobilia-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Quantidade de móveis
                       </label>
                       <select
@@ -578,7 +578,7 @@ export default function Filter() {
                         name="mobilia"
                         value={filters.mobilia}
                         onChange={(e) => handleFilterChange("mobilia", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="0">Sem mobília</option>
@@ -592,12 +592,12 @@ export default function Filter() {
             </div>
 
             {/* Rodapé Mobile */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
+            <div className="sticky bottom-0 bg-surface border-t border-ui-border-soft p-4">
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsFilterOpen(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+                  className="flex-1 px-4 py-2.5 border border-ui-border text-content-secondary rounded-lg font-medium hover:bg-surface-subtle transition-colors text-sm"
                 >
                   Cancelar
                 </button>
@@ -626,16 +626,16 @@ export default function Filter() {
           />
 
           {/* Painel de Filtros Desktop */}
-          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl overflow-y-auto">
+          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-surface shadow-2xl overflow-y-auto">
             <div className="h-full flex flex-col">
               {/* Cabeçalho */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+              <div className="sticky top-0 bg-surface border-b border-ui-border-soft p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-800">Filtros Avançados</h2>
+                  <h2 className="text-xl font-bold text-content">Filtros Avançados</h2>
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-content-placeholder hover:text-content-muted transition-colors"
                     aria-label="Fechar filtros"
                   >
                     <Icon icon="mingcute:close-line" className="w-6 h-6" />
@@ -646,7 +646,7 @@ export default function Filter() {
                   <button
                     type="button"
                     onClick={resetFilters}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-purple-900 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 text-sm text-content-muted hover:text-purple-900 transition-colors flex items-center gap-2"
                   >
                     <Icon icon="mingcute:refresh-line" className="w-4 h-4" />
                     Limpar todos
@@ -666,13 +666,13 @@ export default function Filter() {
               <div className="flex-1 p-6 space-y-8">
                 {/* Valores */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
                     <Icon icon="mingcute:coin-line" className="w-5 h-5" />
                     Valores
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="valor-min-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="valor-min-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Valor mínimo (R$)
                       </label>
                       <input
@@ -682,11 +682,11 @@ export default function Filter() {
                         placeholder="0,00"
                         value={filters.valorMin}
                         onChange={(e) => handleFilterChange("valorMin", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
-                      <label htmlFor="valor-max-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="valor-max-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Valor máximo (R$)
                       </label>
                       <input
@@ -696,7 +696,7 @@ export default function Filter() {
                         placeholder="0,00"
                         value={filters.valorMax}
                         onChange={(e) => handleFilterChange("valorMax", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -704,13 +704,13 @@ export default function Filter() {
 
                 {/* Características */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
                     <Icon icon="mingcute:home-2-line" className="w-5 h-5" />
                     Características
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
-                      <label htmlFor="property-type-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="property-type-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Tipo de Imóvel
                       </label>
                       <select
@@ -718,7 +718,7 @@ export default function Filter() {
                         name="propertyType"
                         value={filters.propertyType || "all"}
                         onChange={(e) => handleFilterChange("propertyType", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="all">Todos</option>
                         <option value="apartment">Apartamento</option>
@@ -727,7 +727,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="quartos-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="quartos-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Quartos
                       </label>
                       <select
@@ -735,7 +735,7 @@ export default function Filter() {
                         name="quartos"
                         value={filters.quartos}
                         onChange={(e) => handleFilterChange("quartos", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 quarto</option>
@@ -746,7 +746,7 @@ export default function Filter() {
                     </div>
                     
                     <div>
-                      <label htmlFor="banheiros-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="banheiros-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Banheiros
                       </label>
                       <select
@@ -754,7 +754,7 @@ export default function Filter() {
                         name="banheiros"
                         value={filters.banheiros}
                         onChange={(e) => handleFilterChange("banheiros", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 banheiro</option>
@@ -764,7 +764,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="vagas-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="vagas-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Vagas
                       </label>
                       <select
@@ -772,7 +772,7 @@ export default function Filter() {
                         name="vagas"
                         value={filters.vagas}
                         onChange={(e) => handleFilterChange("vagas", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 vaga</option>
@@ -782,7 +782,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="garagem-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="garagem-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Garagem
                       </label>
                       <select
@@ -790,7 +790,7 @@ export default function Filter() {
                         name="garagem"
                         value={filters.garagem}
                         onChange={(e) => handleFilterChange("garagem", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 carro</option>
@@ -800,7 +800,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="lavabo-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="lavabo-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Lavabo
                       </label>
                       <select
@@ -808,7 +808,7 @@ export default function Filter() {
                         name="lavabo"
                         value={filters.lavabo}
                         onChange={(e) => handleFilterChange("lavabo", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 lavabo</option>
@@ -817,7 +817,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="andares-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="andares-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Andares
                       </label>
                       <select
@@ -825,7 +825,7 @@ export default function Filter() {
                         name="andares"
                         value={filters.andares}
                         onChange={(e) => handleFilterChange("andares", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 andar</option>
@@ -838,13 +838,13 @@ export default function Filter() {
 
                 {/* Área */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
                     <Icon icon="mingcute:ruler-line" className="w-5 h-5" />
                     Área (m²)
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="area-min-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="area-min-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Área mínima
                       </label>
                       <input
@@ -854,11 +854,11 @@ export default function Filter() {
                         placeholder="0 m²"
                         value={filters.areaMin}
                         onChange={(e) => handleFilterChange("areaMin", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
-                      <label htmlFor="area-max-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="area-max-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Área máxima
                       </label>
                       <input
@@ -868,7 +868,7 @@ export default function Filter() {
                         placeholder="0 m²"
                         value={filters.areaMax}
                         onChange={(e) => handleFilterChange("areaMax", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -876,13 +876,13 @@ export default function Filter() {
 
                 {/* Localização */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
                     <Icon icon="mingcute:map-pin-line" className="w-5 h-5" />
                     Localização
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="endereco-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="endereco-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Endereço
                       </label>
                       <input
@@ -892,13 +892,13 @@ export default function Filter() {
                         placeholder="Rua, número"
                         value={filters.endereco}
                         onChange={(e) => handleFilterChange("endereco", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="bairro-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="bairro-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                           Bairro
                         </label>
                         <input
@@ -908,11 +908,11 @@ export default function Filter() {
                           placeholder="Nome do bairro"
                           value={filters.bairro}
                           onChange={(e) => handleFilterChange("bairro", e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
-                        <label htmlFor="cep-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="cep-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                           CEP
                         </label>
                         <input
@@ -922,13 +922,13 @@ export default function Filter() {
                           placeholder="00000-000"
                           value={filters.cep}
                           onChange={(e) => handleFilterChange("cep", e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="uf-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="uf-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Estado (UF)
                       </label>
                       <select
@@ -936,7 +936,7 @@ export default function Filter() {
                         name="uf"
                         value={filters.uf}
                         onChange={(e) => handleFilterChange("uf", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Selecione um estado</option>
                         {estadosBrasileiros.map((uf) => (
@@ -951,14 +951,14 @@ export default function Filter() {
 
                 {/* Outros */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
                     <Icon icon="mingcute:settings-3-line" className="w-5 h-5" />
                     Outros
                   </h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="data-inicio-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="data-inicio-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                           Data início
                         </label>
                         <input
@@ -967,11 +967,11 @@ export default function Filter() {
                           type="date"
                           value={filters.dataInicio}
                           onChange={(e) => handleFilterChange("dataInicio", e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
-                        <label htmlFor="data-fim-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="data-fim-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                           Data fim
                         </label>
                         <input
@@ -980,13 +980,13 @@ export default function Filter() {
                           type="date"
                           value={filters.dataFim}
                           onChange={(e) => handleFilterChange("dataFim", e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="fachada-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="fachada-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Fachada
                       </label>
                       <select
@@ -994,7 +994,7 @@ export default function Filter() {
                         name="fachada"
                         value={filters.fachada}
                         onChange={(e) => handleFilterChange("fachada", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="nova">Nova</option>
@@ -1004,7 +1004,7 @@ export default function Filter() {
                     </div>
 
                     <div>
-                      <label htmlFor="mobilia-desktop" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="mobilia-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Quantidade de móveis
                       </label>
                       <select
@@ -1012,7 +1012,7 @@ export default function Filter() {
                         name="mobilia"
                         value={filters.mobilia}
                         onChange={(e) => handleFilterChange("mobilia", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-gray-300 text-gray-400 focus:text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       >
                         <option value="">Qualquer</option>
                         <option value="0">Sem mobília</option>
@@ -1025,12 +1025,12 @@ export default function Filter() {
               </div>
 
               {/* Rodapé Desktop */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
+              <div className="sticky bottom-0 bg-surface border-t border-ui-border-soft p-6">
                 <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(false)}
-                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-6 py-3 border border-ui-border text-content-secondary rounded-lg font-medium hover:bg-surface-subtle transition-colors"
                   >
                     Cancelar
                   </button>

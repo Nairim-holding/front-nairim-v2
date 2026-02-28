@@ -203,8 +203,8 @@ export default function Select({
       <div
         ref={containerRef}
         className={`
-          ${disabled ? 'bg-[#EDEDED] cursor-not-allowed outline-none' : 'bg-white border-[#CCCCCC] cursor-pointer outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent'} 
-          border rounded-lg py-2 px-4 flex justify-between items-center relative text-[14px] text-[#111111B2] h-[40px] w-full
+          ${disabled ? 'bg-surface-muted cursor-not-allowed outline-none' : 'bg-surface border-ui-border cursor-pointer outline-none focus:ring-2 focus:ring-brand focus:border-transparent'} 
+          border rounded-lg py-2 px-4 flex justify-between items-center relative text-[14px] text-content-secondary h-[40px] w-full
         `}
         onClick={toggleOpen}
         onMouseDown={handleMouseDown}
@@ -219,11 +219,11 @@ export default function Select({
       {isOpen && !disabled && (
         <div 
           ref={optionsListRef as React.RefObject<HTMLDivElement>}
-          className="absolute z-50 w-full bg-white border border-[#CCCCCC] rounded-lg mt-1 shadow-lg max-h-60 flex flex-col"
+          className="absolute z-50 w-full bg-surface border border-ui-border rounded-lg mt-1 shadow-lg max-h-60 flex flex-col"
         >
           {searchable && (
-            <div className="p-2 border-b border-gray-200 sticky top-0 bg-white z-10 flex items-center gap-2">
-              <Search size={16} className="text-gray-400 shrink-0" />
+            <div className="p-2 border-b border-ui-border-soft sticky top-0 bg-surface z-10 flex items-center gap-2">
+              <Search size={16} className="text-content-placeholder shrink-0" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -253,8 +253,8 @@ export default function Select({
                   ref={(el) => { optionRefs.current[index] = el; }}
                   className={`
                     py-2 px-4 cursor-pointer outline-none text-[14px]
-                    ${String(selectedValue) === String(option.value) ? 'bg-purple-50 text-purple-700 font-semibold' : ''}
-                    hover:bg-gray-100 focus:bg-purple-100 focus:text-purple-800
+                    ${String(selectedValue) === String(option.value) ? 'bg-surface-subtle text-brand-hover font-semibold' : ''}
+                    hover:bg-surface-subtle focus:bg-surface-subtle focus:text-brand-hover
                   `}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -267,7 +267,7 @@ export default function Select({
                 </li>
               ))
             ) : (
-              <li className="py-2 px-4 text-[14px] text-gray-500 text-center italic">
+              <li className="py-2 px-4 text-[14px] text-content-muted text-center italic">
                 Nenhuma opção encontrada
               </li>
             )}

@@ -17,21 +17,21 @@ export default function Pagination({ currentPage, totalPage, onPageChange }: Pag
       <button
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 hover:bg-surface-subtle rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Página anterior"
       >
-        <ChevronLeft size={20} className="text-gray-600" />
+        <ChevronLeft size={20} className="text-content-muted" />
       </button>
-      <span className="text-[14px] font-normal text-gray-700">
+      <span className="text-[14px] font-normal text-content-secondary">
         Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPage}</span>
       </span>
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage === totalPage}
-        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 hover:bg-surface-subtle rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Próxima página"
       >
-        <ChevronRight size={20} className="text-gray-600" />
+        <ChevronRight size={20} className="text-content-muted" />
       </button>
     </div>
   );

@@ -65,10 +65,10 @@ export default function TextArea({
   return (
     <div className="flex flex-col w-full">
       <label htmlFor={id} className="flex items-center gap-2 mb-2">
-        {svg && <span className="text-[#666666]">{svg}</span>}
-        <span className="text-[14px] font-medium text-[#111111B2]">
+        {svg && <span className="text-content-muted">{svg}</span>}
+        <span className="text-[14px] font-medium text-content-secondary">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-state-error ml-1">*</span>}
         </span>
       </label>
       
@@ -87,16 +87,16 @@ export default function TextArea({
           maxLength={maxLength}
           className={`
             w-full px-4 py-3 border-2 rounded-lg
-            text-[14px] font-normal text-[#111111B2]
-            placeholder:text-[#CCCCCC]
+            text-[14px] font-normal text-content-secondary
+            placeholder:text-content-placeholder
             resize-none focus:outline-none
             transition-all duration-200
             pr-20
             ${disabled 
-              ? 'bg-[#EDEDED] border-[#CCCCCC] cursor-not-allowed text-[#666666]' 
-              : 'bg-white border-[#CCCCCC] hover:border-[#999999] focus:border-[#8B5CF6] focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-30'
+              ? 'bg-surface-muted border-ui-border cursor-not-allowed text-content-muted' 
+              : 'bg-surface border-ui-border hover:border-content-placeholder focus:border-brand focus:ring-2 focus:ring-brand focus:ring-opacity-30'
             }
-            ${error ? 'border-red-500' : ''}
+            ${error ? 'border-state-error' : ''}
             ${className}
           `}
           {...props}
@@ -108,23 +108,23 @@ export default function TextArea({
             <span className={`
               text-[14px] font-medium
               ${currentLength > maxLength 
-                ? 'text-red-500' 
+                ? 'text-state-error' 
                 : currentLength > maxLength * 0.8 
-                  ? 'text-amber-500' 
-                  : 'text-[#666666]'
+                  ? 'text-state-warning' 
+                  : 'text-content-muted'
               }
             `}>
               {currentLength}
             </span>
-            <span className="text-[14px] text-[#666666]">/</span>
-            <span className="text-[14px] text-[#666666]">{maxLength}</span>
+            <span className="text-[14px] text-content-muted">/</span>
+            <span className="text-[14px] text-content-muted">{maxLength}</span>
           </div>
         )}
       </div>
       
       {/* Mensagem de erro */}
       {error && (
-        <p className="text-[12px] text-red-500 font-medium mt-1">{error}</p>
+        <p className="text-[12px] text-state-error font-medium mt-1">{error}</p>
       )}
     </div>
   );
