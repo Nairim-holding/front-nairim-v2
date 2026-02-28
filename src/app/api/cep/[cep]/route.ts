@@ -1,5 +1,3 @@
-// src/app/api/cep/[cep]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 
 const TIMEOUT = 5000;
@@ -80,9 +78,7 @@ function normalizarOpenCep(data: OpenCepResponse): CepNormalizado {
 }
 
 async function buscarViaCep(cep: string): Promise<CepNormalizado> {
-  const response = await fetchComTimeout(
-    `https://viacep.com.br/ws/${cep}/json/`
-  );
+  const response = await fetchComTimeout(`https://viacep.com.br/ws/${cep}/json/`);
 
   if (!response.ok) {
     throw new Error("Erro HTTP ViaCEP");
@@ -98,9 +94,7 @@ async function buscarViaCep(cep: string): Promise<CepNormalizado> {
 }
 
 async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
-  const response = await fetchComTimeout(
-    `https://opencep.com/v1/${cep}`
-  );
+  const response = await fetchComTimeout(`https://opencep.com/v1/${cep}`);
 
   if (!response.ok) {
     throw new Error("Erro HTTP OpenCEP");
@@ -117,10 +111,9 @@ async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { cep: string } }
+  context: { params: Promise<{ cep: string }> }
 ) {
-  const { cep } = context.params;
-
+  const { cep } = await context.params;
   const cepLimpo = limparCep(cep);
 
   if (!validarCep(cepLimpo)) {
@@ -133,7 +126,6 @@ export async function GET(
   try {
     const endereco = await buscarViaCep(cepLimpo);
     return NextResponse.json(endereco, { status: 200 });
-
   } catch (viaCepError: unknown) {
     if (viaCepError instanceof Error) {
       console.warn("ViaCEP falhou:", viaCepError.message);
@@ -142,7 +134,6 @@ export async function GET(
     try {
       const endereco = await buscarOpenCep(cepLimpo);
       return NextResponse.json(endereco, { status: 200 });
-
     } catch (openCepError: unknown) {
       if (openCepError instanceof Error) {
         console.error("OpenCEP também falhou:", openCepError.message);
