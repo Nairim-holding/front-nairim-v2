@@ -29,6 +29,8 @@ interface CepNormalizado {
   cidade: string;
   estado: string;
   fonte: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 function limparCep(cep: string): string {
@@ -53,7 +55,58 @@ async function fetchComTimeout(url: string, timeout = TIMEOUT): Promise<Response
   }
 }
 
-function normalizarViaCep(data: ViaCepResponse): CepNormalizado {
+async function buscarCoordenadas(endereco: string, cidadeEstado: string): Promise<{ lat?: number; lng?: number }> {
+  try {
+    // Tentativa 1: Endereço Completo
+    let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}&limit=1`;
+    let res = await fetch(url, {
+      headers: {
+        "User-Agent": "NairimApp/1.0",
+        "Accept-Language": "pt-BR",
+        Accept: "application/json",
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+      }
+    }
+
+    // Tentativa 2: Apenas Cidade e Estado (Fallback)
+    url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeEstado)}&limit=1`;
+    res = await fetch(url, {
+      headers: {
+        "User-Agent": "NairimApp/1.0",
+        "Accept-Language": "pt-BR",
+        Accept: "application/json",
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+      }
+    }
+  } catch (err) {
+    console.error("Erro ao buscar coordenadas no Nominatim:", err);
+  }
+  return {};
+}
+
+async function normalizarViaCep(data: ViaCepResponse): Promise<CepNormalizado> {
+  const enderecoCompleto = `${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`;
+  const cidadeEstado = `${data.localidade}, ${data.uf}, Brasil`;
+  const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
+
   return {
     cep: data.cep,
     rua: data.logradouro,
@@ -62,10 +115,16 @@ function normalizarViaCep(data: ViaCepResponse): CepNormalizado {
     cidade: data.localidade,
     estado: data.uf,
     fonte: "ViaCEP",
+    latitude: coords.lat,
+    longitude: coords.lng,
   };
 }
 
-function normalizarOpenCep(data: OpenCepResponse): CepNormalizado {
+async function normalizarOpenCep(data: OpenCepResponse): Promise<CepNormalizado> {
+  const enderecoCompleto = `${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`;
+  const cidadeEstado = `${data.localidade}, ${data.uf}, Brasil`;
+  const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
+
   return {
     cep: data.cep,
     rua: data.logradouro,
@@ -74,6 +133,8 @@ function normalizarOpenCep(data: OpenCepResponse): CepNormalizado {
     cidade: data.localidade,
     estado: data.uf,
     fonte: "OpenCEP",
+    latitude: coords.lat,
+    longitude: coords.lng,
   };
 }
 
@@ -90,7 +151,7 @@ async function buscarViaCep(cep: string): Promise<CepNormalizado> {
     throw new Error("CEP não encontrado no ViaCEP");
   }
 
-  return normalizarViaCep(data);
+  return await normalizarViaCep(data);
 }
 
 async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
@@ -106,7 +167,7 @@ async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
     throw new Error("CEP não encontrado no OpenCEP");
   }
 
-  return normalizarOpenCep(data);
+  return await normalizarOpenCep(data);
 }
 
 export async function GET(

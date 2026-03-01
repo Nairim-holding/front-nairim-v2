@@ -167,7 +167,10 @@ export default function VisualizarImovelPage() {
       city: address.city || '',
       state: address.state || '',
       country: address.country || 'Brasil',
+      latitude: address.latitude || '',
+      longitude: address.longitude || '',
       
+      purchase_date: values.purchase_date ? values.purchase_date.split('T')[0] : '',
       purchase_value: formatMoney(values.purchase_value || ''),
       rental_value: formatMoney(values.rental_value || ''),
       condo_fee: formatMoney(values.condo_fee || ''),
@@ -234,7 +237,12 @@ export default function VisualizarImovelPage() {
     return transformed;
   };
 
-  const steps: FormStep[] = useMemo(() => [
+  const steps: FormStep[] = useMemo(() => {
+    const activeLease = propertyData?.leases?.[0];
+    const hasActiveLease = !!activeLease;
+    const tenantName = activeLease?.tenant?.name || '';
+
+    return [
     {
       title: 'Dados do Imóvel',
       icon: <Home size={20} />,
@@ -538,6 +546,18 @@ export default function VisualizarImovelPage() {
           disabled: true,
           readOnly: true,
         },
+        {
+          field: 'latitude',
+          label: 'Latitude',
+          type: 'text',
+          hidden: true,
+        },
+        {
+          field: 'longitude',
+          label: 'Longitude',
+          type: 'text',
+          hidden: true,
+        }
       ],
     },
     {
@@ -545,10 +565,20 @@ export default function VisualizarImovelPage() {
       icon: <DollarSign size={20} />,
       fields: [
         {
+          field: 'purchase_date',
+          label: 'Data da Compra',
+          type: 'date',
+          required: false,
+          icon: <Calendar size={20} />,
+          className: 'col-span-full',
+          disabled: true,
+          readOnly: true,
+        },
+        {
           field: 'purchase_value',
           label: 'Valor do Imóvel (Compra)',
           type: 'text',
-          required: true,
+          required: false,
           placeholder: 'R$ 500.000,00',
           mask: 'money',
           icon: <Dollar size={20} />,
@@ -593,13 +623,18 @@ export default function VisualizarImovelPage() {
           label: 'Status Atual',
           type: 'select',
           required: true,
+          disabled: true,
           options: [
             { label: 'Disponível', value: 'AVAILABLE' },
             { label: 'Ocupado', value: 'OCCUPIED' },
           ],
           icon: <Key size={20} />,
-          disabled: true,
-          readOnly: true,
+          renderBottom: () => hasActiveLease ? (
+            <div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 shadow-lg">
+              Inquilino: {tenantName}
+            </div>
+          ) : null,
+          className: 'relative group'
         },
         {
           field: 'sale_date',
@@ -708,7 +743,8 @@ export default function VisualizarImovelPage() {
         }
       ],
     },
-  ], [owners, propertyTypes, agencies, loadingData]);
+  ];
+}, [owners, propertyTypes, agencies, loadingData, propertyData]);
 
   const handleFieldChange = async () => {
     return null;

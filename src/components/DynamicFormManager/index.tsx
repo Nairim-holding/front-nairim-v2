@@ -367,11 +367,10 @@ export default function DynamicFormManager({
   const handleChange = (fieldName: string, rawValue: any) => {
     if (isViewMode) return;
     
-    // CORREÇÃO: Preserva Arrays e Objetos para campos Custom/File
     const parsedValue = (typeof rawValue === 'object' && rawValue !== null) 
       ? rawValue 
       : (rawValue !== undefined && rawValue !== null ? String(rawValue) : '');
-    
+      
     setFormValues(prev => ({ ...prev, [fieldName]: parsedValue }));
 
     const updatedValues = { ...formValues, [fieldName]: parsedValue };
@@ -406,7 +405,7 @@ export default function DynamicFormManager({
             });
           }
         })
-        .catch(error => console.error('Erro no onFieldChange:', error));
+        .catch(error => console.error(error));
     }
   };
 

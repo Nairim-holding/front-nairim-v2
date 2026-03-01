@@ -26,8 +26,6 @@ const parseMetric = (value: string | number) => {
 const parseMoney = (value: string | number) => {
   if (!value && value !== 0 && value !== '0' && value !== '000') return 0;
   
-  // Como o unmasked value do money vem apenas dígitos da nossa máscara (ex: "300000" para R$ 3.000,00)
-  // dividimos por 100 para pegar os centavos corretos.
   const numericValue = typeof value === 'string' ? value.replace(/\D/g, '') : value.toString();
   if (!numericValue) return 0;
   return parseFloat(numericValue) / 100;
@@ -43,6 +41,7 @@ export default function CadastrarImovelPage() {
   const [agencies, setAgencies] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isManualAddress, setIsManualAddress] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -86,37 +85,38 @@ export default function CadastrarImovelPage() {
         try {
           showMessage('Buscando CEP...', 'info');
           
-          const response = await fetch(`/api/cep?cep=${cleanCEP}&country=BR`);
+          const response = await fetch(`/api/cep/${cleanCEP}`);
           
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+            if (response.status === 404) {
+              setIsManualAddress(true);
+              showMessage('CEP não encontrado. Os campos de endereço foram liberados para preenchimento manual.', 'error');
+              return { street: '', district: '', city: '', state: '', latitude: '', longitude: '' };
+            }
+            throw new Error('Erro ao buscar CEP');
           }
 
           const data = await response.json();
           
-          if (data.error) {
-            showMessage(data.error, 'error');
-            return {
-              street: '',
-              district: '',
-              city: '',
-              state: '',
-              country: 'Brasil',
-            };
+          if (data.error || data.erro) {
+            throw new Error(data.error || 'CEP não encontrado.');
           } else {
+            setIsManualAddress(false);
             showMessage('Endereço preenchido automaticamente!', 'success');
             
             return {
-              street: data.logradouro || '',
+              street: data.rua || '',
               district: data.bairro || '',
-              city: data.localidade || '',
-              state: data.uf || '',
+              city: data.cidade || '',
+              state: data.estado || '',
               country: data.pais || 'Brasil',
+              latitude: data.latitude || '',
+              longitude: data.longitude || '',
             };
           }
         } catch (error: any) {
-          showMessage(error.message || 'Erro ao buscar CEP. Tente novamente.', 'error');
+          showMessage('Erro ao buscar CEP. Preencha manualmente.', 'error');
+          setIsManualAddress(true);
           return null;
         }
       } else if (cleanCEP.length < 8) {
@@ -126,6 +126,8 @@ export default function CadastrarImovelPage() {
           city: '',
           state: '',
           country: 'Brasil',
+          latitude: '',
+          longitude: '',
         };
       }
     }
@@ -138,7 +140,6 @@ export default function CadastrarImovelPage() {
     for (const field of stepFields) {
       if (field.required) {
         const value = data[field.field];
-        // Um valor "0" de dinheiro mascara para "000" numérico, vamos deixar passar se for exigido numérico.
         if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
           return false;
         }
@@ -336,8 +337,8 @@ export default function CadastrarImovelPage() {
           required: true,
           placeholder: 'Rua das Flores',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
           className: 'col-span-full',
         },
         {
@@ -379,8 +380,8 @@ export default function CadastrarImovelPage() {
           required: true,
           placeholder: 'Centro',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'city',
@@ -389,8 +390,8 @@ export default function CadastrarImovelPage() {
           required: true,
           placeholder: 'São Paulo',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'state',
@@ -399,8 +400,8 @@ export default function CadastrarImovelPage() {
           required: true,
           placeholder: 'SP',
           icon: <Globe size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'country',
@@ -410,8 +411,20 @@ export default function CadastrarImovelPage() {
           placeholder: 'Brasil',
           defaultValue: 'Brasil',
           icon: <Globe size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
+        },
+        {
+          field: 'latitude',
+          label: 'Latitude',
+          type: 'text',
+          hidden: true,
+        },
+        {
+          field: 'longitude',
+          label: 'Longitude',
+          type: 'text',
+          hidden: true,
         }
       ],
     },
@@ -420,10 +433,18 @@ export default function CadastrarImovelPage() {
       icon: <DollarSign size={20} />,
       fields: [
         {
+          field: 'purchase_date',
+          label: 'Data da Compra',
+          type: 'date',
+          required: false,
+          icon: <Calendar size={20} />,
+          className: 'col-span-full',
+        },
+        {
           field: 'purchase_value',
           label: 'Valor do Imóvel (Compra)',
           type: 'text',
-          required: true,
+          required: false,
           placeholder: 'R$ 500.000,00',
           mask: 'money',
           icon: <Dollar size={20} />,
@@ -557,7 +578,7 @@ export default function CadastrarImovelPage() {
         }
       ],
     },
-  ], [owners, propertyTypes, agencies, loadingData]);
+  ], [owners, propertyTypes, agencies, loadingData, isManualAddress]);
 
   const handleSubmit = async (data: any) => {
     try {
@@ -592,10 +613,13 @@ export default function CadastrarImovelPage() {
         city: data.city,
         state: data.state,
         country: data.country || 'Brasil',
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
       };
 
       const valuesData = {
-        purchase_value: parseMoney(data.purchase_value),
+        purchase_date: data.purchase_date || null,
+        purchase_value: parseMoney(data.purchase_value) || null,
         rental_value: parseMoney(data.rental_value),
         condo_fee: parseMoney(data.condo_fee),
         property_tax: parseMoney(data.property_tax),

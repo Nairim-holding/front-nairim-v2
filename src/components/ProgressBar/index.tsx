@@ -52,26 +52,28 @@ export default function ProgressBar({
   };
 
   return (
-    <div className="flex border-b-2 pb-3 border-ui-border">
-      <ul className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+    <div className="flex border-b-2 pb-3 border-ui-border pt-2">
+      <ul className="flex items-center gap-4 flex-wrap justify-center sm:justify-start">
         {steps.map((step, index) => {
           const status = getStepStatus(index);
           const accessible = isStepAccessible(index);
           const isClickable = accessible;
 
           return (
-            <li key={index}>
+            <li key={index} className={status === 'active' ? 'z-10' : 'z-0'}>
               <button
                 type="button"
                 onClick={() => handleStepClick(index)}
                 disabled={!isClickable}
                 className={`
-                  flex items-center gap-2 px-5 py-3 border border-ui-border-muted rounded-xl drop-shadow-custom-black
-                  transition-all duration-200
+                  flex items-center gap-2 px-5 py-3 rounded-xl
+                  transition-all duration-300
                   ${isClickable ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed'}
-                  ${status === 'active' || status === 'completed'
-                    ? 'bg-gradient-to-r from-brand to-brand-hover drop-shadow-purple-soft text-content-inverse'
-                    : 'bg-surface-subtle text-content-muted opacity-50'
+                  ${status === 'active' 
+                    ? 'bg-gradient-to-r from-brand to-brand-hover drop-shadow-purple-soft text-content-inverse ring-2 ring-brand ring-offset-2 scale-105 font-bold border-transparent'
+                    : status === 'completed'
+                    ? 'bg-brand text-content-inverse opacity-80 border border-transparent shadow-sm'
+                    : 'bg-surface-subtle text-content-muted opacity-50 border border-ui-border-muted drop-shadow-custom-black'
                   }
                 `}
               >
@@ -80,7 +82,7 @@ export default function ProgressBar({
                 `}>
                   {step.icon}
                 </div>
-                <p className="text-[18px] font-medium font-poppins">
+                <p className={`text-[18px] font-poppins ${status === 'active' ? 'font-semibold' : 'font-medium'}`}>
                   {step.title}
                 </p>
               </button>

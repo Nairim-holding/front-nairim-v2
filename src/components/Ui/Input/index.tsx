@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
+
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import Label from "../Label";
@@ -115,13 +116,9 @@ const removeMask = (maskType: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'm
     case "telefone":
       return value.replace(/\D/g, '');
     case "money":
-      return value.replace(/\D/g, '');
     case "metros2":
     case "metros":
-      const digits = value.replace(/\D/g, '');
-      if (!digits) return '';
-      const amount = parseInt(digits) / 100;
-      return amount.toString(); 
+      return value;
     default:
       return value;
   }
@@ -197,7 +194,7 @@ export default function Input({
       const limitedNumbers = numbersOnly.slice(0, 8);
       const maskedValue = maskCEP(limitedNumbers);
       setDisplayValue(maskedValue);
-      onChange?.({ target: { value: maskedValue } } as React.ChangeEvent<HTMLInputElement>);
+      onChange?.({ target: { value: limitedNumbers } } as React.ChangeEvent<HTMLInputElement>);
     } else if (mask) {
       const maskedValue = applyMask(mask, rawValue);
       setDisplayValue(maskedValue);

@@ -80,8 +80,8 @@ export default function EditarImovelPage() {
   const [propertyData, setPropertyData] = useState<any>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isManualAddress, setIsManualAddress] = useState(false);
 
-  // CORREÇÃO 1: Cache do CEP
   const lastFetchedCep = useRef('');
 
   useEffect(() => {
@@ -152,7 +152,6 @@ export default function EditarImovelPage() {
     fetchPropertyData();
   }, [id, router, showMessage]);
 
-  // CORREÇÃO 2: useCallback e lógica de cache do CEP
   const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
     if (fieldName === 'zip_code' && value) {
       const cleanCEP = value.replace(/\D/g, '');
@@ -169,7 +168,6 @@ export default function EditarImovelPage() {
       }
 
       if (cleanCEP.length === 8) {
-        // Se já buscou este CEP, ignora para evitar loop
         if (cleanCEP === lastFetchedCep.current) {
             return null;
         }
@@ -179,37 +177,38 @@ export default function EditarImovelPage() {
         try {
           showMessage('Buscando CEP...', 'info');
           
-          const response = await fetch(`/api/cep?cep=${cleanCEP}&country=BR`);
+          const response = await fetch(`/api/cep/${cleanCEP}`);
           
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+            if (response.status === 404) {
+              setIsManualAddress(true);
+              showMessage('CEP não encontrado. Os campos de endereço foram liberados para preenchimento manual.', 'error');
+              return { street: '', district: '', city: '', state: '', latitude: '', longitude: '' };
+            }
+            throw new Error('Erro ao buscar CEP');
           }
 
           const data = await response.json();
           
-          if (data.error) {
-            showMessage(data.error, 'error');
-            return {
-              street: '',
-              district: '',
-              city: '',
-              state: '',
-              country: 'Brasil',
-            };
+          if (data.error || data.erro) {
+            throw new Error(data.error || 'CEP não encontrado.');
           } else {
+            setIsManualAddress(false);
             showMessage('Endereço preenchido automaticamente!', 'success');
             
             return {
-              street: data.logradouro || '',
+              street: data.rua || data.logradouro || '',
               district: data.bairro || '',
-              city: data.localidade || '',
-              state: data.uf || '',
+              city: data.cidade || data.localidade || '',
+              state: data.estado || data.uf || '',
               country: data.pais || 'Brasil',
+              latitude: data.latitude || '',
+              longitude: data.longitude || '',
             };
           }
         } catch (error: any) {
-          showMessage(error.message || 'Erro ao buscar CEP. Tente novamente.', 'error');
+          showMessage('Erro ao buscar CEP. Preencha manualmente.', 'error');
+          setIsManualAddress(true);
           return null;
         }
       }
@@ -217,7 +216,6 @@ export default function EditarImovelPage() {
     return null;
   }, [showMessage]);
 
-  // CORREÇÃO 3: useCallback para evitar recarregamento
   const transformData = useCallback((apiResponse: any) => {
     const data = apiResponse.data || apiResponse;
     
@@ -228,7 +226,6 @@ export default function EditarImovelPage() {
     const address = data.addresses?.[0]?.address || {};
     const values = data.values?.[0] || {};
 
-    // Inicializa o cache com o CEP atual
     if (address.zip_code && !lastFetchedCep.current) {
         lastFetchedCep.current = address.zip_code.replace(/\D/g, '');
     }
@@ -268,7 +265,10 @@ export default function EditarImovelPage() {
       city: address.city || '',
       state: address.state || '',
       country: address.country || 'Brasil',
+      latitude: address.latitude || '',
+      longitude: address.longitude || '',
       
+      purchase_date: values.purchase_date ? values.purchase_date.split('T')[0] : '',
       purchase_value: formatMoney(values.purchase_value || ''),
       rental_value: formatMoney(values.rental_value || ''),
       condo_fee: formatMoney(values.condo_fee || ''),
@@ -335,7 +335,12 @@ export default function EditarImovelPage() {
     return transformed;
   }, []);
 
-  const steps: FormStep[] = useMemo(() => [
+  const steps: FormStep[] = useMemo(() => {
+    const activeLease = propertyData?.leases?.[0];
+    const hasActiveLease = !!activeLease;
+    const tenantName = activeLease?.tenant?.name || '';
+
+    return [
     {
       title: 'Dados do Imóvel',
       icon: <Home size={20} />,
@@ -522,8 +527,8 @@ export default function EditarImovelPage() {
           required: true,
           placeholder: 'Rua das Flores',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
           className: 'col-span-full',
         },
         {
@@ -565,8 +570,8 @@ export default function EditarImovelPage() {
           required: true,
           placeholder: 'Centro',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'city',
@@ -575,8 +580,8 @@ export default function EditarImovelPage() {
           required: true,
           placeholder: 'São Paulo',
           icon: <MapPinIcon size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'state',
@@ -585,8 +590,8 @@ export default function EditarImovelPage() {
           required: true,
           placeholder: 'SP',
           icon: <Globe size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
         },
         {
           field: 'country',
@@ -596,8 +601,20 @@ export default function EditarImovelPage() {
           placeholder: 'Brasil',
           defaultValue: 'Brasil',
           icon: <Globe size={20} />,
-          disabled: true,
-          readOnly: true,
+          disabled: !isManualAddress,
+          readOnly: !isManualAddress,
+        },
+        {
+          field: 'latitude',
+          label: 'Latitude',
+          type: 'text',
+          hidden: true,
+        },
+        {
+          field: 'longitude',
+          label: 'Longitude',
+          type: 'text',
+          hidden: true,
         }
       ],
     },
@@ -606,10 +623,18 @@ export default function EditarImovelPage() {
       icon: <DollarSign size={20} />,
       fields: [
         {
+          field: 'purchase_date',
+          label: 'Data da Compra',
+          type: 'date',
+          required: false,
+          icon: <Calendar size={20} />,
+          className: 'col-span-full',
+        },
+        {
           field: 'purchase_value',
           label: 'Valor do Imóvel (Compra)',
           type: 'text',
-          required: true,
+          required: false,
           placeholder: 'R$ 500.000,00',
           mask: 'money',
           icon: <Dollar size={20} />,
@@ -646,11 +671,18 @@ export default function EditarImovelPage() {
           label: 'Status Atual',
           type: 'select',
           required: true,
+          disabled: hasActiveLease,
           options: [
             { label: 'Disponível', value: 'AVAILABLE' },
             { label: 'Ocupado', value: 'OCCUPIED' },
           ],
           icon: <Key size={20} />,
+          renderBottom: () => hasActiveLease ? (
+            <div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 shadow-lg">
+              Inquilino: {tenantName}
+            </div>
+          ) : null,
+          className: 'relative group'
         },
         {
           field: 'sale_date',
@@ -743,9 +775,9 @@ export default function EditarImovelPage() {
         }
       ],
     },
-  ], [owners, propertyTypes, agencies, loadingData]);
+  ];
+}, [owners, propertyTypes, agencies, loadingData, propertyData, isManualAddress]);
 
-  // CORREÇÃO 4: useCallback no submit
   const handleSubmit = useCallback(async (data: any) => {
     try {
       const formData = new FormData();
@@ -779,10 +811,13 @@ export default function EditarImovelPage() {
         city: data.city,
         state: data.state,
         country: data.country || 'Brasil',
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
       };
 
       const valuesData = {
-        purchase_value: parseMoney(data.purchase_value),
+        purchase_date: data.purchase_date || null,
+        purchase_value: parseMoney(data.purchase_value) || null,
         rental_value: parseMoney(data.rental_value),
         condo_fee: parseMoney(data.condo_fee),
         property_tax: parseMoney(data.property_tax),
@@ -904,7 +939,6 @@ export default function EditarImovelPage() {
     }
   }, [user, id, propertyData]);
 
-  // CORREÇÃO 5: useCallback para funções de callback
   const onSubmitSuccess = useCallback((_data: any) => {
     showMessage('Imóvel atualizado com sucesso!', 'success');
     router.push('/dashboard/imoveis');
