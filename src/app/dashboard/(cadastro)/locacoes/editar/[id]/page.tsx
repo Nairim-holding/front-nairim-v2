@@ -8,7 +8,7 @@ import DynamicFormManager from '@/components/DynamicFormManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash
+  Home, File, Percent, Calculator, Hash, AlertCircle
 } from 'lucide-react';
 
 const parseMoney = (value: string | number) => {
@@ -60,6 +60,7 @@ export default function EditarLocacaoPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
+  const [isCanceled, setIsCanceled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,7 +156,7 @@ export default function EditarLocacaoPage() {
         throw new Error('Selecione um imóvel para continuar');
       }
 
-      const formattedData = {
+      const formattedData: any = {
         property_id: data.property_id,
         type_id: data.type_id,
         owner_id: data.owner_id,
@@ -173,6 +174,14 @@ export default function EditarLocacaoPage() {
         tax_due_day: data.tax_due_day ? parseInt(data.tax_due_day) : null,
         condo_due_day: data.condo_due_day ? parseInt(data.condo_due_day) : null,
       };
+
+      if (isCanceled) {
+        formattedData.status = 'CANCELED';
+        formattedData.canceled_at = data.canceled_at ? new Date(data.canceled_at).toISOString() : null;
+        formattedData.cancellation_penalty = data.cancellation_penalty ? parseMoney(data.cancellation_penalty) : null;
+        formattedData.other_cancellation_amounts = data.other_cancellation_amounts ? parseMoney(data.other_cancellation_amounts) : null;
+        formattedData.cancellation_justification = data.cancellation_justification || null;
+      }
 
       const API_URL = process.env.NEXT_PUBLIC_URL_API;
       const response = await fetch(`${API_URL}/leases/${id}`, {
@@ -212,6 +221,10 @@ export default function EditarLocacaoPage() {
   const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     
+    if (apiData.status === 'CANCELED') {
+      setIsCanceled(true);
+    }
+    
     const formatDate = (dateString: string) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -238,190 +251,237 @@ export default function EditarLocacaoPage() {
       rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
       tax_due_day: apiData.tax_due_day ? String(apiData.tax_due_day) : '10',
       condo_due_day: apiData.condo_due_day ? String(apiData.condo_due_day) : '10',
+      canceled_at: apiData.canceled_at ? formatDate(apiData.canceled_at) : '',
+      cancellation_penalty: apiData.cancellation_penalty ? formatMoney(apiData.cancellation_penalty) : '',
+      other_cancellation_amounts: apiData.other_cancellation_amounts ? formatMoney(apiData.other_cancellation_amounts) : '',
+      cancellation_justification: apiData.cancellation_justification || '',
     };
   }, []);
 
-  const steps: FormStep[] = useMemo(() => [
-    {
-      title: 'Dados da Locação',
-      icon: <FileText size={20} />,
-      fields: [
-        {
-          field: 'contract_number',
-          label: 'Número do Contrato',
-          type: 'text',
-          required: true,
-          placeholder: 'Ex: 2024/001',
-          autoFocus: true,
-          icon: <Hash size={20} />,
-          className: 'col-span-full',
-        },
-        {
-          field: 'start_date',
-          label: 'Data de Início',
-          type: 'date',
-          required: true,
-          icon: <Calendar size={20} />,
-        },
-        {
-          field: 'end_date',
-          label: 'Data de Término',
-          type: 'date',
-          required: true,
-          icon: <Calendar size={20} />,
-        },
-        {
-          field: 'property_id',
-          label: 'Imóvel',
-          type: 'select',
-          required: true,
-          options: loadingData 
-            ? [{ label: 'Carregando imóveis...', value: '' }]
-            : properties.map((property) => ({ 
-                label: property.title, 
-                value: property.id 
-              })),
-          icon: <Home size={20} />,
-          className: 'col-span-full',
-        },
-        {
-          field: 'type_id',
-          label: '',
-          type: 'text',
-          hidden: true,
-        },
-        {
-          field: 'owner_id',
-          label: '',
-          type: 'text',
-          hidden: true,
-        },
-        {
-          field: 'type_display',
-          label: 'Tipo do Imóvel',
-          type: 'text',
-          required: true,
-          icon: <Building size={20} />,
-          disabled: true,
-          readOnly: true,
-          placeholder: 'Selecione um imóvel primeiro',
-        },
-        {
-          field: 'owner_display',
-          label: 'Proprietário',
-          type: 'text',
-          required: true,
-          icon: <User size={20} />,
-          disabled: true,
-          readOnly: true,
-          placeholder: 'Selecione um imóvel primeiro',
-        },
-        {
-          field: 'tenant_id',
-          label: 'Inquilino',
-          type: 'select',
-          required: true,
-          options: loadingData 
-            ? [{ label: 'Carregando inquilinos...', value: '' }]
-            : tenants.map((tenant) => ({ 
-                label: tenant.name, 
-                value: tenant.id 
-              })),
-          icon: <User size={20} />,
-          className: 'col-span-full',
-        },
-        {
-          field: 'notes',
-          label: 'Observações Gerais',
-          type: 'textarea',
-          placeholder: 'Observações sobre a locação',
-          rows: 3,
-          icon: <FileText size={20} />,
-          className: 'col-span-full',
-        },
-      ],
-    },
-    {
-      title: 'Valores da Locação',
-      icon: <DollarSign size={20} />,
-      fields: [
-        {
-          field: 'rent_amount',
-          label: 'Valor do Aluguel',
-          type: 'text',
-          required: true,
-          placeholder: 'R$ 0,00',
-          icon: <DollarSign size={20} />,
-          mask: 'money',
-        },
-        {
-          field: 'condo_fee',
-          label: 'Valor do Condomínio',
-          type: 'text',
-          placeholder: 'R$ 0,00',
-          icon: <Building size={20} />,
-          mask: 'money',
-        },
-        {
-          field: 'property_tax',
-          label: 'Valor do IPTU',
-          type: 'text',
-          placeholder: 'R$ 0,00',
-          icon: <File size={20} />,
-          mask: 'money',
-        },
-        {
-          field: 'extra_charges',
-          label: 'Taxas Extras',
-          type: 'text',
-          placeholder: 'R$ 0,00',
-          icon: <Calculator size={20} />,
-          mask: 'money',
-        },
-        {
-          field: 'agency_commission',
-          label: 'Comissão Imobiliária (%)',
-          type: 'number',
-          placeholder: '5',
-          maxLength: 3,
-          icon: <Percent size={20} />,
-        },
-        {
-          field: 'commission_amount',
-          label: 'Valor Comissão',
-          type: 'text',
-          placeholder: 'R$ 0,00',
-          icon: <DollarSign size={20} />,
-          readOnly: true,
-          disabled: true,
-          className: 'bg-gray-50',
-          mask: 'money',
-        },
-        {
-          field: 'rent_due_day',
-          label: 'Vencimento Aluguel',
-          type: 'text',
-          required: true,
-          placeholder: 'Dia 5',
-          icon: <Calendar size={20} />,
-        },
-        {
-          field: 'tax_due_day',
-          label: 'Vencimento IPTU',
-          type: 'text',
-          placeholder: 'Dia 10',
-          icon: <Calendar size={20} />,
-        },
-        {
-          field: 'condo_due_day',
-          label: 'Vencimento Condomínio',
-          type: 'text',
-          placeholder: 'Dia 10',
-          icon: <Calendar size={20} />,
-        },
-      ],
-    },
-  ], [properties, tenants, loadingData]);
+  const steps: FormStep[] = useMemo(() => {
+    const baseSteps: FormStep[] = [
+      {
+        title: 'Dados da Locação',
+        icon: <FileText size={20} />,
+        fields: [
+          {
+            field: 'contract_number',
+            label: 'Número do Contrato',
+            type: 'text',
+            required: true,
+            placeholder: 'Ex: 2024/001',
+            autoFocus: true,
+            icon: <Hash size={20} />,
+            className: 'col-span-full',
+          },
+          {
+            field: 'start_date',
+            label: 'Data de Início',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
+          },
+          {
+            field: 'end_date',
+            label: 'Data de Término',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
+          },
+          {
+            field: 'property_id',
+            label: 'Imóvel',
+            type: 'select',
+            required: true,
+            options: loadingData 
+              ? [{ label: 'Carregando imóveis...', value: '' }]
+              : properties.map((property) => ({ 
+                  label: property.title, 
+                  value: property.id 
+                })),
+            icon: <Home size={20} />,
+            className: 'col-span-full',
+          },
+          {
+            field: 'type_id',
+            label: '',
+            type: 'text',
+            hidden: true,
+          },
+          {
+            field: 'owner_id',
+            label: '',
+            type: 'text',
+            hidden: true,
+          },
+          {
+            field: 'type_display',
+            label: 'Tipo do Imóvel',
+            type: 'text',
+            required: true,
+            icon: <Building size={20} />,
+            disabled: true,
+            readOnly: true,
+            placeholder: 'Selecione um imóvel primeiro',
+          },
+          {
+            field: 'owner_display',
+            label: 'Proprietário',
+            type: 'text',
+            required: true,
+            icon: <User size={20} />,
+            disabled: true,
+            readOnly: true,
+            placeholder: 'Selecione um imóvel primeiro',
+          },
+          {
+            field: 'tenant_id',
+            label: 'Inquilino',
+            type: 'select',
+            required: true,
+            options: loadingData 
+              ? [{ label: 'Carregando inquilinos...', value: '' }]
+              : tenants.map((tenant) => ({ 
+                  label: tenant.name, 
+                  value: tenant.id 
+                })),
+            icon: <User size={20} />,
+            className: 'col-span-full',
+          },
+          {
+            field: 'notes',
+            label: 'Observações Gerais',
+            type: 'textarea',
+            placeholder: 'Observações sobre a locação',
+            rows: 3,
+            icon: <FileText size={20} />,
+            className: 'col-span-full',
+          },
+        ],
+      },
+      {
+        title: 'Valores da Locação',
+        icon: <DollarSign size={20} />,
+        fields: [
+          {
+            field: 'rent_amount',
+            label: 'Valor do Aluguel',
+            type: 'text',
+            required: true,
+            placeholder: 'R$ 0,00',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'condo_fee',
+            label: 'Valor do Condomínio',
+            type: 'text',
+            placeholder: 'R$ 0,00',
+            icon: <Building size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'property_tax',
+            label: 'Valor do IPTU',
+            type: 'text',
+            placeholder: 'R$ 0,00',
+            icon: <File size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'extra_charges',
+            label: 'Taxas Extras',
+            type: 'text',
+            placeholder: 'R$ 0,00',
+            icon: <Calculator size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'agency_commission',
+            label: 'Comissão Imobiliária (%)',
+            type: 'number',
+            placeholder: '5',
+            maxLength: 3,
+            icon: <Percent size={20} />,
+          },
+          {
+            field: 'commission_amount',
+            label: 'Valor Comissão',
+            type: 'text',
+            placeholder: 'R$ 0,00',
+            icon: <DollarSign size={20} />,
+            readOnly: true,
+            disabled: true,
+            className: 'bg-gray-50',
+            mask: 'money',
+          },
+          {
+            field: 'rent_due_day',
+            label: 'Vencimento Aluguel',
+            type: 'text',
+            required: true,
+            placeholder: 'Dia 5',
+            icon: <Calendar size={20} />,
+          },
+          {
+            field: 'tax_due_day',
+            label: 'Vencimento IPTU',
+            type: 'text',
+            placeholder: 'Dia 10',
+            icon: <Calendar size={20} />,
+          },
+          {
+            field: 'condo_due_day',
+            label: 'Vencimento Condomínio',
+            type: 'text',
+            placeholder: 'Dia 10',
+            icon: <Calendar size={20} />,
+          },
+        ],
+      },
+    ];
+
+    if (isCanceled) {
+      baseSteps.push({
+        title: 'Cancelamento',
+        icon: <AlertCircle size={20} />,
+        fields: [
+          {
+            field: 'canceled_at',
+            label: 'Data de Cancelamento',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
+          },
+          {
+            field: 'cancellation_penalty',
+            label: 'Valor da Multa',
+            type: 'text',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'other_cancellation_amounts',
+            label: 'Outros Valores',
+            type: 'text',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+          },
+          {
+            field: 'cancellation_justification',
+            label: 'Justificativa',
+            type: 'textarea',
+            required: false,
+            rows: 3,
+            icon: <FileText size={20} />,
+            className: 'col-span-full',
+          },
+        ]
+      });
+    }
+
+    return baseSteps;
+  }, [properties, tenants, loadingData, isCanceled]);
 
   const onSubmitSuccess = () => {
     showMessage('Locação atualizada com sucesso!', 'success');

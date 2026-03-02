@@ -23,6 +23,7 @@ export interface InputProps {
   showIncrementButtons?: boolean;
   min?: number;
   max?: number;
+  full?: boolean;
 }
 
 const maskCPF = (value: string): string => {
@@ -142,6 +143,7 @@ export default function Input({
   showIncrementButtons = false,
   min = 0,
   max,
+  full
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = password ? (showPassword ? 'text' : 'password') : type;

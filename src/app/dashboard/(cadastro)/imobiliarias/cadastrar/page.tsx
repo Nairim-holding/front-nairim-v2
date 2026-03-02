@@ -130,6 +130,16 @@ export default function CadastrarImobiliariaPage() {
       icon: <Building2 size={20} />,
       fields: [
         {
+          field: 'legal_name',
+          label: 'Razão Social',
+          type: 'text',
+          required: true,
+          placeholder: 'Nome jurídico completo',
+          icon: <FileText size={20} />,
+          validation: { minLength: 3, maxLength: 200 },
+          className: 'col-span-full',
+        },
+        {
           field: 'trade_name',
           label: 'Nome Fantasia',
           type: 'text',
@@ -138,16 +148,6 @@ export default function CadastrarImobiliariaPage() {
           autoFocus: true,
           icon: <Building size={20} />,
           validation: { minLength: 3, maxLength: 100 },
-          className: 'col-span-full',
-        },
-        {
-          field: 'legal_name',
-          label: 'Razão Social',
-          type: 'text',
-          required: true,
-          placeholder: 'Nome jurídico completo',
-          icon: <FileText size={20} />,
-          validation: { minLength: 3, maxLength: 200 },
           className: 'col-span-full',
         },
         {

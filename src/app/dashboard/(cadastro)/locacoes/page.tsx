@@ -13,6 +13,12 @@ export default function LeasesPage() {
       type: "text"
     },
     {
+      field: "status",
+      label: "Status",
+      sortParam: "status",
+      type: "text"
+    },
+    {
       field: "start_date",
       label: "Data Início",
       sortParam: "start_date",

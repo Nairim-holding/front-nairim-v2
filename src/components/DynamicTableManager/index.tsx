@@ -1,10 +1,8 @@
-/* eslint-disable react-hooks/immutability */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Filter, Trash2, Plus, Edit, Eye } from "lucide-react";
+import { Filter, Trash2, Plus, Edit, Eye, X } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import SkeletonTable from "../Loading/SkeletonTable";
@@ -13,6 +11,7 @@ import SearchInput from "../SearchInput";
 import SelectLimit from "../SelectLimit";
 import Pagination from "../Pagination";
 import TableInformations from "../TableInformations";
+import Input from "../Ui/Input";
 import { formatCurrency, formatDate, formatCPFCNPJ, formatGender, formatPhone, formatCEP } from "@/util/formatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
@@ -54,6 +53,14 @@ export default function DynamicTableManager({
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>({});
   const [showOwnerTypeModal, setShowOwnerTypeModal] = useState(false);
+  
+  const [isCancelLeaseModalOpen, setIsCancelLeaseModalOpen] = useState(false);
+  const [cancelLeaseData, setCancelLeaseData] = useState({
+    cancellation_penalty: '',
+    other_cancellation_amounts: '',
+    cancellation_justification: '',
+    canceled_at: new Date().toISOString().split('T')[0]
+  });
   
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
@@ -249,6 +256,23 @@ export default function DynamicTableManager({
         if (['rent_due_day', 'tax_due_day', 'condo_due_day'].includes(column.field)) {
            return item[column.field] ? `${item[column.field]}º dia` : '-';
         }
+        if (column.field === "status") {
+          const statusMap: Record<string, { label: string, color: string }> = {
+            'EXPIRED': { label: 'Vencido', color: 'text-red-700 bg-red-100 border border-red-300' },
+            'EXPIRING': { label: 'Vencendo', color: 'text-yellow-700 bg-yellow-100 border border-yellow-300' },
+            'ACTIVE': { label: 'Em Dia', color: 'text-green-700 bg-green-100 border border-green-300' },
+            'CANCELED': { label: 'Cancelado', color: 'text-orange-700 bg-orange-100 border border-orange-500' }
+          };
+          const mapped = statusMap[item.status];
+          if (mapped) {
+            return (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${mapped.color}`}>
+                {mapped.label}
+              </span>
+            );
+          }
+          return item.status || '-';
+        }
       }
 
       const isProperty = resource === 'properties';
@@ -357,11 +381,14 @@ export default function DynamicTableManager({
 
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked && items.length > 0) {
-      setSelectedCheckboxes(items.map((item: any) => item.id));
+      const selectableItems = resource === 'leases' 
+        ? items.filter((item: any) => item.status !== 'CANCELED' && item.status !== 'Cancelado')
+        : items;
+      setSelectedCheckboxes(selectableItems.map((item: any) => item.id));
     } else {
       setSelectedCheckboxes([]);
     }
-  }, [items]);
+  }, [items, resource]);
 
   const handleCheckboxChange = useCallback((id: string) => {
     setSelectedCheckboxes(prev => {
@@ -375,7 +402,22 @@ export default function DynamicTableManager({
 
   const handleDeleteClick = useCallback(() => {
     if (!selectedCheckboxes.length) {
-      showMessage(`Selecione os ${title.toLowerCase()} que deseja excluir.`, "error");
+      showMessage(`Selecione os registros que deseja ${resource === 'leases' ? 'cancelar' : 'excluir'}.`, "error");
+      return;
+    }
+
+    if (resource === 'leases') {
+      const hasCanceled = items.some((item: any) => 
+        selectedCheckboxes.includes(item.id) && 
+        (item.status === 'CANCELED' || item.status === 'Cancelado')
+      );
+
+      if (hasCanceled) {
+        showMessage("Não é possível cancelar uma locação que já está cancelada.", "error");
+        return;
+      }
+
+      setIsCancelLeaseModalOpen(true);
       return;
     }
     
@@ -413,7 +455,57 @@ export default function DynamicTableManager({
       },
       () => {}
     );
-  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title]);
+  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title, items]);
+
+  const handleConfirmCancelLeases = useCallback(async () => {
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      for (const id of selectedCheckboxes) {
+        try {
+          const parsedPenalty = cancelLeaseData.cancellation_penalty 
+            ? Number(String(cancelLeaseData.cancellation_penalty).replace(/\D/g, '')) / 100 
+            : null;
+            
+          const parsedOther = cancelLeaseData.other_cancellation_amounts 
+            ? Number(String(cancelLeaseData.other_cancellation_amounts).replace(/\D/g, '')) / 100 
+            : null;
+
+          const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/leases/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'CANCELED',
+              canceled_at: cancelLeaseData.canceled_at,
+              cancellation_justification: cancelLeaseData.cancellation_justification || null,
+              cancellation_penalty: parsedPenalty,
+              other_cancellation_amounts: parsedOther
+            })
+          });
+          if (response.ok) successCount++;
+          else errorCount++;
+        } catch {
+          errorCount++;
+        }
+      }
+      if (errorCount === 0) {
+        showMessage(selectedCheckboxes.length > 1 ? `${successCount} locações canceladas com sucesso!` : "Locação cancelada com sucesso!", "success");
+      } else {
+        showMessage(`${successCount} locações canceladas. ${errorCount} erros.`, "info");
+      }
+      refreshData();
+      setSelectedCheckboxes([]);
+      setIsCancelLeaseModalOpen(false);
+      setCancelLeaseData({
+        cancellation_penalty: '',
+        other_cancellation_amounts: '',
+        cancellation_justification: '',
+        canceled_at: new Date().toISOString().split('T')[0]
+      });
+    } catch {
+      showMessage("Erro ao cancelar locação.", "error");
+    }
+  }, [cancelLeaseData, selectedCheckboxes, showMessage, refreshData]);
 
   const handleApplyFilter = useCallback((filters: Record<string, any>) => {
     setAppliedFilters(filters);
@@ -441,23 +533,30 @@ export default function DynamicTableManager({
     }
     const start = (meta.page - 1) * meta.limit + 1;
     const end = Math.min(meta.page * meta.limit, meta.total);
-    const allSelected = selectedCheckboxes.length === items.length && items.length > 0;
+    
+    const selectableItems = resource === 'leases'
+      ? items.filter((item: any) => item.status !== 'CANCELED' && item.status !== 'Cancelado')
+      : items;
+      
+    const allSelected = selectedCheckboxes.length > 0 && selectedCheckboxes.length === selectableItems.length;
+    
     return { start, end, allSelected };
-  }, [meta, selectedCheckboxes.length, items.length]);
+  }, [meta, selectedCheckboxes.length, items, resource]);
 
   const hasActiveFilters = useMemo(() => Object.keys(appliedFilters).length > 0, [appliedFilters]);
   const activeFilterCount = useMemo(() => Object.keys(appliedFilters).length, [appliedFilters]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && (filterVisible || showOwnerTypeModal)) {
-        setFilterVisible(false);
-        setShowOwnerTypeModal(false);
+      if (event.key === 'Escape') {
+        if (filterVisible) setFilterVisible(false);
+        if (showOwnerTypeModal) setShowOwnerTypeModal(false);
+        if (isCancelLeaseModalOpen) setIsCancelLeaseModalOpen(false);
       }
     };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [filterVisible, showOwnerTypeModal]);
+  }, [filterVisible, showOwnerTypeModal, isCancelLeaseModalOpen]);
 
   if (isLoadingFilters || isLoadingData) {
     return <SkeletonTable />;
@@ -527,7 +626,7 @@ export default function DynamicTableManager({
               <button 
                 onClick={handleDeleteClick}
                 className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Excluir selecionados"
+                title={resource === 'leases' ? "Cancelar selecionados" : "Excluir selecionados"}
                 disabled={!selectedCheckboxes.length}
               >
                 <Trash2 size={20} color="var(--color-text-muted)" />
@@ -605,18 +704,22 @@ export default function DynamicTableManager({
                   >
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 ${isFirst ? 'justify-start' : 'justify-center'}`}>
                       {isFirst && enableDelete && (
-                        <div className="mr-2 flex shrink-0 items-center justify-center">
-                          <input 
-                            type="checkbox" 
-                            className="inp-checkbox-select rounded border-ui-border" 
-                            value={item.id} 
-                            checked={selectedCheckboxes.includes(item.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              handleCheckboxChange(item.id);
-                            }}
-                          />
+                        <div className="mr-2 flex shrink-0 items-center justify-center w-4 h-4">
+                          {!(resource === 'leases' && (item.status === 'CANCELED' || item.status === 'Cancelado')) ? (
+                            <input 
+                              type="checkbox" 
+                              className="inp-checkbox-select rounded border-ui-border w-full h-full cursor-pointer" 
+                              value={item.id} 
+                              checked={selectedCheckboxes.includes(item.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleCheckboxChange(item.id);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full" />
+                          )}
                         </div>
                       )}
                       <div className={`truncate w-full text-[13px] ${isFirst || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'}`}>
@@ -657,6 +760,85 @@ export default function DynamicTableManager({
           ))}
         </TableInformations>
       </div>
+
+      {isCancelLeaseModalOpen && (
+        <div className="fixed inset-0 bg-layer-overlay z-[1000001] flex items-center justify-center p-4">
+          <div className="bg-surface rounded-xl max-w-xl w-full shadow-2xl animate-fade-in p-6 overflow-y-auto max-h-[95vh]">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold text-content">Cancelar Locação</h3>
+              <button 
+                onClick={() => setIsCancelLeaseModalOpen(false)}
+                className="p-1 hover:bg-surface-subtle rounded-lg transition-colors"
+                title="Fechar"
+              >
+                <X size={20} className="text-content-secondary" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 mb-6 text-content-secondary">
+              <p className="text-sm">Preencha os dados abaixo para cancelar {selectedCheckboxes.length > 1 ? 'as locações selecionadas' : 'a locação selecionada'}.</p>
+              
+              <div className="flex flex-col gap-1 w-full">
+                <label className="text-sm font-medium text-content">Data de Cancelamento *</label>
+                <input 
+                  type="date" 
+                  className="border border-ui-border rounded-lg px-4 h-[40px] text-[14px] bg-surface outline-none focus:border-brand w-full"
+                  value={cancelLeaseData.canceled_at}
+                  onChange={(e) => setCancelLeaseData({...cancelLeaseData, canceled_at: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
+                  <Input
+                    id="cancellation_penalty"
+                    label="Valor da Multa"
+                    mask="money"
+                    value={cancelLeaseData.cancellation_penalty}
+                    onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_penalty: e.target.value})}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+                <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
+                  <Input
+                    id="other_cancellation_amounts"
+                    label="Outros Valores"
+                    mask="money"
+                    value={cancelLeaseData.other_cancellation_amounts}
+                    onChange={(e) => setCancelLeaseData({...cancelLeaseData, other_cancellation_amounts: e.target.value})}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-1 w-full">
+                <label className="text-sm font-medium text-content">Justificativa</label>
+                <textarea 
+                  className="border border-ui-border rounded-lg p-4 text-[14px] bg-surface outline-none focus:border-brand min-h-[100px] resize-none w-full"
+                  placeholder="Motivo do cancelamento..."
+                  value={cancelLeaseData.cancellation_justification}
+                  onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_justification: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-8">
+              <button 
+                onClick={() => setIsCancelLeaseModalOpen(false)}
+                className="px-5 py-2.5 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleConfirmCancelLeases}
+                className="px-5 py-2.5 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
