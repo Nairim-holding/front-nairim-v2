@@ -618,7 +618,7 @@ export default function CasasLocacao() {
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 p-4 bg-surface rounded-lg shadow-sm">
             <div>
               <p className="text-gray-800 font-medium">
-                {totalResults} {totalResults === 1 ? "casa encontrada" : "casas encontradas"}
+                {totalResults} {totalResults === 1 ? "imóvel encontrado" : "imóveis encontrados"}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 {filters.transactionType === "alugar" ? "Para locação" : "À venda"}
@@ -774,7 +774,7 @@ export default function CasasLocacao() {
 
                       {casa.areaTerreno && (
                         <p className="text-sm text-gray-600 mt-1">
-                          Terreno: {casa.areaTerreno}m²
+                          Área: {casa.areaTerreno}m²
                         </p>
                       )}
 
@@ -976,7 +976,7 @@ export default function CasasLocacao() {
             <div className="text-center py-12 bg-surface rounded-xl shadow-sm">
               <Icon icon="mingcute:home-2-line" className="w-24 h-24 text-gray-300 mx-auto mb-6" />
               <h3 className="text-2xl font-medium text-gray-600 mb-3">
-                Nenhuma casa encontrada
+                Nenhum Imóvel encontrada
               </h3>
               <p className="text-gray-500 mb-8 max-w-md mx-auto">
                 {filters.quartos ||
