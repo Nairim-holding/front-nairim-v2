@@ -494,7 +494,7 @@ export default function DynamicFormManager({
         const result = await onSubmit(formValues);
         
         showMessage(
-          result.message || `${title} ${mode === 'create' ? 'criado' : 'atualizado'} com sucesso!`,
+          result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
           'success'
         );
 
@@ -521,13 +521,13 @@ export default function DynamicFormManager({
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Erro ao ${mode === 'create' ? 'criar' : 'atualizar'}`);
+          throw new Error(errorData.message || `Erro ao ${mode === 'create' ? 'cadastrar' : 'atualizar'}`);
         }
 
         const result = await response.json();
         
         showMessage(
-          result.message || `${title} ${mode === 'create' ? 'criado' : 'atualizado'} com sucesso!`,
+          result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
           'success'
         );
 

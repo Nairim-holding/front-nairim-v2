@@ -77,6 +77,12 @@ export default function LeasesPage() {
       type: "currency"
     },
     {
+      field: "payment_condition",
+      label: "Condição Pagamento",
+      sortParam: "payment_condition",
+      type: "text"
+    },
+    {
       field: "extra_charges",
       label: "Valor Taxas Extras",
       sortParam: "extra_charges",

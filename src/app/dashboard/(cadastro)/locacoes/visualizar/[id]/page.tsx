@@ -1,18 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+"use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMessageContext } from '@/contexts/MessageContext';
 import DynamicFormManager from '@/components/DynamicFormManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, AlertCircle
+  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard
 } from 'lucide-react';
+
+const parseMoney = (value: string | number) => {
+  if (!value && value !== 0) return 0;
+  if (typeof value === 'number') return value;
+  const strValue = String(value).trim();
+  if (!strValue.includes(',') && strValue.includes('.')) {
+    const parsed = parseFloat(strValue);
+    if (!isNaN(parsed)) return parsed;
+  }
+  const cleaned = strValue.replace(/[^\d,-]/g, '').replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  if (isNaN(parsed)) return 0;
+  return parsed;
+};
 
 const formatMoney = (value: number) => {
   if (!value && value !== 0) return 'R$ 0,00';
-  
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -24,41 +38,100 @@ const formatMoney = (value: number) => {
 export default function VisualizarLocacaoPage() {
   const params = useParams();
   const id = params.id as string;
+  
+  const { showMessage } = useMessageContext();
   const router = useRouter();
   
+  const [properties, setProperties] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [formValues, setFormValues] = useState<any>({});
   const [isCanceled, setIsCanceled] = useState(false);
 
-  const transformData = (apiData: any) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [propertiesRes, tenantsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=50`),
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
+        ]);
+
+        if (!propertiesRes.ok || !tenantsRes.ok) {
+          throw new Error('Erro ao buscar dados');
+        }
+
+        const propertiesData = await propertiesRes.json();
+        const tenantsData = await tenantsRes.json();
+
+        setProperties(propertiesData.data || propertiesData || []);
+        setTenants(tenantsData.data || tenantsData || []);
+      } catch (error) {
+        showMessage('Erro ao carregar dados', 'error');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, [showMessage]);
+
+  const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
+    return null;
+  }, []);
+
+  const handleSubmit = async (data: any) => {
+    router.push('/dashboard/locacoes');
+  };
+
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     
     if (apiData.status === 'CANCELED') {
       setIsCanceled(true);
     }
     
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
+
+    const getPaymentConditionLabel = (val: string) => {
+      switch (val) {
+        case 'IN_FULL_15_DISCOUNT': return 'À vista com 15% de desconto';
+        case 'SECOND_INSTALLMENT_10_DISCOUNT': return 'Segunda parcela com 10% de desconto';
+        case 'INSTALLMENTS_12X': return 'Parcelado em 12x';
+        default: return val || '';
+      }
+    };
+    
     return {
       contract_number: apiData.contract_number || '',
-      start_date: apiData.start_date ? apiData.start_date.split('T')[0] : '',
-      end_date: apiData.end_date ? apiData.end_date.split('T')[0] : '',
-      property_display: apiData.property?.title || 'Imóvel não encontrado',
+      start_date: formatDate(apiData.start_date),
+      end_date: formatDate(apiData.end_date),
+      property_id: apiData.property_id || '',
+      type_id: apiData.type_id || '',
+      owner_id: apiData.owner_id || '',
       type_display: apiData.property?.type?.description || apiData.type?.description || '',
       owner_display: apiData.property?.owner?.name || apiData.owner?.name || '',
-      tenant_display: apiData.tenant?.name || 'Inquilino não encontrado',
+      tenant_id: apiData.tenant_id || '',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
-      condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : null,
-      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : null,
-      extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : null,
-      agency_commission: apiData.agency_commission ? `${apiData.agency_commission}%` : '0%',
+      condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
+      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
+      extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
+      agency_commission: apiData.agency_commission ? String(apiData.agency_commission) : '5',
       commission_amount: apiData.commission_amount ? formatMoney(apiData.commission_amount) : 'R$ 0,00',
-      rent_due_day: apiData.rent_due_day ? `Dia ${apiData.rent_due_day}` : 'Dia 5',
-      tax_due_day: apiData.tax_due_day ? `Dia ${apiData.tax_due_day}` : 'Dia 10',
-      condo_due_day: apiData.condo_due_day ? `Dia ${apiData.condo_due_day}` : 'Dia 10',
-      canceled_at: apiData.canceled_at ? apiData.canceled_at.split('T')[0] : '',
-      cancellation_penalty: apiData.cancellation_penalty ? formatMoney(apiData.cancellation_penalty) : 'R$ 0,00',
-      other_cancellation_amounts: apiData.other_cancellation_amounts ? formatMoney(apiData.other_cancellation_amounts) : 'R$ 0,00',
+      rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
+      tax_due_day: apiData.tax_due_day ? String(apiData.tax_due_day) : '10',
+      condo_due_day: apiData.condo_due_day ? String(apiData.condo_due_day) : '10',
+      payment_condition: getPaymentConditionLabel(apiData.payment_condition),
+      canceled_at: apiData.canceled_at ? formatDate(apiData.canceled_at) : '',
+      cancellation_penalty: apiData.cancellation_penalty ? formatMoney(apiData.cancellation_penalty) : '',
+      other_cancellation_amounts: apiData.other_cancellation_amounts ? formatMoney(apiData.other_cancellation_amounts) : '',
       cancellation_justification: apiData.cancellation_justification || '',
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => {
     const baseSteps: FormStep[] = [
@@ -72,10 +145,10 @@ export default function VisualizarLocacaoPage() {
             type: 'text',
             required: true,
             placeholder: 'Ex: 2024/001',
-            autoFocus: true,
             icon: <Hash size={20} />,
             className: 'col-span-full',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'start_date',
@@ -84,6 +157,7 @@ export default function VisualizarLocacaoPage() {
             required: true,
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'end_date',
@@ -92,15 +166,39 @@ export default function VisualizarLocacaoPage() {
             required: true,
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
-            field: 'property_display',
+            field: 'property_id',
             label: 'Imóvel',
-            type: 'text',
+            type: 'select',
             required: true,
+            options: loadingData 
+              ? [{ label: 'Carregando imóveis...', value: '' }]
+              : properties.map((property) => ({ 
+                  label: property.title, 
+                  value: property.id 
+                })),
             icon: <Home size={20} />,
             className: 'col-span-full',
             readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'type_id',
+            label: '',
+            type: 'text',
+            hidden: true,
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'owner_id',
+            label: '',
+            type: 'text',
+            hidden: true,
+            readOnly: true,
+            disabled: true,
           },
           {
             field: 'type_display',
@@ -108,7 +206,9 @@ export default function VisualizarLocacaoPage() {
             type: 'text',
             required: true,
             icon: <Building size={20} />,
+            disabled: true,
             readOnly: true,
+            placeholder: 'Selecione um imóvel primeiro',
           },
           {
             field: 'owner_display',
@@ -116,16 +216,25 @@ export default function VisualizarLocacaoPage() {
             type: 'text',
             required: true,
             icon: <User size={20} />,
+            disabled: true,
             readOnly: true,
+            placeholder: 'Selecione um imóvel primeiro',
           },
           {
-            field: 'tenant_display',
+            field: 'tenant_id',
             label: 'Inquilino',
-            type: 'text',
+            type: 'select',
             required: true,
+            options: loadingData 
+              ? [{ label: 'Carregando inquilinos...', value: '' }]
+              : tenants.map((tenant) => ({ 
+                  label: tenant.name, 
+                  value: tenant.id 
+                })),
             icon: <User size={20} />,
             className: 'col-span-full',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'notes',
@@ -136,6 +245,7 @@ export default function VisualizarLocacaoPage() {
             icon: <FileText size={20} />,
             className: 'col-span-full',
             readOnly: true,
+            disabled: true,
           },
         ],
       },
@@ -150,7 +260,9 @@ export default function VisualizarLocacaoPage() {
             required: true,
             placeholder: 'R$ 0,00',
             icon: <DollarSign size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'condo_fee',
@@ -158,15 +270,20 @@ export default function VisualizarLocacaoPage() {
             type: 'text',
             placeholder: 'R$ 0,00',
             icon: <Building size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'property_tax',
             label: 'Valor do IPTU',
             type: 'text',
+            required: true,
             placeholder: 'R$ 0,00',
             icon: <File size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'extra_charges',
@@ -174,15 +291,19 @@ export default function VisualizarLocacaoPage() {
             type: 'text',
             placeholder: 'R$ 0,00',
             icon: <Calculator size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'agency_commission',
-            label: 'Comissão Imobiliária',
-            type: 'text',
-            placeholder: '0%',
+            label: 'Comissão Imobiliária (%)',
+            type: 'number',
+            placeholder: '5',
+            maxLength: 3,
             icon: <Percent size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'commission_amount',
@@ -191,6 +312,9 @@ export default function VisualizarLocacaoPage() {
             placeholder: 'R$ 0,00',
             icon: <DollarSign size={20} />,
             readOnly: true,
+            disabled: true,
+            className: 'bg-gray-50',
+            mask: 'money',
           },
           {
             field: 'rent_due_day',
@@ -200,6 +324,7 @@ export default function VisualizarLocacaoPage() {
             placeholder: 'Dia 5',
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'tax_due_day',
@@ -208,6 +333,7 @@ export default function VisualizarLocacaoPage() {
             placeholder: 'Dia 10',
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'condo_due_day',
@@ -216,9 +342,67 @@ export default function VisualizarLocacaoPage() {
             placeholder: 'Dia 10',
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
         ],
       },
+      {
+        title: 'Condição de Pagamento (IPTU)',
+        icon: <CreditCard size={20} />,
+        fields: [
+          {
+            field: 'payment_simulator',
+            label: '',
+            type: 'custom',
+            className: 'col-span-full',
+            render: (_: any, formValues: any) => {
+              const taxVal = parseMoney(formValues?.property_tax || 0);
+              
+              if (!taxVal) {
+                return (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                    ⚠️ Preencha o <strong>Valor do IPTU</strong> na etapa anterior para habilitar e visualizar as opções de pagamento.
+                  </div>
+                );
+              }
+
+              const aVista = taxVal * 0.85;
+              const segParcela = taxVal * 0.90;
+              const parcelado = taxVal / 12;
+
+              return (
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-sm font-medium text-content-secondary">Simulação de Valores (Base: {formatMoney(taxVal)})</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'À vista com 15% de desconto' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">À vista (15% desc.)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(aVista)}</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'Segunda parcela com 10% de desconto' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">2ª Parcela (10% desc.)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(segParcela)}</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'Parcelado em 12x' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">Parcelado (12x)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(parcelado)} <span className="text-xs font-normal">/mês</span></div>
+                      <div className="text-xs text-content-muted mt-1">Total: {formatMoney(taxVal)}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+          },
+          {
+            field: 'payment_condition',
+            label: 'Método Escolhido',
+            type: 'text',
+            icon: <CreditCard size={20} />,
+            className: 'col-span-full',
+            readOnly: true,
+            disabled: true,
+          },
+        ]
+      }
     ];
 
     if (isCanceled) {
@@ -230,22 +414,28 @@ export default function VisualizarLocacaoPage() {
             field: 'canceled_at',
             label: 'Data de Cancelamento',
             type: 'date',
+            required: true,
             icon: <Calendar size={20} />,
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'cancellation_penalty',
             label: 'Valor da Multa',
             type: 'text',
             icon: <DollarSign size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'other_cancellation_amounts',
             label: 'Outros Valores',
             type: 'text',
             icon: <DollarSign size={20} />,
+            mask: 'money',
             readOnly: true,
+            disabled: true,
           },
           {
             field: 'cancellation_justification',
@@ -254,24 +444,41 @@ export default function VisualizarLocacaoPage() {
             rows: 3,
             icon: <FileText size={20} />,
             className: 'col-span-full',
-            readOnly: false,
+            readOnly: true,
+            disabled: true,
           },
         ]
       });
     }
 
     return baseSteps;
-  }, [isCanceled]);
+  }, [properties, tenants, loadingData, isCanceled]);
+
+  const onSubmitSuccess = () => {
+    router.push('/dashboard/locacoes');
+  };
+
+  if (loadingData) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+      </div>
+    );
+  }
 
   return (
     <DynamicFormManager
       resource="leases"
-      title="Locação"
+      title="Visualizar Locação"
       basePath="/dashboard/locacoes"
       mode="view"
       id={id}
       steps={steps}
+      onSubmit={handleSubmit}
+      onSubmitSuccess={onSubmitSuccess}
+      onFieldChange={handleFieldChange}
       transformData={transformData}
+      onFormValuesChange={setFormValues}
     />
   );
 }

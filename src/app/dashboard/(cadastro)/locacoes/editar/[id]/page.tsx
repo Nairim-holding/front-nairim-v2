@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+"use client";
 
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -8,39 +8,25 @@ import DynamicFormManager from '@/components/DynamicFormManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, AlertCircle
+  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard
 } from 'lucide-react';
 
 const parseMoney = (value: string | number) => {
   if (!value && value !== 0) return 0;
-  
-  if (typeof value === 'number') {
-    return value;
-  }
-  
+  if (typeof value === 'number') return value;
   const strValue = String(value).trim();
-  
   if (!strValue.includes(',') && strValue.includes('.')) {
     const parsed = parseFloat(strValue);
     if (!isNaN(parsed)) return parsed;
   }
-  
-  const cleaned = strValue
-    .replace(/[^\d,-]/g, '') 
-    .replace(',', '.');
-    
+  const cleaned = strValue.replace(/[^\d,-]/g, '').replace(',', '.');
   const parsed = parseFloat(cleaned);
-  
-  if (isNaN(parsed)) {
-    return 0;
-  }
-  
+  if (isNaN(parsed)) return 0;
   return parsed;
 };
 
 const formatMoney = (value: number) => {
   if (!value && value !== 0) return 'R$ 0,00';
-  
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -102,7 +88,6 @@ export default function EditarLocacaoPage() {
 
         const result = await response.json();
         const property = result.data || result;
-        
         const propertyValues = property.values?.[0] || {};
         
         const updates: any = {
@@ -147,6 +132,12 @@ export default function EditarLocacaoPage() {
       };
     }
 
+    if (fieldName === 'property_tax') {
+      if (!value) {
+        return { payment_condition: '' };
+      }
+    }
+
     return null;
   }, [formValues, showMessage]);
 
@@ -173,6 +164,7 @@ export default function EditarLocacaoPage() {
         rent_due_day: parseInt(data.rent_due_day) || 5,
         tax_due_day: data.tax_due_day ? parseInt(data.tax_due_day) : null,
         condo_due_day: data.condo_due_day ? parseInt(data.condo_due_day) : null,
+        payment_condition: data.payment_condition || null,
       };
 
       if (isCanceled) {
@@ -243,14 +235,15 @@ export default function EditarLocacaoPage() {
       tenant_id: apiData.tenant_id || '',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
-      condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : null,
-      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : null,
-      extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : null,
+      condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
+      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
+      extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
       agency_commission: apiData.agency_commission ? String(apiData.agency_commission) : '5',
       commission_amount: apiData.commission_amount ? formatMoney(apiData.commission_amount) : 'R$ 0,00',
       rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
       tax_due_day: apiData.tax_due_day ? String(apiData.tax_due_day) : '10',
       condo_due_day: apiData.condo_due_day ? String(apiData.condo_due_day) : '10',
+      payment_condition: apiData.payment_condition || '',
       canceled_at: apiData.canceled_at ? formatDate(apiData.canceled_at) : '',
       cancellation_penalty: apiData.cancellation_penalty ? formatMoney(apiData.cancellation_penalty) : '',
       other_cancellation_amounts: apiData.other_cancellation_amounts ? formatMoney(apiData.other_cancellation_amounts) : '',
@@ -384,6 +377,7 @@ export default function EditarLocacaoPage() {
             field: 'property_tax',
             label: 'Valor do IPTU',
             type: 'text',
+            required: true,
             placeholder: 'R$ 0,00',
             icon: <File size={20} />,
             mask: 'money',
@@ -439,6 +433,67 @@ export default function EditarLocacaoPage() {
           },
         ],
       },
+      {
+        title: 'Condição de Pagamento (IPTU)',
+        icon: <CreditCard size={20} />,
+        fields: [
+          {
+            field: 'payment_simulator',
+            label: '',
+            type: 'custom',
+            className: 'col-span-full',
+            render: (_: any, formValues: any) => {
+              const taxVal = parseMoney(formValues?.property_tax || 0);
+              
+              if (!taxVal) {
+                return (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                    ⚠️ Preencha o <strong>Valor do IPTU</strong> na etapa anterior para habilitar e visualizar as opções de pagamento.
+                  </div>
+                );
+              }
+
+              const aVista = taxVal * 0.85;
+              const segParcela = taxVal * 0.90;
+              const parcelado = taxVal / 12;
+
+              return (
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-sm font-medium text-content-secondary">Simulação de Valores (Base: {formatMoney(taxVal)})</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'IN_FULL_15_DISCOUNT' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">À vista (15% desc.)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(aVista)}</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">2ª Parcela (10% desc.)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(segParcela)}</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'INSTALLMENTS_12X' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
+                      <div className="text-xs text-content-muted mb-1">Parcelado (12x)</div>
+                      <div className="text-lg font-bold text-content">{formatMoney(parcelado)} <span className="text-xs font-normal">/mês</span></div>
+                      <div className="text-xs text-content-muted mt-1">Total: {formatMoney(taxVal)}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+          },
+          {
+            field: 'payment_condition',
+            label: 'Selecione o Método de Pagamento',
+            type: 'select',
+            required: true,
+            options: [
+              { label: 'À vista com 15% de desconto', value: 'IN_FULL_15_DISCOUNT' },
+              { label: 'Segunda parcela com 10% de desconto', value: 'SECOND_INSTALLMENT_10_DISCOUNT' },
+              { label: 'Parcelado em 12x', value: 'INSTALLMENTS_12X' }
+            ],
+            icon: <CreditCard size={20} />,
+            className: 'col-span-full',
+          },
+        ]
+      }
     ];
 
     if (isCanceled) {
@@ -471,7 +526,6 @@ export default function EditarLocacaoPage() {
             field: 'cancellation_justification',
             label: 'Justificativa',
             type: 'textarea',
-            required: false,
             rows: 3,
             icon: <FileText size={20} />,
             className: 'col-span-full',
@@ -491,7 +545,7 @@ export default function EditarLocacaoPage() {
   if (loadingData) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }

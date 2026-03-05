@@ -256,6 +256,14 @@ export default function DynamicTableManager({
         if (['rent_due_day', 'tax_due_day', 'condo_due_day'].includes(column.field)) {
            return item[column.field] ? `${item[column.field]}º dia` : '-';
         }
+        if (column.field === "payment_condition") {
+          const paymentMap: Record<string, string> = {
+            'IN_FULL_15_DISCOUNT': 'À vista (15% desc.)',
+            'SECOND_INSTALLMENT_10_DISCOUNT': '2ª parcela (10% desc.)',
+            'INSTALLMENTS_12X': 'Parcelado (12x)'
+          };
+          return paymentMap[item.payment_condition] || '-';
+        }
         if (column.field === "status") {
           const statusMap: Record<string, { label: string, color: string }> = {
             'EXPIRED': { label: 'Vencido', color: 'text-red-700 bg-red-100 border border-red-300' },
