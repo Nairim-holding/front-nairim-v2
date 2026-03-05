@@ -268,6 +268,26 @@ export default function DynamicFormManager({
 
     if (value && value.toString().trim() !== '' && !Array.isArray(value)) {
       const stringValue = value.toString();
+
+      // VALIDAÇÃO DE DATA
+      if (field.type === 'date') {
+        if (stringValue.length < 10 && !stringValue.includes('-')) {
+          return 'Data incompleta';
+        }
+        
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateRegex.test(stringValue)) {
+          const [y, m, d] = stringValue.split('-').map(Number);
+          const date = new Date(y, m - 1, d);
+          
+          if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+            return 'Data inválida';
+          }
+          if (y < 1900 || y > 2100) {
+            return 'Ano inválido';
+          }
+        }
+      }
       
       if (field.validation?.pattern && !field.validation.pattern.test(stringValue)) {
         return field.validation.patternMessage || 'Formato inválido';
@@ -542,7 +562,7 @@ export default function DynamicFormManager({
     let value = formValues[field.field];
     if (value === undefined || value === null) {
       value = '';
-    } else if (['text', 'email', 'password', 'tel'].includes(field.type)) {
+    } else if (['text', 'email', 'password', 'tel', 'date'].includes(field.type)) {
       value = String(value);
     }
     

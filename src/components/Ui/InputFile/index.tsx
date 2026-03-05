@@ -68,8 +68,16 @@ export default function InputFile({
   const isLimitReached = multiple && maxFiles ? currentCount >= maxFiles : false;
   const isUploadDisabled = disabled || isLimitReached;
 
-  const mediaItems = previews.filter(p => p.type === 'image' || p.type === 'video');
-  const documents = previews.filter(p => p.type !== 'image' && p.type !== 'video');
+  // INVERTE A ORDEM GERAL DOS PREVIEWS PARA MOSTRAR DO PRIMEIRO AO ÚLTIMO
+  const reversedPreviews = [...previews].reverse();
+
+  // SEPARA VÍDEOS DE IMAGENS E GARANTE QUE OS VÍDEOS APAREÇAM PRIMEIRO
+  const videoItems = reversedPreviews.filter(p => p.type === 'video');
+  const imageItems = reversedPreviews.filter(p => p.type === 'image');
+  const mediaItems = [...videoItems, ...imageItems];
+  
+  // OS DOCUMENTOS TAMBÉM SEGUEM A ORDEM INVERTIDA DA LISTA GERAL
+  const documents = reversedPreviews.filter(p => p.type !== 'image' && p.type !== 'video');
   
   const imageGridClass = isViewMode 
     ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3'
@@ -380,6 +388,7 @@ export default function InputFile({
         </div>
         <div className={`grid ${imageGridClass}`}>
           {mediaItems.map((preview, index) => {
+            // Buscamos o Index global na lista "previews" não-invertida para a hora de excluir o item certo
             const globalIndex = previews.findIndex(p => p === preview);
             
             return (

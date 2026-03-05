@@ -16,7 +16,7 @@ export interface InputProps {
   svg?: React.ReactNode;
   disabled?: boolean;
   tabIndex?: number;
-  mask?: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros';
+  mask?: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros' | 'date';
   autoFocus?: boolean;
   password?: boolean;
   maxLength?: number;
@@ -94,7 +94,14 @@ const maskMetros = (value: string): string => {
   }).format(amount);
 };
 
-const applyMask = (maskType: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros', value: string): string => {
+const maskDate = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 8); // Garante no máximo 8 números
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+};
+
+const applyMask = (maskType: InputProps['mask'], value: string): string => {
   switch (maskType) {
     case "cpf": return maskCPF(value);
     case "cnpj": return maskCNPJ(value);
@@ -103,11 +110,12 @@ const applyMask = (maskType: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'me
     case "money": return maskMoney(value);
     case "metros2": return maskMetros2(value);
     case "metros": return maskMetros(value);
+    case "date": return maskDate(value);
     default: return value;
   }
 };
 
-const removeMask = (maskType: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros' | undefined, value: string): string => {
+const removeMask = (maskType: InputProps['mask'], value: string): string => {
   if (!maskType) return value;
   
   switch (maskType) {
@@ -120,6 +128,13 @@ const removeMask = (maskType: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'm
     case "metros2":
     case "metros":
       return value;
+    case "date": {
+      const numbersDate = value.replace(/\D/g, '');
+      if (numbersDate.length === 8) {
+        return `${numbersDate.slice(4, 8)}-${numbersDate.slice(2, 4)}-${numbersDate.slice(0, 2)}`;
+      }
+      return numbersDate; // Se incompleto, retorna os números digitados para falhar na validação
+    }
     default:
       return value;
   }
@@ -146,7 +161,8 @@ export default function Input({
   full
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const inputType = password ? (showPassword ? 'text' : 'password') : type;
+  const effectiveType = type === 'date' ? 'text' : (password ? (showPassword ? 'text' : 'password') : type);
+  const effectiveMask = mask || (type === 'date' ? 'date' : undefined);
   const [displayValue, setDisplayValue] = useState<string>('');
   const [isPasting, setIsPasting] = useState(false);
 
@@ -156,15 +172,23 @@ export default function Input({
       return;
     }
     
-    const stringValue = String(value);
+    let stringValue = String(value);
+
+    // Ajusta o preenchimento inicial se a data vier no formato ISO do DB (YYYY-MM-DD)
+    if (effectiveMask === 'date' && stringValue.includes('-')) {
+      const parts = stringValue.split('T')[0].split('-');
+      if (parts.length === 3) {
+        stringValue = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    }
     
-    if (mask) {
-      const maskedValue = applyMask(mask, stringValue);
+    if (effectiveMask) {
+      const maskedValue = applyMask(effectiveMask, stringValue);
       setDisplayValue(maskedValue);
     } else {
       setDisplayValue(stringValue);
     }
-  }, [value, mask, disabled]);
+  }, [value, effectiveMask, disabled]);
 
   const handleIncrement = () => {
     if (disabled || type !== 'number') return;
@@ -191,16 +215,16 @@ export default function Input({
     
     const rawValue = e.target.value;
     
-    if (mask === 'cep') {
+    if (effectiveMask === 'cep') {
       const numbersOnly = rawValue.replace(/\D/g, '');
       const limitedNumbers = numbersOnly.slice(0, 8);
       const maskedValue = maskCEP(limitedNumbers);
       setDisplayValue(maskedValue);
       onChange?.({ target: { value: limitedNumbers } } as React.ChangeEvent<HTMLInputElement>);
-    } else if (mask) {
-      const maskedValue = applyMask(mask, rawValue);
+    } else if (effectiveMask) {
+      const maskedValue = applyMask(effectiveMask, rawValue);
       setDisplayValue(maskedValue);
-      const unmaskedValue = removeMask(mask, maskedValue);
+      const unmaskedValue = removeMask(effectiveMask, maskedValue);
       onChange?.({ target: { value: unmaskedValue } } as React.ChangeEvent<HTMLInputElement>);
     } else {
       setDisplayValue(rawValue);
@@ -211,7 +235,7 @@ export default function Input({
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     if (disabled) return;
     
-    if (mask === 'cep') {
+    if (effectiveMask === 'cep') {
       e.preventDefault();
       setIsPasting(true);
       
@@ -252,14 +276,14 @@ export default function Input({
           onPaste={handlePaste}
           ref={inputRef}
           name={id}
-          type={inputType}
+          type={effectiveType}
           value={displayValue}
           onChange={handleInputChange}
-          placeholder={placeholder}
+          placeholder={placeholder || (effectiveMask === 'date' ? 'DD/MM/AAAA' : undefined)}
           required={required}
           min={min}
           max={max}
-          maxLength={maxLength}
+          maxLength={effectiveMask === 'date' ? 10 : maxLength} // <-- Trava o input exatamente no limite dos 10 chars "DD/MM/YYYY"
           disabled={disabled}
           tabIndex={tabIndex}
           className={`
