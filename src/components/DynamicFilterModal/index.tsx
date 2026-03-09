@@ -69,7 +69,7 @@ interface FilterValue {
   showDropdown?: boolean;
 }
 
-// Funções para formatação de telefone (APENAS para inputs de texto livre)
+// Funções para formatação de telefone
 const removePhoneMask = (value: string): string => {
   if (!value) return '';
   return value.replace(/\D/g, '');
@@ -77,135 +77,47 @@ const removePhoneMask = (value: string): string => {
 
 const formatPhone = (phone: string | null | undefined): string => {
   if (!phone) return '';
-  
   const cleaned = phone.replace(/\D/g, '');
-  
-  if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  } else if (cleaned.length === 11) {
-    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } else if (cleaned.length === 12) {
-    return cleaned.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
-  } else if (cleaned.length === 13) {
-    return cleaned.replace(/(\d{3})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
-  }
-  
+  if (cleaned.length === 10) return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  else if (cleaned.length === 11) return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  else if (cleaned.length === 12) return cleaned.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
+  else if (cleaned.length === 13) return cleaned.replace(/(\d{3})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
   return phone;
 };
 
-// Verifica se um campo é do tipo telefone/celular
 const isPhoneField = (fieldName: string): boolean => {
   const phoneFields = [
     'telephone', 'phone', 'cellphone', 'mobile', 'celular',
     'whatsapp', 'contact_phone', 'contact_cellphone', 'mobile_phone',
     'home_phone', 'work_phone', 'office_phone', 'business_phone'
   ];
-  
-  return phoneFields.some(phoneField => 
-    fieldName.toLowerCase().includes(phoneField.toLowerCase())
-  );
+  return phoneFields.some(phoneField => fieldName.toLowerCase().includes(phoneField.toLowerCase()));
 };
 
-// Objeto FIELD_ICONS
 const FIELD_ICONS: Record<string, any> = {
-  'name': User,
-  'email': Mail,
-  'birth_date': CalendarDays,
-  'created_at': Calendar,
-  'updated_at': Calendar,
-  'gender': UserCircle,
-  'title': Type,
-  'owner': User,
-  'type': Home,
-  'city': MapPin,
-  'state': MapPin,
-  'district': MapPin,
-  'street': MapPin,
-  'zip_code': Hash,
-  'bedrooms': Bed,
-  'bathrooms': Bath,
-  'half_bathrooms': Bath,
-  'garage_spaces': Car,
-  'area_total': Ruler,
-  'area_built': Ruler,
-  'frontage': Ruler,
-  'furnished': Sofa,
-  'floor_number': Building,
-  'tax_registration': Hash,
-  'notes': FileText,
-  'agency': Building,
-  'owner_id': User,
-  'type_id': Home,
-  'agency_id': Building,
-  'trade_name': Building2,
-  'legal_name': FileText,
-  'cnpj': CreditCard,
-  'state_registration': FileCheck,
-  'municipal_registration': ClipboardCheck,
-  'license_number': FileDigit,
-  'contact_name': UserCircle,
-  'contact_phone': Phone,
-  'contact_email': Mail,
-  'whatsapp': MessageCircle,
-  'contact_role': Briefcase,
-  'contact_department': Building,
-  'contact_notes': FileText,
-  'telephone': Phone,
-  'phone': Phone,
-  'cellphone': Phone,
-  'mobile': Phone,
-  'celular': Phone,
-  'number': Hash,
-  'country': Globe,
-  'status': CheckCircle,
-  'active': CheckCircle,
-  'inactive': XCircle,
-  'value': DollarSign,
-  'price': DollarSign,
-  'amount': DollarSign,
-  'percentage': Percent,
-  'rate': Percent,
-  'purchase_value': DollarSign,
-  'rental_value': DollarSign,
-  'condo_fee': DollarSign,
-  'property_tax': DollarSign,
-  'company': Building2,
-  'enterprise': Building2,
-  'institution': Landmark,
-  'organization': Building2,
-  'internal_code': Hash,
-  'occupation': Briefcase,
-  'marital_status': Heart,
-  'cpf': CreditCard,
-  'contact': UserCircle,
-  'contract_number': FileText,
-  'start_date': Calendar,
-  'end_date': Calendar,
-  'property_title': Home,
-  'tenant': Users,
-  'rent_amount': DollarSign,
-  'extra_charges': DollarSign,
-  'commission_amount': DollarSign,
-  'rent_due_day': CalendarDays,
-  'tax_due_day': CalendarDays,
-  'condo_due_day': CalendarDays,
-  'description': Type,
-  'code': Hash,
-  'id': Hash,
-  'reference': FileText,
-  'document': FileText,
-  'category': Tag,
-  'default': Type,
+  'name': User, 'email': Mail, 'birth_date': CalendarDays, 'created_at': Calendar, 'updated_at': Calendar,
+  'gender': UserCircle, 'title': Type, 'owner': User, 'type': Home, 'city': MapPin, 'state': MapPin,
+  'district': MapPin, 'street': MapPin, 'zip_code': Hash, 'bedrooms': Bed, 'bathrooms': Bath,
+  'half_bathrooms': Bath, 'garage_spaces': Car, 'area_total': Ruler, 'area_built': Ruler, 'frontage': Ruler,
+  'furnished': Sofa, 'floor_number': Building, 'tax_registration': Hash, 'notes': FileText, 'agency': Building,
+  'owner_id': User, 'type_id': Home, 'agency_id': Building, 'trade_name': Building2, 'legal_name': FileText,
+  'cnpj': CreditCard, 'state_registration': FileCheck, 'municipal_registration': ClipboardCheck, 'license_number': FileDigit,
+  'contact_name': UserCircle, 'contact_phone': Phone, 'contact_email': Mail, 'whatsapp': MessageCircle,
+  'contact_role': Briefcase, 'contact_department': Building, 'contact_notes': FileText, 'telephone': Phone,
+  'phone': Phone, 'cellphone': Phone, 'mobile': Phone, 'celular': Phone, 'number': Hash, 'country': Globe,
+  'status': CheckCircle, 'active': CheckCircle, 'inactive': XCircle, 'value': DollarSign, 'price': DollarSign,
+  'amount': DollarSign, 'percentage': Percent, 'rate': Percent, 'purchase_value': DollarSign, 'rental_value': DollarSign,
+  'condo_fee': DollarSign, 'property_tax': DollarSign, 'company': Building2, 'enterprise': Building2,
+  'institution': Landmark, 'organization': Building2, 'internal_code': Hash, 'occupation': Briefcase,
+  'marital_status': Heart, 'cpf': CreditCard, 'contact': UserCircle, 'contract_number': FileText,
+  'start_date': Calendar, 'end_date': Calendar, 'property_title': Home, 'tenant': Users, 'rent_amount': DollarSign,
+  'extra_charges': DollarSign, 'commission_amount': DollarSign, 'rent_due_day': CalendarDays, 'tax_due_day': CalendarDays,
+  'condo_due_day': CalendarDays, 'description': Type, 'code': Hash, 'id': Hash, 'reference': FileText,
+  'document': FileText, 'category': Tag, 'default': Type,
 };
 
 export default function DynamicFilterModal({ 
-  visible, 
-  setVisible, 
-  onApply, 
-  onClear, 
-  title,
-  filters,
-  initialValues = {}
+  visible, setVisible, onApply, onClear, title, filters, initialValues = {}
 }: DynamicFilterModalProps) {
   const [localFilters, setLocalFilters] = useState<Record<string, FilterValue>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
@@ -216,11 +128,18 @@ export default function DynamicFilterModal({
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const visibleFilters = useMemo(() => {
-    return filters;
-  }, [filters]);
+  const visibleFilters = useMemo(() => filters, [filters]);
 
-  // Inicializar com valores passados
+  // Função para pegar o Label a partir de um Value (ID) na inicialização
+  const getLabelForValue = useCallback((filter: DynamicFilter, val: any): string => {
+    if (filter.type === 'select' && (filter.options || filter.values)) {
+      const options = filter.options || filter.values || [];
+      const match = options.find((opt: any) => typeof opt === 'object' && opt !== null && String(opt.value) === String(val));
+      if (match) return match.label;
+    }
+    return String(val);
+  }, []);
+
   useEffect(() => {
     if (visible) {
       const newFilters: Record<string, FilterValue> = {};
@@ -232,23 +151,11 @@ export default function DynamicFilterModal({
         
         if (filter.dateRange) {
           if (initialValue && typeof initialValue === 'object' && 'from' in initialValue && 'to' in initialValue) {
-            newFilters[filter.field] = {
-              value: initialValue.from,
-              value2: initialValue.to,
-              showDropdown: false
-            };
+            newFilters[filter.field] = { value: initialValue.from, value2: initialValue.to, showDropdown: false };
           } else if (initialValue && typeof initialValue === 'string') {
-            newFilters[filter.field] = {
-              value: initialValue,
-              value2: '',
-              showDropdown: false
-            };
+            newFilters[filter.field] = { value: initialValue, value2: '', showDropdown: false };
           } else {
-            newFilters[filter.field] = {
-              value: '',
-              value2: '',
-              showDropdown: false,
-            };
+            newFilters[filter.field] = { value: '', value2: '', showDropdown: false };
           }
           newSearchTerms[filter.field] = '';
         } else {
@@ -257,137 +164,73 @@ export default function DynamicFilterModal({
               const { value, value2, values } = initialValue as any;
               
               if (isPhone && value) {
-                newFilters[filter.field] = {
-                  value: removePhoneMask(String(value)),
-                  showDropdown: false
-                };
+                newFilters[filter.field] = { value: removePhoneMask(String(value)), showDropdown: false };
                 newSearchTerms[filter.field] = String(value);
               } else {
-                newFilters[filter.field] = {
-                  value: value || '',
-                  value2: value2 || '',
-                  values: values || [],
-                  showDropdown: false
-                };
+                newFilters[filter.field] = { value: value || '', value2: value2 || '', values: values || [], showDropdown: false };
                 if (value) {
-                  newSearchTerms[filter.field] = String(value);
+                  newSearchTerms[filter.field] = getLabelForValue(filter, value);
                 }
               }
             } else {
               if (isPhone) {
-                newFilters[filter.field] = {
-                  value: removePhoneMask(String(initialValue)),
-                  showDropdown: false
-                };
+                newFilters[filter.field] = { value: removePhoneMask(String(initialValue)), showDropdown: false };
                 newSearchTerms[filter.field] = String(initialValue);
               } else {
-                newFilters[filter.field] = {
-                  value: initialValue,
-                  showDropdown: false
-                };
-                newSearchTerms[filter.field] = String(initialValue);
+                newFilters[filter.field] = { value: initialValue, showDropdown: false };
+                newSearchTerms[filter.field] = getLabelForValue(filter, initialValue);
               }
             }
           } else {
-            newFilters[filter.field] = {
-              value: '',
-              showDropdown: false,
-            };
+            newFilters[filter.field] = { value: '', showDropdown: false };
             newSearchTerms[filter.field] = '';
           }
         }
       });
       
-      console.log('🔄 Inicializando filtros locais:', newFilters);
       setLocalFilters(newFilters);
       setSearchTerms(newSearchTerms);
       setActiveDropdown(null);
     }
-  }, [visible, visibleFilters, initialValues]);
+  }, [visible, visibleFilters, initialValues, getLabelForValue]);
 
-  // Fechar dropdowns ao clicar fora
   const handleClickOutside = useCallback((event: MouseEvent) => {
     let clickedInsideDropdown = false;
-    
-    Object.values(dropdownRefs.current).forEach(dropdown => {
-      if (dropdown && dropdown.contains(event.target as Node)) {
-        clickedInsideDropdown = true;
-      }
-    });
-    
-    Object.values(inputRefs.current).forEach(input => {
-      if (input && input.contains(event.target as Node)) {
-        clickedInsideDropdown = true;
-      }
-    });
+    Object.values(dropdownRefs.current).forEach(dropdown => { if (dropdown && dropdown.contains(event.target as Node)) clickedInsideDropdown = true; });
+    Object.values(inputRefs.current).forEach(input => { if (input && input.contains(event.target as Node)) clickedInsideDropdown = true; });
     
     if (!clickedInsideDropdown && activeDropdown) {
-      setLocalFilters(prev => ({
-        ...prev,
-        [activeDropdown]: {
-          ...prev[activeDropdown],
-          showDropdown: false
-        }
-      }));
+      setLocalFilters(prev => ({ ...prev, [activeDropdown]: { ...prev[activeDropdown], showDropdown: false } }));
       setActiveDropdown(null);
     }
-    
-    if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-      setVisible(false);
-    }
+    if (modalRef.current && !modalRef.current.contains(event.target as Node)) setVisible(false);
   }, [activeDropdown, setVisible]);
 
   useEffect(() => {
-    if (visible) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
+    if (visible) document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, [visible, handleClickOutside]);
 
-  // Fechar dropdown quando pressionar ESC
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && activeDropdown) {
-        setLocalFilters(prev => ({
-          ...prev,
-          [activeDropdown]: {
-            ...prev[activeDropdown],
-            showDropdown: false
-          }
-        }));
+        setLocalFilters(prev => ({ ...prev, [activeDropdown]: { ...prev[activeDropdown], showDropdown: false } }));
         setActiveDropdown(null);
       }
     };
-
     document.addEventListener('keydown', handleEsc);
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-    };
+    return () => document.removeEventListener('keydown', handleEsc);
   }, [activeDropdown]);
 
-  const updateFilterValue = useCallback((field: string, key: keyof FilterValue, value: any) => {
+  // Modificado para aceitar o displayLabel
+  const updateFilterValue = useCallback((field: string, key: keyof FilterValue, value: any, displayLabel?: string) => {
     setLocalFilters(prev => {
       const current = prev[field] || {};
-      const updatedValue = {
-        ...current,
-        [key]: value,
-        showDropdown: false
-      };
-      
-      if (updatedValue.showDropdown !== undefined && typeof updatedValue.showDropdown !== 'boolean') {
-        updatedValue.showDropdown = false;
-      }
-      
-      return {
-        ...prev,
-        [field]: updatedValue
-      };
+      const updatedValue = { ...current, [key]: value, showDropdown: false };
+      return { ...prev, [field]: updatedValue };
     });
     
     if (key === 'value' && value !== '') {
@@ -395,74 +238,46 @@ export default function DynamicFilterModal({
       if (!filter?.dateRange) {
         setSearchTerms(prev => ({
           ...prev,
-          [field]: String(value)
+          // Se recebemos um label explícito, usamos ele, senão usamos o value
+          [field]: displayLabel !== undefined ? displayLabel : String(value)
         }));
       }
     }
     
-    if (activeDropdown === field) {
-      setActiveDropdown(null);
-    }
+    if (activeDropdown === field) setActiveDropdown(null);
   }, [activeDropdown, visibleFilters]);
 
   const handleApply = () => {
     const simplifiedFilters: Record<string, any> = {};
-    
     Object.entries(localFilters).forEach(([field, filterValue]) => {
       if (!filterValue) return;
-      
       const filterConfig = visibleFilters.find(f => f.field === field);
-      
       if (filterConfig?.dateRange) {
         const hasFrom = filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '';
         const hasTo = filterValue.value2 !== undefined && filterValue.value2 !== null && filterValue.value2 !== '';
-        
-        if (hasFrom && hasTo) {
-          simplifiedFilters[field] = {
-            from: filterValue.value,
-            to: filterValue.value2
-          };
-        } else if (hasFrom) {
-          simplifiedFilters[field] = filterValue.value;
-        }
+        if (hasFrom && hasTo) simplifiedFilters[field] = { from: filterValue.value, to: filterValue.value2 };
+        else if (hasFrom) simplifiedFilters[field] = filterValue.value;
       } else {
-        const hasValue = filterValue.value !== undefined && 
-                        filterValue.value !== null && 
-                        filterValue.value !== '' ||
-                        (filterValue.values && filterValue.values.length > 0);
-        
+        const hasValue = filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '' || (filterValue.values && filterValue.values.length > 0);
         if (hasValue) {
-          if (filterValue.values && filterValue.values.length > 0) {
-            simplifiedFilters[field] = filterValue.values;
-          } else if (filterValue.value !== '' && filterValue.value !== null && filterValue.value !== undefined) {
-            if (isPhoneField(field)) {
-              simplifiedFilters[field] = removePhoneMask(String(filterValue.value));
-            } else {
-              simplifiedFilters[field] = filterValue.value;
-            }
+          if (filterValue.values && filterValue.values.length > 0) simplifiedFilters[field] = filterValue.values;
+          else if (filterValue.value !== '' && filterValue.value !== null && filterValue.value !== undefined) {
+            if (isPhoneField(field)) simplifiedFilters[field] = removePhoneMask(String(filterValue.value));
+            else simplifiedFilters[field] = filterValue.value;
           }
         }
       }
     });
-
-    console.log('✅ Aplicando filtros:', simplifiedFilters);
     onApply(simplifiedFilters);
   };
 
   const handleClear = () => {
     const clearedFilters: Record<string, FilterValue> = {};
     const clearedSearchTerms: Record<string, string> = {};
-    
     visibleFilters.forEach(filter => {
-      clearedFilters[filter.field] = {
-        value: '',
-        value2: '',
-        values: [],
-        showDropdown: false,
-      };
+      clearedFilters[filter.field] = { value: '', value2: '', values: [], showDropdown: false };
       clearedSearchTerms[filter.field] = '';
     });
-    
     setLocalFilters(clearedFilters);
     setSearchTerms(clearedSearchTerms);
     setActiveDropdown(null);
@@ -473,72 +288,34 @@ export default function DynamicFilterModal({
     const filter = visibleFilters.find(f => f.field === field);
     if (filter?.autocomplete || filter?.options || filter?.values) {
       if (activeDropdown && activeDropdown !== field) {
-        setLocalFilters(prev => ({
-          ...prev,
-          [activeDropdown]: {
-            ...prev[activeDropdown],
-            showDropdown: false
-          }
-        }));
+        setLocalFilters(prev => ({ ...prev, [activeDropdown]: { ...prev[activeDropdown], showDropdown: false } }));
       }
-      
-      setLocalFilters(prev => ({
-        ...prev,
-        [field]: {
-          ...(prev[field] || {}),
-          showDropdown: true
-        }
-      }));
+      setLocalFilters(prev => ({ ...prev, [field]: { ...(prev[field] || {}), showDropdown: true } }));
       setActiveDropdown(field);
     }
   }, [activeDropdown, visibleFilters]);
 
   const handleInputBlur = useCallback((field: string) => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-    }
-    
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     closeTimeoutRef.current = setTimeout(() => {
-      setLocalFilters(prev => ({
-        ...prev,
-        [field]: {
-          ...(prev[field] || {}),
-          showDropdown: false
-        }
-      }));
-      
-      if (activeDropdown === field) {
-        setActiveDropdown(null);
-      }
+      setLocalFilters(prev => ({ ...prev, [field]: { ...(prev[field] || {}), showDropdown: false } }));
+      if (activeDropdown === field) setActiveDropdown(null);
     }, 200);
   }, [activeDropdown]);
 
-  const handleOptionClick = useCallback((field: string, value: any) => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-    }
-    
+  // Modificado para aceitar o displayLabel da opção clicada
+  const handleOptionClick = useCallback((field: string, value: any, displayLabel?: string) => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     const filter = visibleFilters.find(f => f.field === field);
     const isPhone = isPhoneField(field);
     
-    // Para campos de telefone em dropdowns, os valores já vêm formatados do back-end
-    // Então armazenamos sem máscara, mas mantemos a formatação para exibição
     let valueToStore = value;
     if (isPhone && (filter?.autocomplete || filter?.options || filter?.values)) {
       valueToStore = removePhoneMask(String(value));
     }
     
-    updateFilterValue(field, 'value', valueToStore);
-    
-    if (!filter?.dateRange) {
-      // Para campos de telefone com opções, mantemos o valor formatado para exibição
-      if (isPhone && (filter?.autocomplete || filter?.options || filter?.values)) {
-        setSearchTerms(prev => ({
-          ...prev,
-          [field]: String(value) // Mantém o valor formatado original
-        }));
-      }
-    }
+    // Passamos o ID (valueToStore) pro filtro interno, e o TEXTO (displayLabel) para a exibição no Input
+    updateFilterValue(field, 'value', valueToStore, displayLabel);
   }, [updateFilterValue, visibleFilters]);
 
   const getFilterIcon = (field: string) => {
@@ -546,57 +323,32 @@ export default function DynamicFilterModal({
       const Icon = FIELD_ICONS[field];
       return <Icon size={16} className="text-content-muted" />;
     }
-    
     const fieldLower = field.toLowerCase();
-    
     const keywordMap = [
-      { keywords: ['name', 'nome', 'pessoa'], icon: User },
-      { keywords: ['email', 'e-mail'], icon: Mail },
-      { keywords: ['date', 'data', 'dia'], icon: Calendar },
-      { keywords: ['phone', 'telefone', 'celular', 'fone', 'cellphone'], icon: Phone },
-      { keywords: ['address', 'endereco', 'rua', 'logradouro'], icon: MapPin },
-      { keywords: ['city', 'cidade'], icon: MapPin },
-      { keywords: ['state', 'estado', 'uf'], icon: MapPin },
-      { keywords: ['zip', 'cep'], icon: Hash },
-      { keywords: ['code', 'codigo', 'id'], icon: Hash },
-      { keywords: ['number', 'numero', 'num'], icon: Hash },
+      { keywords: ['name', 'nome', 'pessoa'], icon: User }, { keywords: ['email', 'e-mail'], icon: Mail },
+      { keywords: ['date', 'data', 'dia'], icon: Calendar }, { keywords: ['phone', 'telefone', 'celular', 'fone', 'cellphone'], icon: Phone },
+      { keywords: ['address', 'endereco', 'rua', 'logradouro'], icon: MapPin }, { keywords: ['city', 'cidade'], icon: MapPin },
+      { keywords: ['state', 'estado', 'uf'], icon: MapPin }, { keywords: ['zip', 'cep'], icon: Hash },
+      { keywords: ['code', 'codigo', 'id'], icon: Hash }, { keywords: ['number', 'numero', 'num'], icon: Hash },
       { keywords: ['value', 'valor', 'price', 'preco', 'amount', 'montante'], icon: DollarSign },
-      { keywords: ['percent', 'porcentagem', 'rate', 'taxa'], icon: Percent },
-      { keywords: ['status', 'estado'], icon: CheckCircle },
-      { keywords: ['active', 'ativo'], icon: CheckCircle },
-      { keywords: ['inactive', 'inativo'], icon: XCircle },
-      { keywords: ['description', 'descricao'], icon: Type },
-      { keywords: ['note', 'observacao', 'obs'], icon: FileText },
-      { keywords: ['document', 'documento'], icon: FileText },
-      { keywords: ['contract', 'contrato'], icon: FileText },
-      { keywords: ['file', 'arquivo'], icon: FileText },
-      { keywords: ['category', 'categoria'], icon: Tag },
-      { keywords: ['type', 'tipo'], icon: Type },
-      { keywords: ['owner', 'proprietario'], icon: User },
-      { keywords: ['tenant', 'inquilino'], icon: Users },
-      { keywords: ['property', 'imovel'], icon: Home },
-      { keywords: ['bedroom', 'quarto'], icon: Bed },
-      { keywords: ['bathroom', 'banheiro'], icon: Bath },
-      { keywords: ['garage', 'garagem'], icon: Car },
-      { keywords: ['area', 'area'], icon: Ruler },
-      { keywords: ['furnished', 'mobiliado'], icon: Sofa },
-      { keywords: ['floor', 'andar'], icon: Building },
-      { keywords: ['tax', 'imposto'], icon: Landmark },
-      { keywords: ['contact', 'contato'], icon: UserCircle },
-      { keywords: ['role', 'cargo', 'funcao'], icon: Briefcase },
-      { keywords: ['department', 'departamento'], icon: Building },
-      { keywords: ['company', 'empresa'], icon: Building2 },
-      { keywords: ['trade', 'fantasia'], icon: Building2 },
-      { keywords: ['legal', 'razao'], icon: FileText },
-      { keywords: ['cnpj', 'cpf'], icon: CreditCard },
-      { keywords: ['registration', 'inscricao', 'registro'], icon: FileCheck },
-      { keywords: ['license', 'licenca'], icon: FileDigit },
-      { keywords: ['whatsapp', 'zap'], icon: MessageCircle },
-      { keywords: ['web', 'site', 'url'], icon: Globe },
-      { keywords: ['country', 'pais'], icon: Globe },
-      { keywords: ['default', 'padrao'], icon: Type },
+      { keywords: ['percent', 'porcentagem', 'rate', 'taxa'], icon: Percent }, { keywords: ['status', 'estado'], icon: CheckCircle },
+      { keywords: ['active', 'ativo'], icon: CheckCircle }, { keywords: ['inactive', 'inativo'], icon: XCircle },
+      { keywords: ['description', 'descricao'], icon: Type }, { keywords: ['note', 'observacao', 'obs'], icon: FileText },
+      { keywords: ['document', 'documento'], icon: FileText }, { keywords: ['contract', 'contrato'], icon: FileText },
+      { keywords: ['file', 'arquivo'], icon: FileText }, { keywords: ['category', 'categoria'], icon: Tag },
+      { keywords: ['type', 'tipo'], icon: Type }, { keywords: ['owner', 'proprietario'], icon: User },
+      { keywords: ['tenant', 'inquilino'], icon: Users }, { keywords: ['property', 'imovel'], icon: Home },
+      { keywords: ['bedroom', 'quarto'], icon: Bed }, { keywords: ['bathroom', 'banheiro'], icon: Bath },
+      { keywords: ['garage', 'garagem'], icon: Car }, { keywords: ['area', 'area'], icon: Ruler },
+      { keywords: ['furnished', 'mobiliado'], icon: Sofa }, { keywords: ['floor', 'andar'], icon: Building },
+      { keywords: ['tax', 'imposto'], icon: Landmark }, { keywords: ['contact', 'contato'], icon: UserCircle },
+      { keywords: ['role', 'cargo', 'funcao'], icon: Briefcase }, { keywords: ['department', 'departamento'], icon: Building },
+      { keywords: ['company', 'empresa'], icon: Building2 }, { keywords: ['trade', 'fantasia'], icon: Building2 },
+      { keywords: ['legal', 'razao'], icon: FileText }, { keywords: ['cnpj', 'cpf'], icon: CreditCard },
+      { keywords: ['registration', 'inscricao', 'registro'], icon: FileCheck }, { keywords: ['license', 'licenca'], icon: FileDigit },
+      { keywords: ['whatsapp', 'zap'], icon: MessageCircle }, { keywords: ['web', 'site', 'url'], icon: Globe },
+      { keywords: ['country', 'pais'], icon: Globe }, { keywords: ['default', 'padrao'], icon: Type },
     ];
-    
     for (const mapping of keywordMap) {
       for (const keyword of mapping.keywords) {
         if (fieldLower.includes(keyword)) {
@@ -605,7 +357,6 @@ export default function DynamicFilterModal({
         }
       }
     }
-    
     const Icon = FIELD_ICONS['default'] || Type;
     return <Icon size={16} className="text-content-muted" />;
   };
@@ -613,36 +364,22 @@ export default function DynamicFilterModal({
   const getFilteredSuggestions = (field: string) => {
     const filter = visibleFilters.find(f => f.field === field);
     const searchTerm = searchTerms[field]?.toLowerCase() || '';
-    
     if (!filter) return [];
     
     const source = filter.options || filter.values || [];
-    const isPhone = isPhoneField(field);
     
     if (filter.type === 'select' && source.length > 0 && typeof source[0] === 'object') {
       const objectSource = source as Array<{ value: any; label: string }>;
-      if (searchTerm) {
-        return objectSource.filter((item: { value: any; label: string }) => 
-          item.label.toLowerCase().includes(searchTerm)
-        );
-      }
+      if (searchTerm) return objectSource.filter((item: { value: any; label: string }) => item.label.toLowerCase().includes(searchTerm));
       return objectSource;
     }
     
-    if (searchTerm) {
-      return source.filter((item: any) => 
-        String(item).toLowerCase().includes(searchTerm)
-      );
-    }
-    
+    if (searchTerm) return source.filter((item: any) => String(item).toLowerCase().includes(searchTerm));
     return source;
   };
 
   const renderFilterInput = (filter: DynamicFilter) => {
-    const filterValue = localFilters[filter.field] || { 
-      value: '', 
-      showDropdown: false,
-    };
+    const filterValue = localFilters[filter.field] || { value: '', showDropdown: false };
     const searchTerm = searchTerms[filter.field] || '';
     const suggestions = getFilteredSuggestions(filter.field);
     const hasSuggestions = suggestions.length > 0;
@@ -687,70 +424,21 @@ export default function DynamicFilterModal({
           <div className="relative">
             <div className="relative">
               <input
-                ref={(el) => { 
-                  if (el) {
-                    inputRefs.current[filter.field] = el;
-                  }
-                }}
+                ref={(el) => { if (el) inputRefs.current[filter.field] = el; }}
                 type={filter.inputType || 'text'}
                 className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
-                // IMPORTANTE: Para campos de telefone com opções, mostra o valor como veio do back-end (já formatado)
-                // Para inputs livres de telefone, aplica formatação
                 value={isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm)}
                 onChange={(e) => {
                   const value = e.target.value;
+                  const cleanedValue = isPhone ? removePhoneMask(value) : value;
                   
-                  if (isPhone) {
-                    const cleanedValue = removePhoneMask(value);
-                    
-                    setSearchTerms(prev => ({
-                      ...prev,
-                      [filter.field]: value
-                    }));
-                    
-                    setLocalFilters(prev => {
-                      const current = prev[filter.field] || {};
-                      const showDropdown = Boolean(
-                        cleanedValue.length > 0 && 
-                        hasOptions
-                      );
-                      
-                      return {
-                        ...prev,
-                        [filter.field]: {
-                          ...current,
-                          value: cleanedValue,
-                          showDropdown: showDropdown
-                        }
-                      };
-                    });
-                  } else {
-                    setSearchTerms(prev => ({
-                      ...prev,
-                      [filter.field]: value
-                    }));
-                    
-                    setLocalFilters(prev => {
-                      const current = prev[filter.field] || {};
-                      const showDropdown = Boolean(
-                        value.length > 0 && 
-                        hasOptions
-                      );
-                      
-                      return {
-                        ...prev,
-                        [filter.field]: {
-                          ...current,
-                          value: value,
-                          showDropdown: showDropdown
-                        }
-                      };
-                    });
-                  }
+                  setSearchTerms(prev => ({ ...prev, [filter.field]: value }));
+                  setLocalFilters(prev => ({
+                    ...prev,
+                    [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(value.length > 0 && hasOptions) }
+                  }));
                   
-                  if (value.length > 0 && hasOptions) {
-                    handleInputFocus(filter.field);
-                  }
+                  if (value.length > 0 && hasOptions) handleInputFocus(filter.field);
                 }}
                 onFocus={() => handleInputFocus(filter.field)}
                 onBlur={() => handleInputBlur(filter.field)}
@@ -764,13 +452,7 @@ export default function DynamicFilterModal({
                   onClick={(e) => {
                     e.preventDefault();
                     if (isDropdownOpen) {
-                      setLocalFilters(prev => ({
-                        ...prev,
-                        [filter.field]: {
-                          ...(prev[filter.field] || {}),
-                          showDropdown: false
-                        }
-                      }));
+                      setLocalFilters(prev => ({ ...prev, [filter.field]: { ...(prev[filter.field] || {}), showDropdown: false } }));
                       setActiveDropdown(null);
                     } else {
                       handleInputFocus(filter.field);
@@ -779,12 +461,7 @@ export default function DynamicFilterModal({
                   }}
                   onMouseDown={(e) => e.preventDefault()}
                 >
-                  <svg 
-                    className={`w-4 h-4 text-content-placeholder transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className={`w-4 h-4 text-content-placeholder transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -793,11 +470,7 @@ export default function DynamicFilterModal({
             
             {isDropdownOpen && hasOptions && (
               <div 
-                ref={(el) => { 
-                  if (el) {
-                    dropdownRefs.current[filter.field] = el;
-                  }
-                }}
+                ref={(el) => { if (el) dropdownRefs.current[filter.field] = el; }}
                 className="absolute z-50 w-full mt-1 bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 onMouseDown={(e) => e.preventDefault()}
               >
@@ -809,18 +482,10 @@ export default function DynamicFilterModal({
                         <div
                           key={index}
                           className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleOptionClick(filter.field, value);
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleOptionClick(filter.field, value);
-                          }}
+                          // Passando o label aqui!
+                          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
                         >
-                          {/* As opções de telefone já vêm formatadas do back-end, mostramos o label como está */}
                           {label}
                         </div>
                       );
@@ -830,26 +495,15 @@ export default function DynamicFilterModal({
                       <div
                         key={index}
                         className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleOptionClick(filter.field, suggestion);
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleOptionClick(filter.field, suggestion);
-                        }}
+                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, String(suggestion)); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, String(suggestion)); }}
                       >
-                        {/* As opções de telefone já vêm formatadas do back-end, mostramos como estão */}
                         {String(suggestion)}
                       </div>
                     );
                   })
                 ) : (
-                  <div className="px-3 py-2 text-sm text-content-muted">
-                    Nenhuma opção disponível
-                  </div>
+                  <div className="px-3 py-2 text-sm text-content-muted">Nenhuma opção disponível</div>
                 )}
               </div>
             )}
@@ -865,11 +519,9 @@ export default function DynamicFilterModal({
 
   const getActiveFilterCount = () => {
     return Object.values(localFilters).filter(filter => 
-      filter && (
-        (filter.value !== undefined && filter.value !== null && filter.value !== '') ||
-        (filter.values && filter.values.length > 0) ||
-        (filter.value2 !== undefined && filter.value2 !== null && filter.value2 !== '')
-      )
+      filter && ((filter.value !== undefined && filter.value !== null && filter.value !== '') ||
+      (filter.values && filter.values.length > 0) ||
+      (filter.value2 !== undefined && filter.value2 !== null && filter.value2 !== ''))
     ).length;
   };
 
@@ -881,57 +533,36 @@ export default function DynamicFilterModal({
       
       <div 
         ref={modalRef}
-        className="absolute top-[40%] sm:top-full left-0 z-50 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft"
-        style={{
-          width: 'min(95vw, 1000px)',
-          maxHeight: 'min(90vh, 400px)',
-          overflow: 'hidden'
-        }}
+        className="absolute top-[40%] sm:top-full left-0 z-50 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col overflow-hidden"
+        style={{ width: 'min(95vw, 1400px)', maxHeight: 'min(90vh, 600px)' }}
       >
-        <div className="p-4 w-full h-full flex flex-col">
-          <div className="flex justify-between items-center mb-4 flex-shrink-0">
-            <div>
-              <h3 className="text-lg font-semibold text-content">Filtrar {title}</h3>
-              <p className="text-sm text-content-muted mt-1">
-                {getActiveFilterCount() > 0 
-                  ? `${getActiveFilterCount()} filtro(s) ativo(s)` 
-                  : "Selecione os critérios de filtro"}
-              </p>
-            </div>
-            <button 
-              onClick={() => setVisible(false)}
-              className="p-2 hover:bg-surface-subtle rounded-lg transition-colors flex-shrink-0"
-              aria-label="Fechar filtro"
-            >
-              <X size={20} className="text-content-secondary" />
-            </button>
+        <div className="p-4 flex justify-between items-center border-b border-ui-border-soft flex-shrink-0 bg-surface">
+          <div>
+            <h3 className="text-lg font-semibold text-content">Filtrar {title}</h3>
+            <p className="text-sm text-content-muted mt-1">
+              {getActiveFilterCount() > 0 ? `${getActiveFilterCount()} filtro(s) ativo(s)` : "Selecione os critérios de filtro"}
+            </p>
           </div>
-          
-          <div 
-            ref={contentRef}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto flex-grow px-1"
-            style={{
-              maxHeight: 'calc(min(90vh, 350px) - 140px)'
-            }}
-          >
-            {visibleFilters.map((filter) => renderFilterInput(filter))}
-          </div>
-          
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-ui-border-soft flex-shrink-0">
-            <button 
-              onClick={handleClear}
-              className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
-            >
-              Limpar tudo
-            </button>
-            <button 
-              onClick={handleApply}
-              className="px-4 py-2 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-            >
-              <Check size={16} />
-              Aplicar filtros
-            </button>
-          </div>
+          <button onClick={() => setVisible(false)} className="p-2 hover:bg-surface-subtle rounded-lg transition-colors flex-shrink-0" aria-label="Fechar filtro">
+            <X size={20} className="text-content-secondary" />
+          </button>
+        </div>
+        
+        <div 
+          ref={contentRef}
+          className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto flex-1 min-h-0"
+        >
+          {visibleFilters.map((filter) => renderFilterInput(filter))}
+        </div>
+        
+        <div className="p-4 flex justify-end gap-3 border-t border-ui-border-soft flex-shrink-0 bg-surface">
+          <button onClick={handleClear} className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors">
+            Limpar tudo
+          </button>
+          <button onClick={handleApply} className="px-4 py-2 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+            <Check size={16} />
+            Aplicar filtros
+          </button>
         </div>
       </div>
     </>
