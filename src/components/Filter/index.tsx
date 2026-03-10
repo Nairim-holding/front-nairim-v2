@@ -290,7 +290,7 @@ export default function Filter() {
                         name="propertyType"
                         value={filters.propertyType || "all"}
                         onChange={(e) => handleFilterChange("propertyType", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="all">Todos</option>
                         <option value="apartment">Apartamento</option>
@@ -307,7 +307,7 @@ export default function Filter() {
                         name="quartos"
                         value={filters.quartos}
                         onChange={(e) => handleFilterChange("quartos", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 quarto</option>
@@ -326,7 +326,7 @@ export default function Filter() {
                         name="banheiros"
                         value={filters.banheiros}
                         onChange={(e) => handleFilterChange("banheiros", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 banheiro</option>
@@ -344,7 +344,7 @@ export default function Filter() {
                         name="vagas"
                         value={filters.vagas}
                         onChange={(e) => handleFilterChange("vagas", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 vaga</option>
@@ -362,7 +362,7 @@ export default function Filter() {
                         name="garagem"
                         value={filters.garagem}
                         onChange={(e) => handleFilterChange("garagem", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 carro</option>
@@ -380,7 +380,7 @@ export default function Filter() {
                         name="lavabo"
                         value={filters.lavabo}
                         onChange={(e) => handleFilterChange("lavabo", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 lavabo</option>
@@ -397,7 +397,7 @@ export default function Filter() {
                         name="andares"
                         value={filters.andares}
                         onChange={(e) => handleFilterChange("andares", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 andar</option>
@@ -504,7 +504,7 @@ export default function Filter() {
                         name="uf"
                         value={filters.uf}
                         onChange={(e) => handleFilterChange("uf", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Selecione um estado</option>
                         {estadosBrasileiros.map((uf) => (
@@ -560,7 +560,7 @@ export default function Filter() {
                         name="fachada"
                         value={filters.fachada}
                         onChange={(e) => handleFilterChange("fachada", e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="nova">Nova</option>
@@ -578,7 +578,7 @@ export default function Filter() {
                         name="mobilia"
                         value={filters.mobilia}
                         onChange={(e) => handleFilterChange("mobilia", e.target.value || "")}
-                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="0">Sem mobília</option>
@@ -718,7 +718,7 @@ export default function Filter() {
                         name="propertyType"
                         value={filters.propertyType || "all"}
                         onChange={(e) => handleFilterChange("propertyType", e.target.value)}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="all">Todos</option>
                         <option value="apartment">Apartamento</option>
@@ -735,7 +735,7 @@ export default function Filter() {
                         name="quartos"
                         value={filters.quartos}
                         onChange={(e) => handleFilterChange("quartos", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 quarto</option>
@@ -754,7 +754,7 @@ export default function Filter() {
                         name="banheiros"
                         value={filters.banheiros}
                         onChange={(e) => handleFilterChange("banheiros", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 banheiro</option>
@@ -772,7 +772,7 @@ export default function Filter() {
                         name="vagas"
                         value={filters.vagas}
                         onChange={(e) => handleFilterChange("vagas", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 vaga</option>
@@ -790,7 +790,7 @@ export default function Filter() {
                         name="garagem"
                         value={filters.garagem}
                         onChange={(e) => handleFilterChange("garagem", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 carro</option>
@@ -808,7 +808,7 @@ export default function Filter() {
                         name="lavabo"
                         value={filters.lavabo}
                         onChange={(e) => handleFilterChange("lavabo", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 lavabo</option>
@@ -825,7 +825,7 @@ export default function Filter() {
                         name="andares"
                         value={filters.andares}
                         onChange={(e) => handleFilterChange("andares", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="1">1 andar</option>
@@ -936,7 +936,7 @@ export default function Filter() {
                         name="uf"
                         value={filters.uf}
                         onChange={(e) => handleFilterChange("uf", e.target.value)}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Selecione um estado</option>
                         {estadosBrasileiros.map((uf) => (
@@ -994,7 +994,7 @@ export default function Filter() {
                         name="fachada"
                         value={filters.fachada}
                         onChange={(e) => handleFilterChange("fachada", e.target.value)}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="nova">Nova</option>
@@ -1012,7 +1012,7 @@ export default function Filter() {
                         name="mobilia"
                         value={filters.mobilia}
                         onChange={(e) => handleFilterChange("mobilia", e.target.value || "")}
-                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none custom-select"
                       >
                         <option value="">Qualquer</option>
                         <option value="0">Sem mobília</option>
@@ -1048,6 +1048,30 @@ export default function Filter() {
           </div>
         </div>
       )}
+
+      {/* Estilos personalizados para selects */}
+      <style>{`
+        .custom-select {
+          background-color: #7a6d92;
+          color: #1f2937;
+        }
+        .custom-select option {
+          background-color: #756b87;
+          color: #1f2937;
+        }
+        .custom-select option:hover,
+        .custom-select option:focus,
+        .custom-select option:active,
+        .custom-select option:checked {
+          background-color: #000000;
+          color: #1f2937;
+        }
+        /* Para navegadores que suportam :checked com background */
+        .custom-select option:checked {
+          background-color: #251530 !important;
+          color: #e0e0e1 !important;
+        }
+      `}</style>
     </>
   );
 }

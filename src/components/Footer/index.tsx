@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Icon } from "@iconify/react"; // Importação adicionada
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -52,8 +53,8 @@ export default function Footer() {
             
             <div className="flex flex-col gap-4 md:gap-6 border-l border-purple-800/30 pl-6 md:pl-8 sm:items-center md:items-start">
               <p className="text-[12px] md:text-[14px] text-gray-400 font-light leading-relaxed max-w-md text-center md:text-left">
-                Grupo familiar com tradição em Garça/SP, investindo no futuro através de 
-                inovação, desenvolvimento regional e crescimento sustentável.
+                Grupo familiar com tradição, investindo no futuro através de 
+                inovação, desenvolvimento e crescimento sustentável.
               </p>
             </div>
           </div>
@@ -95,10 +96,6 @@ export default function Footer() {
                 </a>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] md:text-[11px] tracking-[0.2em] text-white/40 uppercase font-semibold">Localização</span>
-                <span className="text-[13px] md:text-[14px] tracking-[0.05em] text-gray-300 leading-relaxed font-light">
-                  Garça • São Paulo • Brasil
-                </span>
                 <span className="text-[11px] md:text-[12px] tracking-[0.05em] text-purple-400/60 leading-relaxed font-light mt-2">
                   Atuamos há mais de 20 anos na região
                 </span>
@@ -127,20 +124,26 @@ export default function Footer() {
           </div>
           
           <div className="flex gap-6 md:gap-8">
-            {[
-              { name: 'LinkedIn', bg: 'bg-[#0077B5]', hover: 'hover:bg-[#006699]' },
-              { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-600 to-pink-600', hover: 'hover:opacity-90' },
-              { name: 'YouTube', bg: 'bg-[#FF0000]', hover: 'hover:bg-[#CC0000]' },
-              { name: 'Facebook', bg: 'bg-[#1877F2]', hover: 'hover:bg-[#166FE5]' }
-            ].map((social) => (
-              <button
-                key={social.name}
-                className={`w-10 h-10 md:w-12 md:h-12 rounded-full ${social.bg} ${social.hover} transition-all duration-300 flex items-center justify-center text-white text-sm font-medium transform hover:scale-110`}
-                aria-label={`${social.name} da Nairim Holding`}
-              >
-                {social.name.charAt(0)}
-              </button>
-            ))}
+            {/* Instagram */}
+            <a
+              href="https://instagram.com/nairimholding" // Substitua pelo link real
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-all duration-300 flex items-center justify-center text-white transform hover:scale-110"
+              aria-label="Instagram da Nairim Holding"
+            >
+              <Icon icon="mingcute:instagram-line" className="w-5 h-5 md:w-6 md:h-6" />
+            </a>
+            {/* Facebook */}
+            <a
+              href="https://facebook.com/nairimholding" // Substitua pelo link real
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] transition-all duration-300 flex items-center justify-center text-white transform hover:scale-110"
+              aria-label="Facebook da Nairim Holding"
+            >
+              <Icon icon="mingcute:facebook-line" className="w-5 h-5 md:w-6 md:h-6" />
+            </a>
           </div>
         </div>
 

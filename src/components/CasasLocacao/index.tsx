@@ -50,6 +50,14 @@ export default function CasasLocacao() {
     }).format(value);
   };
 
+  const formatArea = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
   const fetchProperties = async (page: number = 1) => {
     try {
       setLoading(true);
@@ -127,7 +135,7 @@ export default function CasasLocacao() {
         console.log("----- Processando propriedade ID:", property.id);
         console.log("Objeto completo:", JSON.stringify(property, null, 2));
 
-        // ----- 1. ENDEREÇO (agora extrai de property.addresses[0].address) -----
+        // ----- 1. ENDEREÇO (extrai de property.addresses[0].address) -----
         let street = "",
           number = "",
           district = "",
@@ -151,10 +159,10 @@ export default function CasasLocacao() {
           .trim()
           .replace(/,\s*$/, "") || "Localização não informada";
 
-        // ----- 2. PREÇO, CONDOMÍNIO E STATUS (agora extrai de property.values[0]) -----
+        // ----- 2. PREÇO, CONDOMÍNIO E STATUS -----
         let preco = 0;
         let condoFee = 0;
-        let propertyStatus = "AVAILABLE";
+        let propertyStatus: string | null = null;
 
         if (property.values && property.values.length > 0) {
           const val = property.values[0];
@@ -164,12 +172,16 @@ export default function CasasLocacao() {
             preco = parseFloat(val.purchase_value) || 0;
           }
           condoFee = parseFloat(val.condo_fee) || 0;
-          propertyStatus = val.status || "AVAILABLE";
+          propertyStatus = val.status || property.status;
+        } else {
+          propertyStatus = property.status;
         }
+
+        propertyStatus = propertyStatus ? String(propertyStatus).toUpperCase() : null;
 
         console.log(`→ Preço (${filters.transactionType}):`, preco);
         console.log("→ Condomínio:", condoFee);
-        console.log("→ Status:", propertyStatus);
+        console.log("→ Status (cru):", propertyStatus);
 
         // ----- 3. TIPO DO IMÓVEL -----
         let tipo = "Casa";
@@ -184,9 +196,8 @@ export default function CasasLocacao() {
         } else if (property.property_type) {
           tipo = property.property_type;
         }
-        console.log("→ Tipo:", tipo);
 
-        // ----- 4. CARACTERÍSTICAS (estão na raiz do objeto) -----
+        // ----- 4. CARACTERÍSTICAS -----
         const quartos = property.bedrooms ?? 0;
         const banheiros = (property.bathrooms ?? 0) + (property.half_bathrooms ?? 0);
         const vagas = property.garage_spaces ?? 0;
@@ -194,21 +205,8 @@ export default function CasasLocacao() {
         const areaTerreno = property.area_total ?? 0;
         const mobilia = property.furnished ?? false;
 
-        console.log(
-          "→ Quartos:",
-          quartos,
-          "| Banheiros:",
-          banheiros,
-          "| Vagas:",
-          vagas,
-          "| Área:",
-          area,
-          "| Mobília:",
-          mobilia
-        );
-
-        // ----- 5. IMAGENS (primeira imagem do array documents) -----
-        let imagem = "/CasasLocacao.jpg";
+        // ----- 5. IMAGENS -----
+        let imagem = "/CasaLocacao.jpeg";
         if (property.documents && property.documents.length > 0) {
           const img = property.documents.find(
             (d: any) => d.type === "IMAGE" && d.file_path
@@ -217,9 +215,8 @@ export default function CasasLocacao() {
             imagem = img.file_path;
           }
         }
-        console.log("→ Imagem:", imagem);
 
-        // ----- 6. CAMPOS OPCIONAIS (não existem na API, mantidos para fallback) -----
+        // ----- 6. CAMPOS OPCIONAIS -----
         const suites = property.suites ?? 0;
         const anoConstrucao = property.year_built ?? 0;
         const jardim = property.garden ?? false;
@@ -236,7 +233,7 @@ export default function CasasLocacao() {
           vagas,
           area,
           mobilia,
-          status: propertyStatus,
+          status: propertyStatus || "UNKNOWN",
           imagem,
           cidade: city || "Não informada",
           tipo,
@@ -254,10 +251,21 @@ export default function CasasLocacao() {
       console.log(mappedProperties);
       console.log("==========================================");
 
-      setCasas(mappedProperties);
-      setTotalPages(totalPagesCount);
-      setCurrentPage(currentPageCount);
-      setTotalResults(totalCount);
+      // 🔽 FILTRO: mantém apenas imóveis com status "AVAILABLE"
+      const availableProperties = mappedProperties.filter(p => p.status === "AVAILABLE");
+
+      // 🔽 Recalcula totais com base apenas nos disponíveis
+      const newTotalResults = availableProperties.length;
+      const newTotalPages = Math.ceil(newTotalResults / itemsPerPage);
+      let newCurrentPage = currentPageCount;
+      if (newCurrentPage > newTotalPages && newTotalPages > 0) {
+        newCurrentPage = 1;
+      }
+
+      setCasas(availableProperties);
+      setTotalPages(newTotalPages);
+      setCurrentPage(newCurrentPage);
+      setTotalResults(newTotalResults);
     } catch (err) {
       console.error("❌ Erro na requisição:", err);
       setError(err instanceof Error ? err.message : "Erro ao conectar com a API");
@@ -458,6 +466,9 @@ export default function CasasLocacao() {
         );
       }
 
+      // 🔽 FILTRO DE DISPONIBILIDADE NO FALLBACK
+      filteredData = filteredData.filter(casa => casa.status === "AVAILABLE");
+
       const startIndex = (page - 1) * itemsPerPage;
       const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
@@ -572,12 +583,12 @@ export default function CasasLocacao() {
               )}
               {filters.areaMin && (
                 <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
-                  Área mínima: {filters.areaMin}m²
+                  Área mínima: {formatArea(Number(filters.areaMin))} m²
                 </span>
               )}
               {filters.areaMax && (
                 <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
-                  Área máxima: {filters.areaMax}m²
+                  Área máxima: {formatArea(Number(filters.areaMax))} m²
                 </span>
               )}
               {(filters.location || filters.bairro || filters.uf) && (
@@ -774,7 +785,7 @@ export default function CasasLocacao() {
 
                       {casa.areaTerreno && (
                         <p className="text-sm text-gray-600 mt-1">
-                          Área: {casa.areaTerreno}m²
+                          Área do terreno: {formatArea(casa.areaTerreno)} m²
                         </p>
                       )}
 
@@ -830,8 +841,8 @@ export default function CasasLocacao() {
                         <div className="p-2 bg-yellow-50 rounded-lg mb-2 group-hover:bg-yellow-100 transition-colors">
                           <Icon icon="mingcute:ruler-line" className="w-5 h-5 text-yellow-600" />
                         </div>
-                        <span className="text-sm font-medium text-gray-800">{casa.area}m²</span>
-                        <span className="text-xs text-gray-500">Área</span>
+                        <span className="text-sm font-medium text-gray-800">{formatArea(casa.area)}</span>
+                        <span className="text-xs text-gray-500">m²</span>
                       </div>
                     </div>
 
