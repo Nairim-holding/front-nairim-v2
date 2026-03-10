@@ -11,20 +11,6 @@ import {
   Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard
 } from 'lucide-react';
 
-const parseMoney = (value: string | number) => {
-  if (!value && value !== 0) return 0;
-  if (typeof value === 'number') return value;
-  const strValue = String(value).trim();
-  if (!strValue.includes(',') && strValue.includes('.')) {
-    const parsed = parseFloat(strValue);
-    if (!isNaN(parsed)) return parsed;
-  }
-  const cleaned = strValue.replace(/[^\d,-]/g, '').replace(',', '.');
-  const parsed = parseFloat(cleaned);
-  if (isNaN(parsed)) return 0;
-  return parsed;
-};
-
 const formatMoney = (value: number) => {
   if (!value && value !== 0) return 'R$ 0,00';
   return new Intl.NumberFormat('pt-BR', {
@@ -45,7 +31,6 @@ export default function VisualizarLocacaoPage() {
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [formValues, setFormValues] = useState<any>({});
   const [isCanceled, setIsCanceled] = useState(false);
 
   useEffect(() => {
@@ -65,8 +50,8 @@ export default function VisualizarLocacaoPage() {
 
         setProperties(propertiesData.data || propertiesData || []);
         setTenants(tenantsData.data || tenantsData || []);
-      } catch (error) {
-        showMessage('Erro ao carregar dados', 'error');
+      } catch (_error) {
+        showMessage('Erro ao carregar dados iniciais', 'error');
       } finally {
         setLoadingData(false);
       }
@@ -75,11 +60,11 @@ export default function VisualizarLocacaoPage() {
     fetchData();
   }, [showMessage]);
 
-  const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
+  const handleFieldChange = useCallback(async () => {
     return null;
   }, []);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async () => {
     router.push('/dashboard/locacoes');
   };
 
@@ -98,9 +83,9 @@ export default function VisualizarLocacaoPage() {
 
     const getPaymentConditionLabel = (val: string) => {
       switch (val) {
-        case 'IN_FULL_15_DISCOUNT': return 'À vista com 15% de desconto';
-        case 'SECOND_INSTALLMENT_10_DISCOUNT': return 'Segunda parcela com 10% de desconto';
-        case 'INSTALLMENTS_12X': return 'Parcelado em 12x';
+        case 'IN_FULL_15_DISCOUNT': return 'À vista';
+        case 'SECOND_INSTALLMENT_10_DISCOUNT': return 'Segunda parcela';
+        case 'INSTALLMENTS': return 'Parcelado';
         default: return val || '';
       }
     };
@@ -125,7 +110,17 @@ export default function VisualizarLocacaoPage() {
       rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
       tax_due_day: apiData.tax_due_day ? String(apiData.tax_due_day) : '10',
       condo_due_day: apiData.condo_due_day ? String(apiData.condo_due_day) : '10',
-      payment_condition: getPaymentConditionLabel(apiData.payment_condition),
+      
+      // Pagamento e Parcelas do IPTU
+      payment_condition: apiData.payment_condition || '', // O valor original invisível
+      payment_condition_label: getPaymentConditionLabel(apiData.payment_condition), // O label bonitinho
+      property_tax_cash: apiData.property_tax_cash ? formatMoney(apiData.property_tax_cash) : '',
+      property_tax_first_installment: apiData.property_tax_first_installment ? formatMoney(apiData.property_tax_first_installment) : '',
+      property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
+      iptu_installments_count: apiData.iptu_installments_count ? String(apiData.iptu_installments_count) : '',
+      iptu_installments: Array.isArray(apiData.iptu_installments) ? apiData.iptu_installments.map((val: number) => formatMoney(val)) : [],
+
+      // Cancelamento
       canceled_at: apiData.canceled_at ? formatDate(apiData.canceled_at) : '',
       cancellation_penalty: apiData.cancellation_penalty ? formatMoney(apiData.cancellation_penalty) : '',
       other_cancellation_amounts: apiData.other_cancellation_amounts ? formatMoney(apiData.other_cancellation_amounts) : '',
@@ -144,7 +139,6 @@ export default function VisualizarLocacaoPage() {
             label: 'Número do Contrato',
             type: 'text',
             required: true,
-            placeholder: 'Ex: 2024/001',
             icon: <Hash size={20} />,
             className: 'col-span-full',
             readOnly: true,
@@ -208,7 +202,6 @@ export default function VisualizarLocacaoPage() {
             icon: <Building size={20} />,
             disabled: true,
             readOnly: true,
-            placeholder: 'Selecione um imóvel primeiro',
           },
           {
             field: 'owner_display',
@@ -218,7 +211,6 @@ export default function VisualizarLocacaoPage() {
             icon: <User size={20} />,
             disabled: true,
             readOnly: true,
-            placeholder: 'Selecione um imóvel primeiro',
           },
           {
             field: 'tenant_id',
@@ -240,7 +232,6 @@ export default function VisualizarLocacaoPage() {
             field: 'notes',
             label: 'Observações Gerais',
             type: 'textarea',
-            placeholder: 'Observações sobre a locação',
             rows: 3,
             icon: <FileText size={20} />,
             className: 'col-span-full',
@@ -258,7 +249,6 @@ export default function VisualizarLocacaoPage() {
             label: 'Valor do Aluguel',
             type: 'text',
             required: true,
-            placeholder: 'R$ 0,00',
             icon: <DollarSign size={20} />,
             mask: 'money',
             readOnly: true,
@@ -268,7 +258,6 @@ export default function VisualizarLocacaoPage() {
             field: 'condo_fee',
             label: 'Valor do Condomínio',
             type: 'text',
-            placeholder: 'R$ 0,00',
             icon: <Building size={20} />,
             mask: 'money',
             readOnly: true,
@@ -276,10 +265,9 @@ export default function VisualizarLocacaoPage() {
           },
           {
             field: 'property_tax',
-            label: 'Valor do IPTU',
+            label: 'Valor do IPTU (Base)',
             type: 'text',
             required: true,
-            placeholder: 'R$ 0,00',
             icon: <File size={20} />,
             mask: 'money',
             readOnly: true,
@@ -289,7 +277,6 @@ export default function VisualizarLocacaoPage() {
             field: 'extra_charges',
             label: 'Taxas Extras',
             type: 'text',
-            placeholder: 'R$ 0,00',
             icon: <Calculator size={20} />,
             mask: 'money',
             readOnly: true,
@@ -299,7 +286,6 @@ export default function VisualizarLocacaoPage() {
             field: 'agency_commission',
             label: 'Comissão Imobiliária (%)',
             type: 'number',
-            placeholder: '5',
             maxLength: 3,
             icon: <Percent size={20} />,
             readOnly: true,
@@ -309,7 +295,6 @@ export default function VisualizarLocacaoPage() {
             field: 'commission_amount',
             label: 'Valor Comissão',
             type: 'text',
-            placeholder: 'R$ 0,00',
             icon: <DollarSign size={20} />,
             readOnly: true,
             disabled: true,
@@ -321,7 +306,6 @@ export default function VisualizarLocacaoPage() {
             label: 'Vencimento Aluguel',
             type: 'text',
             required: true,
-            placeholder: 'Dia 5',
             icon: <Calendar size={20} />,
             readOnly: true,
             disabled: true,
@@ -330,7 +314,6 @@ export default function VisualizarLocacaoPage() {
             field: 'tax_due_day',
             label: 'Vencimento IPTU',
             type: 'text',
-            placeholder: 'Dia 10',
             icon: <Calendar size={20} />,
             readOnly: true,
             disabled: true,
@@ -339,7 +322,6 @@ export default function VisualizarLocacaoPage() {
             field: 'condo_due_day',
             label: 'Vencimento Condomínio',
             type: 'text',
-            placeholder: 'Dia 10',
             icon: <Calendar size={20} />,
             readOnly: true,
             disabled: true,
@@ -351,56 +333,114 @@ export default function VisualizarLocacaoPage() {
         icon: <CreditCard size={20} />,
         fields: [
           {
-            field: 'payment_simulator',
+            field: 'iptu_base_info',
             label: '',
             type: 'custom',
             className: 'col-span-full',
-            render: (_: any, formValues: any) => {
-              const taxVal = parseMoney(formValues?.property_tax || 0);
-              
-              if (!taxVal) {
-                return (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-                    ⚠️ Preencha o <strong>Valor do IPTU</strong> na etapa anterior para habilitar e visualizar as opções de pagamento.
-                  </div>
-                );
-              }
-
-              const aVista = taxVal * 0.85;
-              const segParcela = taxVal * 0.90;
-              const parcelado = taxVal / 12;
-
-              return (
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-sm font-medium text-content-secondary">Simulação de Valores (Base: {formatMoney(taxVal)})</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'À vista com 15% de desconto' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
-                      <div className="text-xs text-content-muted mb-1">À vista (15% desc.)</div>
-                      <div className="text-lg font-bold text-content">{formatMoney(aVista)}</div>
-                    </div>
-                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'Segunda parcela com 10% de desconto' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
-                      <div className="text-xs text-content-muted mb-1">2ª Parcela (10% desc.)</div>
-                      <div className="text-lg font-bold text-content">{formatMoney(segParcela)}</div>
-                    </div>
-                    <div className={`p-4 rounded-lg border transition-all ${formValues?.payment_condition === 'Parcelado em 12x' ? 'border-brand bg-brand/5 shadow-sm' : 'border-ui-border bg-surface hover:bg-surface-subtle'}`}>
-                      <div className="text-xs text-content-muted mb-1">Parcelado (12x)</div>
-                      <div className="text-lg font-bold text-content">{formatMoney(parcelado)} <span className="text-xs font-normal">/mês</span></div>
-                      <div className="text-xs text-content-muted mt-1">Total: {formatMoney(taxVal)}</div>
-                    </div>
-                  </div>
+            render: (_: any, fv: any) => (
+              <div className="mb-2 p-4 bg-surface border border-ui-border rounded-lg flex items-center gap-4 opacity-80">
+                <div className="p-3 bg-brand/10 text-brand rounded-full">
+                  <FileText size={24} />
                 </div>
-              );
-            }
+                <div>
+                  <p className="text-xs text-content-muted uppercase tracking-wider font-semibold">Valor Base do IPTU (Anual)</p>
+                  <p className="text-xl font-bold text-content">{fv?.property_tax || 'R$ 0,00'}</p>
+                </div>
+              </div>
+            )
           },
           {
             field: 'payment_condition',
-            label: 'Método Escolhido',
+            label: '',
+            type: 'text',
+            hidden: true // Mantemos a variável original escondida apenas para uso lógico
+          },
+          {
+            field: 'payment_condition_label',
+            label: 'Método de Pagamento Escolhido',
             type: 'text',
             icon: <CreditCard size={20} />,
             className: 'col-span-full',
             readOnly: true,
             disabled: true,
           },
+          {
+            field: 'property_tax_cash',
+            label: 'Valor de Cobrança: À vista',
+            type: 'text',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+            readOnly: true,
+            disabled: true,
+            hidden: (fv) => fv?.payment_condition !== 'IN_FULL_15_DISCOUNT',
+          },
+          {
+            field: 'property_tax_first_installment',
+            label: 'Valor de Cobrança: 1ª Parcela',
+            type: 'text',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+            readOnly: true,
+            disabled: true,
+            hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
+          },
+          {
+            field: 'property_tax_second_installment',
+            label: 'Valor de Cobrança: 2ª Parcela (com desconto)',
+            type: 'text',
+            icon: <DollarSign size={20} />,
+            mask: 'money',
+            readOnly: true,
+            disabled: true,
+            hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
+          },
+          {
+            field: 'iptu_installments_count',
+            label: 'Número de Parcelas',
+            type: 'text',
+            icon: <Hash size={20} />,
+            readOnly: true,
+            disabled: true,
+            hidden: (fv) => fv?.payment_condition !== 'INSTALLMENTS',
+          },
+          {
+            field: 'iptu_installments',
+            label: '',
+            type: 'custom',
+            hidden: (fv) => fv?.payment_condition !== 'INSTALLMENTS',
+            render: (value: any) => {
+              const arr = Array.isArray(value) ? value : [];
+              if (arr.length === 0) return null;
+
+              const titleText = arr.length === 1 
+                ? 'Detalhamento de 1 Parcela' 
+                : `Detalhamento das ${arr.length} Parcelas`;
+
+              return (
+                <div className="flex flex-col gap-4 col-span-full border p-5 rounded-xl bg-surface-subtle shadow-sm mt-2 w-full opacity-80">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <span className="text-[15px] font-semibold text-content border-l-4 border-brand pl-3">
+                      {titleText}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {arr.map((val, idx) => (
+                      <div key={`inst-${idx}`} className="bg-surface p-3 rounded-lg border border-ui-border">
+                        <label className="block text-xs text-content-muted mb-1.5 font-medium">{idx + 1}ª Parcela</label>
+                        <input 
+                          type="text" 
+                          value={val} 
+                          readOnly
+                          disabled
+                          className="w-full h-10 px-3 border border-ui-border rounded-md text-sm bg-surface-muted cursor-not-allowed"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+          }
         ]
       }
     ];
@@ -454,10 +494,6 @@ export default function VisualizarLocacaoPage() {
     return baseSteps;
   }, [properties, tenants, loadingData, isCanceled]);
 
-  const onSubmitSuccess = () => {
-    router.push('/dashboard/locacoes');
-  };
-
   if (loadingData) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -469,16 +505,14 @@ export default function VisualizarLocacaoPage() {
   return (
     <DynamicFormManager
       resource="leases"
-      title="Visualizar Locação"
+      title="Locação"
       basePath="/dashboard/locacoes"
       mode="view"
       id={id}
       steps={steps}
       onSubmit={handleSubmit}
-      onSubmitSuccess={onSubmitSuccess}
       onFieldChange={handleFieldChange}
       transformData={transformData}
-      onFormValuesChange={setFormValues}
     />
   );
 }

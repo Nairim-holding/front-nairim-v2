@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Eye, FileText, Download, Image as ImageIcon, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
+import { X, Eye, FileText, Download, Image as ImageIcon, ChevronRight, ChevronLeft, AlertCircle, Star } from 'lucide-react';
 import Label from '../Label';
 import Image from 'next/image';
 
@@ -14,6 +14,7 @@ interface DocumentItem {
   type?: string;
   mime_type?: string;
   description?: string;
+  is_featured?: boolean;
 }
 
 interface FilePreview {
@@ -25,6 +26,7 @@ interface FilePreview {
   id?: string;
   mimeType?: string;
   documentType?: string;
+  isFeatured?: boolean;
 }
 
 export interface InputFileProps {
@@ -32,8 +34,8 @@ export interface InputFileProps {
   label: string;
   accept: string;
   textButton?: string;
-  value?: DocumentItem[] | File[];
-  onChange?: (files: File[]) => void;
+  value?: any[]; 
+  onChange?: (files: any[]) => void;
   svg?: React.ReactNode;
   multiple?: boolean;
   disabled?: boolean;
@@ -41,6 +43,7 @@ export interface InputFileProps {
   placeholder?: string;
   maxFiles?: number;
   isViewMode?: boolean;
+  enableFeatureSelection?: boolean;
 }
 
 export default function InputFile({
@@ -57,6 +60,7 @@ export default function InputFile({
   placeholder = "Nenhum arquivo selecionado",
   maxFiles = 30,
   isViewMode = false,
+  enableFeatureSelection = false,
 }: InputFileProps) {
   const [previews, setPreviews] = useState<FilePreview[]>([]);
   const [modalMedia, setModalMedia] = useState<{url: string, type: 'image' | 'video'} | null>(null);
@@ -68,15 +72,20 @@ export default function InputFile({
   const isLimitReached = multiple && maxFiles ? currentCount >= maxFiles : false;
   const isUploadDisabled = disabled || isLimitReached;
 
-  // INVERTE A ORDEM GERAL DOS PREVIEWS PARA MOSTRAR DO PRIMEIRO AO ÚLTIMO
+  // Inverte a ordem para os mais recentes aparecerem primeiro
   const reversedPreviews = [...previews].reverse();
-
-  // SEPARA VÍDEOS DE IMAGENS E GARANTE QUE OS VÍDEOS APAREÇAM PRIMEIRO
   const videoItems = reversedPreviews.filter(p => p.type === 'video');
   const imageItems = reversedPreviews.filter(p => p.type === 'image');
-  const mediaItems = [...videoItems, ...imageItems];
   
-  // OS DOCUMENTOS TAMBÉM SEGUEM A ORDEM INVERTIDA DA LISTA GERAL
+  // ORDENAÇÃO AUTOMÁTICA: O item com isFeatured=true sempre vai para a primeira posição
+  const mediaItems = [...videoItems, ...imageItems].sort((a, b) => {
+    const aFeatured = !!a.isFeatured;
+    const bFeatured = !!b.isFeatured;
+    if (aFeatured && !bFeatured) return -1; // 'a' vai pro começo
+    if (!aFeatured && bFeatured) return 1;  // 'b' vai pro começo
+    return 0; // Mantém a ordem original
+  });
+
   const documents = reversedPreviews.filter(p => p.type !== 'image' && p.type !== 'video');
   
   const imageGridClass = isViewMode 
@@ -89,39 +98,25 @@ export default function InputFile({
 
   const getDocumentTypeName = (type?: string): string => {
     if (!type) return 'Documento';
-    
     const typeMap: Record<string, string> = {
-      'REGISTRATION': 'Matrícula',
-      'PROPERTY_RECORD': 'Registro',
-      'TITLE_DEED': 'Escritura',
-      'IMAGE': 'Mídia',
-      'OTHER': 'Outro Documento'
+      'REGISTRATION': 'Matrícula', 'PROPERTY_RECORD': 'Registro', 'TITLE_DEED': 'Escritura', 'IMAGE': 'Mídia', 'OTHER': 'Outro Documento'
     };
-    
     return typeMap[type] || type;
   };
 
-  const getDisplayName = (preview: FilePreview): string => {
-    return preview.name;
-  };
+  const getDisplayName = (preview: FilePreview): string => preview.name;
 
   const isDocumentItem = (item: any): item is DocumentItem => {
-    return item && 
-      typeof item === 'object' && 
-      'file_name' in item && 
-      'file_url' in item &&
-      !(item instanceof File);
+    return item && typeof item === 'object' && 'file_name' in item && 'file_url' in item && !(item instanceof File);
   };
 
-  const isFileInstance = (item: any): item is File => {
-    return item instanceof File;
-  };
+  const isFileInstance = (item: any): item is File => item instanceof File;
 
   useEffect(() => {
     const generatePreviews = async () => {
       const newPreviews: FilePreview[] = [];
-      
       const items = (value || []) as any[];
+      
       for (const item of items) {
         if (item && isDocumentItem(item)) {
           const fileName = item.file_name || item.description || getDocumentTypeName(item.type);
@@ -130,82 +125,30 @@ export default function InputFile({
           const mimeType = item.mime_type || '';
           
           let type: 'image' | 'video' | 'pdf' | 'other' = 'other';
-          
-          if (mimeType.startsWith('video/') || fileName.match(/\.(mp4|webm|ogg|mov)$/i)) {
-            type = 'video';
-          } else if (fileType === 'IMAGE' || mimeType.startsWith('image/') || 
-              fileName.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i)) {
-            type = 'image';
-          } else if (fileType === 'REGISTRATION' || fileType === 'PROPERTY_RECORD' || 
-                    fileType === 'TITLE_DEED' || mimeType === 'application/pdf' ||
-                    fileName.toLowerCase().endsWith('.pdf')) {
-            type = 'pdf';
-          }
+          if (mimeType.startsWith('video/') || fileName.match(/\.(mp4|webm|ogg|mov)$/i)) type = 'video';
+          else if (fileType === 'IMAGE' || mimeType.startsWith('image/') || fileName.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i)) type = 'image';
+          else if (fileType === 'REGISTRATION' || fileType === 'PROPERTY_RECORD' || fileType === 'TITLE_DEED' || mimeType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf')) type = 'pdf';
           
           newPreviews.push({
-            type,
-            name: fileName,
-            url: fileUrl,
-            fileUrl: fileUrl,
-            id: item.id,
-            mimeType: mimeType,
-            documentType: item.type,
+            type, name: fileName, url: fileUrl, fileUrl: fileUrl, id: item.id, mimeType: mimeType, documentType: item.type, isFeatured: !!item.is_featured,
           });
         } else if (item && isFileInstance(item)) {
-          if (item.type.startsWith('image/')) {
-            const url = URL.createObjectURL(item);
-            newPreviews.push({
-              type: 'image',
-              name: item.name,
-              url,
-              file: item,
-              mimeType: item.type,
-            });
-          } else if (item.type.startsWith('video/')) {
-            const url = URL.createObjectURL(item);
-            newPreviews.push({
-              type: 'video',
-              name: item.name,
-              url,
-              file: item,
-              mimeType: item.type,
-            });
-          } else if (item.type === 'application/pdf') {
-            newPreviews.push({
-              type: 'pdf',
-              name: item.name,
-              url: URL.createObjectURL(item),
-              file: item,
-              mimeType: item.type,
-            });
-          } else {
-            newPreviews.push({
-              type: 'other',
-              name: item.name,
-              url: '#',
-              file: item,
-              mimeType: item.type,
-            });
-          }
+          const isFeatured = !!(item as any).is_featured;
+          if (item.type.startsWith('image/')) newPreviews.push({ type: 'image', name: item.name, url: URL.createObjectURL(item), file: item, mimeType: item.type, isFeatured });
+          else if (item.type.startsWith('video/')) newPreviews.push({ type: 'video', name: item.name, url: URL.createObjectURL(item), file: item, mimeType: item.type, isFeatured });
+          else if (item.type === 'application/pdf') newPreviews.push({ type: 'pdf', name: item.name, url: URL.createObjectURL(item), file: item, mimeType: item.type });
+          else newPreviews.push({ type: 'other', name: item.name, url: '#', file: item, mimeType: item.type });
         }
       }
       
       setPreviews(newPreviews);
     };
 
-    if (value && (Array.isArray(value) ? value.length > 0 : true)) {
-      generatePreviews();
-    } else {
-      setPreviews([]);
-    }
+    if (value && (Array.isArray(value) ? value.length > 0 : true)) generatePreviews();
+    else setPreviews([]);
 
-    return () => {
-      previews.forEach(preview => {
-        if (preview.url.startsWith('blob:')) {
-          URL.revokeObjectURL(preview.url);
-        }
-      });
-    };
+    return () => previews.forEach(preview => { if (preview.url.startsWith('blob:')) URL.revokeObjectURL(preview.url); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, isEditMode, disabled]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,95 +157,80 @@ export default function InputFile({
 
     const fileArray = Array.from(files);
     
-    const newPreviews: FilePreview[] = fileArray.map(file => {
-      if (file.type.startsWith('video/')) {
-        const url = URL.createObjectURL(file);
-        return {
-          type: 'video',
-          name: file.name,
-          url,
-          file,
-          mimeType: file.type,
-        };
-      } else if (file.type.startsWith('image/')) {
-        const url = URL.createObjectURL(file);
-        return {
-          type: 'image',
-          name: file.name,
-          url,
-          file,
-          mimeType: file.type,
-        };
-      } else if (file.type === 'application/pdf') {
-        return {
-          type: 'pdf',
-          name: file.name,
-          url: URL.createObjectURL(file),
-          file,
-          mimeType: file.type,
-        };
-      } else {
-        return {
-          type: 'other',
-          name: file.name,
-          url: '#',
-          file,
-          mimeType: file.type,
-        };
-      }
-    });
-
-    setPreviews(prev => [...prev, ...newPreviews]);
-
     if (multiple) {
       const currentItems = value as any[];
       const existingDocumentItems = currentItems.filter(isDocumentItem);
       const existingFiles = currentItems.filter(isFileInstance);
-      const combinedFiles = [...existingDocumentItems, ...existingFiles, ...fileArray].slice(0, maxFiles) as any;
+      
+      // Auto selecionar a primeira imagem adicionada como destaque se não houver nenhuma
+      const hasFeatured = existingDocumentItems.some(i => i.is_featured) || existingFiles.some(f => (f as any).is_featured);
+      if (!hasFeatured && enableFeatureSelection && fileArray.length > 0 && fileArray[0].type.startsWith('image/')) {
+        (fileArray[0] as any).is_featured = true;
+      }
+
+      const combinedFiles = [...existingDocumentItems, ...existingFiles, ...fileArray].slice(0, maxFiles);
       onChange(combinedFiles);
     } else {
+      if (enableFeatureSelection && fileArray.length > 0) (fileArray[0] as any).is_featured = true;
       onChange(fileArray.slice(0, 1));
     }
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRemoveFile = (index: number) => {
     if (!onChange || !isEditMode) return;
-    
     const itemToRemove = previews[index];
     setPreviews(prev => prev.filter((_, i) => i !== index));
-    
     const currentItems = value as any[];
-    
     const newItems = currentItems.filter((item) => {
-      if (isDocumentItem(item) && item.id === itemToRemove.id) {
-        return false;
-      }
-      if (isFileInstance(item) && itemToRemove.file && item === itemToRemove.file) {
-        return false;
-      }
+      if (isDocumentItem(item) && item.id === itemToRemove.id) return false;
+      if (isFileInstance(item) && itemToRemove.file && item === itemToRemove.file) return false;
       return true;
     });
     
+    // Se removeu o destaque, auto-seleciona a proxima
+    if (itemToRemove.isFeatured && enableFeatureSelection && newItems.length > 0) {
+      const firstImg = newItems.find(i => isDocumentItem(i) ? i.type === 'IMAGE' : isFileInstance(i) && i.type.startsWith('image/'));
+      if (firstImg) {
+        if (isFileInstance(firstImg)) (firstImg as any).is_featured = true;
+        else firstImg.is_featured = true;
+      }
+    }
     onChange(newItems);
   };
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
+  const handleSetFeatured = (globalIndex: number) => {
+    if (!onChange || !isEditMode || !enableFeatureSelection) return;
+    
+    const previewTarget = previews[globalIndex];
+    if (previewTarget.type !== 'image' && previewTarget.type !== 'video') return; 
+
+    const isCurrentlyFeatured = !!previewTarget.isFeatured;
+    const currentItems = Array.isArray(value) ? [...value] : [];
+    
+    const newItems = currentItems.map(item => {
+      let isMatch = false;
+      if (isDocumentItem(item) && item.id && previewTarget.id && item.id === previewTarget.id) isMatch = true;
+      else if (isFileInstance(item) && previewTarget.file && item === previewTarget.file) isMatch = true;
+      else if (isDocumentItem(item) && item.file_url === previewTarget.fileUrl) isMatch = true;
+      
+      // TOGGLE LÓGICA: Se é o item clicado, inverte. Se não é, vira falso (limpa a seleção dos outros).
+      const newFeaturedState = isMatch ? !isCurrentlyFeatured : false;
+
+      if (isFileInstance(item)) {
+        (item as any).is_featured = newFeaturedState;
+        return item;
+      } else {
+        return { ...item, is_featured: newFeaturedState };
+      }
+    });
+    onChange(newItems);
   };
 
-  const openMediaModal = (url: string, type: 'image' | 'video', index: number) => {
-    setModalMedia({url, type});
-    setCurrentMediaIndex(index);
-  };
-
-  const closeModal = () => {
-    setModalMedia(null);
-    setCurrentMediaIndex(0);
-  };
+  const handleButtonClick = () => fileInputRef.current?.click();
+  const openMediaModal = (url: string, type: 'image' | 'video', index: number) => { setModalMedia({url, type}); setCurrentMediaIndex(index); };
+  const closeModal = () => { setModalMedia(null); setCurrentMediaIndex(0); };
 
   const nextMedia = () => {
     if (mediaItems.length === 0) return;
@@ -324,47 +252,30 @@ export default function InputFile({
     try {
       if (preview.fileUrl && preview.fileUrl !== '#') {
         const link = document.createElement('a');
-        link.href = preview.fileUrl;
-        link.download = preview.name;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        link.href = preview.fileUrl; link.download = preview.name; link.target = '_blank';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
       } else if (preview.file) {
         const url = URL.createObjectURL(preview.file);
         const link = document.createElement('a');
-        link.href = url;
-        link.download = preview.name;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        link.href = url; link.download = preview.name; link.target = '_blank';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
       }
     } catch (error) {
-      if (preview.fileUrl && preview.fileUrl !== '#') {
-        window.open(preview.fileUrl, '_blank');
-      }
+      if (preview.fileUrl && preview.fileUrl !== '#') window.open(preview.fileUrl, '_blank');
     }
   };
 
   const handleOpenFile = (preview: FilePreview) => {
     if (preview.fileUrl && preview.fileUrl !== '#') {
       if (preview.type === 'image' || preview.type === 'video') {
-        const index = mediaItems.findIndex(m => 
-          (m.fileUrl || m.url) === (preview.fileUrl || preview.url)
-        );
+        const index = mediaItems.findIndex(m => (m.fileUrl || m.url) === (preview.fileUrl || preview.url));
         openMediaModal(preview.fileUrl, preview.type as 'image' | 'video', index);
-      } else {
-        window.open(preview.fileUrl, '_blank');
-      }
+      } else window.open(preview.fileUrl, '_blank');
     } else if (preview.file) {
       if (preview.type === 'image' || preview.type === 'video') {
-        const url = URL.createObjectURL(preview.file);
-        openMediaModal(url, preview.type, 0);
+        const url = URL.createObjectURL(preview.file); openMediaModal(url, preview.type, 0);
       } else {
-        const url = URL.createObjectURL(preview.file);
-        window.open(url, '_blank');
+        const url = URL.createObjectURL(preview.file); window.open(url, '_blank');
       }
     }
   };
@@ -388,20 +299,44 @@ export default function InputFile({
         </div>
         <div className={`grid ${imageGridClass}`}>
           {mediaItems.map((preview, index) => {
-            // Buscamos o Index global na lista "previews" não-invertida para a hora de excluir o item certo
+            // Buscamos o index global usando o próprio objeto preview para ter 100% de precisão de qual foi clicado.
             const globalIndex = previews.findIndex(p => p === preview);
             
             return (
-            <div
-              key={preview.id || `media-${index}`}
-              className="group relative border rounded-lg overflow-hidden bg-black hover:border-brand transition-all duration-200"
-            >
+            <div key={preview.id || `media-${index}`} className="group relative border rounded-lg overflow-hidden bg-black hover:border-brand transition-all duration-200">
+              
+              {enableFeatureSelection && isEditMode && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSetFeatured(globalIndex);
+                  }}
+                  className={`absolute top-2 left-2 z-20 p-2 rounded-full transition-all duration-200 
+                    ${preview.isFeatured 
+                      ? 'bg-yellow-400 text-white opacity-100 shadow-lg scale-110' 
+                      : 'bg-black/50 text-white opacity-60 group-hover:opacity-100 hover:bg-yellow-400 hover:shadow-md hover:scale-110'}`}
+                  title={preview.isFeatured ? "Desmarcar destaque" : "Marcar como destaque"}
+                >
+                  <Star size={16} className={preview.isFeatured ? "fill-current" : ""} />
+                </button>
+              )}
+
+              {enableFeatureSelection && !isEditMode && preview.isFeatured && (
+                 <div className="absolute top-2 left-2 z-20 p-1.5 rounded-full bg-yellow-400 text-white shadow-md">
+                   <Star size={16} className="fill-current" />
+                 </div>
+              )}
+
               {isEditMode && (
                 <button
                   type="button"
-                  onClick={() => handleRemoveFile(globalIndex)}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 
-                            opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(globalIndex);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                 >
                   <X size={16} />
                 </button>
@@ -412,22 +347,13 @@ export default function InputFile({
                 onClick={() => openMediaModal(preview.fileUrl || preview.url, preview.type as 'image'|'video', index)}
               >
                 {preview.type === 'video' ? (
-                  <video 
-                    src={preview.fileUrl || preview.url} 
-                    className="object-cover max-w-[100px] min-w-[100px] max-h-[100px] min-h-[100px] opacity-80"
-                  />
+                  <video src={preview.fileUrl || preview.url} className="object-cover max-w-[100px] min-w-[100px] max-h-[100px] min-h-[100px] opacity-80" />
                 ) : (
                   <Image
-                    src={preview.fileUrl || preview.url}
-                    alt={preview.name}
-                    width={100}
-                    height={100}
+                    src={preview.fileUrl || preview.url} alt={preview.name} width={100} height={100}
                     className="object-cover hover:scale-105 transition-transform duration-200 max-w-[100px] min-w-[100px] max-h-[100px] min-h-[100px]"
                     unoptimized
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://via.placeholder.com/300x300?text=Mídia';
-                    }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x300?text=Mídia'; }}
                   />
                 )}
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -435,22 +361,18 @@ export default function InputFile({
                 </div>
               </div>
               
-              <div className="p-3 bg-surface">
-                <p className="text-xs font-medium text-content truncate mb-1">
-                  {getDisplayName(preview)}
+              <div className={`p-3 bg-surface border-t ${preview.isFeatured ? 'border-yellow-400 bg-yellow-50/10' : ''}`}>
+                <p className={`text-xs font-medium text-content truncate mb-1 flex items-center gap-1 ${preview.isFeatured ? 'text-yellow-600' : ''}`}>
+                  {preview.isFeatured && <span className="font-bold">⭐ Destaque - </span>} 
+                  <span className="truncate">{getDisplayName(preview)}</span>
                 </p>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-content-muted">
                     {preview.file && formatFileSize(preview.file.size)}
                   </span>
                   {!isEditMode && (
-                    <button
-                      type="button"
-                      onClick={() => handleDownload(preview)}
-                      className="text-xs text-state-success hover:text-green-700 hover:underline flex items-center gap-1"
-                    >
-                      <Download size={12} />
-                      Baixar
+                    <button type="button" onClick={(e) => { e.stopPropagation(); handleDownload(preview); }} className="text-xs text-brand hover:text-brand-hover hover:underline flex items-center gap-1">
+                      <Download size={12} /> Baixar
                     </button>
                   )}
                 </div>
@@ -468,26 +390,16 @@ export default function InputFile({
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-content-secondary whitespace-nowrap">
-            Documentos ({documents.length})
-          </h4>
+          <h4 className="text-sm font-medium text-content-secondary whitespace-nowrap">Documentos ({documents.length})</h4>
         </div>
         <div className={`grid ${documentGridClass}`}>
           {documents.map((preview, index) => {
             const globalIndex = previews.findIndex(p => p === preview);
             
             return (
-              <div
-                key={preview.id || `doc-${index}`}
-                className="group relative border rounded-lg p-4 bg-surface hover:border-brand transition-all duration-200"
-              >
+              <div key={preview.id || `doc-${index}`} className="group relative border rounded-lg p-4 bg-surface hover:border-brand transition-all duration-200">
                 {isEditMode && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFile(globalIndex)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 
-                               opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
+                  <button type="button" onClick={() => handleRemoveFile(globalIndex)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <X size={16} />
                   </button>
                 )}
@@ -495,43 +407,23 @@ export default function InputFile({
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
                     {preview.type === 'pdf' ? (
-                      <div className="p-2 bg-red-50 rounded-lg">
-                        <FileText size={24} className="text-red-500" />
-                      </div>
+                      <div className="p-2 bg-red-50 rounded-lg"><FileText size={24} className="text-red-500" /></div>
                     ) : (
-                      <div className="p-2 bg-surface-subtle rounded-lg">
-                        <FileText size={24} className="text-content-muted" />
-                      </div>
+                      <div className="p-2 bg-surface-subtle rounded-lg"><FileText size={24} className="text-content-muted" /></div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-content truncate mb-1">
-                      {getDisplayName(preview)}
-                    </p>
-                    {preview.file && (
-                      <p className="text-xs text-content-muted mb-2">
-                        {formatFileSize(preview.file.size)}
-                      </p>
-                    )}
+                    <p className="text-sm font-medium text-content truncate mb-1">{getDisplayName(preview)}</p>
+                    {preview.file && <p className="text-xs text-content-muted mb-2">{formatFileSize(preview.file.size)}</p>}
                     
                     <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenFile(preview)}
-                        className="text-xs text-brand hover:text-brand-hover hover:underline flex items-center gap-1"
-                      >
-                        <Eye size={12} />
-                        Visualizar
+                      <button type="button" onClick={() => handleOpenFile(preview)} className="text-xs text-brand hover:text-brand-hover hover:underline flex items-center gap-1">
+                        <Eye size={12} /> Visualizar
                       </button>
                       {!isEditMode && (
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(preview)}
-                          className="text-xs text-state-success hover:text-green-700 hover:underline flex items-center gap-1"
-                        >
-                          <Download size={12} />
-                          Baixar
+                        <button type="button" onClick={() => handleDownload(preview)} className="text-xs text-state-success hover:text-green-700 hover:underline flex items-center gap-1">
+                          <Download size={12} /> Baixar
                         </button>
                       )}
                     </div>
@@ -550,50 +442,22 @@ export default function InputFile({
       {modalMedia && mediaItems.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4">
           <div className="relative max-w-6xl max-h-[90vh] w-full flex flex-col items-center">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
-            >
-              <X size={24} />
-            </button>
+            <button onClick={closeModal} className="absolute top-4 right-4 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><X size={24} /></button>
 
             {mediaItems.length > 1 && (
-              <button
-                onClick={prevMedia}
-                type="button"
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
-              >
-                <ChevronLeft size={24} />
-              </button>
+              <button onClick={prevMedia} type="button" className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><ChevronLeft size={24} /></button>
             )}
 
             <div className="relative w-full h-[70vh] flex items-center justify-center bg-black">
               {modalMedia.type === 'video' ? (
-                <video 
-                  src={modalMedia.url} 
-                  controls 
-                  className="max-w-full max-h-full rounded-lg"
-                  autoPlay
-                />
+                <video src={modalMedia.url} controls className="max-w-full max-h-full rounded-lg" autoPlay />
               ) : (
-                <Image
-                  src={modalMedia.url}
-                  alt={`Mídia ${currentMediaIndex + 1} de ${mediaItems.length}`}
-                  fill
-                  className="object-contain rounded-lg"
-                  unoptimized
-                />
+                <Image src={modalMedia.url} alt={`Mídia ${currentMediaIndex + 1}`} fill className="object-contain rounded-lg" unoptimized />
               )}
             </div>
 
             {mediaItems.length > 1 && (
-              <button
-                onClick={nextMedia}
-                type="button"  
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"
-              >
-                <ChevronRight size={24} />
-              </button>
+              <button onClick={nextMedia} type="button" className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><ChevronRight size={24} /></button>
             )}
 
             {mediaItems.length > 1 && (
@@ -601,27 +465,14 @@ export default function InputFile({
                 {mediaItems.map((img, index) => (
                   <button
                     key={index}
-                    onClick={() => {
-                      setCurrentMediaIndex(index);
-                      setModalMedia({url: img.fileUrl || img.url, type: img.type as 'image'|'video'});
-                    }}
+                    onClick={() => { setCurrentMediaIndex(index); setModalMedia({url: img.fileUrl || img.url, type: img.type as 'image'|'video'}); }}
                     type="button"
-                    className={`relative w-12 h-12 flex-shrink-0 rounded overflow-hidden border-2 bg-black ${
-                      index === currentMediaIndex 
-                        ? 'border-brand' 
-                        : 'border-transparent'
-                    }`}
+                    className={`relative w-12 h-12 flex-shrink-0 rounded overflow-hidden border-2 bg-black ${index === currentMediaIndex ? 'border-brand' : 'border-transparent'}`}
                   >
                     {img.type === 'video' ? (
                        <video src={img.fileUrl || img.url} className="object-cover w-full h-full opacity-60" />
                     ) : (
-                      <Image
-                        src={img.fileUrl || img.url}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
+                      <Image src={img.fileUrl || img.url} alt="" fill className="object-cover" unoptimized />
                     )}
                   </button>
                 ))}
@@ -637,53 +488,22 @@ export default function InputFile({
 
       <Label id={id} label={label} required={required} svg={svg} />
 
-      <div className={`
-        flex flex-col w-full p-5 border-2 ${isViewMode ? 'border-solid' : 'border-dashed'} rounded-lg
-        ${disabled 
-          ? 'bg-surface-muted border-ui-border' 
-          : isLimitReached
-            ? 'bg-red-50 border-red-500'
-            : 'bg-surface border-ui-border hover:border-brand'}
-        transition-colors duration-200 h-full
-      `}>
+      <div className={`flex flex-col w-full p-5 border-2 ${isViewMode ? 'border-solid' : 'border-dashed'} rounded-lg ${disabled ? 'bg-surface-muted border-ui-border' : isLimitReached ? 'bg-red-50 border-red-500' : 'bg-surface border-ui-border hover:border-brand'} transition-colors duration-200 h-full`}>
         {isEditMode && (
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-2">
             <button
-              type="button"
-              onClick={handleButtonClick}
-              disabled={isUploadDisabled}
-              className={`
-                flex justify-center items-center px-6 py-2.5 rounded-lg
-                text-[16px] font-medium transition-all duration-200
-                whitespace-nowrap flex-shrink-0
-                ${isUploadDisabled
-                  ? 'bg-surface-muted text-content-muted cursor-not-allowed'
-                  : 'bg-gradient-to-r from-brand to-brand-hover text-white hover:shadow-lg hover:shadow-purple-500/25'
-                }
-              `}
+              type="button" onClick={handleButtonClick} disabled={isUploadDisabled}
+              className={`flex justify-center items-center px-6 py-2.5 rounded-lg text-[16px] font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${isUploadDisabled ? 'bg-surface-muted text-content-muted cursor-not-allowed' : 'bg-gradient-to-r from-brand to-brand-hover text-white hover:shadow-lg hover:shadow-purple-500/25'}`}
             >
               {textButton}
             </button>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              id={id}
-              accept={accept}
-              onChange={handleFileChange}
-              multiple={multiple}
-              disabled={isUploadDisabled}
-              required={required && currentCount === 0}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" id={id} accept={accept} onChange={handleFileChange} multiple={multiple} disabled={isUploadDisabled} required={required && currentCount === 0} className="hidden" />
 
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                 <p className={`text-[14px] font-medium truncate ${isLimitReached ? 'text-red-600' : 'text-content-muted'}`}>
-                  {currentCount > 0 
-                    ? `${currentCount} arquivo(s) selecionado(s)` 
-                    : placeholder
-                  }
+                  {currentCount > 0 ? `${currentCount} arquivo(s) selecionado(s)` : placeholder}
                 </p>
                 {multiple && maxFiles > 0 && (
                   <span className={`inline-block whitespace-nowrap min-w-max flex-shrink-0 text-[12px] px-2 py-0.5 rounded-full font-semibold ${isLimitReached ? 'bg-red-100 text-red-600' : 'bg-surface-subtle text-content-muted'}`}>
@@ -691,19 +511,7 @@ export default function InputFile({
                   </span>
                 )}
               </div>
-              {accept && (
-                <p className="text-[12px] text-content-placeholder mt-1">
-                  Formatos aceitos: {accept.replace(/,video\/(mp4|webm)/g, ' + vídeos')}
-                </p>
-              )}
-              {isLimitReached && !disabled && (
-                <div className="flex items-center gap-1 mt-1 text-red-600">
-                  <AlertCircle size={14} className="flex-shrink-0" />
-                  <p className="text-[12px] font-medium">
-                    Limite máximo atingido. Remova arquivos para adicionar novos.
-                  </p>
-                </div>
-              )}
+              {accept && <p className="text-[12px] text-content-placeholder mt-1">Formatos aceitos: {accept.replace(/,video\/(mp4|webm)/g, ' + vídeos')}</p>}
             </div>
           </div>
         )}
@@ -715,12 +523,8 @@ export default function InputFile({
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className="mb-4">
-              <ImageIcon className={`mx-auto h-12 w-12 ${isLimitReached ? 'text-red-300' : 'text-content-placeholder'}`} />
-            </div>
-            <p className={`text-sm ${isLimitReached ? 'text-red-600 font-medium' : 'text-content-muted'}`}>
-              {isViewMode ? 'Nenhum arquivo anexado' : placeholder}
-            </p>
+            <div className="mb-4"><ImageIcon className={`mx-auto h-12 w-12 ${isLimitReached ? 'text-red-300' : 'text-content-placeholder'}`} /></div>
+            <p className={`text-sm ${isLimitReached ? 'text-red-600 font-medium' : 'text-content-muted'}`}>{isViewMode ? 'Nenhum arquivo anexado' : placeholder}</p>
           </div>
         )}
       </div>

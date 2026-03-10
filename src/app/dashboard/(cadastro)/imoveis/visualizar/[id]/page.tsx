@@ -189,6 +189,7 @@ export default function VisualizarImovelPage() {
           file_url: doc.file_path,
           type: doc.type,
           mime_type: doc.file_type,
+          is_featured: doc.is_featured || false, // <--- ADICIONADO MAPEAMENTO DO DESTAQUE
         })) || [],
         
       arquivosMatricula: data.documents
@@ -698,7 +699,8 @@ export default function VisualizarImovelPage() {
           maxFiles: 30,
           disabled: true,
           readOnly: true,
-        },
+          enableFeatureSelection: true, // <--- ATIVA A FUNCIONALIDADE DE RENDERIZAR A ESTRELA (APENAS LEITURA)
+        } as any,
         {
           field: 'arquivosMatricula',
           label: 'Matrícula',
@@ -765,7 +767,7 @@ export default function VisualizarImovelPage() {
   if (loadingData || loadingProperty) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }

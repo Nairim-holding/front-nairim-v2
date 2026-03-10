@@ -539,7 +539,8 @@ export default function CadastrarImovelPage() {
           icon: <Upload size={20} />,
           className: 'col-span-full w-full',
           maxFiles: 30,
-        },
+          enableFeatureSelection: true, // <-- ADICIONADO PARA PERMITIR A ESCOLHA DO DESTAQUE
+        } as any,
         {
           field: 'arquivosMatricula',
           label: 'Matrícula',
@@ -635,7 +636,15 @@ export default function CadastrarImovelPage() {
       formData.append('valuesData', JSON.stringify(valuesData));
       formData.append('userId', user?.id || '');
 
+      // ==== LÓGICA DE CAPTURAR O DESTAQUE ====
       if (data.arquivosImagens?.length > 0) {
+        const featuredImage = Array.from(data.arquivosImagens).find((file: any) => file.is_featured);
+        
+        if (featuredImage) {
+          const featuredIdentifier = (featuredImage as any).id || (featuredImage as File).name;
+          formData.append('featuredImageIdentifier', featuredIdentifier);
+        }
+
         Array.from(data.arquivosImagens).forEach((file: any) => {
           formData.append('arquivosImagens', file);
         });

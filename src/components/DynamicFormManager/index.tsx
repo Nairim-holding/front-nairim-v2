@@ -787,6 +787,7 @@ export default function DynamicFormManager({
               placeholder={field.placeholder}
               maxFiles={field.maxFiles}
               isViewMode={isViewMode}
+              enableFeatureSelection={(field as any).enableFeatureSelection}
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
           </div>
