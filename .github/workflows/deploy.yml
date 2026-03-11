@@ -15,7 +15,7 @@ jobs:
         with:
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
-          key: ${{ secrets.HOST_SSH_KEY }}
+          key: ${{ secrets.HOST_SSH_KEY_2 }}
           port: 22
           script: |
             cd /var/www/front-nairim-holding
