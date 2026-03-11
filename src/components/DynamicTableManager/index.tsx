@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
@@ -17,7 +19,6 @@ import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef } from "@/types/types";
 import ModalSelectTypeOwner from "@/components/ModalSelectTypeOwner";
-import { OwnerType } from "@/types/owner";
 import { useRouter } from "next/navigation";
 
 interface DynamicTableManagerProps {
@@ -156,11 +157,6 @@ export default function DynamicTableManager({
     if (Array.isArray(data)) return { items: data, meta: { page: 1, limit: state.limit, total: data.length, totalPages: 1 } };
     return { items: [], meta: null };
   }, [data, state.limit]);
-
-  const handleSelectOwnerType = (tipo: OwnerType) => {
-    setShowOwnerTypeModal(false);
-    window.location.href = `${basePath}/cadastrar?tipo=${tipo}`;
-  };
 
   const getNestedValue = useCallback((obj: any, path: string) => {
     if (!obj || !path) return undefined;
@@ -408,6 +404,7 @@ export default function DynamicTableManager({
     });
   }, []);
 
+  // Lógica de exclusão atualizada para capturar as mensagens exatas da API (Ex: Lançamentos vinculados)
   const handleDeleteClick = useCallback(() => {
     if (!selectedCheckboxes.length) {
       showMessage(`Selecione os registros que deseja ${resource === 'leases' ? 'cancelar' : 'excluir'}.`, "error");
@@ -439,21 +436,37 @@ export default function DynamicTableManager({
         try {
           let successCount = 0;
           let errorCount = 0;
+          let lastErrorMessage = "";
+
           for (const id of selectedCheckboxes) {
             try {
               const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`, {
                 method: 'DELETE',
               });
-              if (response.ok) successCount++;
-              else errorCount++;
+              
+              if (response.ok) {
+                successCount++;
+              } else {
+                errorCount++;
+                const data = await response.json().catch(() => null);
+                if (data && data.message) {
+                  lastErrorMessage = data.message;
+                }
+              }
             } catch {
               errorCount++;
             }
           }
+          
           if (errorCount === 0) {
             showMessage(selectedCheckboxes.length > 1 ? `${successCount} registros removidos com sucesso!` : "Registro removido com sucesso!", "success");
           } else {
-            showMessage(`${successCount} de ${selectedCheckboxes.length} registros removidos. ${errorCount} erros.`, "info");
+            // Se for exclusão individual e houver uma mensagem específica da API (ex: 409 Conflict), mostrar ela.
+            if (selectedCheckboxes.length === 1 && lastErrorMessage) {
+              showMessage(lastErrorMessage, "error");
+            } else {
+              showMessage(`${successCount} de ${selectedCheckboxes.length} registros removidos. ${errorCount} erros.`, "error");
+            }
           }
           refreshData();
           setSelectedCheckboxes([]);
