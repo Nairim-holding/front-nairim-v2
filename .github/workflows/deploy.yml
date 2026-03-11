@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY_2 }}
           port: 22
           script: |
-            cd /var/www/front-nairim-holding
+            cd /var/www/front-nairim-holding/front-nairim-v2
             
             git pull origin main
             
