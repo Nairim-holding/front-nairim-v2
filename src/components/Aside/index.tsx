@@ -17,7 +17,9 @@ import {
   Building2,
   UserCheck,
   UserCircle,
-  Tag
+  Tag,
+  PiggyBank,
+  Landmark
 } from "lucide-react";
 import Logo from "../Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +27,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Aside() {
   const [openAside, setOpenAside] = useState(false);
-  const [openSubmenu, setOpenSubmenu] = useState(false);
+  // Mudamos de booleano para string, para saber QUAL menu está aberto
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [isDarkModeAnimating, setIsDarkModeAnimating] = useState(false);
   const [activeItem, setActiveItem] = useState("/dashboard");
   const submenuRef = useRef<HTMLDivElement>(null);
@@ -37,7 +40,7 @@ export default function Aside() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
-        setOpenSubmenu(false);
+        setOpenSubmenu(null); // Fecha todos ao clicar fora
       }
     }
 
@@ -60,13 +63,15 @@ export default function Aside() {
     setActiveItem(href);
     if (href !== "#") {
       setOpenAside(false);
-      setOpenSubmenu(false);
+      setOpenSubmenu(null);
     }
   };
 
-  const handleCadastroClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Impede que o clique se propague
-    setOpenSubmenu(!openSubmenu);
+  // Nova função de clique que recebe o nome do menu
+  const handleSubmenuClick = (e: React.MouseEvent, label: string) => {
+    e.stopPropagation();
+    // Se clicar no menu que já está aberto, ele fecha. Se clicar em outro, ele abre e fecha o anterior.
+    setOpenSubmenu(openSubmenu === label ? null : label);
   };
 
   const handleDarkModeToggle = () => {
@@ -94,12 +99,19 @@ export default function Aside() {
       ]
     },
     { href: "/dashboard/locacoes", icon: Key, label: "Locações" },
+    { 
+      href: "#",
+      icon: PiggyBank, 
+      label: "Financeiro",
+      submenu: [
+        { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras" },
+      ]
+    },
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
   ];
 
   const handleLogout = async () => {
     logout();
-
     setOpenAside(false);
   };
 
@@ -124,7 +136,7 @@ export default function Aside() {
           className="fixed inset-0 bg-layer-overlay z-[999] transition-opacity duration-300"
           onClick={() => {
             setOpenAside(false);
-            setOpenSubmenu(false);
+            setOpenSubmenu(null);
           }}
         />
       )}
@@ -149,14 +161,76 @@ export default function Aside() {
                 className="space-y-2 h-full overflow-y-auto pr-2 custom-scrollbar"
                 style={{ maxHeight: "calc(100vh - 200px)" }}
               >
-                {menuItems.map((item) => (
-                  <li key={item.label} className="relative">
-                    {item.submenu ? (
-                      <>
-                        <button
-                          onClick={handleCadastroClick}
+                {menuItems.map((item) => {
+                  const isOpen = openSubmenu === item.label; // Verifica se ESTE menu está aberto
+
+                  return (
+                    <li key={item.label} className="relative">
+                      {item.submenu ? (
+                        <>
+                          <button
+                            onClick={(e) => handleSubmenuClick(e, item.label)}
+                            className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
+                              isOpen
+                                ? isDark 
+                                  ? "bg-brand text-content-inverse" 
+                                  : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
+                                : isDark
+                                ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                                : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
+                            }`}
+                          >
+                            <item.icon size={22} className="min-w-[25px]" />
+                            {openAside && (
+                              <>
+                                <span className="ml-3 flex-1 text-left">{item.label}</span>
+                                <ChevronDown 
+                                  size={16} 
+                                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                                />
+                              </>
+                            )}
+                          </button>
+
+                          {isOpen && openAside && (
+                            <div className={`mt-1 ${
+                              isDark ? "bg-surface-strong" : "bg-surface-muted"
+                            } rounded-lg shadow-lg overflow-hidden`}>
+                              <ul className="space-y-1">
+                                {item.submenu.map((subItem) => (
+                                  <li key={subItem.label}>
+                                    <Link
+                                      href={subItem.href}
+                                      onClick={() => {
+                                        setActiveItem(subItem.href);
+                                        setOpenAside(false);
+                                        setOpenSubmenu(null);
+                                      }}
+                                      className={`flex items-center p-3 rounded text-sm transition-colors ${
+                                        activeItem === subItem.href
+                                          ? isDark
+                                            ? "bg-surface-muted text-content-inverse"
+                                            : "bg-surface-subtle text-content"
+                                          : isDark
+                                          ? "text-content-muted hover:bg-surface-muted hover:text-content-inverse"
+                                          : "text-content-secondary hover:bg-surface-subtle hover:text-content"
+                                      }`}
+                                    >
+                                      <subItem.icon size={18} className="mr-3" />
+                                      {subItem.label}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          onClick={() => handleItemClick(item.href)}
                           className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                            openSubmenu
+                            activeItem === item.href
                               ? isDark 
                                 ? "bg-brand text-content-inverse" 
                                 : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
@@ -166,70 +240,12 @@ export default function Aside() {
                           }`}
                         >
                           <item.icon size={22} className="min-w-[25px]" />
-                          {openAside && (
-                            <>
-                              <span className="ml-3 flex-1 text-left">{item.label}</span>
-                              <ChevronDown 
-                                size={16} 
-                                className={`transition-transform duration-200 ${openSubmenu ? "rotate-180" : ""}`}
-                              />
-                            </>
-                          )}
-                        </button>
-
-                        {openSubmenu && openAside && (
-                          <div className={`mt-1 ${
-                            isDark ? "bg-surface-strong" : "bg-surface-muted"
-                          } rounded-lg shadow-lg overflow-hidden`}>
-                            <ul className="space-y-1">
-                              {item.submenu.map((subItem) => (
-                                <li key={subItem.label}>
-                                  <Link
-                                    href={subItem.href}
-                                    onClick={() => {
-                                      setActiveItem(subItem.href);
-                                      setOpenAside(false);
-                                      setOpenSubmenu(false);
-                                    }}
-                                    className={`flex items-center p-3 rounded text-sm transition-colors ${
-                                      activeItem === subItem.href
-                                        ? isDark
-                                          ? "bg-surface-muted text-content-inverse"
-                                          : "bg-surface-subtle text-content"
-                                        : isDark
-                                        ? "text-content-muted hover:bg-surface-muted hover:text-content-inverse"
-                                        : "text-content-secondary hover:bg-surface-subtle hover:text-content"
-                                    }`}
-                                  >
-                                    <subItem.icon size={18} className="mr-3" />
-                                    {subItem.label}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        onClick={() => handleItemClick(item.href)}
-                        className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                          activeItem === item.href
-                            ? isDark 
-                              ? "bg-brand text-content-inverse" 
-                              : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
-                            : isDark
-                            ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
-                            : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
-                        }`}
-                      >
-                        <item.icon size={22} className="min-w-[25px]" />
-                        {openAside && <span className="ml-3">{item.label}</span>}
-                      </Link>
-                    )}
-                  </li>
-                ))}
+                          {openAside && <span className="ml-3">{item.label}</span>}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
 
                 {/* Logout */}
                 <li>
