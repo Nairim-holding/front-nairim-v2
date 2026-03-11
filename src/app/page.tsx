@@ -9,12 +9,12 @@ import Headline from "@/components/Headline";
 export default function Home() {
   return (
     <main>
-    <Header />
-    <Headline />
-    <Filter />
-    <CasasLocacao />
-    <ApartamentosLocacao />
-    <Footer />
+      <Header />
+      <Headline />
+      <Filter />
+      <CasasLocacao />
+      <ApartamentosLocacao />
+      <Footer />
     </main>
   );
 }
