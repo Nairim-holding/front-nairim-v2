@@ -153,20 +153,20 @@ body.dark {
   --color-purple-800: var(--color-brand-primary-hover);
   --color-purple-900: var(--color-brand-primary-hover);
 
-  --color-blue-50: var(--color-bg-subtle);
-  --color-blue-100: var(--color-bg-subtle);
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
   --color-blue-500: var(--chart-series-4);
   --color-blue-600: var(--chart-series-4);
   --color-blue-700: var(--chart-series-4);
 
-  --color-green-50: var(--color-bg-subtle);
-  --color-green-100: var(--color-bg-subtle);
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
   --color-green-500: var(--color-success);
   --color-green-600: var(--color-success);
   --color-green-700: var(--color-success-strong);
 
-  --color-red-50: var(--color-bg-subtle);
-  --color-red-100: var(--color-bg-subtle);
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
   --color-red-500: var(--color-error);
   --color-red-600: var(--color-error);
 
