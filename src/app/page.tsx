@@ -4,6 +4,7 @@ import Filter from "@/components/Filter";
 import Footer from "@/components/Footer";
 import Header  from "@/components/Header";
 import Headline from "@/components/Headline";
+import ImoveisList from "@/components/ImoveisList";
 
 
 export default function Home() {
@@ -12,8 +13,7 @@ export default function Home() {
       <Header />
       <Headline />
       <Filter />
-      <CasasLocacao />
-      <ApartamentosLocacao />
+      <ImoveisList />
       <Footer />
     </main>
   );
