@@ -39,6 +39,28 @@ export default function Filter() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isFilterOpen]);
 
+  // Função para formatar valor como moeda brasileira (R$)
+  const formatCurrencyInput = (value: string): string => {
+    // Remove tudo que não é dígito
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return '';
+    
+    // Converte para número e divide por 100 para ter centavos
+    const numberValue = parseInt(digits, 10) / 100;
+    
+    // Formata no padrão brasileiro
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numberValue);
+  };
+
+  const handleCurrencyChange = (field: 'valorMin' | 'valorMax', rawValue: string) => {
+    const formatted = formatCurrencyInput(rawValue);
+    setFilters({ ...filters, [field]: formatted });
+  };
+
   const handleFilterChange = (field: keyof typeof filters, value: any) => {
     setFilters({ ...filters, [field]: value });
   };
@@ -253,9 +275,10 @@ export default function Filter() {
                         id="valor-min-mobile"
                         name="valorMin"
                         type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={filters.valorMin}
-                        onChange={(e) => handleFilterChange("valorMin", e.target.value)}
+                        onChange={(e) => handleCurrencyChange('valorMin', e.target.value)}
                         className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
@@ -267,9 +290,10 @@ export default function Filter() {
                         id="valor-max-mobile"
                         name="valorMax"
                         type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={filters.valorMax}
-                        onChange={(e) => handleFilterChange("valorMax", e.target.value)}
+                        onChange={(e) => handleCurrencyChange('valorMax', e.target.value)}
                         className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
@@ -679,9 +703,10 @@ export default function Filter() {
                         id="valor-min-desktop"
                         name="valorMin"
                         type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={filters.valorMin}
-                        onChange={(e) => handleFilterChange("valorMin", e.target.value)}
+                        onChange={(e) => handleCurrencyChange('valorMin', e.target.value)}
                         className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
@@ -693,9 +718,10 @@ export default function Filter() {
                         id="valor-max-desktop"
                         name="valorMax"
                         type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={filters.valorMax}
-                        onChange={(e) => handleFilterChange("valorMax", e.target.value)}
+                        onChange={(e) => handleCurrencyChange('valorMax', e.target.value)}
                         className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
