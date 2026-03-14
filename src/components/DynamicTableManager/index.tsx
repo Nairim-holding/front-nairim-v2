@@ -34,6 +34,7 @@ interface DynamicTableManagerProps {
   enableEdit?: boolean;
   enableDelete?: boolean;
   onRowClick?: (item: any) => void;
+  defaultFilters?: Record<string, any>; 
 }
 
 export default function DynamicTableManager({
@@ -49,10 +50,11 @@ export default function DynamicTableManager({
   enableEdit = true,
   enableDelete = true,
   onRowClick,
+  defaultFilters = {},
 }: DynamicTableManagerProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
-  const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>({});
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>(defaultFilters);
   const [showOwnerTypeModal, setShowOwnerTypeModal] = useState(false);
   
   const [isCancelLeaseModalOpen, setIsCancelLeaseModalOpen] = useState(false);
@@ -92,7 +94,7 @@ export default function DynamicTableManager({
     limit: defaultLimit,
     search: "",
     sort: defaultSort,
-    filters: {}
+    filters: defaultFilters
   });
 
   const dataColumns = useMemo(() => {
@@ -200,6 +202,34 @@ export default function DynamicTableManager({
   }, []);
 
   const getCellValue = useCallback((item: any, column: ColumnDef) => {
+    // 1. TRATAMENTO FORÇADO DO STATUS (Ativo/Inativo)
+    if (column.field === "is_active") {
+      const isActive = item[column.field];
+      return (
+        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
+          isActive 
+            ? 'text-green-700 bg-green-50 border border-green-200' 
+            : 'text-red-700 bg-red-50 border border-red-200'
+        }`}>
+          {isActive ? 'Ativo' : 'Inativo'}
+        </span>
+      );
+    }
+
+    // 2. TRATAMENTO FORÇADO PARA STATUS DE LANÇAMENTOS FINANCEIROS (Pendente/Concluído)
+    if (column.field === "status" && (item[column.field] === 'PENDING' || item[column.field] === 'COMPLETED')) {
+      const isCompleted = item[column.field] === 'COMPLETED';
+      return (
+        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
+          isCompleted 
+            ? 'text-green-700 bg-green-50 border border-green-200' 
+            : 'text-yellow-700 bg-yellow-50 border border-yellow-200'
+        }`}>
+          {isCompleted ? 'Concluído' : 'Pendente'}
+        </span>
+      );
+    }
+
     try {
       if (column.field === 'person_type') {
         const cnpjStr = item.cnpj ? String(item.cnpj).replace(/\D/g, '') : '';
@@ -404,7 +434,6 @@ export default function DynamicTableManager({
     });
   }, []);
 
-  // Lógica de exclusão atualizada para capturar as mensagens exatas da API (Ex: Lançamentos vinculados)
   const handleDeleteClick = useCallback(() => {
     if (!selectedCheckboxes.length) {
       showMessage(`Selecione os registros que deseja ${resource === 'leases' ? 'cancelar' : 'excluir'}.`, "error");
@@ -461,7 +490,6 @@ export default function DynamicTableManager({
           if (errorCount === 0) {
             showMessage(selectedCheckboxes.length > 1 ? `${successCount} registros removidos com sucesso!` : "Registro removido com sucesso!", "success");
           } else {
-            // Se for exclusão individual e houver uma mensagem específica da API (ex: 409 Conflict), mostrar ela.
             if (selectedCheckboxes.length === 1 && lastErrorMessage) {
               showMessage(lastErrorMessage, "error");
             } else {

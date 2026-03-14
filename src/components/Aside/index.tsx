@@ -19,7 +19,12 @@ import {
   UserCircle,
   Tag,
   PiggyBank,
-  Landmark
+  Landmark,
+  CreditCard,
+  ChartColumnStacked,
+  HandCoins,
+  Users,
+  FolderInput
 } from "lucide-react";
 import Logo from "../Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,6 +110,12 @@ export default function Aside() {
       label: "Financeiro",
       submenu: [
         { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras" },
+        { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias" },   
+        { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },                                                                 
+        { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },                                  
+        { href: "/dashboard/fornecedores", icon: Users, label: "Fornecedores" },        
+        { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },                                  
+                          
       ]
     },
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
@@ -118,15 +129,13 @@ export default function Aside() {
   return (
     <>
       <button
-        className={`fixed top-[8px] left-[10px] z-[1100] bg-page p-2 rounded-md shadow-md transition-all duration-300 hover:opacity-100 ${
-          isDark ? "bg-surface text-content-inverse" : "text-content"
-        } ${openAside ? "left-[14.25rem]" : "left-[10px]"}`}
+        className={`fixed top-[8px] left-[10px] z-[1100] bg-page p-2 rounded-md shadow-md transition-all duration-300 hover:opacity-100 text-content ${openAside ? "left-[14.25rem]" : "left-[10px]"}`}
         onClick={() => setOpenAside(!openAside)}
       >
         {openAside ? (
-          <X size={25} className={isDark ? "text-content-inverse" : ""} />
+          <X size={25} />
         ) : (
-          <Menu size={25} className={isDark ? "text-content-inverse" : ""} />
+          <Menu size={25} />
         )}
       </button>
 
@@ -143,14 +152,12 @@ export default function Aside() {
 
       {/* Aside */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[300px] z-[1000] shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isDark ? "bg-surface" : "bg-page"
-        } ${openAside ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 h-full w-[300px] z-[1000] shadow-lg transform transition-transform duration-300 ease-in-out bg-page ${openAside ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex flex-col h-full pt-5 px-5 pb-3 items-start">
           <div className="mb-4">
             <Link href="/dashboard">
-              <Logo className={isDark ? "text-content-inverse" : "text-brand-logo"} />
+              <Logo className="text-brand-logo" />
             </Link>
           </div>
 
@@ -162,7 +169,7 @@ export default function Aside() {
                 style={{ maxHeight: "calc(100vh - 200px)" }}
               >
                 {menuItems.map((item) => {
-                  const isOpen = openSubmenu === item.label; // Verifica se ESTE menu está aberto
+                  const isOpen = openSubmenu === item.label;
 
                   return (
                     <li key={item.label} className="relative">
@@ -172,11 +179,7 @@ export default function Aside() {
                             onClick={(e) => handleSubmenuClick(e, item.label)}
                             className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                               isOpen
-                                ? isDark 
-                                  ? "bg-brand text-content-inverse" 
-                                  : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
-                                : isDark
-                                ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                                ? "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
                                 : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                             }`}
                           >
@@ -193,9 +196,7 @@ export default function Aside() {
                           </button>
 
                           {isOpen && openAside && (
-                            <div className={`mt-1 ${
-                              isDark ? "bg-surface-strong" : "bg-surface-muted"
-                            } rounded-lg shadow-lg overflow-hidden`}>
+                            <div className="mt-1 bg-surface-muted rounded-lg shadow-lg overflow-hidden">
                               <ul className="space-y-1">
                                 {item.submenu.map((subItem) => (
                                   <li key={subItem.label}>
@@ -208,11 +209,7 @@ export default function Aside() {
                                       }}
                                       className={`flex items-center p-3 rounded text-sm transition-colors ${
                                         activeItem === subItem.href
-                                          ? isDark
-                                            ? "bg-surface-muted text-content-inverse"
-                                            : "bg-surface-subtle text-content"
-                                          : isDark
-                                          ? "text-content-muted hover:bg-surface-muted hover:text-content-inverse"
+                                          ? "bg-surface-subtle text-content"
                                           : "text-content-secondary hover:bg-surface-subtle hover:text-content"
                                       }`}
                                     >
@@ -231,11 +228,7 @@ export default function Aside() {
                           onClick={() => handleItemClick(item.href)}
                           className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                             activeItem === item.href
-                              ? isDark 
-                                ? "bg-brand text-content-inverse" 
-                                : "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
-                              : isDark
-                              ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
+                              ? "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
                               : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                           }`}
                         >
@@ -251,11 +244,7 @@ export default function Aside() {
                 <li>
                   <button
                     onClick={handleLogout}
-                    className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                      isDark
-                        ? "text-content-muted hover:bg-surface-strong hover:text-content-inverse"
-                        : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
-                    }`}
+                    className="flex items-center w-full p-3 rounded-lg transition-all duration-200 text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
                   >
                     <LogOut size={22} className="min-w-[25px]" />
                     {openAside && <span className="ml-3">Sair</span>}
@@ -276,7 +265,7 @@ export default function Aside() {
                     ) : (
                       <Sun size={20} className="text-content-secondary" />
                     )}
-                    <span className={isDark ? "text-content-inverse" : "text-content-secondary"}>
+                    <span className="text-content-secondary">
                       {isDark ? "Dark Mode" : "Light Mode"}
                     </span>
                   </div>
