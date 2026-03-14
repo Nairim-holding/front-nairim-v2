@@ -15,7 +15,7 @@ interface Contact {
 interface ContactManagerProps {
   value?: Contact[];
   onChange?: (contacts: Contact[]) => void;
-  resourceType: 'owners' | 'tenants' | 'agencies';
+  resourceType: 'owners' | 'tenants' | 'agencies' | "financial-supplier";
   readOnly?: boolean;
 }
 
