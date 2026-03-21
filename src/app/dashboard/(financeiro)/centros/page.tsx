@@ -1,61 +1,138 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, Suspense } from "react";
+import { useState, useEffect } from "react";
 import Section from "@/components/Section";
-import DynamicTableManager from "@/components/DynamicTableManager";
-import SkeletonTable from "@/components/Loading/SkeletonTable";
-import { ColumnDef } from "@/types/types";
+import { useMessageContext } from "@/contexts/MessageContext";
+import { usePopupContext } from "@/contexts/PopupContext";
+import MultiColumnManager from "@/components/MultiColumnManager/page";
 
 export default function CentrosPage() {
-  const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const { showMessage } = useMessageContext();
+  const { showPopup } = usePopupContext();
 
-  // Coluna 'type' removida pois a aba já indica o tipo do centro
-  const columns: ColumnDef[] = [
-    { field: "name", label: "Nome do Centro", sortParam: "name", type: "text" },
-    { field: "is_active", label: "Status", sortParam: "is_active", type: "boolean" },
-    { field: "created_at", label: "Criado em", sortParam: "created_at", type: "date" }
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+  const [centers, setCenters] = useState<any[]>([]);
+  
+  // Controle da Aba (Despesa / Receita)
+  const [transactionType, setTransactionType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+
+  const baseURL = process.env.NEXT_PUBLIC_URL_API;
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${baseURL}/financial-center?limit=1000`);
+      const data = await res.json();
+      setCenters(data?.data || data || []);
+    } catch (_error) { // <-- Corrigido o erro do ESLint (variável não usada)
+      showMessage("Erro ao carregar os dados.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSaveParent = async (data: any, mode: 'CREATE' | 'EDIT') => {
+    const url = mode === 'CREATE' ? `${baseURL}/financial-center` : `${baseURL}/financial-center/${data.id}`;
+    const payload = mode === 'CREATE' ? { ...data, type: transactionType } : data;
+    
+    const res = await fetch(url, {
+      method: mode === 'CREATE' ? 'POST' : 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) {
+      const result = await res.json();
+      throw new Error(result.message || "Erro ao salvar Centro.");
+    }
+    
+    showMessage("Centro salvo com sucesso!", "success");
+    const newRecord = await res.json();
+    await fetchData();
+    return newRecord;
+  };
+
+  // <-- Corrigido o erro do TypeScript envelopando em uma Promise
+  const handleDeleteParent = (id: string, name: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      showPopup(
+        `Excluir Centro`,
+        `Tem certeza que deseja excluir "${name}"?`,
+        async () => {
+          try {
+            const res = await fetch(`${baseURL}/financial-center/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const result = await res.json().catch(() => ({}));
+              throw new Error(result.message || `Erro ao excluir Centro.`);
+            }
+            showMessage("Excluído com sucesso!", "success");
+            await fetchData();
+            resolve(); // Sucesso: Avisa o MultiColumnManager para limpar a tela
+          } catch (error: any) {
+            showMessage(error.message, "error");
+            reject(error); // Erro: Impede o form de fechar
+          }
+        },
+        () => reject(new Error("Ação cancelada")) // Se o usuário fechar o modal, rejeita a promise
+      );
+    });
+  };
+
+  // Filtramos os centros que correspondem à aba selecionada
+  const filteredCenters = centers.filter(c => c.type === transactionType);
 
   return (
     <Section title="Centros de Custos e Receitas">
-      
-      {/* Sistema de Tabs */}
-      <div className="flex gap-3 mb-6 border-b border-ui-border pb-4">
-        <button
-          onClick={() => setActiveTab('EXPENSE')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${
-            activeTab === 'EXPENSE' 
-              ? 'bg-red-50 text-red-700 border-red-200' 
-              : 'bg-surface text-content-secondary border-ui-border hover:bg-surface-subtle'
-          }`}
-        >
-          Centros de Despesa
-        </button>
-        <button
-          onClick={() => setActiveTab('INCOME')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${
-            activeTab === 'INCOME' 
-              ? 'bg-green-50 text-green-700 border-green-200' 
-              : 'bg-surface text-content-secondary border-ui-border hover:bg-surface-subtle'
-          }`}
-        >
-          Centros de Receita
-        </button>
-      </div>
+      <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
+        
+        {/* Toggle Customizado para esta página (Receita / Despesa) */}
+        <div className="flex mb-6 rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">
+          <button
+            onClick={() => setTransactionType('EXPENSE')}
+            className={`px-8 py-2.5 text-sm font-bold transition-all ${
+              transactionType === 'EXPENSE' 
+                ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md' 
+                : 'text-content-secondary hover:text-content'
+            }`}
+          >
+            Despesa
+          </button>
+          <button
+            onClick={() => setTransactionType('INCOME')}
+            className={`px-8 py-2.5 text-sm font-bold transition-all ${
+              transactionType === 'INCOME' 
+                ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md' 
+                : 'text-content-secondary hover:text-content'
+            }`}
+          >
+            Receita
+          </button>
+        </div>
 
-      <Suspense fallback={<SkeletonTable />}>
-        {/* Usamos a key com o valor da tab para garantir que a tabela seja completamente destruída e recriada ao alternar as abas, prevenindo bugs de cache de estado */}
-        <DynamicTableManager
-          key={`center-${activeTab}`} 
-          resource="financial-center"
-          title={activeTab === 'EXPENSE' ? 'Centro de Despesa' : 'Centro de Receita'}
-          columns={columns}
-          basePath="/dashboard/centros"
-          autoFocusSearch={true}
-          defaultFilters={{ type: activeTab }} 
+        <MultiColumnManager
+          titleParent="Centro"
+          titleChild="" 
+          parentData={filteredCenters}
+          childData={[]} 
+          childRelationKey="center_id"
+          isLoading={isLoading}
+          hasChild={false} 
+          
+          onSaveParent={handleSaveParent}
+          onDeleteParent={handleDeleteParent}
+          
+          // <-- Corrigido o erro exigindo async () nas funções vazias do filho
+          onSaveChild={async () => {}} 
+          onDeleteChild={async () => {}}
         />
-      </Suspense>
 
+      </div>
     </Section>
   );
 }

@@ -261,12 +261,13 @@ export default function DynamicFormManager({
     
     if (isHidden || field.disabled) return null;
     
+    // Tratamento para boolean não ser barrado como vazio se for false
     if (field.required && (value === '' || value === null || value === undefined || 
         (Array.isArray(value) && value.length === 0))) {
       return `${field.label} é obrigatório`;
     }
 
-    if (value && value.toString().trim() !== '' && !Array.isArray(value)) {
+    if (value && value.toString().trim() !== '' && !Array.isArray(value) && typeof value !== 'boolean') {
       const stringValue = value.toString();
 
       // VALIDAÇÃO DE DATA
@@ -384,12 +385,21 @@ export default function DynamicFormManager({
     return Object.keys(newErrors).length === 0;
   };
 
+  // CORREÇÃO: Não stringifica se for booleano, permitindo Toggles funcionarem nativamente
   const handleChange = (fieldName: string, rawValue: any) => {
     if (isViewMode) return;
     
-    const parsedValue = (typeof rawValue === 'object' && rawValue !== null) 
-      ? rawValue 
-      : (rawValue !== undefined && rawValue !== null ? String(rawValue) : '');
+    let parsedValue = rawValue;
+    
+    if (typeof rawValue === 'boolean') {
+      parsedValue = rawValue;
+    } else if (typeof rawValue === 'object' && rawValue !== null) {
+      parsedValue = rawValue;
+    } else if (rawValue !== undefined && rawValue !== null) {
+      parsedValue = String(rawValue);
+    } else {
+      parsedValue = '';
+    }
       
     setFormValues(prev => ({ ...prev, [fieldName]: parsedValue }));
 
@@ -794,6 +804,7 @@ export default function DynamicFormManager({
         );
 
       case 'custom':
+        // CORREÇÃO: Passando o valor real (booleano) para a função onChange do custom render
         return (
           <div 
             key={`${field.field}-${index}`} 
