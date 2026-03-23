@@ -31,42 +31,38 @@ export default function ModalSelectTypeOwner({
   }, [onClose]);
 
   return (
-    <div className="fixed z-50 left-[5px]">
+    // Transformamos em absolute para ele flutuar a partir do botão pai
+    <div className={`absolute z-50 mt-2 ${className}`}>
       <div 
         ref={dropdownRef}
-        className={`
-          w-72 bg-surface rounded-lg shadow-xl 
-          border border-gray-200 
-          animate-in slide-in-from-top-2 duration-200
-          ${className}
-        `}
+        className="w-72 bg-surface rounded-lg shadow-xl border border-ui-border animate-in slide-in-from-top-2 duration-200"
       >
         <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">
-            Selecione o tipo de proprietário
+          <h3 className="text-sm font-semibold text-content mb-3">
+            Selecione o tipo de fornecedor
           </h3>
 
           <div className="space-y-2">
             <button
               onClick={() => onSelect('fisica')}
-              className="flex w-full p-3 rounded-lg hover:bg-gray-50"
+              className="flex w-full p-3 rounded-lg hover:bg-surface-subtle transition-colors text-content-secondary hover:text-content"
             >
-              <User className="mr-3 text-purple-600" />
+              <User className="mr-3 text-brand" />
               Pessoa Física
             </button>
 
             <button
               onClick={() => onSelect('juridica')}
-              className="flex w-full p-3 rounded-lg hover:bg-gray-50"
+              className="flex w-full p-3 rounded-lg hover:bg-surface-subtle transition-colors text-content-secondary hover:text-content"
             >
-              <Building2 className="mr-3 text-purple-600" />
+              <Building2 className="mr-3 text-brand" />
               Pessoa Jurídica
             </button>
           </div>
 
           <button
             onClick={onClose}
-            className="mt-3 w-full text-sm text-gray-500 hover:text-gray-700"
+            className="mt-3 w-full text-sm text-content-muted hover:text-content-secondary transition-colors"
           >
             Cancelar
           </button>

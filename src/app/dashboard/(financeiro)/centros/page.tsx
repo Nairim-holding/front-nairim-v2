@@ -25,7 +25,7 @@ export default function CentrosPage() {
       const res = await fetch(`${baseURL}/financial-center?limit=1000`);
       const data = await res.json();
       setCenters(data?.data || data || []);
-    } catch (_error) { // <-- Corrigido o erro do ESLint (variável não usada)
+    } catch { // <-- CORREÇÃO AQUI: Removemos o (_error) para o ESLint parar de reclamar
       showMessage("Erro ao carregar os dados.", "error");
     } finally {
       setIsLoading(false);
@@ -58,7 +58,6 @@ export default function CentrosPage() {
     return newRecord;
   };
 
-  // <-- Corrigido o erro do TypeScript envelopando em uma Promise
   const handleDeleteParent = (id: string, name: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       showPopup(
@@ -73,13 +72,13 @@ export default function CentrosPage() {
             }
             showMessage("Excluído com sucesso!", "success");
             await fetchData();
-            resolve(); // Sucesso: Avisa o MultiColumnManager para limpar a tela
+            resolve();
           } catch (error: any) {
             showMessage(error.message, "error");
-            reject(error); // Erro: Impede o form de fechar
+            reject(error);
           }
         },
-        () => reject(new Error("Ação cancelada")) // Se o usuário fechar o modal, rejeita a promise
+        () => reject(new Error("Ação cancelada"))
       );
     });
   };
@@ -91,7 +90,6 @@ export default function CentrosPage() {
     <Section title="Centros de Custos e Receitas">
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
         
-        {/* Toggle Customizado para esta página (Receita / Despesa) */}
         <div className="flex mb-6 rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">
           <button
             onClick={() => setTransactionType('EXPENSE')}
@@ -116,6 +114,7 @@ export default function CentrosPage() {
         </div>
 
         <MultiColumnManager
+          resetTrigger={transactionType} 
           titleParent="Centro"
           titleChild="" 
           parentData={filteredCenters}
@@ -123,11 +122,8 @@ export default function CentrosPage() {
           childRelationKey="center_id"
           isLoading={isLoading}
           hasChild={false} 
-          
           onSaveParent={handleSaveParent}
           onDeleteParent={handleDeleteParent}
-          
-          // <-- Corrigido o erro exigindo async () nas funções vazias do filho
           onSaveChild={async () => {}} 
           onDeleteChild={async () => {}}
         />

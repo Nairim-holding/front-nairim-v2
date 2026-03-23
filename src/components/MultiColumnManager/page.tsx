@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, Edit2, X, Search } from "lucide-react";
 import Toggle from "@/components/Ui/Toggle";
 
@@ -32,6 +32,9 @@ interface MultiColumnManagerProps {
   onDeleteParent: (id: string, name: string) => Promise<void>;
   onDeleteChild: (id: string, name: string) => Promise<void>;
   isLoading: boolean;
+  
+  // Gatilho para limpar e fechar o formulário ao trocar de aba (ex: Despesa -> Receita)
+  resetTrigger?: any; 
 }
 
 export default function MultiColumnManager({
@@ -45,7 +48,8 @@ export default function MultiColumnManager({
   onSaveChild,
   onDeleteParent,
   onDeleteChild,
-  isLoading
+  isLoading,
+  resetTrigger // <-- Pegamos a prop aqui
 }: MultiColumnManagerProps) {
   
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
@@ -58,6 +62,33 @@ export default function MultiColumnManager({
   const [formMode, setFormMode] = useState<FormMode>('IDLE');
   const [formData, setFormData] = useState({ id: '', name: '', is_active: true });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Referência para o Input de Nome
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Efeito 1: Focar no input e colocar o cursor no final do texto
+  useEffect(() => {
+    if (formMode !== 'IDLE') {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Pega o tamanho do texto atual e joga o cursor para o final
+          const length = inputRef.current.value.length;
+          inputRef.current.setSelectionRange(length, length);
+        }
+      }, 50);
+    }
+  }, [formMode]);
+
+  // Efeito 2: Escutar o gatilho (resetTrigger) para fechar tudo ao trocar de aba
+  useEffect(() => {
+    // Sempre que o valor de resetTrigger mudar, nós fechamos o form e limpamos seleções
+    setFormMode('IDLE');
+    setFormData({ id: '', name: '', is_active: true });
+    setSelectedParentId(null);
+    setSearchParent('');
+    setSearchChild('');
+  }, [resetTrigger]);
 
   const normalizeText = (text: string) => 
     text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
@@ -315,8 +346,8 @@ export default function MultiColumnManager({
                   Nome {formMode.includes('PARENT') ? `do ${titleParent}` : `do ${titleChild}`}
                 </label>
                 <input 
+                  ref={inputRef} 
                   type="text"
-                  autoFocus
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2.5 text-[14px] border border-ui-border rounded-lg outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
