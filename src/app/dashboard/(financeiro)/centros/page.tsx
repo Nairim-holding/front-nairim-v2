@@ -88,7 +88,7 @@ export default function CentrosPage() {
   const filteredCenters = centers.filter(c => c.type === transactionType);
 
   return (
-    <Section title="Centros de Custos e Receitas">
+    <Section title="Centros de Despesas e Receitas">
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
         
         {/* Toggle Customizado para esta página (Receita / Despesa) */}
