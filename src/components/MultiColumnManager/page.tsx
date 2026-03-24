@@ -32,8 +32,6 @@ interface MultiColumnManagerProps {
   onDeleteParent: (id: string, name: string) => Promise<void>;
   onDeleteChild: (id: string, name: string) => Promise<void>;
   isLoading: boolean;
-  
-  // Gatilho para limpar e fechar o formulário ao trocar de aba (ex: Despesa -> Receita)
   resetTrigger?: any; 
 }
 

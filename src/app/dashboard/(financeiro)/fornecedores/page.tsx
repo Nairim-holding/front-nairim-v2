@@ -67,6 +67,14 @@ export default function FornecedoresPage() {
     })
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
+  // FUNÇÃO NOVA: Descobre com precisão se é PF ou PJ baseando-se nos dados salvos
+  const getPersonType = (supplier: any): OwnerType => {
+    if (supplier.cnpj) return 'juridica';
+    if (supplier.cpf || supplier.internal_code || supplier.occupation || supplier.marital_status) return 'fisica';
+    if (supplier.trade_name || supplier.state_registration || supplier.municipal_registration) return 'juridica';
+    return 'juridica'; // Fallback padrão
+  };
+
   const openForm = (mode: FormMode, id: string | null = null, type: OwnerType = 'juridica') => {
     setSelectedId(id);
     setFormMode(mode);
@@ -159,7 +167,6 @@ export default function FornecedoresPage() {
       state_registration: personType === 'juridica' ? (data.state_registration || null) : null,
       municipal_registration: personType === 'juridica' ? (data.municipal_registration || null) : null,
       
-      // Só manda endereço se a pessoa preencheu pelo menos a rua ou cep
       addresses: data.zip_code || data.street ? [
         {
           zip_code: data.zip_code?.replace(/\D/g, ''),
@@ -228,10 +235,10 @@ export default function FornecedoresPage() {
     const identificationFields: any[] = isPF 
       ? [
           { field: 'legal_name', label: 'Nome Completo', type: 'text', required: true, placeholder: 'Nome Completo', autoFocus: true, icon: <User size={20} />, className: 'col-span-full' },
-          { field: 'internal_code', label: 'Código Interno', type: 'text', required: true, placeholder: 'Código interno', icon: <Hash size={20} /> },
+          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} /> },
           { field: 'occupation', label: 'Profissão', type: 'text', required: false, placeholder: 'Profissão', icon: <User size={20} /> },
           { field: 'marital_status', label: 'Estado Civil', type: 'select', required: false, placeholder: 'Selecione...', options: maritalStatusOptions, icon: <User size={20} /> },
-          { field: 'cpf', label: 'CPF', type: 'text', required: true, placeholder: '000.000.000-00', mask: 'cpf', icon: <FileText size={20} /> },
+          { field: 'cpf', label: 'CPF', type: 'text', required: false, placeholder: '000.000.000-00', mask: 'cpf', icon: <FileText size={20} /> },
         ]
       : [
           { field: 'legal_name', label: 'Razão Social', type: 'text', required: true, placeholder: 'Razão Social', autoFocus: true, icon: <BuildingIcon size={20} />, className: 'col-span-full' },
@@ -251,7 +258,6 @@ export default function FornecedoresPage() {
         title: 'Endereço',
         icon: <MapPin size={20} />,
         fields: [
-          // TODOS OS CAMPOS AQUI ESTÃO COMO required: false
           { field: 'zip_code', label: 'CEP', type: 'text', required: false, placeholder: '00000-000', mask: 'cep', icon: <MapPinIcon size={20} />, className: 'col-span-full' },
           { field: 'street', label: 'Rua', type: 'text', required: false, placeholder: 'Rua das Flores', readOnly: !isManualAddress, disabled: !isManualAddress, icon: <MapPinIcon size={20} />, className: 'col-span-full' },
           { field: 'number', label: 'Número', type: 'text', required: false, placeholder: '123', icon: <Hash size={20} /> },
@@ -335,7 +341,8 @@ export default function FornecedoresPage() {
                   displayedSuppliers.map(supplier => (
                     <div 
                       key={supplier.id}
-                      onClick={() => openForm('EDIT', supplier.id, supplier.cpf ? 'fisica' : 'juridica')}
+                      // AQUI USAMOS A FUNÇÃO NOVA para descobrir o tipo: getPersonType(supplier)
+                      onClick={() => openForm('EDIT', supplier.id, getPersonType(supplier))}
                       className={`group flex justify-between items-center px-3 py-2.5 cursor-pointer rounded-lg mb-1 transition-colors ${
                         selectedId === supplier.id 
                           ? 'bg-brand/10 text-brand border border-brand/20' 
@@ -357,7 +364,7 @@ export default function FornecedoresPage() {
 
                       <div className={`flex items-center gap-1 flex-shrink-0 ml-2 ${selectedId === supplier.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); openForm('EDIT', supplier.id, supplier.cpf ? 'fisica' : 'juridica'); }}
+                          onClick={(e) => { e.stopPropagation(); openForm('EDIT', supplier.id, getPersonType(supplier)); }}
                           className="p-1 hover:bg-brand/20 rounded text-brand"
                           title="Editar"
                         >

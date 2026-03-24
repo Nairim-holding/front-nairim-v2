@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import DynamicFormManager from '@/components/DynamicFormManager';
+import IptuManager from '@/components/IptuManager';
 import { FormStep } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter, useParams } from 'next/navigation';
@@ -11,10 +12,7 @@ import {
   Home, MapPin, DollarSign, Upload, Building2, 
   Key, FileText, BedDouble, Bath, Car, Ruler, Sofa,
   HomeIcon, User, Building, DollarSign as Dollar,
-  Calendar, File,
-  MapPinIcon,
-  Hash,
-  Globe
+  Calendar, File, MapPinIcon, Hash, Globe, Landmark
 } from 'lucide-react';
 
 const parseMetric = (value: string) => {
@@ -74,13 +72,9 @@ export default function EditarImovelPage() {
 
         if (!ownersRes.ok || !typesRes.ok || !agenciesRes.ok) throw new Error('Erro ao buscar dados iniciais');
 
-        const ownersData = await ownersRes.json();
-        const typesData = await typesRes.json();
-        const agenciesData = await agenciesRes.json();
-
-        setOwners(ownersData.data || ownersData || []);
-        setPropertyTypes(typesData.data || typesData || []);
-        setAgencies(agenciesData.data || agenciesData || []);
+        setOwners((await ownersRes.json()).data || []);
+        setPropertyTypes((await typesRes.json()).data || []);
+        setAgencies((await agenciesRes.json()).data || []);
       } catch (error) {
         showMessage('Erro ao carregar dados iniciais', 'error');
       } finally {
@@ -101,7 +95,7 @@ export default function EditarImovelPage() {
         const data = await response.json();
         if (data.success && data.data) {
           setPropertyData(data.data);
-          setCompletedSteps([0, 1, 2, 3]);
+          setCompletedSteps([0, 1, 2, 3, 4]);
         } else {
           throw new Error(data.message || 'Erro ao carregar dados do imóvel');
         }
@@ -137,20 +131,14 @@ export default function EditarImovelPage() {
             }
             throw new Error('Erro ao buscar CEP');
           }
-
           const data = await response.json();
           if (data.error || data.erro) throw new Error(data.error || 'CEP não encontrado.');
           
           setIsManualAddress(false);
           showMessage('Endereço preenchido automaticamente!', 'success');
           return {
-            street: data.rua || data.logradouro || '',
-            district: data.bairro || '',
-            city: data.cidade || data.localidade || '',
-            state: data.estado || data.uf || '',
-            country: data.pais || 'Brasil',
-            latitude: data.latitude || '',
-            longitude: data.longitude || '',
+            street: data.rua || data.logradouro || '', district: data.bairro || '', city: data.cidade || data.localidade || '',
+            state: data.estado || data.uf || '', country: data.pais || 'Brasil', latitude: data.latitude || '', longitude: data.longitude || '',
           };
         } catch (error: any) {
           showMessage('Erro ao buscar CEP. Preencha manualmente.', 'error');
@@ -173,72 +161,41 @@ export default function EditarImovelPage() {
     const extractFileName = (filePath: string) => {
       if (!filePath) return 'Arquivo';
       const parts = filePath.split('/');
-      const fileNameWithTimestamp = parts[parts.length - 1];
-      return decodeURIComponent(fileNameWithTimestamp.replace(/^\d+-/, ''));
+      return decodeURIComponent(parts[parts.length - 1].replace(/^\d+-/, ''));
     };
 
     return {
-      title: data.title || '',
-      bedrooms: data.bedrooms?.toString() || '',
-      bathrooms: data.bathrooms?.toString() || '',
-      half_bathrooms: data.half_bathrooms?.toString() || '',
-      garage_spaces: data.garage_spaces?.toString() || '',
-      area_total: formatMetricValue(data.area_total || ''),
-      area_built: formatMetricValue(data.area_built || ''),
-      frontage: formatMetricValue(data.frontage || ''),
-      floor_number: data.floor_number?.toString() || '',
-      tax_registration: data.tax_registration || '',
-      owner_id: data.owner_id || '',
-      type_id: data.type_id || '',
-      agency_id: data.agency_id || '',
-      furnished: data.furnished?.toString() || 'false',
-      notes: data.notes || '',
+      title: data.title || '', bedrooms: data.bedrooms?.toString() || '', bathrooms: data.bathrooms?.toString() || '',
+      half_bathrooms: data.half_bathrooms?.toString() || '', garage_spaces: data.garage_spaces?.toString() || '',
+      area_total: formatMetricValue(data.area_total || ''), area_built: formatMetricValue(data.area_built || ''),
+      frontage: formatMetricValue(data.frontage || ''), floor_number: data.floor_number?.toString() || '',
+      tax_registration: data.tax_registration || '', owner_id: data.owner_id || '', type_id: data.type_id || '',
+      agency_id: data.agency_id || '', furnished: data.furnished?.toString() || 'false', notes: data.notes || '',
       
-      zip_code: address.zip_code || '',
-      street: address.street || '',
-      number: address.number || '',
-      complement: address.complement || '',
-      block: address.block || '',
-      lot: address.lot || '',
-      district: address.district || '',
-      city: address.city || '',
-      state: address.state || '',
-      country: address.country || 'Brasil',
-      latitude: address.latitude || '',
-      longitude: address.longitude || '',
+      zip_code: address.zip_code || '', street: address.street || '', number: address.number || '', complement: address.complement || '',
+      block: address.block || '', lot: address.lot || '', district: address.district || '', city: address.city || '',
+      state: address.state || '', country: address.country || 'Brasil', latitude: address.latitude || '', longitude: address.longitude || '',
       
-      purchase_date: values.purchase_date ? values.purchase_date.split('T')[0] : '',
-      purchase_value: formatMoney(values.purchase_value || ''),
-      rental_value: formatMoney(values.rental_value || ''),
-      condo_fee: formatMoney(values.condo_fee || ''),
-      property_tax: formatMoney(values.property_tax || ''),
-      status: values.status || 'AVAILABLE',
-      sale_date: values.sale_date ? values.sale_date.split('T')[0] : '',
-      values_notes: values.notes || '',
-      sale_value: formatMoney(values.sale_value || ''),
+      purchase_date: values.purchase_date ? values.purchase_date.split('T')[0] : '', purchase_value: formatMoney(values.purchase_value || ''),
+      rental_value: formatMoney(values.rental_value || ''), condo_fee: formatMoney(values.condo_fee || ''), status: values.status || 'AVAILABLE',
+      property_tax: formatMoney(values.property_tax || ''), // MAPEADO PARA A ABA IPTU
+      sale_date: values.sale_date ? values.sale_date.split('T')[0] : '', values_notes: values.notes || '', sale_value: formatMoney(values.sale_value || ''),
       extra_charges: formatMoney(values.extra_charges || ''),
       
+      iptus: data.iptus || [], 
+
       arquivosImagens: data.documents?.filter((doc: any) => doc.type === 'IMAGE').map((doc: any) => ({
-        id: doc.id,
-        file_name: doc.description || extractFileName(doc.file_path),
-        file_url: doc.file_path,
-        type: doc.type,
-        mime_type: doc.file_type,
-        is_featured: doc.is_featured || false, // <--- MAPEAMENTO DO DESTAQUE
+        id: doc.id, file_name: doc.description || extractFileName(doc.file_path), file_url: doc.file_path, type: doc.type, mime_type: doc.file_type, is_featured: doc.is_featured || false,
       })) || [],
-        
       arquivosMatricula: data.documents?.filter((doc: any) => doc.type === 'REGISTRATION').map((doc: any) => ({
         id: doc.id, file_name: doc.description || extractFileName(doc.file_path), file_url: doc.file_path, type: doc.type, mime_type: doc.file_type,
       })) || [],
-        
       arquivosRegistro: data.documents?.filter((doc: any) => doc.type === 'PROPERTY_RECORD').map((doc: any) => ({
         id: doc.id, file_name: doc.description || extractFileName(doc.file_path), file_url: doc.file_path, type: doc.type, mime_type: doc.file_type,
       })) || [],
-        
       arquivosEscritura: data.documents?.filter((doc: any) => doc.type === 'TITLE_DEED').map((doc: any) => ({
         id: doc.id, file_name: doc.description || extractFileName(doc.file_path), file_url: doc.file_path, type: doc.type, mime_type: doc.file_type,
       })) || [],
-        
       arquivosOutros: data.documents?.filter((doc: any) => !['IMAGE', 'REGISTRATION', 'PROPERTY_RECORD', 'TITLE_DEED'].includes(doc.type)).map((doc: any) => ({
         id: doc.id, file_name: doc.description || extractFileName(doc.file_path), file_url: doc.file_path, type: doc.type, mime_type: doc.file_type,
       })) || [],
@@ -246,7 +203,7 @@ export default function EditarImovelPage() {
   }, []);
 
   const steps: FormStep[] = useMemo(() => {
-    const activeLease = propertyData?.leases?.[0];
+    const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED');
     const hasActiveLease = !!activeLease;
     const tenantName = activeLease?.tenant?.name || '';
 
@@ -262,7 +219,7 @@ export default function EditarImovelPage() {
         { field: 'garage_spaces', label: 'Vagas na Garagem', type: 'number', required: true, placeholder: 'Quantidade de vagas', showIncrementButtons: true, min: 0, icon: <Car size={20} /> },
         { field: 'floor_number', label: 'Número do Andar', type: 'number', required: false, placeholder: 'Número do andar', showIncrementButtons: true, min: 0, icon: <Building size={20} /> },
         { field: 'area_total', label: 'Área Total (m²)', type: 'text', required: true, placeholder: 'Área total em m²', mask: 'metros2', icon: <Ruler size={20} /> },
-        { field: 'area_built', label: 'Área Construída (m²)', type: 'text', required: true, placeholder: 'Área construída em m²', mask: 'metros2', icon: <Ruler size={20} /> },
+        { field: 'area_built', label: 'Área Edificada (m²)', type: 'text', required: true, placeholder: 'Área Edificada em m²', mask: 'metros2', icon: <Ruler size={20} /> },
         { field: 'frontage', label: 'Testada (m)', type: 'text', required: true, placeholder: 'Testada em metros', mask: 'metros', icon: <Ruler size={20} /> },
         { field: 'tax_registration', label: 'Registro Fiscal', type: 'text', required: true, placeholder: 'Número do registro fiscal', icon: <FileText size={20} />, className: 'col-span-full' },
         { field: 'owner_id', label: 'Proprietário', type: 'select', required: true, options: loadingData ? [{ label: 'Carregando...', value: '' }] : owners.map((owner) => ({ label: owner.name || owner.trade_name || owner.legal_name || 'Sem nome', value: owner.id })), icon: <User size={20} />, className: 'col-span-full' },
@@ -296,14 +253,14 @@ export default function EditarImovelPage() {
       fields: [
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', required: false, icon: <Calendar size={20} />, className: 'col-span-full' },
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', required: false, placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} /> },
-        { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: true, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} /> },
-        { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', required: false, placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} /> },
-        { field: 'property_tax', label: 'Valor IPTU', type: 'text', required: true, placeholder: 'R$ 200,00', mask: 'money', icon: <FileText size={20} /> },
+        { field: 'rental_value', label: 'Valor Aluguel Base', type: 'text', required: true, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} /> },
+        { field: 'condo_fee', label: 'Valor Condomínio Base', type: 'text', required: false, placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} /> },
         { 
-          field: 'status', label: 'Status Atual', type: 'select', required: true, disabled: hasActiveLease, 
+          field: 'status', label: 'Status Atual', type: 'select', required: true, 
+          disabled: hasActiveLease, 
           options: [{ label: 'Disponível', value: 'AVAILABLE' }, { label: 'Ocupado', value: 'OCCUPIED' }], 
           icon: <Key size={20} />, 
-          renderBottom: () => hasActiveLease ? (<div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 shadow-lg">Inquilino: {tenantName}</div>) : null, className: 'relative group' 
+          renderBottom: () => hasActiveLease ? (<div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 shadow-lg">Inquilino atual: {tenantName}</div>) : null, className: 'relative group' 
         },
         { field: 'sale_date', label: 'Data da Venda', type: 'date', required: false, icon: <Calendar size={20} />, className: 'col-span-full' },
         { field: 'sale_value', label: 'Valor de Venda', type: 'text', placeholder: 'R$ 600.000,00', mask: 'money', icon: <Dollar size={20} />, className: 'col-span-full' },
@@ -312,22 +269,27 @@ export default function EditarImovelPage() {
       ],
     },
     {
+      title: 'IPTU',
+      icon: <Landmark size={20} />,
+      fields: [
+        { field: 'property_tax', label: 'Valor IPTU (Base de Referência)', type: 'text', required: true, placeholder: 'R$ 1.200,00', mask: 'money', icon: <FileText size={20} />, className: 'col-span-full md:col-span-1' },
+        {
+          field: 'iptus',
+          label: '',
+          type: 'custom',
+          className: 'col-span-full w-full pt-4 border-t border-ui-border-soft mt-4',
+          render: (value: any, fv: any, onChange: any) => {
+            const baseIptu = parseMoney(fv?.property_tax || '0');
+            return <IptuManager value={value || []} onChange={onChange} readOnly={false} activeLease={activeLease} baseIptu={baseIptu} />
+          }
+        }
+      ]
+    },
+    {
       title: 'Mídias',
       icon: <Upload size={20} />,
       fields: [
-        {
-          field: 'arquivosImagens',
-          label: 'Imagens e Vídeos',
-          type: 'file',
-          accept: 'image/*,video/mp4,video/webm',
-          multiple: true,
-          textButton: 'Selecionar Mídias',
-          placeholder: 'Nenhum arquivo selecionado',
-          icon: <Upload size={20} />,
-          className: 'col-span-full w-full',
-          maxFiles: 30,
-          enableFeatureSelection: true, // <--- ATIVA A ESTRELA AQUI
-        } as any,
+        { field: 'arquivosImagens', label: 'Imagens e Vídeos', type: 'file', accept: 'image/*,video/mp4,video/webm', multiple: true, textButton: 'Selecionar Mídias', placeholder: 'Nenhum arquivo selecionado', icon: <Upload size={20} />, className: 'col-span-full w-full', maxFiles: 30, enableFeatureSelection: true } as any,
         { field: 'arquivosMatricula', label: 'Matrícula', type: 'file', accept: '.pdf', multiple: true, maxFiles: 3, textButton: 'Escolher arquivos', className: 'flex-1 w-full', placeholder: 'Nenhum arquivo selecionado', icon: <File size={20} /> },
         { field: 'arquivosRegistro', label: 'Registro', type: 'file', accept: '.pdf', multiple: true, maxFiles: 3, textButton: 'Escolher arquivos', className: 'flex-1 w-full', placeholder: 'Nenhum arquivo selecionado', icon: <FileText size={20} /> },
         { field: 'arquivosEscritura', label: 'Escritura', type: 'file', accept: '.pdf', multiple: true, maxFiles: 3, textButton: 'Escolher arquivos', className: 'flex-1 w-full', placeholder: 'Nenhum arquivo selecionado', icon: <FileText size={20} /> }
@@ -336,26 +298,28 @@ export default function EditarImovelPage() {
   ];
 }, [owners, propertyTypes, agencies, loadingData, propertyData, isManualAddress]);
 
-  const handleSubmit = useCallback(async (data: any) => {
+  const validateStep = (stepIndex: number, data: any): boolean => {
+    if (!steps[stepIndex]) return true;
+    const stepFields = steps[stepIndex].fields;
+    for (const field of stepFields) {
+      if (field.required && !field.hidden && !field.disabled) {
+        const value = data[field.field];
+        if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSubmit = async (data: any) => {
     try {
       const formData = new FormData();
       
       const propertyDataObj = {
-        title: data.title,
-        bedrooms: parseInt(data.bedrooms) || 0,
-        bathrooms: parseInt(data.bathrooms) || 0,
-        half_bathrooms: parseInt(data.half_bathrooms) || 0,
-        garage_spaces: parseInt(data.garage_spaces) || 0,
-        area_total: parseMetric(data.area_total),
-        area_built: parseMetric(data.area_built),
-        frontage: parseMetric(data.frontage),
-        furnished: data.furnished === 'true',
-        floor_number: parseInt(data.floor_number) || 0,
-        tax_registration: data.tax_registration,
-        notes: data.notes,
-        owner_id: data.owner_id,
-        type_id: data.type_id,
-        agency_id: data.agency_id,
+        title: data.title, bedrooms: parseInt(data.bedrooms) || 0, bathrooms: parseInt(data.bathrooms) || 0,
+        half_bathrooms: parseInt(data.half_bathrooms) || 0, garage_spaces: parseInt(data.garage_spaces) || 0,
+        area_total: parseMetric(data.area_total), area_built: parseMetric(data.area_built), frontage: parseMetric(data.frontage),
+        furnished: data.furnished === 'true', floor_number: parseInt(data.floor_number) || 0, tax_registration: data.tax_registration,
+        notes: data.notes, owner_id: data.owner_id, type_id: data.type_id, agency_id: data.agency_id,
       };
 
       const addressData = {
@@ -369,18 +333,15 @@ export default function EditarImovelPage() {
       formData.append('propertyData', JSON.stringify(propertyDataObj));
       formData.append('addressData', JSON.stringify(addressData));
       formData.append('valuesData', JSON.stringify(valuesData));
+      formData.append('iptusData', JSON.stringify(data.iptus || [])); 
       formData.append('userId', user?.id || '');
 
-      const processFileField = (fieldName: string, fieldData: any[] = []): File[] => {
-        return fieldData.filter(item => item && typeof item === 'object' && 'name' in item && 'size' in item && 'type' in item) as File[];
-      };
+      const processFileField = (fieldName: string, fieldData: any[] = []): File[] => fieldData.filter(item => item && typeof item === 'object' && 'name' in item && 'size' in item && 'type' in item) as File[];
 
       const removedDocumentIds: string[] = [];
       const documentTypes = [
-        { field: 'arquivosImagens', type: 'IMAGE' },
-        { field: 'arquivosMatricula', type: 'REGISTRATION' },
-        { field: 'arquivosRegistro', type: 'PROPERTY_RECORD' },
-        { field: 'arquivosEscritura', type: 'TITLE_DEED' }
+        { field: 'arquivosImagens', type: 'IMAGE' }, { field: 'arquivosMatricula', type: 'REGISTRATION' },
+        { field: 'arquivosRegistro', type: 'PROPERTY_RECORD' }, { field: 'arquivosEscritura', type: 'TITLE_DEED' }
       ];
 
       documentTypes.forEach(({ field, type }) => {
@@ -393,13 +354,9 @@ export default function EditarImovelPage() {
 
       if (removedDocumentIds.length > 0) formData.append('removedDocuments', JSON.stringify(removedDocumentIds));
 
-      // LÓGICA PARA IMAGEM EM DESTAQUE
       if (data.arquivosImagens?.length > 0) {
         const featuredImage = Array.from(data.arquivosImagens).find((file: any) => file.is_featured);
-        if (featuredImage) {
-          const featuredIdentifier = (featuredImage as any).id || (featuredImage as File).name;
-          formData.append('featuredImageIdentifier', featuredIdentifier);
-        }
+        if (featuredImage) formData.append('featuredImageIdentifier', (featuredImage as any).id || (featuredImage as File).name);
       }
 
       const newImages = processFileField('arquivosImagens', data.arquivosImagens);
@@ -413,11 +370,7 @@ export default function EditarImovelPage() {
       newEscritura.forEach((file: File) => formData.append('arquivosEscritura', file));
 
       const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const updateRes = await fetch(`${API_URL}/properties/update-unified/${id}`, {
-        method: 'PUT',
-        body: formData,
-      });
-
+      const updateRes = await fetch(`${API_URL}/properties/update-unified/${id}`, { method: 'PUT', body: formData });
       const responseText = await updateRes.text();
       let result;
       try { result = JSON.parse(responseText); } catch (e) { throw new Error('Resposta inválida do servidor'); }
@@ -432,10 +385,8 @@ export default function EditarImovelPage() {
 
       if (!result.success) throw new Error(result.message || 'Erro desconhecido ao atualizar imóvel');
       return result.data || result;
-    } catch (error: any) {
-      throw new Error(`Erro ao atualizar imóvel: ${error.message}`);
-    }
-  }, [user, id, propertyData]);
+    } catch (error: any) { throw new Error(`Erro ao atualizar imóvel: ${error.message}`); }
+  };
 
   const onSubmitSuccess = useCallback((_data: any) => {
     showMessage('Imóvel atualizado com sucesso!', 'success');
@@ -448,32 +399,17 @@ export default function EditarImovelPage() {
 
   const canNavigateToStep = useCallback((targetStep: number, currentStep: number, data: any): boolean => {
     if (targetStep < currentStep) return true;
+    if (targetStep > currentStep) return validateStep(currentStep, data);
     return true;
-  }, []);
+  }, [validateStep]);
 
-  if (loadingData || loadingProperty) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
-      </div>
-    );
-  }
+  if (loadingData || loadingProperty) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div></div>;
 
   return (
     <DynamicFormManager
-      resource="properties"
-      title="Imóvel"
-      basePath="/dashboard/imoveis"
-      mode="edit"
-      id={id}
-      steps={steps}
-      onSubmit={handleSubmit}
-      onSubmitSuccess={onSubmitSuccess}
-      onFieldChange={handleFieldChange}
-      transformData={transformData}
-      completedSteps={completedSteps}
-      onStepComplete={handleStepComplete}
-      canNavigateToStep={canNavigateToStep}
+      resource="properties" title="Imóvel" basePath="/dashboard/imoveis" mode="edit" id={id} steps={steps}
+      onSubmit={handleSubmit} onSubmitSuccess={onSubmitSuccess} onFieldChange={handleFieldChange} transformData={transformData}
+      completedSteps={completedSteps} onStepComplete={handleStepComplete} canNavigateToStep={canNavigateToStep}
     />
   );
 }
