@@ -17,8 +17,13 @@ import {
 
 const parseMetric = (value: string | number) => {
   if (!value) return 0;
-  const numericValue = typeof value === 'string' ? value.replace(/[^\d.]/g, '') : value.toString();
-  return parseFloat(numericValue) || 0;
+  if (typeof value === 'number') return value;
+
+  const cleanValue = value.toString().replace(/\./g, '').replace(',', '.');
+  
+  const numericValue = parseFloat(cleanValue.replace(/[^\d.]/g, ''));
+  
+  return isNaN(numericValue) ? 0 : numericValue;
 };
 
 const parseMoney = (value: string | number) => {

@@ -67,12 +67,11 @@ export default function FornecedoresPage() {
     })
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  // FUNÇÃO NOVA: Descobre com precisão se é PF ou PJ baseando-se nos dados salvos
   const getPersonType = (supplier: any): OwnerType => {
     if (supplier.cnpj) return 'juridica';
     if (supplier.cpf || supplier.internal_code || supplier.occupation || supplier.marital_status) return 'fisica';
     if (supplier.trade_name || supplier.state_registration || supplier.municipal_registration) return 'juridica';
-    return 'juridica'; // Fallback padrão
+    return 'juridica'; 
   };
 
   const openForm = (mode: FormMode, id: string | null = null, type: OwnerType = 'juridica') => {
@@ -160,7 +159,7 @@ export default function FornecedoresPage() {
       cnpj: personType === 'juridica' && data.cnpj ? data.cnpj.replace(/\D/g, '') : null,
       
       cpf: personType === 'fisica' && data.cpf ? data.cpf.replace(/\D/g, '') : null,
-      internal_code: personType === 'fisica' ? (data.internal_code || null) : null,
+      internal_code: data.internal_code || null,
       occupation: personType === 'fisica' ? (data.occupation || null) : null,
       marital_status: personType === 'fisica' ? (data.marital_status || null) : null,
       
@@ -244,6 +243,7 @@ export default function FornecedoresPage() {
           { field: 'legal_name', label: 'Razão Social', type: 'text', required: true, placeholder: 'Razão Social', autoFocus: true, icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'trade_name', label: 'Nome Fantasia', type: 'text', required: false, placeholder: 'Nome Fantasia', icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'cnpj', label: 'CNPJ', type: 'text', required: false, placeholder: '00.000.000/0000-00', mask: 'cnpj', icon: <FileText size={20} />, className: 'col-span-full' },
+          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} /> },
           { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, placeholder: 'Inscrição Estadual', icon: <Hash size={20} /> },
           { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, placeholder: 'Inscrição Municipal', icon: <Hash size={20} /> },
         ];
@@ -341,7 +341,6 @@ export default function FornecedoresPage() {
                   displayedSuppliers.map(supplier => (
                     <div 
                       key={supplier.id}
-                      // AQUI USAMOS A FUNÇÃO NOVA para descobrir o tipo: getPersonType(supplier)
                       onClick={() => openForm('EDIT', supplier.id, getPersonType(supplier))}
                       className={`group flex justify-between items-center px-3 py-2.5 cursor-pointer rounded-lg mb-1 transition-colors ${
                         selectedId === supplier.id 
