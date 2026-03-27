@@ -105,7 +105,7 @@ export default function CentrosPage() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <Section title="Centros de Custos e Receitas">
+    <Section title="Centros de Despesas e Receitas">
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
 
         {/* Seletor Despesa / Receita */}
