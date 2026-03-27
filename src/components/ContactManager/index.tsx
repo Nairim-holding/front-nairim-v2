@@ -144,22 +144,29 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
 
   return (
     <div className="w-full space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* AQUI ESTÁ A PRIMEIRA MUDANÇA:
+        Diminuí o número máximo de colunas (de 4 para 3) para que os cards fiquem naturalmente mais largos!
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {contacts.map((c, idx) => (
           <div 
             key={idx} 
-            className={`relative rounded-xl p-4 shadow-sm transition-shadow group border ${
+            className={`relative rounded-xl p-4 shadow-sm transition-shadow group border h-full flex flex-col justify-between overflow-hidden ${
               readOnly 
                 ? 'bg-surface-muted border-ui-border' 
                 : 'bg-surface border-ui-border-soft hover:shadow-md'
             }`}
           >
-            <div className="flex justify-between items-start mb-3">
-              <div className="font-semibold text-content flex items-center gap-2 truncate pr-2 w-full">
-                <div className="bg-purple-100 p-1.5 rounded-full shrink-0">
+            <div className="flex justify-between items-start mb-4 gap-3">
+              {/* O min-w-0 aqui força o flexbox a respeitar os limites do card */}
+              <div className="font-semibold text-content flex items-start gap-2 w-full min-w-0">
+                <div className="bg-purple-100 p-1.5 rounded-full shrink-0 mt-0.5">
                   <User size={16} className="text-purple-600" />
                 </div>
-                <span className="truncate text-sm" title={c.contact}>{c.contact || 'Sem nome'}</span>
+                {/* break-all força o corte da palavra exatamente na borda do card, jogando para a linha de baixo */}
+                <span className="text-sm leading-snug whitespace-normal break-all" title={c.contact}>
+                  {c.contact || 'Sem nome'}
+                </span>
               </div>
               
               {!readOnly && (
@@ -184,18 +191,22 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
               )}
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 mt-auto">
               {(c.cellphone || c.phone) && (
-                <div className={`text-xs text-content-muted flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'}`}>
-                  {c.cellphone ? <Smartphone size={13} className="text-content-placeholder" /> : <Phone size={13} className="text-content-placeholder" />}
-                  <span className="truncate">{c.cellphone ? formatPhone(c.cellphone) : formatPhone(c.phone || '')}</span>
+                <div className={`text-xs text-content-muted flex items-start gap-2 p-2 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'} min-w-0`}>
+                  <div className="shrink-0 mt-0.5">
+                    {c.cellphone ? <Smartphone size={13} className="text-content-placeholder" /> : <Phone size={13} className="text-content-placeholder" />}
+                  </div>
+                  <span className="break-all whitespace-normal leading-tight">
+                    {c.cellphone ? formatPhone(c.cellphone) : formatPhone(c.phone || '')}
+                  </span>
                 </div>
               )}
               
               {c.email && (
-                <div className={`text-xs text-content-muted flex items-center gap-2 p-1.5 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'}`}>
-                  <Mail size={13} className="text-content-placeholder" />
-                  <span className="truncate" title={c.email}>{c.email}</span>
+                <div className={`text-xs text-content-muted flex items-start gap-2 p-2 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'} min-w-0`}>
+                  <Mail size={13} className="text-content-placeholder shrink-0 mt-0.5" />
+                  <span className="break-all whitespace-normal leading-tight" title={c.email}>{c.email}</span>
                 </div>
               )}
             </div>
@@ -206,7 +217,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
           <button
             type="button"
             onClick={() => openModal('add')}
-            className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-ui-border rounded-xl p-4 text-content-muted hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all min-h-[130px] group"
+            className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-ui-border rounded-xl p-4 text-content-muted hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all min-h-[140px] group h-full"
           >
             <div className="bg-surface-subtle group-hover:bg-purple-200 p-3 rounded-full transition-colors">
               <Plus size={24} />
@@ -360,26 +371,29 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 mb-2 w-full pr-6">
-                              <div className="bg-surface p-1.5 rounded-full border border-ui-border-soft group-hover:border-purple-100">
+                            <div className="flex items-start gap-2 mb-2 w-full pr-6 min-w-0">
+                              <div className="bg-surface p-1.5 rounded-full border border-ui-border-soft group-hover:border-purple-100 mt-0.5 shrink-0">
                                 <User size={14} className="text-content-muted group-hover:text-purple-600" />
                               </div>
-                              <span className="font-semibold text-content text-sm truncate w-full">
+                              {/* Efeito aplicado aqui também para buscas de contatos existentes */}
+                              <span className="font-semibold text-content text-sm break-all whitespace-normal w-full">
                                 {contact.contact}
                               </span>
                             </div>
                             
-                            <div className="space-y-1 w-full">
+                            <div className="space-y-1 w-full mt-auto">
                               {(contact.cellphone || contact.phone) && (
-                                <div className="flex items-center gap-1.5 text-xs text-content-muted group-hover:text-content-secondary">
-                                  <Phone size={12} />
-                                  <span className="truncate">{contact.cellphone ? formatPhone(contact.cellphone) : formatPhone(contact.phone || '')}</span>
+                                <div className="flex items-start gap-1.5 text-xs text-content-muted group-hover:text-content-secondary min-w-0">
+                                  <Phone size={12} className="shrink-0 mt-0.5" />
+                                  <span className="break-all whitespace-normal leading-tight">
+                                    {contact.cellphone ? formatPhone(contact.cellphone) : formatPhone(contact.phone || '')}
+                                  </span>
                                 </div>
                               )}
                               {contact.email && (
-                                <div className="flex items-center gap-1.5 text-xs text-content-muted group-hover:text-content-secondary">
-                                  <Mail size={12} />
-                                  <span className="truncate">{contact.email}</span>
+                                <div className="flex items-start gap-1.5 text-xs text-content-muted group-hover:text-content-secondary mt-1 min-w-0">
+                                  <Mail size={12} className="shrink-0 mt-0.5" />
+                                  <span className="break-all whitespace-normal leading-tight">{contact.email}</span>
                                 </div>
                               )}
                             </div>

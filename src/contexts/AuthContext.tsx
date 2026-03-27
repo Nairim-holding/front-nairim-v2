@@ -64,8 +64,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoading: false,
           });
         } else {
+          localStorage.removeItem('userData');
+          
           setAuthState(prev => ({
             ...prev,
+            isAuthenticated: false,
+            user: null,
+            token: null,
             isLoading: false,
           }));
         }
@@ -84,9 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (token: string, user: User) => {
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
-    document.cookie = `authToken=${token}; expires=${expires.toUTCString()}; path=/`;
+    document.cookie = `authToken=${token}; path=/`;
     
     localStorage.setItem('userData', JSON.stringify(user));
 
@@ -100,6 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 
   const navigation = useRouter();
+  
   const logout = () => {
     document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     

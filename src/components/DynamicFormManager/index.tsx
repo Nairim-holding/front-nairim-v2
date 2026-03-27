@@ -194,6 +194,7 @@ export default function DynamicFormManager({
             break;
           case 'file':
           case 'custom':
+            // IPTU cai em 'custom' e recebe '[]' de padrão
             initialValues[field.field] = [];
             break;
           default:
@@ -261,7 +262,6 @@ export default function DynamicFormManager({
     
     if (isHidden || field.disabled) return null;
     
-    // Tratamento para boolean não ser barrado como vazio se for false
     if (field.required && (value === '' || value === null || value === undefined || 
         (Array.isArray(value) && value.length === 0))) {
       return `${field.label} é obrigatório`;
@@ -270,7 +270,6 @@ export default function DynamicFormManager({
     if (value && value.toString().trim() !== '' && !Array.isArray(value) && typeof value !== 'boolean') {
       const stringValue = value.toString();
 
-      // VALIDAÇÃO DE DATA
       if (field.type === 'date') {
         if (stringValue.length < 10 && !stringValue.includes('-')) {
           return 'Data incompleta';
@@ -385,7 +384,6 @@ export default function DynamicFormManager({
     return Object.keys(newErrors).length === 0;
   };
 
-  // CORREÇÃO: Não stringifica se for booleano, permitindo Toggles funcionarem nativamente
   const handleChange = (fieldName: string, rawValue: any) => {
     if (isViewMode) return;
     
@@ -394,7 +392,7 @@ export default function DynamicFormManager({
     if (typeof rawValue === 'boolean') {
       parsedValue = rawValue;
     } else if (typeof rawValue === 'object' && rawValue !== null) {
-      parsedValue = rawValue;
+      parsedValue = rawValue; // <-- Garante que Arrays (como os do IPTU) sejam passados limpos
     } else if (rawValue !== undefined && rawValue !== null) {
       parsedValue = String(rawValue);
     } else {
@@ -571,7 +569,8 @@ export default function DynamicFormManager({
   const renderField = (field: FormFieldDef, index: number) => {
     let value = formValues[field.field];
     if (value === undefined || value === null) {
-      value = '';
+      // Importante não transformar array em string vazia, pois custom components quebram
+      value = field.type === 'custom' ? [] : '';
     } else if (['text', 'email', 'password', 'tel', 'date'].includes(field.type)) {
       value = String(value);
     }
@@ -804,7 +803,7 @@ export default function DynamicFormManager({
         );
 
       case 'custom':
-        // CORREÇÃO: Passando o valor real (booleano) para a função onChange do custom render
+        // O COMPONENTE CUSTOM RECEBE SEU VALOR (value) AQUI
         return (
           <div 
             key={`${field.field}-${index}`} 

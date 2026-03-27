@@ -167,6 +167,7 @@ export default function CategoriasESubcategoriasPage() {
         </div>
 
         <MultiColumnManager
+          key={transactionType} // <-- O Segredo está aqui para limpar o form ao trocar a aba
           titleParent="Categoria"
           titleChild="Subcategoria"
           parentData={filteredCategories}

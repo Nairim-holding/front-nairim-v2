@@ -105,8 +105,18 @@ export default function DynamicTableManager({
     const initialWidths: Record<string, number> = {};
     dataColumns.forEach(col => {
       if (!columnWidths[col.field]) {
-        initialWidths[col.field] = ['email', 'name', 'street', 'address'].includes(col.field) ? 220 : 150;
-        if (col.field === 'person_type') initialWidths[col.field] = 70;
+        const fieldName = col.field.toLowerCase();
+        
+        // Aumentado para 320 para dar espaço suficiente para e-mails e nomes grandes
+        if (fieldName.includes('email') || fieldName.includes('name') || fieldName.includes('contact') || fieldName.includes('street') || fieldName.includes('address')) {
+          initialWidths[col.field] = 320; 
+        } else if (fieldName.includes('phone') || fieldName.includes('cellphone') || fieldName.includes('telephone')) {
+          initialWidths[col.field] = 160;
+        } else if (col.field === 'person_type') {
+          initialWidths[col.field] = 70;
+        } else {
+          initialWidths[col.field] = 150;
+        }
       }
     });
     if (Object.keys(initialWidths).length > 0) {
@@ -202,7 +212,6 @@ export default function DynamicTableManager({
   }, []);
 
   const getCellValue = useCallback((item: any, column: ColumnDef) => {
-    // 1. TRATAMENTO FORÇADO DO STATUS (Ativo/Inativo)
     if (column.field === "is_active") {
       const isActive = item[column.field];
       return (
@@ -216,7 +225,6 @@ export default function DynamicTableManager({
       );
     }
 
-    // 2. TRATAMENTO FORÇADO PARA STATUS DE LANÇAMENTOS FINANCEIROS (Pendente/Concluído)
     if (column.field === "status" && (item[column.field] === 'PENDING' || item[column.field] === 'COMPLETED')) {
       const isCompleted = item[column.field] === 'COMPLETED';
       return (
@@ -250,7 +258,7 @@ export default function DynamicTableManager({
       if (contactFields.includes(column.field)) {
         if (item.contacts && Array.isArray(item.contacts) && item.contacts.length > 0) {
           return (
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full gap-1 py-1">
               {item.contacts.map((contact: any, index: number) => {
                 let rawValue = '';
                 if (column.field === 'contact' || column.field === 'contact_name') rawValue = contact.contact;
@@ -260,8 +268,8 @@ export default function DynamicTableManager({
 
                 const formattedValue = formatValue(rawValue, column);
                 return (
-                  <div key={index} className="flex items-center justify-start whitespace-nowrap text-xs h-[20px]">
-                     <span className={!rawValue ? "text-content-muted truncate w-full" : "truncate w-full"}>
+                  <div key={index} className="flex items-center justify-start text-xs min-h-[20px] w-full min-w-0">
+                     <span className={`w-full whitespace-normal break-all ${!rawValue ? 'text-content-muted' : ''}`}>
                         {formattedValue !== '-' ? formattedValue : '-'}
                      </span>
                   </div>
@@ -644,6 +652,7 @@ export default function DynamicTableManager({
                         setShowOwnerTypeModal(false);
                       }}
                       onClose={() => setShowOwnerTypeModal(false)}
+                      className="right-0 top-full"
                     />
                   )}
                 </div>
@@ -739,19 +748,21 @@ export default function DynamicTableManager({
           {items.map((item: any) => (
             <tr
               key={item.id}
-              className="bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary cursor-pointer h-[26px]"
+              className="bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary cursor-pointer min-h-[26px] h-fit"
               onClick={() => onRowClick?.(item)}
             >
               {dataColumns.map((col, index) => {
                 const isFirst = index === 0;
                 const width = columnWidths[col.field] || 150;
+                const isContactField = ['contact', 'telephone', 'phone', 'cellphone', 'email', 'contact_name'].includes(col.field);
+                
                 return (
                   <td 
                     key={col.field} 
                     className={`align-middle border-r border-ui-border-soft p-0 ${isFirst ? 'sticky left-0 bg-surface z-20' : ''}`}
                     style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                   >
-                    <div className={`flex w-full h-full min-h-[26px] items-center px-2 ${isFirst ? 'justify-start' : 'justify-center'}`}>
+                    <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${isFirst ? 'justify-start' : 'justify-center'}`}>
                       {isFirst && enableDelete && (
                         <div className="mr-2 flex shrink-0 items-center justify-center w-4 h-4">
                           {!(resource === 'leases' && (item.status === 'CANCELED' || item.status === 'Cancelado')) ? (
@@ -771,7 +782,9 @@ export default function DynamicTableManager({
                           )}
                         </div>
                       )}
-                      <div className={`truncate w-full text-[13px] ${isFirst || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'}`}>
+                      
+                      {/* O Segredo: adicionamos 'break-all' e 'min-w-0' se for contato, senão 'truncate' */}
+                      <div className={`w-full min-w-0 text-[13px] ${isFirst || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'} ${!isContactField ? 'truncate' : 'whitespace-normal break-all'}`}>
                         {getCellValue(item, col)}
                       </div>
                     </div>

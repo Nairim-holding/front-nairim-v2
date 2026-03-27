@@ -333,10 +333,10 @@ export default function VisualizarImovelPage() {
         },
         {
           field: 'area_built',
-          label: 'Área Construída (m²)',
+          label: 'Área Edificada (m²)',
           type: 'text',
           required: true,
-          placeholder: 'Área construída em m²',
+          placeholder: 'Área Edificada em m²',
           mask: 'metros2',
           icon: <Ruler size={20} />,
           disabled: true,
