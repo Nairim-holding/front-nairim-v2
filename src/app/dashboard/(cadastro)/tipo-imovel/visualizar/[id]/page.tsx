@@ -3,7 +3,7 @@
 
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
-import DynamicFormManager from '@/components/DynamicFormManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { Home, Tag, Calendar, Clock } from 'lucide-react';
 

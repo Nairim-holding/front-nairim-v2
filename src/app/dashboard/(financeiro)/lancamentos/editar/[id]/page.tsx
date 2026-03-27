@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from 'next/navigation';
-import DynamicForm from '@/components/DynamicFormManager';
+import DynamicForm from '@/components/form/DynamicForm';
 import { FormFieldDef } from '@/types/types';
 
 export default function EditarLancamentoPage() {

@@ -2,13 +2,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
-import Section from "@/components/Section";
+import Section from "@/components/layout/PageSection";
 import { Plus, Trash2, Edit2, X, Search } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
-import DynamicFormManager from "@/components/DynamicFormManager";
-import ContactManager from "@/components/ContactManager";
-import ModalSelectTypeOwner from "@/components/ModalSelectTypeOwner";
+import DynamicFormManager from "@/components/form/DynamicForm";
+import ContactManager from "@/components/domain/contacts/ContactManager";
+import ModalSelectTypeOwner from "@/components/modals/OwnerTypeModal";
 import { FormStep } from "@/types/types";
 import { OwnerType } from "@/types/owner";
 import {

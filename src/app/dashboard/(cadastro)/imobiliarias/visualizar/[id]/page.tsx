@@ -2,8 +2,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import DynamicFormManager from '@/components/DynamicFormManager';
-import ContactManager from '@/components/ContactManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
+import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
   Building2, MapPin, Phone, FileText,

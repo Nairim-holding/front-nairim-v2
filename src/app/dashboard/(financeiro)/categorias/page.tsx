@@ -1,173 +1,184 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from "react";
-import Section from "@/components/Section";
-import { useMessageContext } from "@/contexts/MessageContext";
-import { usePopupContext } from "@/contexts/PopupContext";
-import MultiColumnManager from "@/components/MultiColumnManager/page";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import Section from '@/components/layout/PageSection';
+import { useMessageContext } from '@/contexts/MessageContext';
+import { usePopupContext } from '@/contexts/PopupContext';
+import MultiColumnManager from '@/components/form/MultiColumnManager';
 
-export default function CategoriasESubcategoriasPage() {
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
+const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+
+type TransactionType = 'EXPENSE' | 'INCOME';
+
+// ─── Componente ──────────────────────────────────────────────────────────────
+
+export default function CategoriasPage() {
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  
-  // O tipo só existe nesta página específica
-  const [transactionType, setTransactionType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const [categories, setCategories] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [subcategories, setSubcategories] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [transactionType, setTransactionType] = useState<TransactionType>('EXPENSE');
 
-  const baseURL = process.env.NEXT_PUBLIC_URL_API;
+  // ─── Data fetching ──────────────────────────────────────────────────────────
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [catRes, subRes] = await Promise.all([
-        fetch(`${baseURL}/financial-category?limit=1000`),
-        fetch(`${baseURL}/financial-subcategory?limit=1000`)
+        fetch(`${API_URL}/financial-category?limit=1000`),
+        fetch(`${API_URL}/financial-subcategory?limit=1000`),
       ]);
-      const catData = await catRes.json();
-      const subData = await subRes.json();
-      
-      setCategories(catData?.data || catData || []);
-      setSubcategories(subData?.data || subData || []);
-    } catch (_error) { // Corrigido ESLint (variável não usada)
-      showMessage("Erro ao carregar os dados.", "error");
+      const [catData, subData] = await Promise.all([catRes.json(), subRes.json()]);
+      setCategories(catData?.data ?? catData ?? []);
+      setSubcategories(subData?.data ?? subData ?? []);
+    } catch {
+      showMessage('Erro ao carregar os dados.', 'error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showMessage]);
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchData]);
 
-  const handleSaveParent = async (data: any, mode: 'CREATE' | 'EDIT') => {
-    const url = mode === 'CREATE' ? `${baseURL}/financial-category` : `${baseURL}/financial-category/${data.id}`;
+  // ─── Computed values ────────────────────────────────────────────────────────
+
+  const filteredCategories = useMemo(
+    () => categories.filter((c) => c.type === transactionType),
+    [categories, transactionType],
+  );
+
+  // ─── Actions ────────────────────────────────────────────────────────────────
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSaveParent = useCallback(async (data: any, mode: 'CREATE' | 'EDIT') => {
+    const url = mode === 'CREATE'
+      ? `${API_URL}/financial-category`
+      : `${API_URL}/financial-category/${data.id}`;
     const payload = mode === 'CREATE' ? { ...data, type: transactionType } : data;
-    
+
     const res = await fetch(url, {
       method: mode === 'CREATE' ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
-    
+
     if (!res.ok) {
       const result = await res.json();
-      throw new Error(result.message || "Erro ao salvar Categoria.");
+      throw new Error(result.message ?? 'Erro ao salvar Categoria.');
     }
-    
-    showMessage("Categoria salva com sucesso!", "success");
+
+    showMessage('Categoria salva com sucesso!', 'success');
     const newRecord = await res.json();
     await fetchData();
     return newRecord;
-  };
+  }, [transactionType, showMessage, fetchData]);
 
-  const handleSaveChild = async (data: any, parentId: string, mode: 'CREATE' | 'EDIT') => {
-    const url = mode === 'CREATE' ? `${baseURL}/financial-subcategory` : `${baseURL}/financial-subcategory/${data.id}`;
-    const payload = { ...data, category_id: parentId };
-    
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSaveChild = useCallback(async (data: any, parentId: string, mode: 'CREATE' | 'EDIT') => {
+    const url = mode === 'CREATE'
+      ? `${API_URL}/financial-subcategory`
+      : `${API_URL}/financial-subcategory/${data.id}`;
+
     const res = await fetch(url, {
       method: mode === 'CREATE' ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ ...data, category_id: parentId }),
     });
 
     if (!res.ok) {
       const result = await res.json();
-      throw new Error(result.message || "Erro ao salvar Subcategoria.");
+      throw new Error(result.message ?? 'Erro ao salvar Subcategoria.');
     }
 
-    showMessage("Subcategoria salva com sucesso!", "success");
+    showMessage('Subcategoria salva com sucesso!', 'success');
     await fetchData();
-  };
+  }, [showMessage, fetchData]);
 
-  // Funções de Delete corrigidas para retornar Promise<void>
-  const handleDeleteParent = (id: string, name: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      showPopup(
-        `Excluir Categoria`,
-        `Tem certeza que deseja excluir "${name}"?`,
-        async () => {
-          try {
-            const res = await fetch(`${baseURL}/financial-category/${id}`, { method: 'DELETE' });
-            if (!res.ok) {
-              const result = await res.json().catch(() => ({}));
-              throw new Error(result.message || `Erro ao excluir Categoria.`);
+  const handleDeleteParent = useCallback(
+    (id: string, name: string): Promise<void> =>
+      new Promise((resolve, reject) => {
+        showPopup(
+          'Excluir Categoria',
+          `Tem certeza que deseja excluir "${name}"?`,
+          async () => {
+            try {
+              const res = await fetch(`${API_URL}/financial-category/${id}`, { method: 'DELETE' });
+              if (!res.ok) {
+                const result = await res.json().catch(() => ({}));
+                throw new Error(result.message ?? 'Erro ao excluir Categoria.');
+              }
+              showMessage('Excluída com sucesso!', 'success');
+              await fetchData();
+              resolve();
+            } catch (err) {
+              showMessage(err instanceof Error ? err.message : 'Erro ao excluir.', 'error');
+              reject(err);
             }
-            showMessage("Excluída com sucesso!", "success");
-            await fetchData();
-            resolve();
-          } catch (error: any) {
-            showMessage(error.message, "error");
-            reject(error);
-          }
-        },
-        () => reject(new Error("Cancelado pelo usuário"))
-      );
-    });
-  };
+          },
+          () => reject(new Error('Cancelado pelo usuário')),
+        );
+      }),
+    [showPopup, showMessage, fetchData],
+  );
 
-  const handleDeleteChild = (id: string, name: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      showPopup(
-        `Excluir Subcategoria`,
-        `Tem certeza que deseja excluir "${name}"?`,
-        async () => {
-          try {
-            const res = await fetch(`${baseURL}/financial-subcategory/${id}`, { method: 'DELETE' });
-            if (!res.ok) {
-              const result = await res.json().catch(() => ({}));
-              throw new Error(result.message || `Erro ao excluir Subcategoria.`);
+  const handleDeleteChild = useCallback(
+    (id: string, name: string): Promise<void> =>
+      new Promise((resolve, reject) => {
+        showPopup(
+          'Excluir Subcategoria',
+          `Tem certeza que deseja excluir "${name}"?`,
+          async () => {
+            try {
+              const res = await fetch(`${API_URL}/financial-subcategory/${id}`, { method: 'DELETE' });
+              if (!res.ok) {
+                const result = await res.json().catch(() => ({}));
+                throw new Error(result.message ?? 'Erro ao excluir Subcategoria.');
+              }
+              showMessage('Excluída com sucesso!', 'success');
+              await fetchData();
+              resolve();
+            } catch (err) {
+              showMessage(err instanceof Error ? err.message : 'Erro ao excluir.', 'error');
+              reject(err);
             }
-            showMessage("Excluída com sucesso!", "success");
-            await fetchData();
-            resolve();
-          } catch (error: any) {
-            showMessage(error.message, "error");
-            reject(error);
-          }
-        },
-        () => reject(new Error("Cancelado pelo usuário"))
-      );
-    });
-  };
+          },
+          () => reject(new Error('Cancelado pelo usuário')),
+        );
+      }),
+    [showPopup, showMessage, fetchData],
+  );
 
-  // Filtramos apenas as categorias atreladas à aba atual (Despesa/Receita)
-  const filteredCategories = categories.filter(c => c.type === transactionType);
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <Section title="Gerenciar Categorias">
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
-        
-        {/* Toggle Customizado para esta página (Receita / Despesa) */}
+
+        {/* Seletor Despesa / Receita */}
         <div className="flex mb-6 rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">
-          <button
-            onClick={() => setTransactionType('EXPENSE')}
-            className={`px-8 py-2.5 text-sm font-bold transition-all ${
-              transactionType === 'EXPENSE' 
-                ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md' 
-                : 'text-content-secondary hover:text-content'
-            }`}
-          >
-            Despesa
-          </button>
-          <button
-            onClick={() => setTransactionType('INCOME')}
-            className={`px-8 py-2.5 text-sm font-bold transition-all ${
-              transactionType === 'INCOME' 
-                ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md' 
-                : 'text-content-secondary hover:text-content'
-            }`}
-          >
-            Receita
-          </button>
+          {(['EXPENSE', 'INCOME'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setTransactionType(type)}
+              className={`px-8 py-2.5 text-sm font-bold transition-all ${
+                transactionType === type
+                  ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md'
+                  : 'text-content-secondary hover:text-content'
+              }`}
+            >
+              {type === 'EXPENSE' ? 'Despesa' : 'Receita'}
+            </button>
+          ))}
         </div>
 
         <MultiColumnManager
-          key={transactionType} // <-- O Segredo está aqui para limpar o form ao trocar a aba
+          key={transactionType}
           titleParent="Categoria"
           titleChild="Subcategoria"
           parentData={filteredCategories}

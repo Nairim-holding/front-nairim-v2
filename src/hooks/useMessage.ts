@@ -1,30 +1,26 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export type MessageType = 'success' | 'error' | 'info';
 
-export interface MessageState {
+export interface ToastItem {
+  id: number;
   text: string;
   type: MessageType;
-  visible: boolean;
+  duration: number;
 }
 
 export const useMessage = () => {
-  const [message, setMessage] = useState<MessageState>({ 
-    text: '', 
-    type: 'info', 
-    visible: false 
-  });
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const nextId = useRef(0);
 
-  const showMessage = useCallback((text: string, type: MessageType) => {
-    setMessage({ text, type, visible: true });
-    setTimeout(() => {
-      setMessage(prev => ({ ...prev, visible: false }));
-    }, 5000);
+  const showMessage = useCallback((text: string, type: MessageType, duration = 5000) => {
+    const id = ++nextId.current;
+    setToasts(prev => [...prev, { id, text, type, duration }]);
   }, []);
 
-  const hideMessage = useCallback(() => {
-    setMessage(prev => ({ ...prev, visible: false }));
+  const hideMessage = useCallback((id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  return { message, showMessage, hideMessage };
+  return { toasts, showMessage, hideMessage };
 };

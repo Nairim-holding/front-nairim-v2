@@ -3,8 +3,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import DynamicFormManager from '@/components/DynamicFormManager';
-import IptuManager from '@/components/IptuManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
+import IptuManager from '@/components/domain/financial/IptuManager';
 import { FormStep } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter } from 'next/navigation';

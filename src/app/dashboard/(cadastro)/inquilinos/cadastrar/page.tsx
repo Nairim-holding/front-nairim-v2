@@ -4,8 +4,8 @@
 import { useState, useMemo, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/contexts/MessageContext';
-import DynamicFormManager from '@/components/DynamicFormManager';
-import ContactManager from '@/components/ContactManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
+import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
   User, MapPin, Phone, FileText, Hash,

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import DynamicForm from '@/components/DynamicFormManager';
+import DynamicForm from '@/components/form/DynamicForm';
 import { FormFieldDef } from '@/types/types';
 import { useParams } from 'next/navigation';
 

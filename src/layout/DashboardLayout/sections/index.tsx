@@ -4,8 +4,8 @@
 import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { MetricResponse, MetricWithData } from "@/types/types";
-import NumericCard from "@/components/NumericCard";
-import { formatCurrencyFixed, formatCurrencyRounded } from "@/lib/formatters";
+import NumericCard from "@/components/charts/MetricCard";
+import { formatCurrencyFixed, formatCurrencyRounded } from "@/utils/formatters";
 import {
   COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_TAX_FEE, COLS_ACQUISITION,
   COLS_FINANCIAL_VACANCY_GAUGE, COLS_VACANCY_MONTHS,
@@ -25,10 +25,10 @@ export const SkeletonLoader = ({ height = "h-[240px]" }: { height?: string }) =>
   </div>
 );
 
-export const EChartsDonut = dynamic(() => import("@/components/EChartsDonut"), { ssr: false, loading: () => <SkeletonLoader /> });
-export const EChartsGauge  = dynamic(() => import("@/components/EChartsGauge"),  { ssr: false, loading: () => <SkeletonLoader /> });
-export const EChartsBar    = dynamic(() => import("@/components/EChartsBar"),    { ssr: false, loading: () => <SkeletonLoader /> });
-export const LeafletMap    = dynamic(() => import("@/components/LeafletMap"),    { ssr: false, loading: () => <SkeletonLoader height="h-[600px]" /> });
+export const EChartsDonut = dynamic(() => import("@/components/charts/DonutChart"), { ssr: false, loading: () => <SkeletonLoader /> });
+export const EChartsGauge  = dynamic(() => import("@/components/charts/GaugeChart"),  { ssr: false, loading: () => <SkeletonLoader /> });
+export const EChartsBar    = dynamic(() => import("@/components/charts/BarChart"),    { ssr: false, loading: () => <SkeletonLoader /> });
+export const LeafletMap    = dynamic(() => import("@/components/map/InteractiveMap"),    { ssr: false, loading: () => <SkeletonLoader height="h-[600px]" /> });
 
 type MetricDataKeys = {
   [K in keyof MetricResponse]: MetricResponse[K] extends MetricWithData ? K : never;

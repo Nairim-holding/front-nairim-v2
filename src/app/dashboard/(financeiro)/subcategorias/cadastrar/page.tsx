@@ -1,62 +1,79 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from "react";
-import DynamicForm from "@/components/DynamicFormManager";
-import { FormFieldDef } from "@/types/types";
+import { useState, useEffect, useCallback } from 'react';
+import type { FormFieldDef } from '@/types/types';
+import DynamicForm from '@/components/form/DynamicForm';
+
+const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+
+type SelectOption = { label: string; value: string };
+
+const STATUS_OPTIONS: SelectOption[] = [
+  { label: 'Ativo', value: 'true' },
+  { label: 'Inativo', value: 'false' },
+];
+
+const LOADING_OPTION: SelectOption[] = [{ label: 'Carregando...', value: '' }];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const transformPayload = (data: any) => ({
+  ...data,
+  is_active: data.is_active === 'true' || data.is_active === true,
+});
 
 export default function CadastrarSubcategoriaPage() {
-  const [categoryOptions, setCategoryOptions] = useState<{label: string, value: string}[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/financial-category?limit=100&filter[is_active]=true`);
+      const data = await res.json();
+      const items: any[] = data.data ?? data ?? []; // eslint-disable-line @typescript-eslint/no-explicit-any
+      setCategoryOptions(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        items.map((c: any) => ({
+          label: `${c.name} (${c.type === 'INCOME' ? 'Receita' : 'Despesa'})`,
+          value: c.id,
+        })),
+      );
+    } catch (err) {
+      console.error('Erro ao buscar categorias:', err);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Fetch corrigido para o novo endpoint de categorias
-        const res = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-category?limit=100&filter[is_active]=true`);
-        const data = await res.json();
-        const items = data.data || data;
-        
-        if (Array.isArray(items)) {
-          setCategoryOptions(items.map((c: any) => ({
-            label: `${c.name} (${c.type === 'INCOME' ? 'Receita' : 'Despesa'})`,
-            value: c.id
-          })));
-        }
-      } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
-      }
-    };
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const fields: FormFieldDef[] = [
     {
-      field: 'name', label: 'Nome da Subcategoria', type: 'text', required: true,
+      field: 'name',
+      label: 'Nome da Subcategoria',
+      type: 'text',
+      required: true,
       placeholder: 'Ex: Pintura Externa',
     },
     {
-      field: 'category_id', label: 'Categoria Pai', type: 'select', required: true,
-      options: categoryOptions.length > 0 ? categoryOptions : [{ label: 'Carregando...', value: '' }],
+      field: 'category_id',
+      label: 'Categoria Pai',
+      type: 'select',
+      required: true,
+      options: categoryOptions.length > 0 ? categoryOptions : LOADING_OPTION,
     },
     {
-      field: 'is_active', label: 'Status', type: 'select', required: true,
-      options: [
-        { label: 'Ativo', value: 'true' },
-        { label: 'Inativo', value: 'false' },
-      ],
-    }
+      field: 'is_active',
+      label: 'Status',
+      type: 'select',
+      required: true,
+      options: STATUS_OPTIONS,
+    },
   ];
-
-  const transformPayload = (data: any) => ({
-    ...data,
-    is_active: data.is_active === 'true' || data.is_active === true
-  });
 
   return (
     <DynamicForm
-      resource="financial-subcategory" // Endpoint corrigido
+      resource="financial-subcategory"
       title="Subcategoria"
-      basePath="/dashboard/categorias" // Retorna para a tela de Tabs
+      basePath="/dashboard/categorias"
       mode="create"
       fields={fields}
       transformResponse={transformPayload}

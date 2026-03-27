@@ -1,34 +1,26 @@
-'use client';
+import { Suspense } from 'react';
+import type { ColumnDef } from '@/types/types';
+import Section from '@/components/layout/PageSection';
+import DynamicTableManager from '@/components/table/DataTable';
+import SkeletonTable from '@/components/table/TableSkeleton';
 
-import Section from "@/components/Section";
-import DynamicTableManager from "@/components/DynamicTableManager";
-import { ColumnDef } from "@/types/types";
+const COLUMNS: ColumnDef[] = [
+  { field: 'description', label: 'Descrição', sortParam: 'description', type: 'text' },
+  { field: 'created_at',  label: 'Criado em',                           type: 'date', formatter: 'date' },
+];
 
 export default function TiposImovelPage() {
-  const columns: ColumnDef[] = [
-    {
-      field: "description",
-      label: "Descrição",
-      sortParam: "description",
-      type: "text"
-    },
-    {
-      field: "created_at",
-      label: "Criado em",
-      type: "date",
-      formatter: "date"
-    }
-  ];
-
   return (
     <Section title="Tipos de Imóvel">
-      <DynamicTableManager
-        resource="property-types"
-        title="Tipos de Imóvel"
-        columns={columns}
-        basePath="/dashboard/tipo-imovel"
-        autoFocusSearch={true}
-      />
+      <Suspense fallback={<SkeletonTable />}>
+        <DynamicTableManager
+          resource="property-types"
+          title="Tipos de Imóvel"
+          columns={COLUMNS}
+          basePath="/dashboard/tipo-imovel"
+          autoFocusSearch
+        />
+      </Suspense>
     </Section>
   );
 }

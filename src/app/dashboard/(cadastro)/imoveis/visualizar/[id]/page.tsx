@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import DynamicFormManager from '@/components/DynamicFormManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter, useParams } from 'next/navigation';

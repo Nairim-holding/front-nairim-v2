@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import DynamicForm from '@/components/DynamicFormManager';
+import DynamicForm from '@/components/form/DynamicForm';
 import { FormFieldDef } from '@/types/types';
 import { useParams } from 'next/navigation';
 import { Check, Circle } from 'lucide-react';

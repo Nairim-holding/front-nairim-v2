@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(wc -l /c/Users/Marcio/Desktop/front-nairim-v2/src/components/*/index.tsx)",
+      "Bash(rm src/lib/api.ts src/lib/formatters.ts src/util/formatters.ts src/util/getThemeTokens.ts src/util/getDefaultDateRange.ts src/util/masks.ts)",
+      "Bash(rmdir src/util)",
+      "Bash(rm -rf src/app/context)",
+      "Bash(grep -rn \"from ''''@/components/\" src/app --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(mv Ui _ui_temp)",
+      "Bash(mv _ui_temp ui)",
+      "Bash(npx next:*)",
+      "Bash(xargs grep:*)"
+    ]
+  }
+}

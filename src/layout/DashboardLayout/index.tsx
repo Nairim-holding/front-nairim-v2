@@ -4,7 +4,7 @@
 import React, { memo } from "react";
 import { MetricResponse } from "@/types/types";
 import { MapCoordinate } from "@/lib/dashboard";
-import DashboardFilter from "@/components/DashboardFilter";
+import DashboardFilter from "@/components/filters/DashboardFilter";
 import {
   SkeletonLoader,
   FinancialSection,

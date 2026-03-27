@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter } from 'next/navigation';
-import DynamicFormManager from '@/components/DynamicFormManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { Home, FileText, Tag } from 'lucide-react';
 

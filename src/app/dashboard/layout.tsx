@@ -1,16 +1,17 @@
-import Aside from "@/components/Aside";
-import GlobalNotifications from "@/components/GlobalNotifications";
+import type { ReactNode } from 'react';
+import Aside from '@/components/layout/Sidebar';
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+/**
+ * Layout do Dashboard — Server Component.
+ *
+ * GlobalNotifications já é montado em src/app/providers.tsx (AppProviders),
+ * portanto não precisa ser redeclarado aqui.
+ */
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <>
-        <GlobalNotifications />
-        <Aside></Aside>
-        <main>{children}</main>
+      <Aside />
+      <main>{children}</main>
     </>
   );
 }

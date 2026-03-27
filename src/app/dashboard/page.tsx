@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { fetchSection, FilterType, DashboardData } from "@/lib/dashboard";
-import DashboardContent from "@/components/DashboardClient";
+import DashboardContent from "@/components/domain/dashboard/DashboardClient";
 interface PageProps {
   searchParams: Promise<{ startDate?: string; endDate?: string }>;
 }

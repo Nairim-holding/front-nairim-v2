@@ -1,10 +1,10 @@
-import ApartamentosLocacao from "@/components/ApartamentosLocacao";
-import CasasLocacao from "@/components/CasasLocacao";
-import Filter from "@/components/Filter";
-import Footer from "@/components/Footer";
-import Header  from "@/components/Header";
-import Headline from "@/components/Headline";
-import ImoveisList from "@/components/ImoveisList";
+import ApartamentosLocacao from "@/components/domain/properties/ApartmentRentals";
+import CasasLocacao from "@/components/domain/properties/HouseRentals";
+import Filter from "@/components/filters/PropertyFilter";
+import Footer from "@/components/layout/AppFooter";
+import Header  from "@/components/layout/AppHeader";
+import Headline from "@/components/layout/HeroImage";
+import ImoveisList from "@/components/domain/properties/PropertyList";
 
 
 export default function Home() {

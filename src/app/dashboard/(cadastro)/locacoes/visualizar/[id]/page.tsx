@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
-import DynamicFormManager from '@/components/DynamicFormManager';
+import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
