@@ -500,19 +500,18 @@ export default function DynamicFormManager({
     try {
       if (onSubmit) {
         const result = await onSubmit(formValues);
-        
-        showMessage(
-          result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
-          'success'
-        );
 
         if (onSubmitSuccess) {
           onSubmitSuccess(result.data || result);
         } else {
+          showMessage(
+            result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
+            'success'
+          );
           router.push(basePath);
         }
       } else {
-        const url = mode === 'create' 
+        const url = mode === 'create'
           ? `${process.env.NEXT_PUBLIC_URL_API}/${resource}`
           : `${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`;
 
@@ -533,15 +532,14 @@ export default function DynamicFormManager({
         }
 
         const result = await response.json();
-        
-        showMessage(
-          result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
-          'success'
-        );
 
         if (onSubmitSuccess) {
           onSubmitSuccess(result.data || result);
         } else {
+          showMessage(
+            result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
+            'success'
+          );
           router.push(basePath);
         }
       }
