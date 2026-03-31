@@ -9,7 +9,9 @@ export function middleware(request: NextRequest) {
 
   const token = request.cookies.get('authToken')?.value;
   const isPublicRoute =
-    PUBLIC_ROUTES.includes(pathname);
+    PUBLIC_ROUTES.includes(pathname) ||
+    pathname.startsWith('/backend') ||
+    pathname.startsWith('/backend-test');
 
   if (token && isPublicRoute) {
     return NextResponse.redirect(
