@@ -12,6 +12,10 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   output: 'standalone',
   turbopack: {},
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@iconify/react'],
+  },
   images: {
     remotePatterns: [
       {
@@ -25,6 +29,9 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
+  },
+  generateBuildId: async () => {
+    return 'build'
   },
 };
 
