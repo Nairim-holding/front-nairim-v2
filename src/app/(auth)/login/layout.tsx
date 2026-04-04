@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Login - Nairim',
+  title: 'Login | Nairim Holding',
   description: 'Faça login na sua conta Nairim para acessar o dashboard',
   robots: {
     index: false,
