@@ -281,7 +281,16 @@ export function buildPropertyFormData(
 
   // New files only
   DOCUMENT_TYPES.forEach(({ field }) => {
-    (data[field] || []).filter(isNewFile).forEach((file: File) => fd.append(field, file));
+    (data[field] || []).filter(isNewFile).forEach((file: File) => {
+      // Ensure filename is properly UTF-8 encoded
+      const encoder = new TextEncoder();
+      const filenameBytes = encoder.encode(file.name);
+      const decodedFilename = new TextDecoder('utf-8').decode(filenameBytes);
+      
+      // Convert File to Blob and append with properly encoded filename
+      const blob = new Blob([file], { type: file.type });
+      fd.append(field, blob, decodedFilename);
+    });
   });
 
   return fd;

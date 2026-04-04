@@ -84,7 +84,10 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   const handleSubmit = useCallback(async (data: any) => {
     const fd = buildPropertyFormData(data, user?.id ?? '');
 
-    const res = await fetch(`${API_URL}/properties/create-unified`, { method: 'POST', body: fd });
+    const res = await fetch(`${API_URL}/properties/create-unified`, { 
+      method: 'POST', 
+      body: fd
+    });
     const text = await res.text();
 
     let result: any; // eslint-disable-line @typescript-eslint/no-explicit-any

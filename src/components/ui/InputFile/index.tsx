@@ -1,9 +1,8 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Eye, FileText, Download, Image as ImageIcon, ChevronRight, ChevronLeft, AlertCircle, Star } from 'lucide-react';
+import { X, Eye, FileText, Download, Image as ImageIcon, ChevronRight, ChevronLeft, Star, Video } from 'lucide-react';
 import Label from '../Label';
 import Image from 'next/image';
 
@@ -65,6 +64,8 @@ export default function InputFile({
   const [previews, setPreviews] = useState<FilePreview[]>([]);
   const [modalMedia, setModalMedia] = useState<{url: string, type: 'image' | 'video'} | null>(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [draggedItem, setDraggedItem] = useState<FilePreview | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !isViewMode && !disabled;
@@ -74,11 +75,12 @@ export default function InputFile({
 
   // Inverte a ordem para os mais recentes aparecerem primeiro
   const reversedPreviews = [...previews].reverse();
-  const videoItems = reversedPreviews.filter(p => p.type === 'video');
-  const imageItems = reversedPreviews.filter(p => p.type === 'image');
   
-  // ORDENAÇÃO AUTOMÁTICA: O item com isFeatured=true sempre vai para a primeira posição
-  const mediaItems = [...videoItems, ...imageItems].sort((a, b) => {
+  // Filtra apenas itens de mídia (imagens e vídeos)
+  const mediaItems = reversedPreviews.filter(p => p.type === 'image' || p.type === 'video');
+  
+  // ORDENAÇÃO AUTOMÁTICA: O item com isFeatured=true sempre vai para a primeira posição (para imagens e vídeos)
+  const sortedMediaItems = [...mediaItems].sort((a, b) => {
     const aFeatured = !!a.isFeatured;
     const bFeatured = !!b.isFeatured;
     if (aFeatured && !bFeatured) return -1; // 'a' vai pro começo
@@ -162,9 +164,9 @@ export default function InputFile({
       const existingDocumentItems = currentItems.filter(isDocumentItem);
       const existingFiles = currentItems.filter(isFileInstance);
       
-      // Auto selecionar a primeira imagem adicionada como destaque se não houver nenhuma
+      // Auto selecionar a primeira mídia adicionada como destaque se não houver nenhuma
       const hasFeatured = existingDocumentItems.some(i => i.is_featured) || existingFiles.some(f => (f as any).is_featured);
-      if (!hasFeatured && enableFeatureSelection && fileArray.length > 0 && fileArray[0].type.startsWith('image/')) {
+      if (!hasFeatured && enableFeatureSelection && fileArray.length > 0) {
         (fileArray[0] as any).is_featured = true;
       }
 
@@ -189,12 +191,12 @@ export default function InputFile({
       return true;
     });
     
-    // Se removeu o destaque, auto-seleciona a proxima
+    // Se removeu o destaque, auto-seleciona a proxima mídia (imagem ou vídeo)
     if (itemToRemove.isFeatured && enableFeatureSelection && newItems.length > 0) {
-      const firstImg = newItems.find(i => isDocumentItem(i) ? i.type === 'IMAGE' : isFileInstance(i) && i.type.startsWith('image/'));
-      if (firstImg) {
-        if (isFileInstance(firstImg)) (firstImg as any).is_featured = true;
-        else firstImg.is_featured = true;
+      const firstMedia = newItems.find(i => isDocumentItem(i) ? i.type === 'IMAGE' : isFileInstance(i) && (i.type.startsWith('image/') || i.type.startsWith('video/')));
+      if (firstMedia) {
+        if (isFileInstance(firstMedia)) (firstMedia as any).is_featured = true;
+        else firstMedia.is_featured = true;
       }
     }
     onChange(newItems);
@@ -209,13 +211,15 @@ export default function InputFile({
     const isCurrentlyFeatured = !!previewTarget.isFeatured;
     const currentItems = Array.isArray(value) ? [...value] : [];
     
+    // Se o item já está destacado, remove o destaque. Se não, destaca ele e remove dos outros
     const newItems = currentItems.map(item => {
       let isMatch = false;
       if (isDocumentItem(item) && item.id && previewTarget.id && item.id === previewTarget.id) isMatch = true;
       else if (isFileInstance(item) && previewTarget.file && item === previewTarget.file) isMatch = true;
       else if (isDocumentItem(item) && item.file_url === previewTarget.fileUrl) isMatch = true;
       
-      // TOGGLE LÓGICA: Se é o item clicado, inverte. Se não é, vira falso (limpa a seleção dos outros).
+      // Se é o item clicado e não estava destacado, agora fica destacado
+      // Se não é o item clicado, perde o destaque
       const newFeaturedState = isMatch ? !isCurrentlyFeatured : false;
 
       if (isFileInstance(item)) {
@@ -233,18 +237,18 @@ export default function InputFile({
   const closeModal = () => { setModalMedia(null); setCurrentMediaIndex(0); };
 
   const nextMedia = () => {
-    if (mediaItems.length === 0) return;
-    const nextIndex = (currentMediaIndex + 1) % mediaItems.length;
+    if (sortedMediaItems.length === 0) return;
+    const nextIndex = (currentMediaIndex + 1) % sortedMediaItems.length;
     setCurrentMediaIndex(nextIndex);
-    const media = mediaItems[nextIndex];
+    const media = sortedMediaItems[nextIndex];
     setModalMedia({url: media.fileUrl || media.url, type: media.type as 'image' | 'video'});
   };
 
   const prevMedia = () => {
-    if (mediaItems.length === 0) return;
-    const prevIndex = (currentMediaIndex - 1 + mediaItems.length) % mediaItems.length;
+    if (sortedMediaItems.length === 0) return;
+    const prevIndex = (currentMediaIndex - 1 + sortedMediaItems.length) % sortedMediaItems.length;
     setCurrentMediaIndex(prevIndex);
-    const media = mediaItems[prevIndex];
+    const media = sortedMediaItems[prevIndex];
     setModalMedia({url: media.fileUrl || media.url, type: media.type as 'image' | 'video'});
   };
 
@@ -260,7 +264,7 @@ export default function InputFile({
         link.href = url; link.download = preview.name; link.target = '_blank';
         document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
       }
-    } catch (error) {
+    } catch {
       if (preview.fileUrl && preview.fileUrl !== '#') window.open(preview.fileUrl, '_blank');
     }
   };
@@ -268,7 +272,7 @@ export default function InputFile({
   const handleOpenFile = (preview: FilePreview) => {
     if (preview.fileUrl && preview.fileUrl !== '#') {
       if (preview.type === 'image' || preview.type === 'video') {
-        const index = mediaItems.findIndex(m => (m.fileUrl || m.url) === (preview.fileUrl || preview.url));
+        const index = sortedMediaItems.findIndex(m => (m.fileUrl || m.url) === (preview.fileUrl || preview.url));
         openMediaModal(preview.fileUrl, preview.type as 'image' | 'video', index);
       } else window.open(preview.fileUrl, '_blank');
     } else if (preview.file) {
@@ -280,6 +284,74 @@ export default function InputFile({
     }
   };
 
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, preview: FilePreview, itemIndex: number) => {
+    if (!isEditMode) return;
+    setDraggedItem(preview);
+    // Store the actual index in the value array
+    e.dataTransfer.setData('text/plain', itemIndex.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isEditMode || !draggedItem) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    if (!isEditMode || !draggedItem) return;
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!isEditMode) return;
+    e.preventDefault();
+    // Only clear if we're actually leaving the target
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX >= rect.right ||
+        e.clientY < rect.top || e.clientY >= rect.bottom) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetPreview: FilePreview, targetIndex: number) => {
+    if (!isEditMode || !draggedItem || !onChange) return;
+    e.preventDefault();
+    
+    // Get the original index from drag data
+    const draggedIndexStr = e.dataTransfer.getData('text/plain');
+    const draggedIndex = parseInt(draggedIndexStr, 10);
+    
+    if (isNaN(draggedIndex) || draggedIndex === targetIndex) {
+      setDragOverIndex(null);
+      setDraggedItem(null);
+      return;
+    }
+
+    // Reorder the items using the actual value array
+    const currentItems = Array.isArray(value) ? [...value] : [];
+    if (draggedIndex >= currentItems.length || targetIndex >= currentItems.length) {
+      setDragOverIndex(null);
+      setDraggedItem(null);
+      return;
+    }
+
+    const newItems = [...currentItems];
+    const [removed] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, removed);
+    
+    onChange(newItems);
+    setDragOverIndex(null);
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragOverIndex(null);
+    setDraggedItem(null);
+  };
+
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
     if (bytes < 1024) return bytes + ' B';
@@ -288,22 +360,48 @@ export default function InputFile({
   };
 
   const renderMediaGrid = () => {
-    if (mediaItems.length === 0) return null;
+    if (sortedMediaItems.length === 0) return null;
 
     return (
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-medium text-content-secondary whitespace-nowrap">
-            Mídias ({mediaItems.length})
+            Mídias ({sortedMediaItems.length})
           </h4>
+          {isEditMode && (
+            <div className="text-xs text-content-muted">
+              Arraste para reordenar
+            </div>
+          )}
         </div>
         <div className={`grid ${imageGridClass}`}>
-          {mediaItems.map((preview, index) => {
+          {sortedMediaItems.map((preview, index) => {
             // Buscamos o index global usando o próprio objeto preview para ter 100% de precisão de qual foi clicado.
             const globalIndex = previews.findIndex(p => p === preview);
+            // Find the index in the original value array
+            const valueIndex = Array.isArray(value) ? value.findIndex(item => {
+              if (isDocumentItem(item) && preview.id && item.id === preview.id) return true;
+              if (isFileInstance(item) && preview.file && item === preview.file) return true;
+              if (isDocumentItem(item) && item.file_url === preview.fileUrl) return true;
+              return false;
+            }) : -1;
             
             return (
-            <div key={preview.id || `media-${index}`} className="group relative border rounded-lg overflow-hidden bg-black hover:border-brand transition-all duration-200">
+            <div 
+              key={preview.id || `media-${index}`} 
+              className={`group relative border rounded-lg overflow-hidden bg-black hover:border-brand transition-all duration-200 cursor-move ${
+                draggedItem === preview ? 'opacity-50 scale-95' : ''
+              } ${
+                dragOverIndex === globalIndex ? 'ring-2 ring-brand ring-offset-2 scale-105' : ''
+              }`}
+              draggable={isEditMode}
+              onDragStart={(e) => handleDragStart(e, preview, valueIndex)}
+              onDragOver={handleDragOver}
+              onDragEnter={(e) => handleDragEnter(e, globalIndex)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, preview, valueIndex)}
+              onDragEnd={handleDragEnd}
+            >
               
               {enableFeatureSelection && isEditMode && (
                 <button
@@ -362,10 +460,19 @@ export default function InputFile({
               </div>
               
               <div className={`p-3 bg-surface border-t ${preview.isFeatured ? 'border-yellow-400 bg-yellow-50/10' : ''}`}>
-                <p className={`text-xs font-medium text-content truncate mb-1 flex items-center gap-1 ${preview.isFeatured ? 'text-yellow-600' : ''}`}>
-                  {preview.isFeatured && <span className="font-bold">⭐ Destaque - </span>} 
-                  <span className="truncate">{getDisplayName(preview)}</span>
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {preview.type === 'video' ? (
+                      <Video size={14} className="text-blue-500" />
+                    ) : (
+                      <ImageIcon size={14} className="text-green-500" />
+                    )}
+                    <p className={`text-xs font-medium text-content truncate flex items-center gap-1 ${preview.isFeatured ? 'text-yellow-600' : ''}`}>
+                      {preview.isFeatured && <span className="font-bold">⭐ Destaque - </span>} 
+                      <span className="truncate">{getDisplayName(preview)}</span>
+                    </p>
+                  </div>
+                </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-content-muted">
                     {preview.file && formatFileSize(preview.file.size)}
@@ -439,12 +546,12 @@ export default function InputFile({
 
   return (
     <div className="w-full h-full">
-      {modalMedia && mediaItems.length > 0 && (
+      {modalMedia && sortedMediaItems.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4">
           <div className="relative max-w-6xl max-h-[90vh] w-full flex flex-col items-center">
             <button onClick={closeModal} className="absolute top-4 right-4 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><X size={24} /></button>
 
-            {mediaItems.length > 1 && (
+            {sortedMediaItems.length > 1 && (
               <button onClick={prevMedia} type="button" className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><ChevronLeft size={24} /></button>
             )}
 
@@ -456,13 +563,13 @@ export default function InputFile({
               )}
             </div>
 
-            {mediaItems.length > 1 && (
+            {sortedMediaItems.length > 1 && (
               <button onClick={nextMedia} type="button" className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-surface rounded-full p-2 shadow-lg hover:bg-surface-subtle z-10"><ChevronRight size={24} /></button>
             )}
 
-            {mediaItems.length > 1 && (
+            {sortedMediaItems.length > 1 && (
               <div className="mt-4 flex justify-center space-x-2 overflow-x-auto w-full max-w-2xl px-4 py-2">
-                {mediaItems.map((img, index) => (
+                {sortedMediaItems.map((img, index) => (
                   <button
                     key={index}
                     onClick={() => { setCurrentMediaIndex(index); setModalMedia({url: img.fileUrl || img.url, type: img.type as 'image'|'video'}); }}
@@ -480,7 +587,7 @@ export default function InputFile({
             )}
 
             <div className="absolute bottom-20 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm whitespace-nowrap">
-              {currentMediaIndex + 1} / {mediaItems.length}
+              {currentMediaIndex + 1} / {sortedMediaItems.length}
             </div>
           </div>
         </div>
