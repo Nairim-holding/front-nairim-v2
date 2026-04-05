@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "critters": "^0.0.23",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
     "framer-motion": "^12.29.2",

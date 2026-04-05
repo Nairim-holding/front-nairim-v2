@@ -785,7 +785,57 @@ export default function DynamicTableManager({
                       
                       {/* O Segredo: adicionamos 'break-all' e 'min-w-0' se for contato, senão 'truncate' */}
                       <div className={`w-full min-w-0 text-[13px] ${isFirst || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'} ${!isContactField ? 'truncate' : 'whitespace-normal break-all'}`}>
-                        {getCellValue(item, col)}
+                        {col.field === 'description' ? (
+                          <div className="relative group w-full">
+                            <div className="w-full pr-6">
+                              {getCellValue(item, col)}
+                            </div>
+                            <div 
+                              className="absolute top-0 right-0 h-full w-2 bg-gray-300 hover:bg-gray-500 cursor-ew-resize transition-colors"
+                              onMouseDown={(e) => {
+                                console.log('Resize started - DataTable');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const startX = e.clientX;
+                                const startWidth = e.currentTarget.parentElement?.offsetWidth || 300;
+                                const td = e.currentTarget.closest('td');
+                                
+                                const doResize = (moveEvent: MouseEvent) => {
+                                  const deltaX = moveEvent.clientX - startX;
+                                  const newWidth = startWidth + deltaX;
+                                  const minWidth = 200;
+                                  const maxWidth = window.innerWidth - 40;
+                                  const finalWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+                                  
+                                  if (td) {
+                                    td.style.width = `${finalWidth}px`;
+                                    td.style.minWidth = `${finalWidth}px`;
+                                    td.style.maxWidth = `${finalWidth}px`;
+                                  }
+                                };
+                                
+                                const doMouseUp = () => {
+                                  console.log('Resize ended - DataTable');
+                                  document.removeEventListener('mousemove', doResize);
+                                  document.removeEventListener('mouseup', doMouseUp);
+                                };
+                                
+                                document.addEventListener('mousemove', doResize);
+                                document.addEventListener('mouseup', doMouseUp);
+                              }}
+                            >
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className="bg-gray-700 text-white text-xs rounded px-1 py-0.5 select-none">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 12h4m0 0v1.414l-4 4h4v1.414L14 12h4m0 0v1.414l-4 4h4v1.414z"/>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          getCellValue(item, col)
+                        )}
                       </div>
                     </div>
                   </td>
