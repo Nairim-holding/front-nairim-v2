@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Calendar, Check, Landmark, DollarSign, ListOrdered, Info } from 'lucide-react';
+import { maskMoney } from '@/utils';
+import { formatMoney, parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
 
 interface IptuInstallment {
   due_date: string;
@@ -24,30 +26,9 @@ interface IptuManagerProps {
   value?: IptuEntry[];
   onChange?: (iptus: IptuEntry[]) => void;
   readOnly?: boolean;
-  activeLease?: any; 
-  baseIptu?: number; 
+  activeLease?: any;
+  baseIptu?: number;
 }
-
-const formatMoney = (value: any) => {
-  if (!value && value !== 0) return 'R$ 0,00';
-  const num = typeof value === 'string' ? parseFloat(value.replace(/\D/g, '')) / 100 : Number(value);
-  if (isNaN(num)) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
-};
-
-const unmaskMoney = (value: string) => {
-  if (!value) return 0;
-  const cleaned = value.replace(/\D/g, '');
-  return parseFloat(cleaned) / 100;
-};
-
-const maskMoneyInput = (value: string | number) => {
-  const stringValue = String(value);
-  const numericValue = stringValue.replace(/\D/g, '');
-  if (!numericValue) return '';
-  const floatValue = parseFloat(numericValue) / 100;
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(floatValue);
-};
 
 export default function IptuManager({ value = [], onChange, readOnly = false, activeLease, baseIptu = 0 }: IptuManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,7 +61,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
   const openModal = (mode: 'add' | 'edit', index?: number) => {
     if (readOnly) return;
     setErrorMsg('');
-    
+
     if (mode === 'edit' && index !== undefined) {
       setEditingIndex(index);
       setTempIptu({ ...iptus[index] });
@@ -122,11 +103,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const val = Number(tempIptu.property_tax_cash);
       if (!val || val <= 0) return setErrorMsg('Informe o valor.');
       if (val < (baseIptu - margin) || val > (baseIptu + margin)) return setErrorMsg(`O valor está fora da margem de 5% do Valor Base (${formatMoney(baseIptu)}).`);
-    } 
+    }
     else if (tempIptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
       const total = Number(tempIptu.property_tax_first_installment) + Number(tempIptu.property_tax_second_installment);
       if (total < (baseIptu - margin) || total > (baseIptu + margin)) return setErrorMsg(`A soma das parcelas está fora da margem de 5% do Valor Base.`);
-    } 
+    }
     else if (tempIptu.payment_condition === 'INSTALLMENTS') {
       const sum = (tempIptu.iptu_installments || []).reduce((acc, curr) => acc + Number(curr.value || 0), 0);
       if (sum < (baseIptu - margin) || sum > (baseIptu + margin)) {
@@ -167,7 +148,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     <div className="w-full space-y-6">
       {activeLease && (
         <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-start gap-3">
-          <Info className="text-brand shrink-0 mt-1" size={18}/>
+          <Info className="text-brand shrink-0 mt-1" size={18} />
           <div>
             <p className="text-sm font-semibold text-brand">Imóvel com Locação Ativa - IPTU Vigente no Contrato</p>
             <p className="text-xs text-content-secondary">Locatário: {activeLease.tenant?.name} | Contrato: {activeLease.contract_number}</p>
@@ -179,7 +160,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         {iptus.map((item, idx) => (
           <div key={idx} className="p-4 border rounded-xl bg-surface shadow-sm relative group">
             <div className="flex justify-between mb-2">
-              <span className="font-bold text-brand flex items-center gap-2"><Calendar size={14}/> Exercício {item.year}</span>
+              <span className="font-bold text-brand flex items-center gap-2"><Calendar size={14} /> Exercício {item.year}</span>
               {!readOnly && (
                 <div className="flex gap-2">
                   <Edit2 size={14} className="cursor-pointer text-content-muted hover:text-blue-500" onClick={() => openModal('edit', idx)} />
@@ -201,11 +182,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b flex justify-between items-center bg-surface-subtle">
-              <h3 className="font-bold flex items-center gap-2 text-content"><Landmark size={20} className="text-brand"/> {editingIndex !== null ? 'Editar' : 'Novo'} Lançamento Anual</h3>
+              <h3 className="font-bold flex items-center gap-2 text-content"><Landmark size={20} className="text-brand" /> {editingIndex !== null ? 'Editar' : 'Novo'} Lançamento Anual</h3>
               <X className="cursor-pointer text-content-muted" onClick={closeModal} />
             </div>
             <div className="p-6 overflow-y-auto space-y-5">
-              
+
               <div className="p-4 bg-surface border border-ui-border rounded-lg flex items-center gap-4">
                 <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
                 <div>
@@ -215,15 +196,15 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
               </div>
 
               {errorMsg && <div className="p-3 bg-red-50 text-state-error text-xs rounded-lg border border-red-200 font-medium">{errorMsg}</div>}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold mb-1.5 block text-content-secondary">Ano do Exercício</label>
-                  <input type="number" value={tempIptu.year} onChange={e => setTempIptu({...tempIptu, year: e.target.value})} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
+                  <input type="number" value={tempIptu.year} onChange={e => setTempIptu({ ...tempIptu, year: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
                 </div>
                 <div>
                   <label className="text-xs font-bold mb-1.5 block text-content-secondary">Condição de Pagamento</label>
-                  <select value={tempIptu.payment_condition} onChange={e => setTempIptu({...tempIptu, payment_condition: e.target.value})} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm bg-surface">
+                  <select value={tempIptu.payment_condition} onChange={e => setTempIptu({ ...tempIptu, payment_condition: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm bg-surface">
                     <option value="IN_FULL_15_DISCOUNT">À vista</option>
                     <option value="SECOND_INSTALLMENT_10_DISCOUNT">1ª e 2ª Parcela</option>
                     <option value="INSTALLMENTS">Parcelado</option>
@@ -234,7 +215,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
               {tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT' && (
                 <div>
                   <label className="text-xs font-bold mb-1.5 block text-content-secondary">Valor Total</label>
-                  <input type="text" value={maskMoneyInput(Number(tempIptu.property_tax_cash) * 100)} onChange={e => setTempIptu({...tempIptu, property_tax_cash: unmaskMoney(e.target.value)})} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                  <input type="text" value={maskMoney(String(tempIptu.property_tax_cash || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                 </div>
               )}
 
@@ -242,25 +223,25 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold mb-1.5 block text-content-secondary">1ª Parcela</label>
-                    <input type="text" value={maskMoneyInput(Number(tempIptu.property_tax_first_installment) * 100)} onChange={e => setTempIptu({...tempIptu, property_tax_first_installment: unmaskMoney(e.target.value)})} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                    <input type="text" value={maskMoney(String(tempIptu.property_tax_first_installment || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
                   <div>
                     <label className="text-xs font-bold mb-1.5 block text-content-secondary">2ª Parcela</label>
-                    <input type="text" value={maskMoneyInput(Number(tempIptu.property_tax_second_installment) * 100)} onChange={e => setTempIptu({...tempIptu, property_tax_second_installment: unmaskMoney(e.target.value)})} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                    <input type="text" value={maskMoney(String(tempIptu.property_tax_second_installment || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
                 </div>
               )}
 
               {tempIptu.payment_condition === 'INSTALLMENTS' && (
                 <div>
-                  <label className="text-xs font-bold mb-1.5 block text-content-secondary flex items-center gap-2"><ListOrdered size={14}/> Qtd. Parcelas</label>
-                  <input type="number" value={tempIptu.iptu_installments_count || ''} onChange={e => generateInstallments(e.target.value)} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm mb-4" />
+                  <label className="text-xs font-bold mb-1.5 block text-content-secondary flex items-center gap-2"><ListOrdered size={14} /> Qtd. Parcelas</label>
+                  <input type="number" value={tempIptu.iptu_installments_count || '0'} onChange={e => generateInstallments(e.target.value)} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm mb-4" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                     {tempIptu.iptu_installments?.map((inst, i) => (
                       <div key={i} className="p-3 border rounded-lg space-y-2 bg-surface-subtle">
-                        <span className="text-[10px] font-bold text-brand">Parcela {i+1}</span>
-                        <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({...tempIptu, iptu_installments: n}) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
-                        <input type="text" value={maskMoneyInput(Number(inst.value) * 100)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = unmaskMoney(e.target.value); setTempIptu({...tempIptu, iptu_installments: n}) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" />
+                        <span className="text-[10px] font-bold text-brand">Parcela {i + 1}</span>
+                        <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
+                        <input type="text" value={maskMoney(String(inst.value || '0'))} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" />
                       </div>
                     ))}
                   </div>
@@ -269,7 +250,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
             </div>
             <div className="p-5 border-t bg-surface-subtle flex justify-end gap-3">
               <button type="button" onClick={closeModal} className="px-5 py-2 text-sm font-medium text-content-secondary">Cancelar</button>
-              <button type="button" onClick={handleSave} className="px-8 py-2 bg-brand text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg hover:bg-brand-hover active:scale-95 transition-all"><Check size={18}/> Salvar</button>
+              <button type="button" onClick={handleSave} className="px-8 py-2 bg-brand text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg hover:bg-brand-hover active:scale-95 transition-all"><Check size={18} /> Salvar</button>
             </div>
           </div>
         </div>
