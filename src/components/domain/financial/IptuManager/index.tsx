@@ -30,6 +30,17 @@ interface IptuManagerProps {
   baseIptu?: number;
 }
 
+const MARGIN_CONDITION: Record<string, number> = {
+  'IN_FULL_15_DISCOUNT': 0.15,
+  'SECOND_INSTALLMENT_10_DISCOUNT': 0.05,
+  'INSTALLMENTS': 0.05,
+  'DEFAULT': 0.05,
+};
+
+const calculateMarginIptu = (baseIptu: number, condition: string) => {
+  return 
+}
+
 export default function IptuManager({ value = [], onChange, readOnly = false, activeLease, baseIptu = 0 }: IptuManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [iptus, setIptus] = useState<IptuEntry[]>([]);
@@ -92,8 +103,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
     const yearValue = Number(tempIptu.year);
     const currentYear = new Date().getFullYear();
-    const margin = baseIptu * 0.05; // 5% de margem
-
+    const margin = baseIptu * (
+      MARGIN_CONDITION[tempIptu.payment_condition]
+      ?? MARGIN_CONDITION.DEFAULT
+    );
+    
     if (!tempIptu.year) return setErrorMsg('O Ano do Exercício é obrigatório.');
     if (yearValue < currentYear - 5 || yearValue > currentYear + 5) {
       return setErrorMsg(`O ano deve estar entre ${currentYear - 5} e ${currentYear + 5}.`);
@@ -102,7 +116,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     if (tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT') {
       const val = Number(tempIptu.property_tax_cash);
       if (!val || val <= 0) return setErrorMsg('Informe o valor.');
-      if (val < (baseIptu - margin) || val > (baseIptu + margin)) return setErrorMsg(`O valor está fora da margem de 5% do Valor Base (${formatMoney(baseIptu)}).`);
+      if (val < (baseIptu - margin) || val > (baseIptu + margin)) return setErrorMsg(`O valor está fora da margem de 15% do Valor Base (${formatMoney(baseIptu)}).`);
     }
     else if (tempIptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
       const total = Number(tempIptu.property_tax_first_installment) + Number(tempIptu.property_tax_second_installment);
@@ -215,7 +229,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
               {tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT' && (
                 <div>
                   <label className="text-xs font-bold mb-1.5 block text-content-secondary">Valor Total</label>
-                  <input type="text" value={maskMoney(String(tempIptu.property_tax_cash || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                  <input type="text" value={maskMoney(tempIptu.property_tax_cash ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                 </div>
               )}
 
@@ -223,11 +237,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold mb-1.5 block text-content-secondary">1ª Parcela</label>
-                    <input type="text" value={maskMoney(String(tempIptu.property_tax_first_installment || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                    <input type="text" value={maskMoney(tempIptu.property_tax_first_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
                   <div>
                     <label className="text-xs font-bold mb-1.5 block text-content-secondary">2ª Parcela</label>
-                    <input type="text" value={maskMoney(String(tempIptu.property_tax_second_installment || '0'))} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                    <input type="text" value={maskMoney(tempIptu.property_tax_second_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
                 </div>
               )}
@@ -241,7 +255,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                       <div key={i} className="p-3 border rounded-lg space-y-2 bg-surface-subtle">
                         <span className="text-[10px] font-bold text-brand">Parcela {i + 1}</span>
                         <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
-                        <input type="text" value={maskMoney(String(inst.value || '0'))} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" />
+                        <input type="text" value={maskMoney(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" />
                       </div>
                     ))}
                   </div>

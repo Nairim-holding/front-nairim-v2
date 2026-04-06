@@ -33,11 +33,17 @@ export function maskPhone(value: string): string {
 }
 
 // Moeda: R$ 0,00
-export function maskMoney(value: string): string {
+export function maskMoney(value: string | number): string {
+  if (typeof value === 'number') {
+    const cents = Math.round(parseFloat(value.toFixed(2)) * 100);
+    return maskMoney(String(cents));
+  }
   const numbers = value.replace(/\D/g, '');
+  if (!numbers) return 'R$ 0,00';
   const floatValue = parseFloat(numbers) / 100;
   return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
 
 // Metros quadrados: 0,00 m²
 export function maskSquareMeters(value: string): string {
