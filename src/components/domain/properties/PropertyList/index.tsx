@@ -20,7 +20,7 @@ interface ImovelProps {
   status: string;
   imagem?: string;
   cidade: string;
-  tipo: string; // "Casa" ou "Apartamento"
+  tipo: string; // "Casa", "Apartamento", "Sala Comercial", etc.
   // Campos comuns
   precoCondominio?: number;
   // Campos específicos de casa
@@ -32,6 +32,7 @@ interface ImovelProps {
   churrasqueira?: boolean;
   // Campos específicos de apartamento
   andar?: number;
+  // Campos comerciais (podem ser adicionados futuramente)
 }
 
 export default function ImoveisList() {
@@ -68,6 +69,7 @@ export default function ImoveisList() {
     const tipo = property.property_type;
     if (filters.propertyType === "house") return tipo === "house";
     if (filters.propertyType === "apartment") return tipo === "apartment";
+    // Se o filtro for "all" ou outro valor não reconhecido, mostra tudo
     return true;
   };
 
@@ -82,13 +84,12 @@ export default function ImoveisList() {
       // Define os tipos a buscar baseado no filtro
       let propertyTypes: string[] = [];
       if (!filters.propertyType || filters.propertyType === "all") {
-        propertyTypes = ["house", "apartment"];
+        propertyTypes = ["house", "apartment"]; // A API pode não aceitar múltiplos tipos, mas enviaremos sem property_type
       } else {
         propertyTypes = [filters.propertyType];
       }
 
-      // Como a API pode não aceitar múltiplos tipos, fazemos uma requisição para cada tipo?
-      // Mas para simplificar, vamos usar o filtro property_type único. Se for "all", buscamos sem property_type.
+      // Monta os filtros para a API
       const apiFilters: any = {
         page,
         limit: itemsPerPage,
@@ -147,11 +148,11 @@ export default function ImoveisList() {
         currentPageCount = response.page ?? response.currentPage ?? page;
       }
 
-      console.log(`Propriedades recebidas: ${propertiesArray.length}`);
+      console.log(`Propriedades recebidas da API: ${propertiesArray.length}`);
 
       // Filtra adicionalmente pelo tipo (garantia)
       const filteredByType = propertiesArray.filter(matchesPropertyType);
-      console.log(`Após filtro de tipo: ${filteredByType.length}`);
+      console.log(`Após filtro de tipo (matchesPropertyType): ${filteredByType.length}`);
 
       if (filteredByType.length === 0) {
         setImoveis([]);
@@ -162,7 +163,7 @@ export default function ImoveisList() {
 
       // Mapeia os imóveis
       const mappedImoveis: ImovelProps[] = filteredByType.map((property: any) => {
-        console.log("----- Processando imóvel ID:", property.id);
+        console.log("----- Processando imóvel ID:", property.id, "Tipo:", property.property_type);
 
         // ----- ENDEREÇO -----
         let street = "", number = "", district = "", city = "", state = "";
@@ -203,16 +204,19 @@ export default function ImoveisList() {
 
         propertyStatus = propertyStatus ? String(propertyStatus).toUpperCase() : null;
 
-        // ----- TIPO DO IMÓVEL -----
-        let tipo = "Imóvel";
-        if (property.property_type === "house") {
-          tipo = "Casa";
-        } else if (property.property_type === "apartment") {
-          tipo = "Apartamento";
+        // ----- TIPO DO IMÓVEL (TEXTO AMIGÁVEL) -----
+        let tipoAmigavel = "Imóvel";
+        const rawType = property.property_type;
+        if (rawType === "house") {
+          tipoAmigavel = "Casa";
+        } else if (rawType === "apartment") {
+          tipoAmigavel = "Apartamento";
+        } else if (rawType === "commercial" || rawType === "commercial_sale") {
+          tipoAmigavel = "Sala Comercial";
         } else if (property.type?.description) {
-          tipo = property.type.description;
+          tipoAmigavel = property.type.description;
         } else if (property.type?.name) {
-          tipo = property.type.name;
+          tipoAmigavel = property.type.name;
         }
 
         // ----- CARACTERÍSTICAS COMUNS -----
@@ -223,7 +227,7 @@ export default function ImoveisList() {
         const mobilia = property.furnished ?? false;
 
         // ----- IMAGEM -----
-        let imagem = "/imagem-padrao.jpg"; // Defina uma imagem padrão
+        let imagem = "/CasaLocacao.jpeg"; // imagem padrão
         if (property.documents && property.documents.length > 0) {
           const img = property.documents.find(
             (d: any) => d.type === "IMAGE" && d.file_path
@@ -236,7 +240,7 @@ export default function ImoveisList() {
         // ----- CAMPOS ESPECÍFICOS -----
         const baseImovel = {
           id: property.id || `temp-${Math.random()}`,
-          nome: property.title || property.name || `${tipo} em ${district || city || "localização"}`,
+          nome: property.title || property.name || `${tipoAmigavel} em ${district || city || "localização"}`,
           local,
           preco,
           quartos,
@@ -247,11 +251,12 @@ export default function ImoveisList() {
           status: propertyStatus || "UNKNOWN",
           imagem,
           cidade: city || "Não informada",
-          tipo,
+          tipo: tipoAmigavel,
           precoCondominio: condoFee,
         };
 
-        if (property.property_type === "house") {
+        // Adiciona campos específicos baseado no tipo bruto (property_type)
+        if (rawType === "house") {
           return {
             ...baseImovel,
             areaTerreno: property.area_total ?? 0,
@@ -261,11 +266,14 @@ export default function ImoveisList() {
             piscina: property.pool ?? false,
             churrasqueira: property.barbecue ?? false,
           };
-        } else {
+        } else if (rawType === "apartment") {
           return {
             ...baseImovel,
             andar: property.floor_number ?? 0,
           };
+        } else {
+          // Para outros tipos (comercial, terreno, etc.) retorna apenas os campos comuns
+          return { ...baseImovel };
         }
       });
 
@@ -273,8 +281,9 @@ export default function ImoveisList() {
       console.log(mappedImoveis);
       console.log("====================================");
 
-      // Filtra apenas disponíveis
+      // Filtra apenas disponíveis (status AVAILABLE)
       const availableImoveis = mappedImoveis.filter(p => p.status === "AVAILABLE");
+      console.log(`Imóveis disponíveis após filtro de status: ${availableImoveis.length}`);
 
       // Recalcula totais
       const newTotalResults = availableImoveis.length;
@@ -292,7 +301,7 @@ export default function ImoveisList() {
       console.error("❌ Erro ao buscar imóveis:", err);
       setError(err instanceof Error ? err.message : "Erro ao conectar com a API");
 
-      // Dados de exemplo (fallback) - inclui casas e apartamentos
+      // Dados de exemplo (fallback) - inclui casas, apartamentos e um comercial
       const exampleData = [
         // Casas
         {
@@ -368,6 +377,22 @@ export default function ImoveisList() {
           cidade: "São Paulo",
           tipo: "Apartamento",
         },
+        // Sala Comercial (exemplo)
+        {
+          id: "com1",
+          nome: "Sala Comercial Centro",
+          local: "Centro, Barueri",
+          preco: 3200,
+          quartos: 0,
+          banheiros: 1,
+          vagas: 2,
+          area: 85,
+          mobilia: false,
+          status: "AVAILABLE",
+          cidade: "Barueri",
+          tipo: "Sala Comercial",
+          precoCondominio: 450,
+        },
       ];
 
       // Aplica filtros nos dados de exemplo
@@ -377,6 +402,7 @@ export default function ImoveisList() {
           (filters.propertyType === "house" && item.tipo === "Casa") ||
           (filters.propertyType === "apartment" && item.tipo === "Apartamento")
         );
+        // Comercial não é filtrado por house/apartment, então se filter for house/apartment, comercial é excluído. OK.
       }
       if (filters.quartos)
         filteredData = filteredData.filter((item) => item.quartos >= Number(filters.quartos));
@@ -437,7 +463,15 @@ export default function ImoveisList() {
   };
 
   const handleVerDetalhes = (id: string, tipo: string) => {
-    const basePath = tipo.toLowerCase() === "casa" ? "casas" : "apartamentos";
+    // Define rota baseada no tipo amigável
+    let basePath = "imoveis"; // fallback genérico
+    if (tipo.toLowerCase() === "casa") {
+      basePath = "casas";
+    } else if (tipo.toLowerCase() === "apartamento") {
+      basePath = "apartamentos";
+    } else if (tipo.toLowerCase().includes("comercial")) {
+      basePath = "comerciais";
+    }
     router.push(`/${basePath}/${id}`);
   };
 
@@ -489,7 +523,6 @@ export default function ImoveisList() {
           </h1>
           <p className="text-gray-600 mb-6">Encontre o imóvel ideal para você</p>
           
-
           {/* Mensagem de erro */}
           {error && (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
@@ -548,6 +581,8 @@ export default function ImoveisList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
               {imoveis.map((imovel) => {
                 const isCasa = imovel.tipo === "Casa";
+                const isApartamento = imovel.tipo === "Apartamento";
+                const isComercial = imovel.tipo.toLowerCase().includes("comercial");
                 return (
                   <div
                     key={imovel.id}
@@ -567,7 +602,7 @@ export default function ImoveisList() {
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-blue-100 flex items-center justify-center">
                           <Icon
-                            icon={isCasa ? "mingcute:home-2-line" : "mingcute:building-2-line"}
+                            icon={isCasa ? "mingcute:home-2-line" : isApartamento ? "mingcute:building-2-line" : "mingcute:store-line"}
                             className="w-16 h-16 text-purple-300"
                           />
                         </div>
@@ -590,9 +625,14 @@ export default function ImoveisList() {
                             Churrasqueira
                           </span>
                         )}
-                        {!isCasa && imovel.andar && (
+                        {isApartamento && imovel.andar && (
                           <span className="px-3 py-1 bg-purple-600 text-white text-xs rounded-full font-medium">
                             {imovel.andar}º andar
+                          </span>
+                        )}
+                        {isComercial && (
+                          <span className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-full font-medium">
+                            Comercial
                           </span>
                         )}
                       </div>
@@ -756,10 +796,16 @@ export default function ImoveisList() {
                               {imovel.suites} suíte{imovel.suites > 1 ? "s" : ""}
                             </span>
                           )}
-                          {!isCasa && imovel.andar && (
+                          {isApartamento && imovel.andar && (
                             <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                               <Icon icon="mingcute:arrow-up-line" className="w-3 h-3 mr-1" />
                               {imovel.andar}º andar
+                            </span>
+                          )}
+                          {isComercial && (
+                            <span className="inline-flex items-center px-2 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-full">
+                              <Icon icon="mingcute:store-line" className="w-3 h-3 mr-1" />
+                              Sala/Comercial
                             </span>
                           )}
                         </div>

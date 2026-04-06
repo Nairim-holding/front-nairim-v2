@@ -28,6 +28,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/uploads/**',
+      },
+      // Adicione também o domínio de produção quando subir o site
+      {
+        protocol: 'https',
+        hostname: 'nairim.com.br',
+        pathname: '/**',
+      },
     ],
   },
   generateBuildId: async () => {

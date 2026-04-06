@@ -8,7 +8,7 @@
 import type { Property, PropertyFilters, PaginatedResponse } from '@/types';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://api-nairim-v2-production.up.railway.app';
+  process.env.NEXT_PUBLIC_API_URL || 'https://nairim.com.br/backend-test';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -23,6 +23,7 @@ function buildQueryString(params: Record<string, unknown>): string {
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  console.log("Chamando URL:", `${API_URL}${path}`);
   const res = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init,

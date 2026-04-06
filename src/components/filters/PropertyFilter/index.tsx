@@ -181,24 +181,18 @@ export default function Filter() {
         </div>
       </div>
 
-      {/* Modal de Filtros - Mobile (Renderizado fora do container principal) */}
+      {/* Modal de Filtros - Mobile */}
       {isFilterOpen && isMobile && (
         <div className="fixed inset-0 z-50">
-          {/* Overlay */}
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsFilterOpen(false)}
             role="presentation"
           />
-
-          {/* Painel de Filtros Mobile */}
           <div className="fixed bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
-            {/* Barra de arrastar */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-12 h-1.5 bg-surface-muted rounded-full"></div>
             </div>
-
-            {/* Cabeçalho */}
             <div className="sticky top-0 bg-surface border-b border-ui-border-soft p-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold text-content">Filtros Avançados</h2>
@@ -211,7 +205,6 @@ export default function Filter() {
                   <Icon icon="mingcute:close-line" className="w-6 h-6" />
                 </button>
               </div>
-              
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -231,8 +224,6 @@ export default function Filter() {
                 </button>
               </div>
             </div>
-
-            {/* Menu lateral de seções (mobile) */}
             <div className="border-b border-ui-border-soft overflow-x-auto">
               <div className="flex px-4">
                 {[
@@ -260,9 +251,8 @@ export default function Filter() {
                 ))}
               </div>
             </div>
-
-            {/* Conteúdo da seção ativa */}
             <div className="flex-1 overflow-y-auto p-4">
+              {/* Valores */}
               {activeSection === "valores" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-content mb-2">Valores (R$)</h3>
@@ -301,6 +291,7 @@ export default function Filter() {
                 </div>
               )}
 
+              {/* Características */}
               {activeSection === "caracteristicas" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-content mb-2">Características</h3>
@@ -321,7 +312,6 @@ export default function Filter() {
                         <option value="house">Casa</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="quartos-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Quartos
@@ -340,7 +330,6 @@ export default function Filter() {
                         <option value="4">4+ quartos</option>
                       </select>
                     </div>
-                    
                     <div>
                       <label htmlFor="banheiros-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Banheiros
@@ -358,7 +347,6 @@ export default function Filter() {
                         <option value="3">3+ banheiros</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="vagas-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Vagas
@@ -376,7 +364,6 @@ export default function Filter() {
                         <option value="3">3+ vagas</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="garagem-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Garagem
@@ -394,7 +381,6 @@ export default function Filter() {
                         <option value="3">3+ carros</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="lavabo-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Lavabo
@@ -411,7 +397,6 @@ export default function Filter() {
                         <option value="2">2 lavabos</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="andares-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Andares
@@ -433,6 +418,7 @@ export default function Filter() {
                 </div>
               )}
 
+              {/* Área */}
               {activeSection === "area" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-content mb-2">Área (m²)</h3>
@@ -469,6 +455,7 @@ export default function Filter() {
                 </div>
               )}
 
+              {/* Localização */}
               {activeSection === "localizacao" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-content mb-2">Localização</h3>
@@ -487,7 +474,6 @@ export default function Filter() {
                         className="w-full px-3 py-2 text-sm border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
-                    
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label htmlFor="bairro-mobile" className="block text-xs font-medium text-content-secondary mb-1">
@@ -518,7 +504,6 @@ export default function Filter() {
                         />
                       </div>
                     </div>
-
                     <div>
                       <label htmlFor="uf-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Estado (UF)
@@ -542,6 +527,7 @@ export default function Filter() {
                 </div>
               )}
 
+              {/* Outros */}
               {activeSection === "outros" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-content mb-2">Outros</h3>
@@ -574,7 +560,6 @@ export default function Filter() {
                         />
                       </div>
                     </div>
-
                     <div>
                       <label htmlFor="fachada-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Fachada
@@ -592,7 +577,6 @@ export default function Filter() {
                         <option value="precisa_reforma">Precisa reforma</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="mobilia-mobile" className="block text-xs font-medium text-content-secondary mb-1">
                         Quantidade de móveis
@@ -614,8 +598,6 @@ export default function Filter() {
                 </div>
               )}
             </div>
-
-            {/* Rodapé Mobile */}
             <div className="sticky bottom-0 bg-surface border-t border-ui-border-soft p-4">
               <div className="flex gap-3">
                 <button
@@ -639,20 +621,16 @@ export default function Filter() {
         </div>
       )}
 
-      {/* Modal de Filtros - Desktop (Renderizado fora do container principal) */}
+      {/* Modal de Filtros - Desktop */}
       {isFilterOpen && !isMobile && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Overlay */}
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsFilterOpen(false)}
             role="presentation"
           />
-
-          {/* Painel de Filtros Desktop */}
           <div className="fixed inset-y-0 right-0 w-full max-w-md bg-surface shadow-2xl overflow-y-auto">
             <div className="h-full flex flex-col">
-              {/* Cabeçalho */}
               <div className="sticky top-0 bg-surface border-b border-ui-border-soft p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-content">Filtros Avançados</h2>
@@ -665,7 +643,6 @@ export default function Filter() {
                     <Icon icon="mingcute:close-line" className="w-6 h-6" />
                   </button>
                 </div>
-                
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -685,8 +662,6 @@ export default function Filter() {
                   </button>
                 </div>
               </div>
-
-              {/* Corpo dos Filtros */}
               <div className="flex-1 p-6 space-y-8">
                 {/* Valores */}
                 <div>
@@ -727,7 +702,6 @@ export default function Filter() {
                     </div>
                   </div>
                 </div>
-
                 {/* Características */}
                 <div>
                   <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
@@ -751,7 +725,6 @@ export default function Filter() {
                         <option value="house">Casa</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="quartos-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Quartos
@@ -770,7 +743,6 @@ export default function Filter() {
                         <option value="4">4+ quartos</option>
                       </select>
                     </div>
-                    
                     <div>
                       <label htmlFor="banheiros-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Banheiros
@@ -788,7 +760,6 @@ export default function Filter() {
                         <option value="3">3+ banheiros</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="vagas-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Vagas
@@ -806,7 +777,6 @@ export default function Filter() {
                         <option value="3">3+ vagas</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="garagem-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Garagem
@@ -824,7 +794,6 @@ export default function Filter() {
                         <option value="3">3+ carros</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="lavabo-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Lavabo
@@ -841,7 +810,6 @@ export default function Filter() {
                         <option value="2">2 lavabos</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="andares-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Andares
@@ -861,7 +829,6 @@ export default function Filter() {
                     </div>
                   </div>
                 </div>
-
                 {/* Área */}
                 <div>
                   <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
@@ -899,7 +866,6 @@ export default function Filter() {
                     </div>
                   </div>
                 </div>
-
                 {/* Localização */}
                 <div>
                   <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
@@ -921,7 +887,6 @@ export default function Filter() {
                         className="w-full px-4 py-2 border border-ui-border text-content-placeholder focus:text-content rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                       />
                     </div>
-                    
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="bairro-desktop" className="block text-sm font-medium text-content-secondary mb-2">
@@ -952,7 +917,6 @@ export default function Filter() {
                         />
                       </div>
                     </div>
-
                     <div>
                       <label htmlFor="uf-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Estado (UF)
@@ -974,7 +938,6 @@ export default function Filter() {
                     </div>
                   </div>
                 </div>
-
                 {/* Outros */}
                 <div>
                   <h3 className="text-lg font-semibold text-content mb-4 flex items-center gap-2">
@@ -1010,7 +973,6 @@ export default function Filter() {
                         />
                       </div>
                     </div>
-
                     <div>
                       <label htmlFor="fachada-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Fachada
@@ -1028,7 +990,6 @@ export default function Filter() {
                         <option value="precisa_reforma">Precisa reforma</option>
                       </select>
                     </div>
-
                     <div>
                       <label htmlFor="mobilia-desktop" className="block text-sm font-medium text-content-secondary mb-2">
                         Quantidade de móveis
@@ -1049,8 +1010,6 @@ export default function Filter() {
                   </div>
                 </div>
               </div>
-
-              {/* Rodapé Desktop */}
               <div className="sticky bottom-0 bg-surface border-t border-ui-border-soft p-6">
                 <div className="flex gap-4">
                   <button
@@ -1075,27 +1034,50 @@ export default function Filter() {
         </div>
       )}
 
-      {/* Estilos personalizados para selects */}
+      {/* Estilos personalizados para selects com suporte a tema claro/escuro */}
       <style>{`
+        /* Estilos padrão (fallback) - para tema claro */
         .custom-select {
-          background-color: #7a6d92;
+          background-color: #ffffff;
           color: #1f2937;
+          border-color: #d1d5db;
         }
         .custom-select option {
-          background-color: #756b87;
+          background-color: #ffffff;
           color: #1f2937;
         }
         .custom-select option:hover,
         .custom-select option:focus,
         .custom-select option:active,
         .custom-select option:checked {
-          background-color: #000000;
+          background-color: #e5e7eb;
           color: #1f2937;
         }
-        /* Para navegadores que suportam :checked com background */
+
+        /* Tema escuro: quando o navegador está em dark mode */
+        @media (prefers-color-scheme: dark) {
+          .custom-select {
+            background-color: #7a6d92;
+            color: #f3f4f6;
+            border-color: #4b5563;
+          }
+          .custom-select option {
+            background-color: #7a6d92;
+            color: #f3f4f6;
+          }
+          .custom-select option:hover,
+          .custom-select option:focus,
+          .custom-select option:active,
+          .custom-select option:checked {
+            background-color: #251530 !important;
+            color: #ffffff !important;
+          }
+        }
+
+        /* Para navegadores que suportam :checked com background (reforço) */
         .custom-select option:checked {
-          background-color: #251530 !important;
-          color: #e0e0e1 !important;
+          background-color: #251530;
+          color: #e0e0e1;
         }
       `}</style>
     </>
