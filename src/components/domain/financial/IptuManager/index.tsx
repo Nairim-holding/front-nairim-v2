@@ -32,13 +32,19 @@ interface IptuManagerProps {
 
 const MARGIN_CONDITION: Record<string, number> = {
   'IN_FULL_15_DISCOUNT': 0.15,
-  'SECOND_INSTALLMENT_10_DISCOUNT': 0.05,
+  'SECOND_INSTALLMENT_10_DISCOUNT': 0.10,
   'INSTALLMENTS': 0.05,
   'DEFAULT': 0.05,
 };
 
-const calculateMarginIptu = (baseIptu: number, condition: string) => {
-  return 
+const calculateMargin = (baseIptu: number, condition: string) => {
+  return baseIptu * (MARGIN_CONDITION[condition] ?? MARGIN_CONDITION.DEFAULT);
+}
+
+const isInMargin = (value: number, baseValue: number, condition: string) => {
+  const margin = calculateMargin(value, condition)
+
+  return value > (baseValue - margin) && value < (baseValue + margin);
 }
 
 export default function IptuManager({ value = [], onChange, readOnly = false, activeLease, baseIptu = 0 }: IptuManagerProps) {
@@ -103,11 +109,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
     const yearValue = Number(tempIptu.year);
     const currentYear = new Date().getFullYear();
-    const margin = baseIptu * (
-      MARGIN_CONDITION[tempIptu.payment_condition]
-      ?? MARGIN_CONDITION.DEFAULT
-    );
-    
+    const margin = calculateMargin(baseIptu, tempIptu.payment_condition);
+
     if (!tempIptu.year) return setErrorMsg('O Ano do Exercício é obrigatório.');
     if (yearValue < currentYear - 5 || yearValue > currentYear + 5) {
       return setErrorMsg(`O ano deve estar entre ${currentYear - 5} e ${currentYear + 5}.`);
@@ -119,8 +122,10 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       if (val < (baseIptu - margin) || val > (baseIptu + margin)) return setErrorMsg(`O valor está fora da margem de 15% do Valor Base (${formatMoney(baseIptu)}).`);
     }
     else if (tempIptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
-      const total = Number(tempIptu.property_tax_first_installment) + Number(tempIptu.property_tax_second_installment);
-      if (total < (baseIptu - margin) || total > (baseIptu + margin)) return setErrorMsg(`A soma das parcelas está fora da margem de 5% do Valor Base.`);
+      const firstInstallment = Number(tempIptu.property_tax_first_installment);
+      const secondInstallment = Number(tempIptu.property_tax_second_installment);
+      const remaining = baseIptu - firstInstallment;
+      if (!isInMargin(secondInstallment, remaining, tempIptu.payment_condition)) return setErrorMsg(`A 2ª parcela está fora da margem de 10% do valor restante.`);
     }
     else if (tempIptu.payment_condition === 'INSTALLMENTS') {
       const sum = (tempIptu.iptu_installments || []).reduce((acc, curr) => acc + Number(curr.value || 0), 0);
