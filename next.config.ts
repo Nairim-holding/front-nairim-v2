@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "**", // Permite qualquer HTTPS
       },
       {
         protocol: 'http',
@@ -34,7 +34,13 @@ const nextConfig: NextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
-      // Adicione também o domínio de produção quando subir o site
+      // Adição do IP que causou o erro:
+      {
+        protocol: 'http',
+        hostname: '187.77.236.241',
+        port: '5001',
+        pathname: '/uploads/**',
+      },
       {
         protocol: 'https',
         hostname: 'nairim.com.br',
