@@ -3,8 +3,9 @@
 // ─── Moeda ──────────────────────────────────────────────────────────────────
 
 export const formatCurrency = (value: any): string => {
+  if (value === null || value === undefined || value === '') return '';
   const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (typeof num !== 'number' || isNaN(num)) return 'R$ 0,00';
+  if (typeof num !== 'number' || isNaN(num)) return '';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -12,12 +13,12 @@ export const formatCurrency = (value: any): string => {
 };
 
 export const formatCurrencyFixed = (v?: number): string =>
-  typeof v === 'number' ? `R$ ${v.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+  typeof v === 'number' ? `R$ ${v.toFixed(2).replace('.', ',')}` : '';
 
 export const formatCurrencyRounded = (v?: number): string =>
   typeof v === 'number'
     ? `R$ ${Math.round(v).toLocaleString('pt-BR')}`
-    : 'R$ 0';
+    : '';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -30,11 +31,14 @@ export const formatDate = (v: any): string => {
 // ─── Número / Área ───────────────────────────────────────────────────────────
 
 export const formatValueOrDash = (v: any): any =>
-  v !== undefined && v !== null ? v : '-';
+  v !== undefined && v !== null ? v : '';
 
 export const formatPercent = (v: any): string => `${v?.toFixed(2) ?? '0'}%`;
 
-export const formatSqm = (v: any): string => `${formatValueOrDash(v)}m²`;
+export const formatSqm = (v: any): string => {
+  if (v === null || v === undefined || v === '') return '';
+  return `${v}m²`;
+};
 
 // ─── Documentos / Pessoas ────────────────────────────────────────────────────
 
@@ -46,6 +50,15 @@ export const formatCPFCNPJ = (value: string): string => {
   }
   if (clean.length === 14) {
     return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  return value;
+};
+
+export const formatRG = (value: string): string => {
+  if (!value) return '-';
+  const clean = value.replace(/\D/g, '');
+  if (clean.length >= 8 && clean.length <= 9) {
+    return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
   }
   return value;
 };

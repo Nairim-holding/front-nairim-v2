@@ -122,7 +122,7 @@ export default function FornecedoresPage() {
           if (!response.ok) {
             setIsManualAddress(true);
             showMessage('CEP não encontrado. Os campos de endereço foram liberados para preenchimento manual.', 'error');
-            return { street: '', district: '', city: '', state: '' }; 
+            return null; // Não sobrescreve os campos, apenas libera para edição 
           }
 
           const data = await response.json();

@@ -25,10 +25,12 @@ export default function VisualizarInquilinoPage() {
     return {
       name: apiData.name || '',
       internal_code: apiData.internal_code || '',
+      nationality: apiData.nationality || '',
       occupation: apiData.occupation || '',
       marital_status: apiData.marital_status || '',
       cnpj: apiData.cnpj || '',
       cpf: apiData.cpf || '',
+      rg: apiData.rg || '',
       municipal_registration: apiData.municipal_registration || '',
       state_registration: apiData.state_registration || '',
       zip_code: address.zip_code || '',
@@ -73,6 +75,14 @@ export default function VisualizarInquilinoPage() {
           hidden: (formValues: any) => !formValues.internal_code || formValues.internal_code.trim() === '',
         },
         {
+          field: 'nationality',
+          label: 'Nacionalidade',
+          type: 'text',
+          icon: <Globe size={20} />,
+          readOnly: true,
+          hidden: (formValues: any) => !formValues.nationality,
+        },
+        {
           field: 'occupation',
           label: 'Profissão',
           type: 'text',
@@ -97,6 +107,15 @@ export default function VisualizarInquilinoPage() {
           icon: <FileText size={20} />,
           readOnly: true,
           hidden: (formValues: any) => !formValues.cpf,
+        },
+        {
+          field: 'rg',
+          label: 'RG',
+          type: 'text',
+          mask: 'rg',
+          icon: <FileText size={20} />,
+          readOnly: true,
+          hidden: (formValues: any) => !formValues.rg,
         },
         {
           field: 'cnpj',

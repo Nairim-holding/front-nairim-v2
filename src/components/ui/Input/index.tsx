@@ -16,7 +16,7 @@ export interface InputProps {
   svg?: React.ReactNode;
   disabled?: boolean;
   tabIndex?: number;
-  mask?: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros' | 'date';
+  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros' | 'date';
   autoFocus?: boolean;
   password?: boolean;
   maxLength?: number;
@@ -41,6 +41,14 @@ const maskCNPJ = (value: string): string => {
   if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
   if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
   return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
+};
+
+const maskRG = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 9);
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+  if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+  return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}-${numbers.slice(8, 9)}`;
 };
 
 const maskCEP = (value: string): string => {
@@ -105,6 +113,7 @@ const applyMask = (maskType: InputProps['mask'], value: string): string => {
   switch (maskType) {
     case "cpf": return maskCPF(value);
     case "cnpj": return maskCNPJ(value);
+    case "rg": return maskRG(value);
     case "cep": return maskCEP(value);
     case "telefone": return maskPhone(value);
     case "money": return maskMoney(value);
@@ -121,6 +130,7 @@ const removeMask = (maskType: InputProps['mask'], value: string): string => {
   switch (maskType) {
     case "cpf":
     case "cnpj":
+    case "rg":
     case "cep":
     case "telefone":
       return value.replace(/\D/g, '');
@@ -188,7 +198,7 @@ export default function Input({
     } else {
       setDisplayValue(stringValue);
     }
-  }, [value, effectiveMask, disabled]);
+  }, [value, effectiveMask]);
 
   const handleIncrement = () => {
     if (disabled || type !== 'number') return;

@@ -37,7 +37,7 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
       const cleanCEP = value.replace(/\D/g, '');
 
       if (cleanCEP.length < 8) {
-        return { street: '', district: '', city: '', state: '', country: 'Brasil', latitude: '', longitude: '' };
+        return null; // Não limpa campos enquanto usuário está digitando
       }
 
       if (cleanCEP.length === 8) {
@@ -49,7 +49,7 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
             if (res.status === 404) {
               setIsManualAddress(true);
               showMessage('CEP não encontrado. Preencha manualmente.', 'error');
-              return { street: '', district: '', city: '', state: '', latitude: '', longitude: '' };
+              return null; // Não sobrescreve os campos, apenas libera para edição
             }
             throw new Error('Erro ao buscar CEP');
           }

@@ -28,9 +28,9 @@ export function parseMoney(value: string | number): number {
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 export function formatMoney(value: number | string): string {
-  if (!value) return '';
+  if (value === null || value === undefined || value === '') return '';
   const n = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(n)) return '';
+  if (isNaN(n) || n === 0) return '';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -40,7 +40,7 @@ export function formatMoney(value: number | string): string {
 }
 
 export function formatMetricValue(value: number | string): string {
-  if (!value) return '';
+  if (value === null || value === undefined || value === '') return '';
   const n = typeof value === 'string' ? parseFloat(value) : value;
   if (isNaN(n)) return '';
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -152,6 +152,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     type_id:          data.type_id ?? '',
     agency_id:        data.agency_id ?? '',
     furnished:        data.furnished?.toString() ?? 'false',
+    registration_number: data.registration_number ?? '',
     notes:            data.notes ?? '',
 
     zip_code:   address.zip_code ?? '',
@@ -177,6 +178,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     values_notes:   values.notes ?? '',
     sale_value:     formatMoney(values.sale_value ?? ''),
     extra_charges:  formatMoney(values.extra_charges ?? ''),
+    market_value:   formatMoney(values.market_value ?? ''),
 
     iptus: data.iptus ?? [],
 
@@ -227,6 +229,7 @@ export function buildPropertyFormData(
     owner_id:         data.owner_id,
     type_id:          data.type_id,
     agency_id:        data.agency_id,
+    registration_number: data.registration_number || null,
   }));
 
   fd.append('addressData', JSON.stringify({
@@ -255,6 +258,7 @@ export function buildPropertyFormData(
     sale_date:      data.sale_date || null,
     sale_value:     parseMoney(data.sale_value) || 0,
     extra_charges:  parseMoney(data.extra_charges) || 0,
+    market_value:   parseMoney(data.market_value) || null,
   }));
 
   fd.append('iptusData', JSON.stringify(data.iptus || []));

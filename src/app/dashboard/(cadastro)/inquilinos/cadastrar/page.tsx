@@ -57,12 +57,7 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
             if (response.status === 404) {
               setIsManualAddress(true);
               showMessage('CEP não encontrado. Os campos de endereço foram liberados para preenchimento manual.', 'error');
-              return {
-                street: '',
-                district: '',
-                city: '',
-                state: '',
-              }; // Limpa os campos para o usuário digitar
+              return null; // Não sobrescreve os campos, apenas libera para edição
             }
             
             const errorData = await response.json().catch(() => ({}));
@@ -90,9 +85,9 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
           }
         } catch (error: any) {
           showMessage(error.message || 'Erro ao buscar CEP.', 'error');
-          // Em caso de erro genérico (como falha de rede), você também pode optar por liberar os campos:
+          // Em caso de erro, libera os campos sem sobrescrever os valores existentes
           setIsManualAddress(true);
-          return null;
+          return null; // Não sobrescreve os campos, apenas libera para edição
         }
       }
     }
@@ -129,7 +124,9 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
       if (tipo === 'fisica') {
         formattedData.occupation = data.occupation || null;
         formattedData.marital_status = data.marital_status || null;
+        formattedData.nationality = data.nationality || null;
         formattedData.cpf = data.cpf ? data.cpf.replace(/\D/g, '') : null;
+        formattedData.rg = data.rg || null;
         formattedData.cnpj = null;
         formattedData.state_registration = null;
         formattedData.municipal_registration = null;
@@ -201,6 +198,13 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
           },
           ...(tipoSelecionado === 'fisica' ? [
             {
+              field: 'nationality',
+              label: 'Nacionalidade',
+              type: 'text',
+              placeholder: 'Brasileira',
+              icon: <Globe size={20} />,
+            } as any,
+            {
               field: 'occupation',
               label: 'Profissão',
               type: 'text',
@@ -228,6 +232,14 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
               required: true,
               placeholder: '000.000.000-00',
               mask: 'cpf',
+              icon: <FileText size={20} />,
+            } as any,
+            {
+              field: 'rg',
+              label: 'RG',
+              type: 'text',
+              placeholder: '00.000.000-0',
+              mask: 'rg',
               icon: <FileText size={20} />,
             } as any,
           ] : []),

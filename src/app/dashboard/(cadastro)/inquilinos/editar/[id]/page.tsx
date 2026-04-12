@@ -56,7 +56,7 @@ export default function EditarInquilinoPage() {
               // FALLBACK: Libera os campos
               setIsManualAddress(true);
               showMessage('CEP não encontrado. Os campos foram liberados para preenchimento manual.', 'error');
-              return { street: '', district: '', city: '', state: '' };
+              return null; // Não sobrescreve os campos, apenas libera para edição
             }
             throw new Error(`Erro ${response.status}`);
           }
@@ -118,7 +118,9 @@ export default function EditarInquilinoPage() {
       if (tipo === 'fisica') {
         formattedData.occupation = data.occupation || null;
         formattedData.marital_status = data.marital_status || null;
+        formattedData.nationality = data.nationality || null;
         formattedData.cpf = data.cpf ? data.cpf.replace(/\D/g, '') : null;
+        formattedData.rg = data.rg || null;
         formattedData.cnpj = null;
         formattedData.state_registration = null;
         formattedData.municipal_registration = null;
@@ -174,10 +176,12 @@ export default function EditarInquilinoPage() {
       tenant_type: apiData.cpf ? 'fisica' : 'juridica',
       name: apiData.name || '',
       internal_code: apiData.internal_code || '',
+      nationality: apiData.nationality || '',
       occupation: apiData.occupation || '',
       marital_status: apiData.marital_status || '',
       cnpj: apiData.cnpj || '',
       cpf: apiData.cpf || '',
+      rg: apiData.rg || '',
       municipal_registration: apiData.municipal_registration || '',
       state_registration: apiData.state_registration || '',
       zip_code: address.zip_code || '',
@@ -205,6 +209,7 @@ export default function EditarInquilinoPage() {
         { field: 'tenant_type', label: '', type: 'text', hidden: true },
         { field: 'name', label: 'Nome/Razão Social', type: 'text', required: true, placeholder: 'Nome', icon: <UserIcon size={20} />, className: 'col-span-full' },
         { field: 'internal_code', label: 'Código Interno', type: 'text', required: true, icon: <Hash size={20} /> },
+        { field: 'nationality', label: 'Nacionalidade', type: 'text', required: false, placeholder: 'Brasileira', icon: <Globe size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
         { field: 'occupation', label: 'Profissão', type: 'text', required: true, icon: <Briefcase size={20} />, className: 'col-span-full', hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
         {
           field: 'marital_status', label: 'Estado Civil', type: 'select', required: true,
@@ -218,6 +223,7 @@ export default function EditarInquilinoPage() {
           icon: <Heart size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica'
         },
         { field: 'cpf', label: 'CPF', type: 'text', required: true, mask: 'cpf', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
+        { field: 'rg', label: 'RG', type: 'text', required: false, mask: 'rg', placeholder: '00.000.000-0', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
         { field: 'cnpj', label: 'CNPJ', type: 'text', required: true, mask: 'cnpj', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },

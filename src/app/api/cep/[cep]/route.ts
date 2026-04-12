@@ -21,6 +21,15 @@ interface OpenCepResponse {
   uf: string;
 }
 
+interface BrasilApiResponse {
+  cep: string;
+  state: string;
+  city: string;
+  neighborhood: string;
+  street: string;
+  service: string;
+}
+
 interface CepNormalizado {
   cep: string;
   rua: string;
@@ -138,6 +147,24 @@ async function normalizarOpenCep(data: OpenCepResponse): Promise<CepNormalizado>
   };
 }
 
+async function normalizarBrasilApi(data: BrasilApiResponse): Promise<CepNormalizado> {
+  const enderecoCompleto = `${data.street}, ${data.city}, ${data.state}, Brasil`;
+  const cidadeEstado = `${data.city}, ${data.state}, Brasil`;
+  const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
+
+  return {
+    cep: data.cep,
+    rua: data.street,
+    complemento: '',
+    bairro: data.neighborhood,
+    cidade: data.city,
+    estado: data.state,
+    fonte: "BrasilAPI",
+    latitude: coords.lat,
+    longitude: coords.lng,
+  };
+}
+
 async function buscarViaCep(cep: string): Promise<CepNormalizado> {
   const response = await fetchComTimeout(`https://viacep.com.br/ws/${cep}/json/`);
 
@@ -170,6 +197,22 @@ async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
   return await normalizarOpenCep(data);
 }
 
+async function buscarBrasilApi(cep: string): Promise<CepNormalizado> {
+  const response = await fetchComTimeout(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+
+  if (!response.ok) {
+    throw new Error("Erro HTTP BrasilAPI");
+  }
+
+  const data: BrasilApiResponse = await response.json();
+
+  if (!data.cep) {
+    throw new Error("CEP não encontrado na BrasilAPI");
+  }
+
+  return await normalizarBrasilApi(data);
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ cep: string }> }
@@ -197,13 +240,23 @@ export async function GET(
       return NextResponse.json(endereco, { status: 200 });
     } catch (openCepError: unknown) {
       if (openCepError instanceof Error) {
-        console.error("OpenCEP também falhou:", openCepError.message);
+        console.warn("OpenCEP falhou:", openCepError.message);
       }
 
-      return NextResponse.json(
-        { error: "CEP não encontrado em nenhuma base" },
-        { status: 404 }
-      );
+      // Terceiro fallback: BrasilAPI
+      try {
+        const endereco = await buscarBrasilApi(cepLimpo);
+        return NextResponse.json(endereco, { status: 200 });
+      } catch (brasilApiError: unknown) {
+        if (brasilApiError instanceof Error) {
+          console.error("BrasilAPI também falhou:", brasilApiError.message);
+        }
+
+        return NextResponse.json(
+          { error: "CEP não encontrado em nenhuma base" },
+          { status: 404 }
+        );
+      }
     }
   }
 }

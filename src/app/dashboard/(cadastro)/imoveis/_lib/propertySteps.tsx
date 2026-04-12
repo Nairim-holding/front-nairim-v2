@@ -65,8 +65,9 @@ export function buildPropertySteps({
         { field: 'tax_registration', label: 'Registro Fiscal', type: 'text', required: true, placeholder: 'Número do registro fiscal', icon: <FileText size={20} />, className: 'col-span-full', ...ro },
         { field: 'owner_id', label: 'Proprietário', type: 'select', required: true, options: ownerOptions, icon: <User size={20} />, className: 'col-span-full', ...ro },
         { field: 'type_id', label: 'Tipo do imóvel', type: 'select', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro },
-        { field: 'agency_id', label: 'Imobiliária', type: 'select', required: true, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
+        { field: 'agency_id', label: 'Imobiliária', type: 'select', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
         { field: 'furnished', label: 'Mobiliado', type: 'select', required: true, options: [{ label: 'Sim', value: 'true' }, { label: 'Não', value: 'false' }], icon: <Sofa size={20} />, className: 'col-span-full', ...ro },
+        { field: 'registration_number', label: 'Nº Cadastro', type: 'text', required: false, placeholder: 'Número de cadastro do imóvel', icon: <Hash size={20} />, className: 'col-span-full', ...ro },
         { field: 'notes', label: 'Observações', type: 'textarea', placeholder: 'Escreva detalhes não especificados anteriormente', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
       ],
     },
@@ -94,8 +95,9 @@ export function buildPropertySteps({
       fields: [
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
-        { field: 'rental_value', label: 'Valor Aluguel Base', type: 'text', required: true, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },
-        { field: 'condo_fee', label: 'Valor Condomínio Base', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },
+        { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: false, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },
+        { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },
+        { field: 'market_value', label: 'Valor Venal', type: 'text', placeholder: 'R$ 0,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         {
           field: 'status',
           label: 'Status Atual',

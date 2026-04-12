@@ -38,7 +38,7 @@ export function useCepLookup(setIsManualAddress: (v: boolean) => void) {
           if (res.status === 404) {
             setIsManualAddress(true);
             showMessage('CEP não encontrado. Preencha o endereço manualmente.', 'error');
-            return { street: '', district: '', city: '', state: '' };
+            return null; // Não sobrescreve os campos, apenas libera para edição
           }
           throw new Error(`Erro ${res.status}`);
         }

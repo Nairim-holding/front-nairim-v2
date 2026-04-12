@@ -118,7 +118,6 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     if (editingIndex !== null) {
       newIptus[editingIndex] = { ...tempIptu };
     } else {
-      if (newIptus.some(i => Number(i.year) === yearValue)) return setErrorMsg('Este ano já foi lançado.');
       newIptus.push({ ...tempIptu });
     }
 
@@ -273,49 +272,74 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       )}
 
       <div className="grid grid-cols-1 gap-4">
-        {iptus.map((item, idx) => (
-          <div key={idx} className="p-4 border rounded-xl bg-surface shadow-sm relative group">
-            <div className="flex justify-between mb-2">
-              <span className="font-bold text-brand flex items-center gap-2"><Calendar size={14} /> Exercício {item.year}</span>
-              {!readOnly && (
-                <div className="flex gap-2">
-                  <Edit2 size={14} className="cursor-pointer text-content-muted hover:text-blue-500" onClick={() => openModal('edit', idx)} />
-                  <Trash2 size={14} className="cursor-pointer text-state-error hover:opacity-70" onClick={() => handleRemove(idx)} />
+        {(() => {
+          // Agrupar por ano
+          const grouped = iptus.reduce((acc, item, idx) => {
+            const year = String(item.year);
+            if (!acc[year]) acc[year] = [];
+            acc[year].push({ ...item, originalIndex: idx });
+            return acc;
+          }, {} as Record<string, (IptuEntry & { originalIndex: number })[]>);
+
+          // Renderizar grupos ordenados por ano (descendente)
+          return Object.entries(grouped)
+            .sort(([a], [b]) => Number(b) - Number(a))
+            .map(([year, items]) => (
+              <div key={year} className="space-y-2">
+                {/* Cabeçalho do ano */}
+                <div className="flex items-center gap-2 py-1">
+                  <Calendar size={16} className="text-brand" />
+                  <span className="font-bold text-brand text-sm">Exercício {year}</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
-              )}
-            </div>
-            <p className="text-xs text-content-secondary font-medium mb-2">{getConditionLabel(item.payment_condition)}</p>
-            
-            {/* Detalhes dos valores baseados na condição de pagamento */}
-            {item.payment_condition === 'IN_FULL_15_DISCOUNT' && item.property_tax_cash && (
-              <p className="text-sm font-semibold text-content">Valor: {formatMoney(Number(item.property_tax_cash))}</p>
-            )}
-            
-            {item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT' && (
-              <div className="text-sm text-content space-y-1">
-                {item.property_tax_first_installment && (
-                  <p className="font-medium">1ª: {formatMoney(Number(item.property_tax_first_installment))}</p>
-                )}
-                {item.property_tax_second_installment && (
-                  <p className="font-medium">2ª: {formatMoney(Number(item.property_tax_second_installment))}</p>
-                )}
-              </div>
-            )}
-            
-            {item.payment_condition === 'INSTALLMENTS' && item.iptu_installments && item.iptu_installments.length > 0 && (
-              <div className="text-sm text-content space-y-1">
-                <p className="font-medium">{item.iptu_installments.length} parcela(s)</p>
-                <div className="text-xs text-content-secondary space-y-0.5">
-                  {item.iptu_installments.map((inst, i) => (
-                    <p key={i}>
-                      Parcela {i + 1}: {formatMoney(Number(inst.value))} - {inst.due_date ? new Date(inst.due_date).toLocaleDateString('pt-BR') : 'Sem data'}
-                    </p>
+                {/* Itens do ano */}
+                <div className="space-y-2 pl-6">
+                  {items.map((item) => (
+                    <div key={item.originalIndex} className="p-3 border rounded-lg bg-surface shadow-sm relative group">
+                      <div className="flex justify-between mb-1">
+                        <p className="text-xs text-content-secondary font-medium">{getConditionLabel(item.payment_condition)}</p>
+                        {!readOnly && (
+                          <div className="flex gap-2">
+                            <Edit2 size={14} className="cursor-pointer text-content-muted hover:text-blue-500" onClick={() => openModal('edit', item.originalIndex)} />
+                            <Trash2 size={14} className="cursor-pointer text-state-error hover:opacity-70" onClick={() => handleRemove(item.originalIndex)} />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Detalhes dos valores baseados na condição de pagamento */}
+                      {item.payment_condition === 'IN_FULL_15_DISCOUNT' && item.property_tax_cash && (
+                        <p className="text-sm font-semibold text-content">Valor: {formatMoney(Number(item.property_tax_cash))}</p>
+                      )}
+                      
+                      {item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT' && (
+                        <div className="text-sm text-content space-y-1">
+                          {item.property_tax_first_installment && (
+                            <p className="font-medium">1ª: {formatMoney(Number(item.property_tax_first_installment))}</p>
+                          )}
+                          {item.property_tax_second_installment && (
+                            <p className="font-medium">2ª: {formatMoney(Number(item.property_tax_second_installment))}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {item.payment_condition === 'INSTALLMENTS' && item.iptu_installments && item.iptu_installments.length > 0 && (
+                        <div className="text-sm text-content space-y-1">
+                          <p className="font-medium">{item.iptu_installments.length} parcela(s)</p>
+                          <div className="text-xs text-content-secondary space-y-0.5">
+                            {item.iptu_installments.map((inst, i) => (
+                              <p key={i}>
+                                Parcela {i + 1}: {formatMoney(Number(inst.value))} - {inst.due_date ? new Date(inst.due_date).toLocaleDateString('pt-BR') : 'Sem data'}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+            ));
+        })()}
         {!readOnly && (
           <button type="button" onClick={() => openModal('add')} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-content-muted hover:border-brand hover:text-brand hover:bg-brand/5 transition-all">
             <Plus size={24} /> <span className="text-xs font-semibold mt-1">Lançar IPTU Anual</span>

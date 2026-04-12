@@ -14,7 +14,7 @@ import SelectLimit from "../../filters/PageSizeSelect";
 import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
 import Input from "../../ui/Input";
-import { formatCurrency, formatDate, formatCPFCNPJ, formatGender, formatPhone, formatCEP } from "@/utils/formatters";
+import { formatCurrency, formatDate, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/formatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef } from "@/types/types";
@@ -199,6 +199,8 @@ export default function DynamicTableManager({
         case 'phone': return formatPhone(value);
         case 'boolean': return value ? 'Sim' : 'Não';
         case 'cep': return formatCEP(value);
+        case 'rg': return formatRG(value);
+        case 'propertyStatus': return formatStatus(value);
         default: return String(value);
       }
     }
@@ -328,6 +330,7 @@ export default function DynamicTableManager({
         if (addressField) return formatValue(item.addresses?.[0]?.address?.[addressField], column);
         if (column.field === "owner") return formatValue(item.owner?.name, column);
         if (column.field === "type") return formatValue(item.type?.description, column);
+        if (column.field === "status") return formatValue(item.values?.[0]?.status, column);
       }
 
       const addressFieldMap: Record<string, {path: string, field: string}> = {
@@ -652,7 +655,7 @@ export default function DynamicTableManager({
                         setShowOwnerTypeModal(false);
                       }}
                       onClose={() => setShowOwnerTypeModal(false)}
-                      className="right-0 top-full"
+                      className="left-0 top-full"
                     />
                   )}
                 </div>

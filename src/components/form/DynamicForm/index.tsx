@@ -181,7 +181,10 @@ export default function DynamicFormManager({
     const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
     
     allFields.forEach(field => {
-      if (field.defaultValue !== undefined) {
+      // Preserva valores existentes para não perder dados quando campos são re-habilitados
+      if (formValues[field.field] !== undefined && formValues[field.field] !== '') {
+        initialValues[field.field] = formValues[field.field];
+      } else if (field.defaultValue !== undefined) {
         initialValues[field.field] = field.defaultValue;
       } else {
         switch (field.type) {
@@ -204,6 +207,7 @@ export default function DynamicFormManager({
     });
     
     setFormValues(initialValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps, fields]);
 
   useEffect(() => {

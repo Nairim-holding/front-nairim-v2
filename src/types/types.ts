@@ -24,7 +24,7 @@ export interface ColumnDef {
   label: string;
   sortParam?: string;
   type?: ColumnType;
-  formatter?: 'currency' | 'date' | 'cpfCnpj' | 'phone' | 'boolean' | 'gender' | 'address' | 'propertyStatus' | 'cep';
+  formatter?: 'currency' | 'date' | 'cpfCnpj' | 'rg' | 'phone' | 'boolean' | 'gender' | 'address' | 'propertyStatus' | 'cep';
   nestedField?: string;
   width?: string;
   align?: 'left' | 'center' | 'right';
@@ -56,7 +56,7 @@ export interface FormFieldDef {
   disabled?: boolean;
   readOnly?: boolean;
   hidden?: boolean | ((formValues: any) => boolean);
-  mask?: 'cpf' | 'cnpj' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros';
+  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros';
   maxLength?: number;
   showIncrementButtons?: boolean;
   tabIndex?: number;

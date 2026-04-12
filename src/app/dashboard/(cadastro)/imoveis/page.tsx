@@ -13,6 +13,7 @@ const COLUMNS: ColumnDef[] = [
   { field: 'city',            label: 'Cidade',            sortParam: 'city',                type: 'text', nestedField: 'addresses.0.address.city' },
   { field: 'state',           label: 'UF',                sortParam: 'state',               type: 'text', nestedField: 'addresses.0.address.state' },
   { field: 'type',            label: 'Tipo do imóvel',    sortParam: 'type.description',    type: 'text', nestedField: 'type.description' },
+  { field: 'status',          label: 'Disponibilidade',   sortParam: 'values.status',       type: 'text', nestedField: 'values[0].status', formatter: 'propertyStatus' },
   { field: 'bedrooms',        label: 'Quartos',           sortParam: 'bedrooms',            type: 'number' },
   { field: 'bathrooms',       label: 'Banheiros',         sortParam: 'bathrooms',           type: 'number' },
   { field: 'half_bathrooms',  label: 'Lavabos',           sortParam: 'half_bathrooms',      type: 'number' },
