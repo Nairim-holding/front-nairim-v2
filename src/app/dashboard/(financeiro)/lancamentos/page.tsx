@@ -19,6 +19,7 @@ interface FormOptions {
   institutions: SelectOption[];
   cards: SelectOption[];
   centers: SelectOption[];
+  suppliers: SelectOption[];
   subcategories: { [categoryId: string]: SelectOption[] };
   incomeCategories: SelectOption[];
   expenseCategories: SelectOption[];
@@ -40,11 +41,18 @@ const mapCentersWithOptions = (res: any): SelectOption[] =>
     type: i.type,  
   }));
 
+const mapSuppliersToOptions = (res: any): SelectOption[] =>
+  (res?.data ?? res ?? []).map((i: any) => ({
+    label: i.legal_name || i.name || 'Sem nome',
+    value: i.id,
+  }));
+
 const EMPTY_OPTIONS: FormOptions = {
   categories: [],
   institutions: [],
   cards: [],
   centers: [],
+  suppliers: [],
   subcategories: {},
   incomeCategories: [],
   expenseCategories: [],
@@ -58,6 +66,7 @@ const LANCAMENTOS_COLUMNS: ColumnDef[] = [
   { field: 'institution', label: 'Instituição Financeira', sortParam: 'financial_institution.name', type: 'text' },
   { field: 'card_id', label: 'Cartão de Crédito', sortParam: 'card.name', type: 'text' },
   { field: 'center_id', label: 'Centro', sortParam: 'center.name', type: 'text' },
+  { field: 'supplier_id', label: 'Fornecedor', sortParam: 'supplier.name', type: 'text' },
   { field: 'description', label: 'Descrição', sortParam: 'description', type: 'text' },
   { field: 'amount', label: 'Valor', sortParam: 'amount', type: 'currency' },
   { field: 'status', label: 'Status', sortParam: 'status', type: 'text' },
@@ -71,15 +80,16 @@ export default function LancamentosPage() {
 
   const fetchOptions = useCallback(async () => {
     try {
-      const [catRes, subRes, instRes, cardRes, centRes] = await Promise.all([
+      const [catRes, subRes, instRes, cardRes, centRes, supRes] = await Promise.all([
         fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-institution?limit=1000`),
         fetch(`${API_URL}/financial-card?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-center?limit=1000&filter[is_active]=true`),
+        fetch(`${API_URL}/financial-supplier?limit=1000`),
       ]);
-      const [cats, subs, insts, cards, cents] = await Promise.all([
-        catRes.json(), subRes.json(), instRes.json(), cardRes.json(), centRes.json(),
+      const [cats, subs, insts, cards, cents, sups] = await Promise.all([
+        catRes.json(), subRes.json(), instRes.json(), cardRes.json(), centRes.json(), supRes.json(),
       ]);
       
       const allCategories = (cats?.data ?? cats ?? []);
@@ -104,6 +114,7 @@ export default function LancamentosPage() {
         institutions: mapToOptions(insts),
         cards: mapToOptions(cards),
         centers: mapCentersWithOptions(cents),
+        suppliers: mapSuppliersToOptions(sups),
         subcategories: subcategoriesByCategory,
       });
     } catch {

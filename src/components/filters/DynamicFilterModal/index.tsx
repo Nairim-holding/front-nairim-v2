@@ -60,6 +60,9 @@ interface DynamicFilterModalProps {
   title: string;
   filters: DynamicFilter[];
   initialValues?: Record<string, any>;
+  columns?: 1 | 2 | 3 | 4 | 5;
+  maxHeight?: string;
+  excludeFieldsFromCount?: string[];
 }
 
 interface FilterValue {
@@ -117,7 +120,7 @@ const FIELD_ICONS: Record<string, any> = {
 };
 
 export default function DynamicFilterModal({ 
-  visible, setVisible, onApply, onClear, title, filters, initialValues = {}
+  visible, setVisible, onApply, onClear, title, filters, initialValues = {}, columns, maxHeight, excludeFieldsFromCount = []
 }: DynamicFilterModalProps) {
   const [localFilters, setLocalFilters] = useState<Record<string, FilterValue>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
@@ -389,7 +392,7 @@ export default function DynamicFilterModal({
     const hasOptions = filter.autocomplete || filter.options || filter.values;
     
     return (
-      <div className="relative min-h-[90px]" key={filter.field}>
+      <div className="relative min-h-[50px]" key={filter.field}>
         <label className="block text-sm font-medium text-content-secondary mb-1">
           <div className="flex items-center gap-2">
             {Icon}
@@ -402,7 +405,7 @@ export default function DynamicFilterModal({
             <div>
               <input
                 type="date"
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
                 value={filterValue.value || ''}
                 onChange={(e) => updateFilterValue(filter.field, 'value', e.target.value)}
                 min={filter.min}
@@ -412,7 +415,7 @@ export default function DynamicFilterModal({
             <div>
               <input
                 type="date"
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
                 value={filterValue.value2 || ''}
                 onChange={(e) => updateFilterValue(filter.field, 'value2', e.target.value)}
                 min={filterValue.value || filter.min}
@@ -426,7 +429,7 @@ export default function DynamicFilterModal({
               <input
                 ref={(el) => { if (el) inputRefs.current[filter.field] = el; }}
                 type={filter.inputType || 'text'}
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
+                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10 h-10"
                 value={isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm)}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -518,23 +521,24 @@ export default function DynamicFilterModal({
   };
 
   const getActiveFilterCount = () => {
-    return Object.values(localFilters).filter(filter => 
-      filter && ((filter.value !== undefined && filter.value !== null && filter.value !== '') ||
+    return Object.entries(localFilters).filter(([field, filter]) => {
+      if (excludeFieldsFromCount.includes(field)) return false;
+      return filter && ((filter.value !== undefined && filter.value !== null && filter.value !== '') ||
       (filter.values && filter.values.length > 0) ||
-      (filter.value2 !== undefined && filter.value2 !== null && filter.value2 !== ''))
-    ).length;
+      (filter.value2 !== undefined && filter.value2 !== null && filter.value2 !== ''));
+    }).length;
   };
 
   if (!visible) return null;
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-layer-overlay-soft" onClick={() => setVisible(false)} />
+      <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setVisible(false)} />
       
-      <div 
+      <div
         ref={modalRef}
-        className="absolute top-[40%] sm:top-full left-0 z-50 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col overflow-hidden"
-        style={{ width: 'min(95vw, 1400px)', maxHeight: 'min(90vh, 600px)' }}
+        className="fixed top-[5%] left-1/2 -translate-x-1/2 z-50 bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col"
+        style={{ width: 'min(90vw, 1200px)', maxHeight: maxHeight || '85vh' }}
       >
         <div className="p-4 flex justify-between items-center border-b border-ui-border-soft flex-shrink-0 bg-surface">
           <div>
@@ -550,7 +554,19 @@ export default function DynamicFilterModal({
         
         <div 
           ref={contentRef}
-          className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto flex-1 min-h-0"
+          className={`p-4 grid gap-2 flex-1 min-h-0 ${
+            columns === 3 
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+              : columns === 2 
+                ? 'grid-cols-1 sm:grid-cols-2' 
+                : columns === 1 
+                  ? 'grid-cols-1' 
+                  : columns === 4 
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : columns === 5 
+                      ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+                      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+          }`}
         >
           {visibleFilters.map((filter) => renderFilterInput(filter))}
         </div>

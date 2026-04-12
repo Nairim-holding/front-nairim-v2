@@ -1,0 +1,477 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState, useCallback, useMemo } from "react";
+import { X, RefreshCw, Layers } from "lucide-react";
+import type { Option } from "@/types/types";
+
+// Função de máscara monetária para formatar enquanto digita
+const formatCurrencyInput = (value: string): string => {
+  // Remove tudo que não é dígito
+  const numericValue = value.replace(/\D/g, "");
+  
+  // Converte para número (em centavos)
+  const numberValue = parseInt(numericValue, 10) || 0;
+  
+  // Formata como moeda brasileira
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numberValue / 100);
+};
+
+// Extrai apenas os números do valor formatado (para enviar à API)
+const extractNumericValue = (formattedValue: string): string => {
+  const numeric = formattedValue.replace(/[^\d,]/g, "").replace(",", ".");
+  return numeric;
+};
+
+interface FormOptions {
+  institutions: Option[];
+  incomeCategories: Option[];
+  expenseCategories: Option[];
+  centers: (Option & { type?: string })[];
+  suppliers: Option[];
+  cards: Option[];
+  subcategories: { [categoryId: string]: Option[] };
+}
+
+interface ParceladoRecorrenteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  formOptions: FormOptions;
+  onSubmit: (data: any) => Promise<void>;
+}
+
+type TransactionType = "INCOME" | "EXPENSE";
+type PaymentMode = "PARCELADO" | "RECORRENTE";
+
+export default function ParceladoRecorrenteModal({
+  isOpen,
+  onClose,
+  formOptions,
+  onSubmit,
+}: ParceladoRecorrenteModalProps) {
+  const [transactionType, setTransactionType] = useState<TransactionType>("EXPENSE");
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>("PARCELADO");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper to get today's date in YYYY-MM-DD format
+  const getToday = () => new Date().toISOString().split('T')[0];
+
+  // Form fields
+  const [formData, setFormData] = useState({
+    institution: "",
+    card: "",
+    category: "",
+    subcategory: "",
+    center: "",
+    supplier: "",
+    description: "",
+    amount: "",
+    startDate: getToday(),
+    firstPaymentDate: getToday(),
+    numInstallments: "",
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleClose = useCallback(() => {
+    onClose();
+    // Reset form after close animation
+    setTimeout(() => {
+      setTransactionType("EXPENSE");
+      setPaymentMode("PARCELADO");
+      setFormData({
+        institution: "",
+        card: "",
+        category: "",
+        subcategory: "",
+        center: "",
+        supplier: "",
+        description: "",
+        amount: "",
+        startDate: getToday(),
+        firstPaymentDate: getToday(),
+        numInstallments: "",
+      });
+    }, 300);
+  }, [onClose]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Ajustar payload de acordo com o tipo de transação
+      const isIncome = transactionType === "INCOME";
+      const payload: any = {
+        transactionType,
+        paymentMode: isIncome ? null : paymentMode,
+        ...formData,
+        amount: extractNumericValue(formData.amount), // Extrai valor numérico formatado
+        numInstallments: parseInt(formData.numInstallments) || 1,
+        // Para receita, também usar firstPaymentDate separado
+      };
+
+      await onSubmit(payload);
+      handleClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Filter categories by type
+  const filteredCategories = useMemo(() => {
+    return transactionType === "INCOME"
+      ? formOptions.incomeCategories || []
+      : formOptions.expenseCategories || [];
+  }, [transactionType, formOptions]);
+
+  // Filter centers by type
+  const filteredCenters = useMemo(() => {
+    return formOptions.centers?.filter(
+      (center) => !center.type || center.type === transactionType
+    ) || [];
+  }, [transactionType, formOptions.centers]);
+
+  // Get subcategories for selected category
+  const availableSubcategories = useMemo(() => {
+    if (!formData.category || !formOptions.subcategories) return [];
+    return formOptions.subcategories[formData.category] || [];
+  }, [formData.category, formOptions.subcategories]);
+
+  // Show/hide fields based on payment mode and transaction type
+  const showInstallments = paymentMode === "PARCELADO";
+  const isExpense = transactionType === "EXPENSE";
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto m-4 border border-ui-border-soft">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-ui-border-soft">
+          <div className="flex items-center gap-2">
+            <Layers className="w-5 h-5 text-brand" />
+            <h2 className="text-lg font-semibold text-content">
+              Inserir Lançamento Parcelado / Recorrente
+            </h2>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-1.5 hover:bg-surface-subtle rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-content-muted" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {/* Transaction Type Toggle */}
+          <div className="flex gap-2 p-1 bg-surface-subtle rounded-lg">
+            <button
+              type="button"
+              onClick={() => setTransactionType("EXPENSE")}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                transactionType === "EXPENSE"
+                  ? "bg-state-error text-white shadow-sm"
+                  : "text-content-secondary hover:bg-surface-muted"
+              }`}
+            >
+              Despesa
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransactionType("INCOME")}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                transactionType === "INCOME"
+                  ? "bg-state-success text-white shadow-sm"
+                  : "text-content-secondary hover:bg-surface-muted"
+              }`}
+            >
+              Receita
+            </button>
+          </div>
+
+          {/* Only show payment mode options for EXPENSE */}
+          {transactionType === "EXPENSE" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-content-secondary">
+                Modo de Pagamento
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("PARCELADO")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
+                    paymentMode === "PARCELADO"
+                      ? "border-brand bg-brand/5 text-brand"
+                      : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                  }`}
+                >
+                  <Layers className="w-4 h-4 inline mr-1" />
+                  Parcelado
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("RECORRENTE")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
+                    paymentMode === "RECORRENTE"
+                      ? "border-brand bg-brand/5 text-brand"
+                      : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                  }`}
+                >
+                  <RefreshCw className="w-4 h-4 inline mr-1" />
+                  Recorrente
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Institution */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-content-secondary">
+              Inst. Financeira
+            </label>
+            <select
+              value={formData.institution}
+              onChange={(e) => handleInputChange("institution", e.target.value)}
+              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+            >
+              <option value="">Selecione</option>
+              {formOptions.institutions?.map((inst) => (
+                <option key={inst.value} value={inst.value}>
+                  {inst.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Credit Card - apenas para Despesa */}
+          {transactionType === "EXPENSE" && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                Cartão de Crédito
+              </label>
+              <select
+                value={formData.card}
+                onChange={(e) => handleInputChange("card", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              >
+                <option value="">Selecione (opcional)</option>
+                {formOptions.cards?.map((card) => (
+                  <option key={card.value} value={card.value}>
+                    {card.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Two columns for installments and amount */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Number - for PARCELADO, RECORRENTE or INCOME */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">
+                {isExpense 
+                  ? (showInstallments ? "Número de parcelas *" : "Número de lançamentos *")
+                  : "Número de parcelas *"}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                required
+                value={formData.numInstallments}
+                onChange={(e) => handleInputChange("numInstallments", e.target.value)}
+                placeholder={isExpense && showInstallments ? "Ex: 12" : "Ex: 24"}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              />
+            </div>
+
+            {/* Amount */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                {isExpense 
+                  ? (showInstallments ? "Valor da parcela *" : "Valor do lançamento *")
+                  : "Valor da parcela *"}
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.amount}
+                onChange={(e) => {
+                  const maskedValue = formatCurrencyInput(e.target.value);
+                  handleInputChange("amount", maskedValue);
+                }}
+                placeholder="R$ 0,00"
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              />
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                {isExpense 
+                  ? (showInstallments ? "Data da Compra *" : "Data inicial *") 
+                  : "Data inicial *"}
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.startDate}
+                onChange={(e) => handleInputChange("startDate", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                {isExpense ? "Primeiro Pagamento *" : "Data do primeiro pagamento *"}
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.firstPaymentDate}
+                onChange={(e) => handleInputChange("firstPaymentDate", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              />
+            </div>
+          </div>
+
+          {/* Category */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-content-secondary">
+              Categoria *
+            </label>
+            <select
+              required
+              value={formData.category}
+              onChange={(e) => {
+                handleInputChange("category", e.target.value);
+                handleInputChange("subcategory", ""); // Reset subcategory
+              }}
+              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+            >
+              <option value="">Selecione</option>
+              {filteredCategories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-content-secondary">
+              Subcategoria
+            </label>
+            <select
+              value={formData.subcategory}
+              onChange={(e) => handleInputChange("subcategory", e.target.value)}
+              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content disabled:opacity-50"
+              disabled={availableSubcategories.length === 0}
+            >
+              <option value="">
+                {availableSubcategories.length === 0 ? "---" : "Selecione"}
+              </option>
+              {availableSubcategories.map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Center */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-content-secondary">
+              Centro
+            </label>
+            <select
+              value={formData.center}
+              onChange={(e) => handleInputChange("center", e.target.value)}
+              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+            >
+              <option value="">Selecione</option>
+              {filteredCenters.map((center) => (
+                <option key={center.value} value={center.value}>
+                  {center.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Supplier - apenas para Despesa */}
+          {transactionType === "EXPENSE" && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                Fornecedor
+              </label>
+              <select
+                value={formData.supplier}
+                onChange={(e) => handleInputChange("supplier", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              >
+                <option value="">Selecione</option>
+                {formOptions.suppliers?.map((sup) => (
+                  <option key={sup.value} value={sup.value}>
+                    {sup.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Description */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-content-secondary">
+              Descrição
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Descreva o lançamento..."
+              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content placeholder:text-content-placeholder"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-ui-border-soft">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium text-content-secondary hover:text-content hover:bg-surface-subtle rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-hover rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

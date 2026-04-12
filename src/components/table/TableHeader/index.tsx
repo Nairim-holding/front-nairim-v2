@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangeEvent, ReactNode } from 'react';
+import type { ChangeEvent, ReactNode, RefObject } from 'react';
 import { ArrowUpDown, GripVertical } from 'lucide-react';
 import type { Header, SortOrder } from '@/types/administrador';
 
@@ -15,6 +15,7 @@ interface TableInformationsProps {
   hasActions?: boolean;
   columnWidths?: Record<string, number>;
   onMouseDownResize?: (e: React.MouseEvent, field: string) => void;
+  tbodyRef?: RefObject<HTMLTableSectionElement | null>;
 }
 
 export default function TableInformations({
@@ -28,6 +29,7 @@ export default function TableInformations({
   hasActions = true,
   columnWidths = {},
   onMouseDownResize,
+  tbodyRef,
 }: TableInformationsProps) {
   const isEmpty = !children || (Array.isArray(children) && children.length === 0);
 
@@ -111,7 +113,7 @@ export default function TableInformations({
           )}
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100 lines-bg">{children}</tbody>
+      <tbody ref={tbodyRef} className="divide-y divide-gray-100 lines-bg">{children}</tbody>
     </table>
   );
 }

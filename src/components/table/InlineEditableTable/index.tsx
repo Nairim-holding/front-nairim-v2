@@ -2,20 +2,463 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { Filter, Trash2, Edit2, Save, X, Plus } from "lucide-react";
+import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
+import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronLeft, ChevronRight, ChevronDown, Check, CreditCard, DollarSign } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
+import Toggle from "@/components/ui/Toggle";
 import SkeletonTable from "../TableSkeleton";
 import DynamicFilterModal from "../../filters/DynamicFilterModal";
 import SearchInput from "../../filters/SearchInput";
 import SelectLimit from "../../filters/PageSizeSelect";
 import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
+import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
+import InvoiceModal from "@/components/modals/InvoiceModal";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
+
+// Componente Select customizado que abre no foco e permite navegação por Tab
+interface CustomSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options?: Option[];
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
+  groups?: { label: string; options: Option[]; color?: 'green' | 'red' | 'blue' | 'gray' }[];
+}
+
+function CustomSelect({ value, onChange, options = [], disabled, placeholder = "Selecione...", className, groups }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const justOpenedByFocus = useRef(false);
+
+  const flatOptions = useMemo(() => {
+    if (groups) {
+      return groups.flatMap(g => g.options);
+    }
+    return options || [];
+  }, [options, groups]);
+
+  const selectedLabel = useMemo(() => {
+    const opt = flatOptions.find(o => o.value === value);
+    return opt?.label || placeholder;
+  }, [flatOptions, value, placeholder]);
+
+  const safeOptions = options || [];
+
+  useEffect(() => {
+    if (!isOpen) {
+      setHighlightedIndex(-1);
+      return;
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+    
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (!isOpen) {
+        // Abre o dropdown mantendo highlight no valor atual (não seleciona nada ainda)
+        const currentIdx = flatOptions?.findIndex(o => o.value === value);
+        setIsOpen(true);
+        setHighlightedIndex(currentIdx >= 0 ? currentIdx : -1);
+      } else {
+        // Dropdown aberto: Tab navega para próxima opção
+        const direction = e.shiftKey ? -1 : 1;
+        const newIndex = highlightedIndex + direction;
+        
+        if (newIndex >= 0 && newIndex < (flatOptions?.length || 0)) {
+          // Ainda tem opções para navegar
+          setHighlightedIndex(newIndex);
+        } else {
+          // Chegou no início ou fim: fecha e vai para próximo campo
+          setIsOpen(false);
+          const focusable = document.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          const currentIndex = Array.from(focusable).indexOf(buttonRef.current!);
+          const nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+          (focusable[nextIndex] as HTMLElement)?.focus();
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) {
+        setIsOpen(true);
+        setHighlightedIndex(0);
+      } else {
+        setHighlightedIndex((i: number) => Math.min(i + 1, (flatOptions?.length || 0) - 1));
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        setIsOpen(true);
+        setHighlightedIndex((flatOptions?.length || 0) - 1);
+      } else {
+        setHighlightedIndex((i: number) => Math.max(i - 1, 0));
+      }
+    } else if (e.key === 'Enter' && isOpen && highlightedIndex >= 0 && flatOptions?.[highlightedIndex]) {
+      e.preventDefault();
+      // Só seleciona com Enter
+      onChange(String(flatOptions[highlightedIndex].value));
+      setIsOpen(false);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+    }
+  };
+
+  const handleFocus = () => {
+    if (!disabled && !isOpen) {
+      const currentIdx = flatOptions?.findIndex(o => o.value === value);
+      calculatePosition();
+      setIsOpen(true);
+      justOpenedByFocus.current = true;
+      // Highlight no valor atual, ou -1 se não houver valor
+      setHighlightedIndex(currentIdx >= 0 ? currentIdx : -1);
+      // Reset flag após pequeno delay
+      setTimeout(() => { justOpenedByFocus.current = false; }, 100);
+    }
+  };
+
+  const handleClick = () => {
+    if (disabled) return;
+    // Se acabou de abrir por foco, ignora este clique
+    if (justOpenedByFocus.current) return;
+    setIsOpen(!isOpen);
+  };
+
+  const calculatePosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 250; // max-h-[250px]
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Se não cabe embaixo, abre em cima
+      const openAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      
+      setDropdownStyle({
+        position: 'fixed',
+        left: rect.left,
+        top: openAbove ? rect.top - dropdownHeight : rect.bottom,
+        width: rect.width,
+        maxHeight: openAbove ? Math.min(dropdownHeight, spaceAbove - 10) : Math.min(dropdownHeight, spaceBelow - 10),
+        zIndex: 9999,
+      });
+    }
+  }, []);
+
+  // Recalcular posição quando scrollar ou redimensionar
+  useEffect(() => {
+    if (isOpen) {
+      calculatePosition();
+      const handleScroll = () => calculatePosition();
+      const handleResize = () => calculatePosition();
+      
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [isOpen, calculatePosition]);
+
+  // Scroll para opção selecionada quando abrir
+  useEffect(() => {
+    if (isOpen && dropdownRef.current && highlightedIndex >= 0) {
+      const buttons = dropdownRef.current.querySelectorAll('button[role="option"]');
+      const selectedButton = buttons[highlightedIndex] as HTMLElement;
+      if (selectedButton) {
+        selectedButton.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [isOpen, highlightedIndex]);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleClick}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+        className={`w-full px-2 h-[28px] text-[13px] border rounded outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand text-left flex justify-between items-center transition-all ${disabled ? 'bg-gray-100 text-content-muted cursor-not-allowed' : 'bg-surface hover:border-brand/50'} ${isOpen ? 'border-brand ring-2 ring-brand/20' : 'border-ui-border'} ${className}`}
+        tabIndex={0}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+      >
+        <span className={`truncate ${!value ? 'text-content-muted' : 'text-content'}`}>{selectedLabel}</span>
+        <ChevronDown size={14} className={`ml-1 text-content-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {isOpen && (
+        <div 
+          ref={dropdownRef}
+          style={dropdownStyle}
+          className="fixed bg-surface border border-brand/30 rounded-lg shadow-2xl overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-150"
+          role="listbox"
+        >
+          {groups ? (
+            groups.map((group, gIdx) => {
+              // Determinar cores baseado no label do grupo
+              const isIncome = group.label.toLowerCase().includes('receita');
+              const isExpense = group.label.toLowerCase().includes('despesa');
+              const groupColor = group.color || (isIncome ? 'green' : isExpense ? 'red' : 'gray');
+              
+              const headerClass = {
+                green: 'text-green-600 border-ui-border-soft',
+                red: 'text-red-600 border-ui-border-soft',
+                blue: 'text-blue-600 border-ui-border-soft',
+                gray: 'text-content-muted border-ui-border-soft'
+              }[groupColor];
+              
+              
+              return (
+                <div key={gIdx}>
+                  <div className={`px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider border-y ${headerClass}`}>
+                    {group.label}
+                  </div>
+                  {group.options.map((opt) => {
+                    const globalIdx = flatOptions.findIndex(o => o.value === opt.value);
+                    const isHighlighted = globalIdx === highlightedIndex;
+                    const isSelected = opt.value === value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => { onChange(String(opt.value)); setIsOpen(false); buttonRef.current?.focus(); }}
+                        onMouseEnter={() => setHighlightedIndex(globalIdx)}
+                        className={`w-full px-2 py-1.5 text-[12px] text-left flex items-center justify-between transition-colors ${
+                          isHighlighted ? 'bg-brand/10 text-brand' : 'hover:bg-surface-subtle'
+                        } ${isSelected ? 'bg-brand/5 font-medium text-brand' : 'text-content'}`}
+                      >
+                        <span className="truncate">{opt.label}</span>
+                        {isSelected && <Check size={12} className="text-brand flex-shrink-0 ml-1" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })
+          ) : (
+            safeOptions.map((opt, optIdx) => {
+              const isHighlighted = optIdx === highlightedIndex;
+              const isSelected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => { onChange(String(opt.value)); setIsOpen(false); buttonRef.current?.focus(); }}
+                  onMouseEnter={() => setHighlightedIndex(optIdx)}
+                  className={`w-full px-2 py-1.5 text-[12px] text-left flex items-center justify-between transition-colors ${
+                    isHighlighted ? 'bg-brand/15 text-brand' : 'hover:bg-surface-subtle'
+                  } ${isSelected ? 'bg-brand/10 font-medium text-brand' : 'text-content'}`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && <Check size={12} className="text-brand flex-shrink-0 ml-1" />}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Componente de Calendário para seleção de período
+interface CalendarPickerProps {
+  dateRange: { from: string; to: string };
+  onChange: (range: { from: string; to: string }) => void;
+}
+
+function CalendarPicker({ dateRange, onChange }: CalendarPickerProps) {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+  const [selecting, setSelecting] = useState<'from' | 'to'>('from');
+
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
+    
+    const days: Array<{ date: number | null; isCurrentMonth: boolean }> = [];
+    
+    // Empty cells for days before the first day of month
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push({ date: null, isCurrentMonth: false });
+    }
+    
+    // Days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({ date: i, isCurrentMonth: true });
+    }
+    
+    return days;
+  };
+
+  const isDateInRange = (day: number) => {
+    if (!dateRange.from || !dateRange.to) return false;
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return dateStr > dateRange.from && dateStr < dateRange.to;
+  };
+
+  const isDateSelected = (day: number, type: 'from' | 'to') => {
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return dateStr === (type === 'from' ? dateRange.from : dateRange.to);
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return day === today.getDate() && 
+           currentMonth.getMonth() === today.getMonth() && 
+           currentMonth.getFullYear() === today.getFullYear();
+  };
+
+  const handleDateClick = (day: number) => {
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    if (selecting === 'from') {
+      onChange({ from: dateStr, to: dateStr });
+      setSelecting('to');
+    } else {
+      if (dateStr < dateRange.from) {
+        onChange({ from: dateStr, to: dateRange.from });
+      } else {
+        onChange({ from: dateRange.from, to: dateStr });
+      }
+      setSelecting('from');
+    }
+  };
+
+  const days = getDaysInMonth(currentMonth);
+
+  return (
+    <div className="mb-2">
+      {/* Instruction compacta */}
+      <div className="mb-2 text-[11px] text-content-secondary bg-surface-subtle rounded-md p-1.5">
+        {selecting === 'from' ? (
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            Clique na <strong>data inicial</strong>
+          </span>
+        ) : (
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            Agora clique na <strong>data final</strong>
+          </span>
+        )}
+      </div>
+
+      {/* Header com mês/ano e navegação */}
+      <div className="flex items-center justify-between mb-2 px-1">
+        <button
+          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+          className="p-1 hover:bg-surface-subtle rounded transition-colors"
+        >
+          <ChevronLeft size={16} className="text-content-secondary" />
+        </button>
+        <span className="text-xs font-semibold text-content">
+          {monthNames[currentMonth.getMonth()]} <span className="text-content-muted font-normal">{currentMonth.getFullYear()}</span>
+        </span>
+        <button
+          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+          className="p-1 hover:bg-surface-subtle rounded transition-colors"
+        >
+          <ChevronRight size={16} className="text-content-secondary" />
+        </button>
+      </div>
+
+      {/* Dias da semana */}
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {weekDays.map((day, i) => (
+          <div key={i} className="text-center text-[10px] font-semibold text-content-muted py-0.5">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Grid de dias - mais compacto */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {days.map((day, index) => (
+          <div key={index} className="aspect-square">
+            {day.date ? (
+              <button
+                onClick={() => handleDateClick(day.date!)}
+                className={`w-full h-full rounded-md text-xs font-medium transition-all relative ${
+                  isDateSelected(day.date!, 'from') && isDateSelected(day.date!, 'to')
+                    ? 'bg-brand text-content-inverse shadow-sm'
+                    : isDateSelected(day.date!, 'from')
+                    ? 'bg-brand text-content-inverse shadow-sm ring-2 ring-brand/30'
+                    : isDateSelected(day.date!, 'to')
+                    ? 'bg-brand text-content-inverse shadow-sm ring-2 ring-brand/30'
+                    : isDateInRange(day.date!)
+                    ? 'bg-brand/15 text-brand hover:bg-brand/25'
+                    : isToday(day.date!)
+                    ? 'ring-1 ring-brand text-brand hover:bg-surface-subtle'
+                    : 'hover:bg-surface-subtle text-content-secondary'
+                }`}
+              >
+                <span className="relative z-10">{day.date}</span>
+                {isDateSelected(day.date!, 'from') && !isDateSelected(day.date!, 'to') && (
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[7px] font-normal text-brand">De</span>
+                )}
+                {isDateSelected(day.date!, 'to') && !isDateSelected(day.date!, 'from') && (
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[7px] font-normal text-brand">Até</span>
+                )}
+              </button>
+            ) : (
+              <div className="w-full h-full" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Resumo compacto */}
+      <div className="mt-2 text-center">
+        <div className="inline-flex items-center gap-1.5 bg-surface-subtle rounded-md px-2 py-1">
+          <span className="text-xs font-medium text-content">
+            {dateRange.from ? new Date(dateRange.from).toLocaleDateString('pt-BR') : '--/--/----'}
+          </span>
+          <span className="text-content-muted text-xs">→</span>
+          <span className="text-xs font-medium text-content">
+            {dateRange.to ? new Date(dateRange.to).toLocaleDateString('pt-BR') : '--/--/----'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface InlineEditableTableProps {
   resource: string;
@@ -26,7 +469,7 @@ interface InlineEditableTableProps {
   defaultLimit?: number;
   enableCreate?: boolean;
   enableDelete?: boolean;
-  formOptions?: { categories: Option[]; incomeCategories: Option[]; expenseCategories: Option[]; institutions: Option[]; cards: Option[]; centers: Option[]; subcategories: { [categoryId: string]: Option[] }; };
+  formOptions?: { categories: Option[]; incomeCategories: Option[]; expenseCategories: Option[]; institutions: Option[]; cards: Option[]; centers: Option[]; suppliers: Option[]; subcategories: { [categoryId: string]: Option[] }; };
   onRowSave?: (id: string, data: any) => Promise<void>;
   onRowCreate?: (data: any) => Promise<void>;
   onRowDelete?: (id: string) => Promise<void>;
@@ -39,7 +482,7 @@ interface EditingRow {
 
 export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
-  formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], subcategories: {} },
+  formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, onRowSave, onRowCreate, onRowDelete,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -47,7 +490,24 @@ export default function InlineEditableTable({
   const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>({});
   const [editingRows, setEditingRows] = useState<EditingRow[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [maxRowHeight, setMaxRowHeight] = useState<number | undefined>(undefined);
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
+  const [isParceladoModalOpen, setIsParceladoModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
+  // Toggle: false = Data de efetivação (padrão), true = Data do evento
+  const [isEventDate, setIsEventDate] = useState(false);
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>(() => {
+    const today = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+    return {
+      from: threeMonthsAgo.toISOString().split('T')[0],
+      to: today.toISOString().split('T')[0]
+    };
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [hasDateFilter, setHasDateFilter] = useState(true);
   
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
@@ -69,6 +529,60 @@ export default function InlineEditableTable({
     });
     setColumnWidths(initialWidths);
   }, [dataColumns]);
+
+  // Apply default date filter on mount
+  useEffect(() => {
+    const today = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+    const defaultDateRange = {
+      from: threeMonthsAgo.toISOString().split('T')[0],
+      to: today.toISOString().split('T')[0]
+    };
+    
+    setDateRange(defaultDateRange);
+    
+    // Apply to filters - padrão é Data de efetivação (isEventDate = false)
+    const filters: Record<string, any> = {
+      ...appliedFilters,
+      effective_date: { from: defaultDateRange.from, to: defaultDateRange.to }
+    };
+    setAppliedFilters(filters);
+    updateState({ filters, page: 1 });
+  }, []);
+
+  // Atualizar filtro quando o tipo de data mudar (event_date <-> effective_date)
+  useEffect(() => {
+    if (hasDateFilter && dateRange.from && dateRange.to) {
+      const newDateField = isEventDate ? 'event_date' : 'effective_date';
+      const oldDateField = isEventDate ? 'effective_date' : 'event_date';
+      
+      // Remover o filtro antigo e adicionar o novo
+      const { [oldDateField]: removed, ...otherFilters } = appliedFilters;
+      void removed; // evitar warning de unused
+      const newFilters = {
+        ...otherFilters,
+        [newDateField]: { from: dateRange.from, to: dateRange.to }
+      };
+      
+      setAppliedFilters(newFilters);
+      updateState({ filters: newFilters, page: 1 });
+    }
+  }, [isEventDate]);
+
+  // Close date picker when clicking outside
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
+    };
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDatePicker]);
 
   const isResizingRef = useRef<{field: string, startX: number, startWidth: number} | null>(null);
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -125,6 +639,19 @@ export default function InlineEditableTable({
     ...filteredItems.map((item: any) => ({ ...item, isEditing: editingRows.some(row => row.id === item.id && row.isEditing) }))
   ], [filteredItems, editingRows]);
 
+  // Calcular altura máxima das linhas e aplicar a todas
+  useLayoutEffect(() => {
+    if (tableBodyRef.current && displayItems.length > 0) {
+      const rows = tableBodyRef.current.querySelectorAll('tr');
+      let maxHeight = 0;
+      rows.forEach(row => {
+        const height = row.getBoundingClientRect().height;
+        if (height > maxHeight) maxHeight = height;
+      });
+      setMaxRowHeight(maxHeight > 42 ? maxHeight : undefined);
+    }
+  }, [displayItems, editingRows]);
+
   const getNestedValue = useCallback((obj: any, path: string) => {
     return path?.split('.').reduce((acc, key) => {
       const match = key.match(/(\w+)\[(\d+)\]/);
@@ -154,9 +681,31 @@ export default function InlineEditableTable({
     
     const specialFields: Record<string, any> = {
       category_id: item.category?.name, card_id: item.card?.name, subcategory_id: item.subcategory?.name,
-      institution: formOptions.institutions.find(i => i.value === item.financial_institution_id)?.label, center_id: item.center?.name
+      institution: formOptions.institutions.find(i => i.value === item.financial_institution_id)?.label, center_id: item.center?.name,
+      supplier_id: item.supplier?.name || formOptions.suppliers.find(s => s.value === item.supplier_id)?.label
     };
     if (field in specialFields) return formatCellValue(specialFields[field] || '', column);
+
+    // Descrição quebra linha a cada 50 caracteres
+    if (field === 'description') {
+      const desc = item[field] || '';
+      // Quebrar texto em linhas de 50 caracteres
+      const chunkSize = 50;
+      const chunks = [];
+      for (let i = 0; i < desc.length; i += chunkSize) {
+        chunks.push(desc.substring(i, i + chunkSize));
+      }
+      const formattedDesc = chunks.join('\n');
+      
+      return (
+        <span 
+          className="block whitespace-pre-wrap break-words"
+          style={{ lineHeight: '14px' }}
+        >
+          {formattedDesc}
+        </span>
+      );
+    }
 
     const val = item[field] || getNestedValue(item, field);
     return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
@@ -194,7 +743,7 @@ export default function InlineEditableTable({
     setEditingRows(prev => [...prev.filter(r => !r.isNew), {
       id: isNew ? `new-${Date.now()}` : id,
       data: isNew 
-        ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', subcategory_id: '' } 
+        ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' } 
         : { 
             ...item, 
             event_date: safeDateInput(item.event_date), 
@@ -204,6 +753,7 @@ export default function InlineEditableTable({
             financial_institution_id: safeId(item.financial_institution_id || item.financial_institution?.id || item.institution?.id),
             card_id: safeId(item.card_id || item.card?.id),
             center_id: safeId(item.center_id || item.center?.id),
+            supplier_id: safeId(item.supplier_id || item.supplier?.id),
           },
       isEditing: true, isNew, isSaving: false, errors: {}
     }]);
@@ -222,6 +772,7 @@ export default function InlineEditableTable({
         amount: parseFloat(String(row.data.amount).replace(/[^\d,-]/g, '').replace(',', '.')), 
         card_id: row.data.card_id || null, 
         center_id: row.data.center_id || null,
+        supplier_id: row.data.supplier_id || null,
         subcategory_id: row.data.subcategory_id || null
       };
       
@@ -284,7 +835,7 @@ export default function InlineEditableTable({
     const dis = row.isSaving;
     const upd = (v: any) => updateEditingRow(row.id, column.field, v);
     
-    const inputClasses = `w-full px-2 py-1 text-[13px] border rounded outline-none focus:border-brand ${err ? 'border-red-500' : 'border-ui-border'} ${dis ? 'bg-gray-100' : 'bg-surface'}`;
+    const inputClasses = `w-full px-2 h-[28px] text-[13px] border rounded outline-none focus:border-brand ${err ? 'border-red-500' : 'border-ui-border'} ${dis ? 'bg-gray-100' : 'bg-surface'}`;
     
     const renderWrapper = (children: React.ReactNode) => (
       <div className="w-full relative group">
@@ -296,7 +847,16 @@ export default function InlineEditableTable({
     switch (column.field) {
       case 'description':
         return renderWrapper(
-          <textarea value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} rows={3} className={inputClasses} placeholder="Ex: Pagamento..." style={{ minHeight: '60px', minWidth: '200px' }} />
+          <textarea 
+            value={val || ''} 
+            onChange={e => upd(e.target.value)} 
+            disabled={dis} 
+            rows={1} 
+            className={`${inputClasses} resize-none overflow-hidden !h-[28px]`} 
+            placeholder="Descrição..." 
+            style={{ minWidth: '150px' }} 
+            tabIndex={0} 
+          />
         );
       case 'amount':
         const amountDisplay = typeof val === 'number' ? formatCurrency(val) : (val || '');
@@ -313,72 +873,75 @@ export default function InlineEditableTable({
             disabled={dis} 
             className={inputClasses} 
             placeholder="R$ 0,00" 
+            tabIndex={0}
           />
         );
       case 'status':
         return renderWrapper(
-          <select value={val || 'PENDING'} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses}>
-            <option value="PENDING">Pendente</option>
-            <option value="COMPLETED">Concluído</option>
-          </select>
+          <CustomSelect 
+            value={val || 'PENDING'} 
+            onChange={v => upd(v)} 
+            disabled={dis}
+            options={[
+              { value: 'PENDING', label: 'Pendente' },
+              { value: 'COMPLETED', label: 'Concluído' }
+            ]}
+          />
         );
       case 'event_date': case 'effective_date': {
         const safeDate = val ? String(val).split('T')[0] : '';
         return renderWrapper(
-          <input type="date" value={safeDate} onChange={e => upd(e.target.value)} disabled={dis || column.field === 'event_date'} className={inputClasses} />
+          <input type="date" value={safeDate} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} tabIndex={0} />
         );
       }
       case 'category_id':
+        const categoryGroups = [
+          ...(activeTab === 'ALL' || activeTab === 'INCOME' ? [{ label: 'Receitas', options: formOptions.incomeCategories }] : []),
+          ...(activeTab === 'ALL' || activeTab === 'EXPENSE' ? [{ label: 'Despesas', options: formOptions.expenseCategories }] : [])
+        ];
         return renderWrapper(
-          <select 
+          <CustomSelect 
             value={val || ''} 
-            onChange={e => { 
-              updateEditingRow(row.id, 'category_id', e.target.value); 
+            onChange={v => { 
+              updateEditingRow(row.id, 'category_id', v); 
               updateEditingRow(row.id, 'subcategory_id', ''); 
               updateEditingRow(row.id, 'center_id', ''); 
             }} 
-            disabled={dis} 
-            className={inputClasses}
-          >
-            <option value="">Selecione...</option>
-            {(activeTab === 'ALL' || activeTab === 'INCOME') && (
-              <optgroup label="Receitas">
-                {formOptions.incomeCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </optgroup>
-            )}
-            {(activeTab === 'ALL' || activeTab === 'EXPENSE') && (
-              <optgroup label="Despesas">
-                {formOptions.expenseCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </optgroup>
-            )}
-          </select>
+            disabled={dis}
+            groups={categoryGroups.length > 0 ? categoryGroups : undefined}
+            options={categoryGroups.length === 0 ? [] : undefined}
+            placeholder="Selecione..."
+          />
         );
       case 'subcategory_id':
         const subcategories = formOptions.subcategories[row.data.category_id] || [];
         return subcategories.length ? renderWrapper(
-          <select value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses}>
-            <option value="">Selecione...</option>
-            {subcategories.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        ) : null;
+          <CustomSelect 
+            value={val || ''} 
+            onChange={v => upd(v)} 
+            disabled={dis}
+            options={subcategories}
+            placeholder="Selecione..."
+          />
+        ) : renderWrapper(<div className="h-[32px]"></div>);
       case 'institution':
         return renderWrapper(
-          <select 
+          <CustomSelect 
             value={row.data.financial_institution_id || ''} 
-            onChange={e => updateEditingRow(row.id, 'financial_institution_id', e.target.value)} 
-            disabled={dis} 
-            className={inputClasses}
-          >
-            <option value="">Selecione...</option>
-            {formOptions.institutions.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
-          </select>
+            onChange={v => updateEditingRow(row.id, 'financial_institution_id', v)} 
+            disabled={dis}
+            options={formOptions.institutions}
+            placeholder="Selecione..."
+          />
         );
       case 'card_id':
         return renderWrapper(
-          <select value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses}>
-            <option value="">Nenhum</option>
-            {formOptions.cards.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
+          <CustomSelect 
+            value={val || ''} 
+            onChange={v => upd(v)} 
+            disabled={dis}
+            options={[{ value: '', label: 'Nenhum' }, ...formOptions.cards]}
+          />
         );
       case 'center_id': {
         const catId = row.data.category_id;
@@ -392,35 +955,34 @@ export default function InlineEditableTable({
         const incomeCenters = formOptions.centers.filter((c: any) => c.type === 'INCOME');
         const expenseCenters = formOptions.centers.filter((c: any) => c.type === 'EXPENSE');
 
+        const centerGroups = txType === 'ALL' ? [
+          ...(incomeCenters.length > 0 ? [{ label: 'Receitas', options: incomeCenters }] : []),
+          ...(expenseCenters.length > 0 ? [{ label: 'Despesas', options: expenseCenters }] : [])
+        ] : undefined;
+        const centerOptions = txType !== 'ALL' 
+          ? formOptions.centers.filter((c: any) => c.type === txType || !c.type)
+          : formOptions.centers.filter((c: any) => !c.type);
+        
         return renderWrapper(
-          <select value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses}>
-            <option value="">Selecione...</option>
-            {txType === 'ALL' ? (
-              <>
-                {incomeCenters.length > 0 && (
-                  <optgroup label="Receitas">
-                    {incomeCenters.map((c: any) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </optgroup>
-                )}
-                {expenseCenters.length > 0 && (
-                  <optgroup label="Despesas">
-                    {expenseCenters.map((c: any) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </optgroup>
-                )}
-                {formOptions.centers.filter((c: any) => !c.type).map((c: any) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </>
-            ) : (
-              formOptions.centers
-                .filter((c: any) => c.type === txType || !c.type)
-                .map((c: any) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))
-            )}
-          </select>
+          <CustomSelect 
+            value={val || ''} 
+            onChange={v => upd(v)} 
+            disabled={dis}
+            groups={centerGroups}
+            options={centerOptions}
+            placeholder="Selecione..."
+          />
         );
       }
+      case 'supplier_id':
+        return renderWrapper(
+          <CustomSelect 
+            value={val || ''} 
+            onChange={v => upd(v)} 
+            disabled={dis}
+            options={[{ value: '', label: 'Nenhum' }, ...formOptions.suppliers]}
+          />
+        );
       default:
         return renderWrapper(<input type="text" value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} />);
     }
@@ -431,56 +993,132 @@ export default function InlineEditableTable({
 
   return (
     <>
-      <div className="flex justify-center gap-1 sm:justify-between items-center flex-wrap mb-1 mt-2">
-        <div className="flex items-center justify-center sm:justify-start gap-3 max-w-[750px] w-full flex-wrap sm:flex-nowrap relative">
-          <div className="flex items-center gap-2">
-            {enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>}
-            <button onClick={() => setFilterVisible(!filterVisible)} className="p-2 hover:bg-surface-subtle rounded transition-colors relative"><Filter size={20} color={Object.keys(appliedFilters).length ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />{Object.keys(appliedFilters).length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">{Object.keys(appliedFilters).length}</span>}</button>
-            {enableDelete && <button onClick={handleDeleteSelected} className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50" disabled={!selectedCheckboxes.length}><Trash2 size={20} color="var(--color-text-muted)" /></button>}
-          </div>
-
-          <div className="flex bg-surface-subtle p-1 rounded-lg border border-ui-border-soft ml-2">
-            <button onClick={() => setActiveTab('ALL')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'ALL' ? 'bg-surface shadow-sm text-brand' : 'text-content-secondary hover:text-content'}`}>Todos</button>
-            <button onClick={() => setActiveTab('INCOME')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'INCOME' ? 'bg-green-50 border border-green-200 text-green-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Receitas</button>
-            <button onClick={() => setActiveTab('EXPENSE')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'EXPENSE' ? 'bg-red-50 border border-red-200 text-red-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Despesas</button>
-          </div>
-
-          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={f => { setAppliedFilters(f); updateState({ filters: f, page: 1 }); }} onClear={() => { setAppliedFilters({}); updateState({ filters: {}, page: 1 }); }} title={title} filters={dynamicFilters} initialValues={appliedFilters} />}
-          <SearchInput initialValue={state.search} onSearch={s => updateState({ search: s, page: 1 })} placeholder={`Pesquisar ${title.toLowerCase()}...`} delay={600} autoFocus={autoFocusSearch} />
+      {/* Linha 1: Tabs */}
+      <div className="flex justify-center sm:justify-start items-center mb-2 mt-2">
+        <div className="flex bg-surface-subtle p-1 rounded-lg border border-ui-border-soft">
+          <button onClick={() => setActiveTab('ALL')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'ALL' ? 'bg-surface shadow-sm text-brand' : 'text-content-secondary hover:text-content'}`}>Todos</button>
+          <button onClick={() => setActiveTab('INCOME')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'INCOME' ? 'bg-green-50 border border-green-200 text-green-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Receitas</button>
+          <button onClick={() => setActiveTab('EXPENSE')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'EXPENSE' ? 'bg-red-50 border border-red-200 text-red-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Despesas</button>
         </div>
-        <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
-        {meta?.totalPages > 1 && <Pagination currentPage={meta.page} totalPage={meta.totalPages} onPageChange={p => updateState({ page: p })} />}
       </div>
 
-      <div className="flex flex-wrap justify-between items-center mb-2 px-1">
-        <p className="text-[14px] text-content-secondary">
-          {meta && meta.total > 0 ? (
-            activeTab === 'ALL' 
-              ? `Exibindo ${tableData.start} a ${tableData.end} de ${meta.total} registros`
-              : `Exibindo ${filteredItems.length} registros de ${activeTab === 'INCOME' ? 'Receitas' : 'Despesas'} nesta página`
-          ) : 'Nenhum registro encontrado'}
-        </p>
-        
-        {(showTotals || totals.totalIncome > 0 || totals.totalExpense > 0) && items.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center text-[13px]">
-             {(activeTab === 'ALL' || activeTab === 'INCOME') && (
-               <span className="text-green-600 font-medium">Receitas: {formatCurrency(totals.totalIncome)}</span>
-             )}
-             {activeTab === 'ALL' && <span className="text-content-muted">|</span>}
-             {(activeTab === 'ALL' || activeTab === 'EXPENSE') && (
-               <span className="text-red-600 font-medium">Despesas: {formatCurrency(totals.totalExpense)}</span>
-             )}
-             {activeTab === 'ALL' && (
-               <>
-                 <span className="text-content-muted">|</span>
-                 <span className={`font-semibold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>Saldo: {formatCurrency(totals.balance)}</span>
-               </>
-             )}
+      {/* Linha 2: Filtros, Pesquisa e Saldo */}
+      <div className="flex justify-between items-center gap-3 mb-1 flex-wrap lg:flex-nowrap">
+        {/* Esquerda: Botões de ação + Pesquisa em linha única */}
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+          {selectedCheckboxes.length > 0 ? (
+            enableDelete && <button onClick={handleDeleteSelected} className="bg-surface-subtle p-2 rounded hover:bg-red-100 transition-colors"><Trash2 size={20} color="var(--color-error)" /></button>
+          ) : (
+            enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>
+          )}
+          {(() => {
+            const activeFilterCount = Object.keys(appliedFilters).filter(key => key !== 'event_date' && key !== 'effective_date').length;
+            return (
+              <button onClick={() => setFilterVisible(!filterVisible)} className="p-2 hover:bg-surface-subtle rounded transition-colors relative">
+                <Filter size={20} color={activeFilterCount > 0 ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
+                {activeFilterCount > 0 && <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">{activeFilterCount}</span>}
+              </button>
+            );
+          })()}
+          
+          <div className="relative" ref={datePickerRef}>
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-xs whitespace-nowrap"
+            >
+              <Calendar size={14} className="text-content-muted" />
+              <span className="text-content-secondary">
+                {hasDateFilter 
+                  ? `${dateRange.from ? new Date(dateRange.from).toLocaleDateString('pt-BR') : ''} - ${dateRange.to ? new Date(dateRange.to).toLocaleDateString('pt-BR') : ''}`
+                  : 'Período'
+                }
+              </span>
+            </button>
+            
+            {showDatePicker && (
+              <div className="absolute top-full left-0 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft p-3 z-50 w-[320px] max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-ui-border-soft">
+                  <Toggle
+                    checked={isEventDate}
+                    onChange={setIsEventDate}
+                    label={isEventDate ? 'Data do evento' : 'Data de efetivação'}
+                  />
+                  <button onClick={() => setShowDatePicker(false)} className="p-1 hover:bg-surface-subtle rounded transition-colors"><X size={18} className="text-content-muted" /></button>
+                </div>
+                <CalendarPicker
+                  dateRange={dateRange}
+                  onChange={(range) => {
+                    setDateRange(range);
+                    setHasDateFilter(true);
+                    if (range.from && range.to && range.from !== range.to) {
+                      const dateFieldName = isEventDate ? 'event_date' : 'effective_date';
+                      const filters: Record<string, any> = { ...appliedFilters };
+                      filters[dateFieldName] = { from: range.from, to: range.to };
+                      setAppliedFilters(filters);
+                      updateState({ filters, page: 1 });
+                      setShowDatePicker(false);
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
-        )}
+          
+          <button
+            onClick={() => {
+              setHasDateFilter(false);
+              setDateRange({ from: '', to: '' });
+              setAppliedFilters({});
+              updateState({ filters: {}, page: 1 });
+            }}
+            className="flex items-center gap-1 px-2 py-1.5 bg-surface-subtle hover:bg-ui-border rounded-lg transition-colors text-xs text-content-secondary whitespace-nowrap"
+          >
+            <span>Limpar</span>
+            <X size={12} />
+          </button>
+          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={f => { const df = isEventDate ? 'event_date' : 'effective_date'; setAppliedFilters({ ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f }); updateState({ filters: { ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f }, page: 1 }); }} onClear={() => { const df = isEventDate ? 'event_date' : 'effective_date'; setAppliedFilters(dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}); updateState({ filters: dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, page: 1 }); }} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={title === 'Lançamentos' ? 3 : undefined} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
+          
+          {/* Pesquisa logo após Limpar */}
+          <div className="w-[200px] sm:w-[250px] lg:w-[300px]">
+            <SearchInput initialValue={state.search} onSearch={s => updateState({ search: s, page: 1 })} placeholder={`Pesquisar ${title.toLowerCase()}...`} delay={600} autoFocus={autoFocusSearch} />
+          </div>
+        </div>
+
+        {/* Direita: Ícones + Saldo */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Ícone para lançamentos parcelados/recorrentes */}
+          <button
+            onClick={() => setIsParceladoModalOpen(true)}
+            className="flex items-center justify-center w-9 h-9 bg-surface text-content border border-ui-border rounded-lg hover:bg-surface-subtle transition-colors"
+            title="Inserir Lançamento Parcelado / Recorrente"
+          >
+            <DollarSign size={18} />
+          </button>
+
+          {/* Ícone para faturas de cartão */}
+          <button
+            onClick={() => setIsInvoiceModalOpen(true)}
+            className="flex items-center justify-center w-9 h-9 bg-surface text-content border border-ui-border rounded-lg hover:bg-surface-subtle transition-colors"
+            title="Gerenciar Faturas dos Cartões"
+          >
+            <CreditCard size={18} />
+          </button>
+
+          {showTotals && items.length > 0 && (
+            <div className="flex items-center bg-surface-subtle px-3 py-1.5 rounded-lg border border-ui-border-soft">
+              <span className="text-xs text-content-secondary mr-1.5">Saldo:</span>
+              <span className={`text-sm font-semibold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(totals.balance)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow-sm">
+      {/* Container da tabela com altura fixa e rodapé fixo */}
+      <div className="relative">
+        {/* Tabela com scroll */}
+        <div className="overflow-x-auto rounded-lg shadow-sm max-h-[calc(100vh-280px)] overflow-y-auto">
         <TableInformations 
           headers={headers} 
           sort={state.sort} 
@@ -490,23 +1128,24 @@ export default function InlineEditableTable({
           hasActions={true} 
           columnWidths={columnWidths}
           onMouseDownResize={handleMouseDownResize}
+          tbodyRef={tableBodyRef}
         >
           {displayItems.map((item: any) => {
             const editingRow = editingRows.find(row => row.id === item.id);
             const isEditing = !!editingRow?.isEditing;
             
             return (
-              <tr key={item.id} className={`bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary min-h-[26px] h-fit ${isEditing ? 'bg-blue-50 border-blue-200' : ''}`}>
+              <tr key={item.id} className={`bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary h-auto ${isEditing ? 'bg-brand/5 border-brand/20' : ''}`} style={maxRowHeight ? { height: `${maxRowHeight}px` } : undefined}>
                 {dataColumns.map((col, idx) => (
-                  <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${idx === 0 ? 'sticky left-0 bg-surface z-20' : ''} ${isEditing ? 'bg-blue-50' : ''}`} style={{ width: columnWidths[col.field] || 150, minWidth: columnWidths[col.field] || 150 }}>
-                    <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${idx === 0 ? 'justify-start' : 'justify-center'}`}>
+                  <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${idx === 0 ? 'sticky left-0 bg-surface z-20' : ''} ${isEditing ? 'bg-transparent' : ''}`} style={{ width: 'auto', minWidth: 'fit-content' }}>
+                    <div className={`flex w-full items-center px-0.5 py-0 ${idx === 0 ? 'justify-start' : 'justify-center'}`}>
                       {idx === 0 && enableDelete && !isEditing && <input type="checkbox" className="mr-2 inp-checkbox-select rounded border-ui-border cursor-pointer w-4 h-4" checked={selectedCheckboxes.includes(item.id)} onChange={() => setSelectedCheckboxes(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />}
                       <div className={`w-full min-w-0 text-[13px] ${idx === 0 || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'}`}>{renderEditableCell(item, col, editingRow)}</div>
                     </div>
                   </td>
                 ))}
-                <td className="px-2 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[120px] min-w-[120px]">
-                  <div className="flex items-center justify-center gap-1 h-full min-h-[26px]">
+                <td className="px-0.5 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-auto min-w-fit">
+                  <div className="flex w-full items-center justify-center gap-0">
                     {isEditing ? (
                       <>
                         <button onClick={() => saveEditingRow(editingRow!.id)} disabled={editingRow!.isSaving} className="p-1 hover:bg-green-100 rounded text-green-600 disabled:opacity-50">{editingRow!.isSaving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600" /> : <Save size={16} />}</button>
@@ -521,7 +1160,216 @@ export default function InlineEditableTable({
             );
           })}
         </TableInformations>
+        </div>
+        
       </div>
+      
+      {/* Rodapé fixo na parte inferior da tela */}
+      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-4 py-2 z-50 shadow-lg">
+        <div className="flex flex-wrap justify-between items-center gap-2 max-w-[1400px] mx-auto">
+          <p className="text-[13px] text-content-secondary">
+            {meta && meta.total > 0 ? (
+              activeTab === 'ALL' 
+                ? `Total de registros: ${meta.total} (Exibindo ${tableData.start} a ${tableData.end})`
+                : `Total: ${filteredItems.length} registros de ${activeTab === 'INCOME' ? 'Receitas' : 'Despesas'}`
+            ) : 'Nenhum registro encontrado'}
+          </p>
+          
+          <div className="flex items-center gap-3">
+            <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
+            {meta?.totalPages > 1 && <Pagination currentPage={meta.page} totalPage={meta.totalPages} onPageChange={p => updateState({ page: p })} />}
+          </div>
+        </div>
+      </div>
+      
+      {/* Espaço para o rodapé fixo não cobrir conteúdo */}
+      <div className="h-12"></div>
+
+      {/* Modal de Lançamento Parcelado/Recorrente */}
+      <ParceladoRecorrenteModal
+        isOpen={isParceladoModalOpen}
+        onClose={() => setIsParceladoModalOpen(false)}
+        formOptions={{
+          institutions: formOptions.institutions || [],
+          incomeCategories: formOptions.incomeCategories || [],
+          expenseCategories: formOptions.expenseCategories || [],
+          centers: formOptions.centers || [],
+          suppliers: formOptions.suppliers || [],
+          cards: formOptions.cards || [],
+          subcategories: formOptions.subcategories || {},
+        }}
+        onSubmit={async (data) => {
+          try {
+            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+            
+            // Determinar qual endpoint usar
+            let endpoint = '';
+            let payload: any = {};
+            
+            if (data.transactionType === 'INCOME') {
+              const numInstallments = parseInt(data.numInstallments) || 1;
+              
+              if (numInstallments > 1) {
+                // Receita parcelada - criar múltiplas receitas
+                const installmentAmount = parseFloat(data.amount);
+                endpoint = '/financial-transaction/installments';
+                payload = {
+                  transaction_type: 'INCOME',
+                  institution_id: data.institution || null,  // ✅ Enviar null se vazio
+                  category_id: data.category,
+                  subcategory_id: data.subcategory || null,
+                  center_id: data.center || null,
+                  description: data.description || null,  // ✅ Enviar null se vazio
+                  installment_amount: installmentAmount,
+                  num_installments: numInstallments,
+                  total_amount: installmentAmount * numInstallments,
+                  start_date: data.startDate,
+                  first_payment_date: data.firstPaymentDate, // Data separada para receita
+                };
+              } else {
+                // Receita: cria lançamento simples (1 parcela)
+                endpoint = '/financial-transaction';
+                payload = {
+                  category_id: data.category,
+                  subcategory_id: data.subcategory || null,
+                  financial_institution_id: data.institution || null,  // ✅ Enviar null se vazio
+                  center_id: data.center || null,
+                  description: data.description || null,  // ✅ Enviar null se vazio
+                  amount: parseFloat(data.amount),
+                  event_date: data.startDate,
+                  effective_date: data.firstPaymentDate,
+                  status: 'PENDING',
+                };
+              }
+            } else if (data.paymentMode === 'PARCELADO') {
+              // Despesa parcelada - amount é o valor DA PARCELA
+              const installmentAmount = parseFloat(data.amount);
+              const numInstallments = parseInt(data.numInstallments);
+              endpoint = '/financial-transaction/installments';
+              payload = {
+                transaction_type: 'EXPENSE',
+                institution_id: data.institution,
+                card_id: data.card || null,
+                category_id: data.category,
+                subcategory_id: data.subcategory || null,
+                center_id: data.center || null,
+                supplier_id: data.supplier || null,
+                description: data.description,
+                installment_amount: installmentAmount,  // Valor de CADA parcela
+                num_installments: numInstallments,
+                total_amount: installmentAmount * numInstallments,  // Total calculado
+                start_date: data.startDate,
+                first_payment_date: data.firstPaymentDate,
+              };
+            } else if (data.paymentMode === 'RECORRENTE') {
+              // Despesa recorrente
+              const numInstallments = parseInt(data.numInstallments);
+              endpoint = '/financial-transaction/recurring';
+              payload = {
+                transaction_type: 'EXPENSE',
+                institution_id: data.institution,
+                card_id: data.card || null,
+                category_id: data.category,
+                subcategory_id: data.subcategory || null,
+                center_id: data.center || null,
+                supplier_id: data.supplier || null,
+                description: data.description,
+                amount: parseFloat(data.amount),
+                num_installments: numInstallments,
+                start_date: data.startDate,
+                first_payment_date: data.firstPaymentDate,
+              };
+            }
+            
+            // Debug: log do payload
+            console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+            
+            const response = await fetch(`${API_URL}${endpoint}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              throw new Error(error.message || 'Erro ao criar lançamento');
+            }
+            
+            const result = await response.json();
+            const count = result.data?.installments?.length || result.data?.occurrences?.length || 1;
+            
+            showMessage(`${count} lançamento(s) criado(s) com sucesso!`, 'success');
+            refreshData();
+          } catch (error) {
+            console.error('Error creating transaction:', error);
+            showMessage(error instanceof Error ? error.message : 'Erro ao criar lançamento', 'error');
+            throw error;
+          }
+        }}
+      />
+
+      {/* Modal de Faturas de Cartão */}
+      <InvoiceModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          // Atualizar tabela após fechar modal
+          setTimeout(() => refreshData(), 300);
+        }}
+        cards={formOptions.cards || []}
+        institutions={formOptions.institutions || []}
+        onSearchInvoice={async (cardId, month, year) => {
+          try {
+            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+            console.log(`🔍 Buscando fatura: cardId=${cardId}, month=${month}, year=${year}`);
+            const response = await fetch(
+              `${API_URL}/financial-invoice?cardId=${cardId}&month=${month}&year=${year}`
+            );
+            console.log(`📡 Response status: ${response.status}`);
+            
+            if (response.status === 404) {
+              showMessage('Fatura não encontrada para este cartão/mês', 'info');
+              return null;
+            }
+            
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              showMessage(error.message || 'Erro ao buscar fatura', 'error');
+              return null;
+            }
+            const result = await response.json();
+            console.log('✅ Fatura encontrada:', result.data);
+            return result.data || null;
+          } catch (error) {
+            console.error('❌ Error fetching invoice:', error);
+            showMessage('Erro de conexão ao buscar fatura', 'error');
+            return null;
+          }
+        }}
+        onUpdateStatus={async (invoiceId, status, data) => {
+          try {
+            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+            const payload = { status, ...data };
+            console.log('📤 Enviando PUT /status:', payload);
+            const response = await fetch(`${API_URL}/financial-invoice/${invoiceId}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            console.log('📡 Response status:', response.status);
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              console.log('❌ Erro do backend:', error);
+              throw new Error(error.error || error.message || 'Erro ao atualizar fatura');
+            }
+            showMessage('Fatura atualizada com sucesso!', 'success');
+          } catch (error) {
+            console.error('Error updating invoice:', error);
+            showMessage(error instanceof Error ? error.message : 'Erro ao atualizar fatura', 'error');
+            throw error;
+          }
+        }}
+      />
     </>
   );
 }
