@@ -11,7 +11,8 @@
       "Bash(mv _ui_temp ui)",
       "Bash(npx next:*)",
       "Bash(xargs grep:*)",
-      "Bash(cat \"c:/Users/Marcio/Desktop/front-nairim-v2/src/app/dashboard/\\(financeiro\\)/subcategorias/cadastrar/page.tsx\")"
+      "Bash(cat \"c:/Users/Marcio/Desktop/front-nairim-v2/src/app/dashboard/\\(financeiro\\)/subcategorias/cadastrar/page.tsx\")",
+      "Bash(./node_modules/.bin/tsc --noEmit)"
     ]
   }
 }

@@ -46,13 +46,15 @@ export default async function Home() {
     <main className="min-h-screen flex flex-col">
       <Header />
       
-      {imoveis.length > 0 ? (
-        <CarrosselDinamico imoveis={imoveis} />
-      ) : (
-        <div className="relative w-full h-[50vh] bg-slate-100 flex items-center justify-center font-medium text-slate-400 animate-pulse">
-          Buscando destaques Nairim...
-        </div>
-      )}
+      <div className="pb-10 md:pb-20">
+        {imoveis.length > 0 ? (
+          <CarrosselDinamico imoveis={imoveis} />
+        ) : (
+          <div className="relative w-full h-[50vh] bg-slate-100 flex items-center justify-center font-medium text-slate-400 animate-pulse">
+            Buscando destaques Nairim...
+          </div>
+        )}
+      </div>
 
       <Filter />
       <ImoveisList />
