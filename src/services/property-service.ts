@@ -8,7 +8,7 @@
 import type { Property, PropertyFilters, PaginatedResponse } from '@/types';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://nairim.com.br/backend-test';
+  process.env.NEXT_PUBLIC_URL_API;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
