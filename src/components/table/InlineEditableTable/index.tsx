@@ -474,6 +474,9 @@ interface InlineEditableTableProps {
   onRowCreate?: (data: any) => Promise<void>;
   onRowDelete?: (id: string) => Promise<void>;
   showTotals?: boolean;
+  onColumnsChange?: (columns: ColumnDef[]) => void;
+  onColumnWidthsChange?: (widths: Record<string, number>) => void;
+  savedColumnWidths?: Record<string, number>;
 }
 
 interface EditingRow {
@@ -483,7 +486,7 @@ interface EditingRow {
 export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
-  showTotals = true, onRowSave, onRowCreate, onRowDelete,
+  showTotals = true, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -519,16 +522,30 @@ export default function InlineEditableTable({
 
   const dataColumns = useMemo(() => columns.filter(col => col.field !== "actions" && col.type !== "custom"), [columns]);
 
+  // Inicializar widths na montagem
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
     dataColumns.forEach((col: ColumnDef) => {
-      if (!columnWidths[col.field]) {
-        const field = col.field.toLowerCase();
-        initialWidths[col.field] = field.includes('description') ? 300 : (field.includes('amount') || field.includes('value') || field.includes('date')) ? 120 : 150;
-      }
+      const field = col.field.toLowerCase();
+      initialWidths[col.field] = field.includes('description') ? 180 :
+        (field.includes('amount') || field.includes('value')) ? 100 :
+          (field.includes('date')) ? 110 :
+            (field.includes('status')) ? 90 :
+              (field.includes('category') || field.includes('subcategory')) ? 130 : 120;
     });
     setColumnWidths(initialWidths);
-  }, [dataColumns]);
+  }, []);
+
+  // Sincronizar quando preferências são carregadas do servidor
+  useEffect(() => {
+    if (savedColumnWidths && Object.keys(savedColumnWidths).length > 0) {
+      console.log('[InlineEditableTable] Sincronizando widths do servidor:', savedColumnWidths);
+      setColumnWidths(prevWidths => ({
+        ...prevWidths,
+        ...savedColumnWidths
+      }));
+    }
+  }, [savedColumnWidths]);
 
   // Apply default date filter on mount
   useEffect(() => {
@@ -585,22 +602,48 @@ export default function InlineEditableTable({
   }, [showDatePicker]);
 
   const isResizingRef = useRef<{field: string, startX: number, startWidth: number} | null>(null);
+  const columnWidthsRef = useRef<Record<string, number>>(columnWidths);
+
+  // Atualizar ref quando columnWidths muda
+  useEffect(() => {
+    columnWidthsRef.current = columnWidths;
+  }, [columnWidths]);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizingRef.current) return;
     const { field, startX, startWidth } = isResizingRef.current;
-    setColumnWidths(prev => ({ ...prev, [field]: Math.max(60, startWidth + (e.pageX - startX)) }));
+    const newWidth = Math.max(60, startWidth + (e.pageX - startX));
+    console.log(`[InlineEditableTable] Resizing ${field}: ${newWidth}px`);
+    setColumnWidths(prev => ({ ...prev, [field]: newWidth }));
   }, []);
+
   const handleMouseUp = useCallback(() => {
+    if (isResizingRef.current) {
+      // Usar ref para capturar valor atual de columnWidths
+      const currentWidths = { ...columnWidthsRef.current };
+      console.log('[InlineEditableTable] handleMouseUp - columnWidths:', currentWidths);
+      console.log('[InlineEditableTable] Campo redimensionado:', isResizingRef.current.field);
+      onColumnWidthsChange?.(currentWidths);
+    }
     isResizingRef.current = null;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove]);
+  }, [onColumnWidthsChange]);
+
   const handleMouseDownResize = useCallback((e: React.MouseEvent, field: string) => {
     e.preventDefault(); e.stopPropagation();
-    isResizingRef.current = { field, startX: e.pageX, startWidth: columnWidths[field] || 150 };
+    isResizingRef.current = { field, startX: e.pageX, startWidth: columnWidthsRef.current[field] || 150 };
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [columnWidths, handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp]);
+
+  // Reordenar colunas
+  const handleColumnReorder = useCallback((dragIndex: number, dropIndex: number) => {
+    const newColumns = [...columns];
+    const [draggedColumn] = newColumns.splice(dragIndex, 1);
+    newColumns.splice(dropIndex, 0, draggedColumn);
+    onColumnsChange?.(newColumns);
+  }, [columns, onColumnsChange]);
 
   const { items, meta } = useMemo(() => {
     if (!data) return { items: [], meta: null };
@@ -648,7 +691,7 @@ export default function InlineEditableTable({
         const height = row.getBoundingClientRect().height;
         if (height > maxHeight) maxHeight = height;
       });
-      setMaxRowHeight(maxHeight > 42 ? maxHeight : undefined);
+      setMaxRowHeight(maxHeight > 36 ? maxHeight : undefined);
     }
   }, [displayItems, editingRows]);
 
@@ -734,18 +777,20 @@ export default function InlineEditableTable({
 
     const safeDateInput = (val: any) => val ? String(val).split('T')[0] : '';
     const safeId = (val: any) => val ? String(val) : '';
-    
+
     let foundSubcategoryId = safeId(item.subcategory_id || item.subcategory?.id);
     if (!foundSubcategoryId && item.category?.subcategories?.length > 0) {
       foundSubcategoryId = safeId(item.category.subcategories[0].id);
     }
-    
+
+    const newRowId = isNew ? `new-${Date.now()}` : id;
+
     setEditingRows(prev => [...prev.filter(r => !r.isNew), {
-      id: isNew ? `new-${Date.now()}` : id,
-      data: isNew 
-        ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' } 
-        : { 
-            ...item, 
+      id: newRowId,
+      data: isNew
+        ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
+        : {
+            ...item,
             event_date: safeDateInput(item.event_date), 
             effective_date: safeDateInput(item.effective_date),
             category_id: safeId(item.category_id || item.category?.id),
@@ -847,15 +892,15 @@ export default function InlineEditableTable({
     switch (column.field) {
       case 'description':
         return renderWrapper(
-          <textarea 
-            value={val || ''} 
-            onChange={e => upd(e.target.value)} 
-            disabled={dis} 
-            rows={1} 
-            className={`${inputClasses} resize-none overflow-hidden !h-[28px]`} 
-            placeholder="Descrição..." 
-            style={{ minWidth: '150px' }} 
-            tabIndex={0} 
+          <textarea
+            value={val || ''}
+            onChange={e => upd(e.target.value)}
+            disabled={dis}
+            rows={1}
+            className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
+            placeholder="Descrição..."
+            style={{ minWidth: '120px', maxWidth: '160px' }}
+            tabIndex={0}
           />
         );
       case 'amount':
@@ -890,8 +935,17 @@ export default function InlineEditableTable({
         );
       case 'event_date': case 'effective_date': {
         const safeDate = val ? String(val).split('T')[0] : '';
+        const isEventDateField = column.field === 'event_date';
         return renderWrapper(
-          <input type="date" value={safeDate} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} tabIndex={0} />
+          <input
+            type="date"
+            value={safeDate}
+            onChange={e => upd(e.target.value)}
+            disabled={dis}
+            className={inputClasses}
+            tabIndex={0}
+            autoFocus={isEventDateField && row?.isNew}
+          />
         );
       }
       case 'category_id':
@@ -1119,15 +1173,16 @@ export default function InlineEditableTable({
       <div className="relative">
         {/* Tabela com scroll */}
         <div className="overflow-x-auto rounded-lg shadow-sm max-h-[calc(100vh-280px)] overflow-y-auto">
-        <TableInformations 
-          headers={headers} 
-          sort={state.sort} 
-          onSort={s => updateState({ sort: { [s]: state.sort[s] === "desc" ? "asc" : "desc" }, page: 1 })} 
-          onSelectAll={e => setSelectedCheckboxes(e.target.checked ? displayItems.map((i: any) => i.id) : [])} 
-          allSelected={selectedCheckboxes.length === displayItems.length && displayItems.length > 0} 
-          hasActions={true} 
+        <TableInformations
+          headers={headers}
+          sort={state.sort}
+          onSort={s => updateState({ sort: { [s]: state.sort[s] === "desc" ? "asc" : "desc" }, page: 1 })}
+          onSelectAll={e => setSelectedCheckboxes(e.target.checked ? displayItems.map((i: any) => i.id) : [])}
+          allSelected={selectedCheckboxes.length === displayItems.length && displayItems.length > 0}
+          hasActions={true}
           columnWidths={columnWidths}
           onMouseDownResize={handleMouseDownResize}
+          onColumnReorder={handleColumnReorder}
           tbodyRef={tableBodyRef}
         >
           {displayItems.map((item: any) => {
@@ -1137,10 +1192,10 @@ export default function InlineEditableTable({
             return (
               <tr key={item.id} className={`bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary h-auto ${isEditing ? 'bg-brand/5 border-brand/20' : ''}`} style={maxRowHeight ? { height: `${maxRowHeight}px` } : undefined}>
                 {dataColumns.map((col, idx) => (
-                  <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${idx === 0 ? 'sticky left-0 bg-surface z-20' : ''} ${isEditing ? 'bg-transparent' : ''}`} style={{ width: 'auto', minWidth: 'fit-content' }}>
+                  <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${isEditing ? 'bg-transparent' : ''}`} style={{ width: 'auto', minWidth: 'fit-content' }}>
                     <div className={`flex w-full items-center px-0.5 py-0 ${idx === 0 ? 'justify-start' : 'justify-center'}`}>
                       {idx === 0 && enableDelete && !isEditing && <input type="checkbox" className="mr-2 inp-checkbox-select rounded border-ui-border cursor-pointer w-4 h-4" checked={selectedCheckboxes.includes(item.id)} onChange={() => setSelectedCheckboxes(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />}
-                      <div className={`w-full min-w-0 text-[13px] ${idx === 0 || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'}`}>{renderEditableCell(item, col, editingRow)}</div>
+                      <div className={`w-full min-w-0 text-xs ${idx === 0 || col.align === 'left' ? 'text-left' : col.align === 'right' ? 'text-right' : 'text-center'}`}>{renderEditableCell(item, col, editingRow)}</div>
                     </div>
                   </td>
                 ))}

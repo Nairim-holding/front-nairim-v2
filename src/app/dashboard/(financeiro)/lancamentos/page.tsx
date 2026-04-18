@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Section from '@/components/layout/PageSection';
 import InlineEditableTable from '@/components/table/InlineEditableTable';
 import type { ColumnDef } from '@/types/types';
+import ColumnCustomizer from '@/components/table/ColumnCustomizer';
+import { useMessageContext } from '@/contexts/MessageContext';
+import { authFetch } from '@/utils/authFetch';
+import { Settings2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -30,7 +34,7 @@ const mapToOptions = (res: any): SelectOption[] =>
 
 const mapToTypeOptions = (res: any): SelectOption[] =>
   (res?.data ?? res ?? []).map((i: any) => ({
-    label: `${i.name} (${i.type === 'INCOME' ? 'Receita' : 'Despesa'})`,
+    label: i.name,
     value: i.id,
   }));
 
@@ -73,10 +77,15 @@ const LANCAMENTOS_COLUMNS: ColumnDef[] = [
   { field: 'actions', label: 'Ação', type: 'custom' },
 ];
 
-
 export default function LancamentosPage() {
+  const { showMessage } = useMessageContext();
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [options, setOptions] = useState<FormOptions>(EMPTY_OPTIONS);
+  const [columns, setColumns] = useState<ColumnDef[]>(LANCAMENTOS_COLUMNS);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
+  const [isLoadingColumns, setIsLoadingColumns] = useState(true);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchOptions = useCallback(async () => {
     try {
@@ -124,9 +133,122 @@ export default function LancamentosPage() {
     }
   }, []);
 
+  const fetchColumnPreferences = useCallback(async () => {
+    try {
+      const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=financial-transaction`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
+            const orderedColumns: ColumnDef[] = [];
+            const remainingColumns = [...LANCAMENTOS_COLUMNS];
+
+            result.data.columnOrder.forEach((field: string) => {
+              const colIndex = remainingColumns.findIndex(c => c.field === field);
+              if (colIndex >= 0) {
+                orderedColumns.push(remainingColumns[colIndex]);
+                remainingColumns.splice(colIndex, 1);
+              }
+            });
+
+            setColumns([...orderedColumns, ...remainingColumns]);
+          }
+
+          if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
+            setColumnWidths(result.data.columnWidths);
+          }
+        }
+      } else if (response.status === 401) {
+        console.warn('[LancamentosPage] Usuário não autenticado ao carregar preferências');
+      }
+    } catch (error) {
+      console.error('[LancamentosPage] Erro ao carregar preferências:', error);
+    } finally {
+      setIsLoadingColumns(false);
+    }
+  }, []);
+
+  const saveColumnPreferences = useCallback(async (orderedFields: string[], widths: Record<string, number>) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      const MAX_RETRIES = 3;
+      let attempt = 0;
+
+      const attemptSave = async (): Promise<boolean> => {
+        try {
+          const body = {
+            resource: 'financial-transaction',
+            columnOrder: orderedFields,
+            columnWidths: widths,
+          };
+          console.log('[LancamentosPage] Enviando preferências:', body);
+          const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          });
+
+          console.log('[LancamentosPage] Resposta do servidor:', response.status, response.statusText);
+
+          if (response.status === 401) {
+            throw new Error('Usuário não autenticado (401)');
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[LancamentosPage] Erro no corpo da resposta:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          console.log('[LancamentosPage] Resposta JSON:', result);
+
+          showMessage('Preferências de colunas salvas com sucesso', 'success', 2000);
+          return true;
+        } catch (error) {
+          attempt++;
+          if (attempt < MAX_RETRIES) {
+            const delayMs = Math.pow(2, attempt - 1) * 1000;
+            console.warn(`[LancamentosPage] Tentativa ${attempt} falhou. Retentando em ${delayMs}ms...`, error);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            return attemptSave();
+          } else {
+            console.error('[LancamentosPage] Falha ao salvar após 3 tentativas:', error);
+            showMessage('Erro ao salvar preferências de colunas. Tente novamente.', 'error', 5000);
+            return false;
+          }
+        }
+      };
+
+      await attemptSave();
+    }, 500);
+  }, [showMessage]);
+
+  const handleColumnsChange = useCallback((newColumns: ColumnDef[]) => {
+    setColumns(newColumns);
+    const orderedFields = newColumns.map(c => c.field);
+    saveColumnPreferences(orderedFields, columnWidths);
+  }, [saveColumnPreferences, columnWidths]);
+
+  const handleColumnWidthsChange = useCallback((widths: Record<string, number>) => {
+    console.log('[LancamentosPage] handleColumnWidthsChange - novo widths:', widths);
+    setColumnWidths(widths);
+    const orderedFields = columns.map(c => c.field);
+    saveColumnPreferences(orderedFields, widths);
+  }, [columns, saveColumnPreferences]);
+
+  const handleResetColumns = useCallback(() => {
+    setColumns(LANCAMENTOS_COLUMNS);
+    setColumnWidths({});
+    saveColumnPreferences(LANCAMENTOS_COLUMNS.map(c => c.field), {});
+  }, [saveColumnPreferences]);
+
   useEffect(() => {
     fetchOptions();
-  }, [fetchOptions]);
+    fetchColumnPreferences();
+  }, [fetchOptions, fetchColumnPreferences]);
 
   const handleRowSave = useCallback(async (id: string, data: Record<string, unknown>) => {
     const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
@@ -175,7 +297,7 @@ export default function LancamentosPage() {
     }
   }, []);
 
-  if (isLoadingOptions) {
+  if (isLoadingOptions || isLoadingColumns) {
     return (
       <Section title="Gerenciar Lançamentos">
         <div className="flex justify-center items-center h-64">
@@ -186,11 +308,23 @@ export default function LancamentosPage() {
   }
 
   return (
-    <Section title="Gerenciar Lançamentos">
+    <Section
+      title="Gerenciar Lançamentos"
+      action={
+        <button
+          onClick={() => setIsColumnModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-surface-subtle hover:bg-ui-border rounded-lg transition-colors text-sm text-content-secondary"
+          title="Personalizar colunas"
+        >
+          <Settings2 size={16} />
+          <span className="hidden sm:inline">Colunas</span>
+        </button>
+      }
+    >
       <InlineEditableTable
         resource="financial-transaction"
         title="Lançamentos"
-        columns={LANCAMENTOS_COLUMNS}
+        columns={columns}
         autoFocusSearch
         enableCreate
         enableDelete
@@ -198,6 +332,16 @@ export default function LancamentosPage() {
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}
         onRowDelete={handleRowDelete}
+        onColumnsChange={handleColumnsChange}
+        onColumnWidthsChange={handleColumnWidthsChange}
+        savedColumnWidths={columnWidths}
+      />
+      <ColumnCustomizer
+        isOpen={isColumnModalOpen}
+        onClose={() => setIsColumnModalOpen(false)}
+        columns={columns}
+        onReorder={handleColumnsChange}
+        onReset={handleResetColumns}
       />
     </Section>
   );

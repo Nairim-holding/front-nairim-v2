@@ -1,7 +1,7 @@
 "use client";
 
-import type { ChangeEvent, ReactNode, RefObject } from 'react';
-import { ArrowUpDown, GripVertical } from 'lucide-react';
+import React, { type ChangeEvent, type ReactNode, type RefObject } from 'react';
+import { ArrowUpDown, GripVertical, GripHorizontal } from 'lucide-react';
 import type { Header, SortOrder } from '@/types/administrador';
 
 interface TableInformationsProps {
@@ -15,6 +15,7 @@ interface TableInformationsProps {
   hasActions?: boolean;
   columnWidths?: Record<string, number>;
   onMouseDownResize?: (e: React.MouseEvent, field: string) => void;
+  onColumnReorder?: (dragIndex: number, dropIndex: number) => void;
   tbodyRef?: RefObject<HTMLTableSectionElement | null>;
 }
 
@@ -29,8 +30,36 @@ export default function TableInformations({
   hasActions = true,
   columnWidths = {},
   onMouseDownResize,
+  onColumnReorder,
   tbodyRef,
 }: TableInformationsProps) {
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== dropIndex && onColumnReorder) {
+      onColumnReorder(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const isEmpty = !children || (Array.isArray(children) && children.length === 0);
 
   if (isEmpty) {
@@ -46,7 +75,7 @@ export default function TableInformations({
   const dataHeaders = headers.filter(header => header.field !== "actions");
 
   return (
-    <table className="min-w-full text-sm text-left text-content-secondary" style={{ tableLayout: 'fixed' }}>
+    <table className="min-w-full text-xs text-left text-content-secondary" style={{ tableLayout: 'fixed' }}>
       <thead className="bg-surface-muted uppercase text-content-secondary font-semibold border-b border-ui-border-soft">
         <tr className="h-[36px]">
           {dataHeaders.map((header, idx) => {
@@ -54,18 +83,35 @@ export default function TableInformations({
             const displayOrder = sort[header.sortParam!];
             const isFirstColumn = idx === 0;
             const width = columnWidths[header.field] || 150;
+            const isDragging = draggedIndex === idx;
+            const isDragOver = dragOverIndex === idx;
 
             return (
               <th
-                key={idx}
-                className={`py-1 px-2 font-normal text-[13px] whitespace-nowrap relative
+                key={header.field}
+                draggable={!!onColumnReorder}
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={(e) => handleDrop(e, idx)}
+                onDragEnd={handleDragEnd}
+                className={`py-1 px-2 font-normal text-xs whitespace-nowrap relative select-none
                   ${isFirstColumn ? "sticky left-0 bg-surface-muted z-20" : ""}
                   ${isSortable ? "cursor-pointer hover:bg-surface-subtle transition-colors" : ""}
+                  ${onColumnReorder ? "cursor-move" : ""}
+                  ${isDragging ? "opacity-50 bg-brand/10" : ""}
+                  ${isDragOver ? "bg-brand/20 border-l-2 border-brand" : ""}
                 `}
                 style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
-                onClick={isSortable ? () => onSort(header.sortParam!) : undefined}
+                onClick={isSortable && !isDragging ? () => onSort(header.sortParam!) : undefined}
               >
-                <div className={`flex gap-1 capitalize w-full ${isFirstColumn ? 'items-start justify-start' : 'items-center justify-center'}`}>
+                <div className={`flex gap-1 capitalize w-full items-center ${isFirstColumn ? 'justify-start' : 'justify-center'}`}>
+                  {onColumnReorder && (
+                    <GripHorizontal
+                      size={12}
+                      className="text-content-muted cursor-move flex-shrink-0 mr-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                   {isFirstColumn && (
                     <input
                       type="checkbox"
@@ -104,7 +150,7 @@ export default function TableInformations({
           {hasActions && (
             <th
               key="actions"
-              className="py-1 px-2 font-normal text-[13px] whitespace-nowrap sticky right-0 bg-surface-muted z-20 w-[80px] min-w-[80px] max-w-[80px]"
+              className="py-1 px-2 font-normal text-xs whitespace-nowrap sticky right-0 bg-surface-muted z-20 w-[70px] min-w-[70px] max-w-[70px]"
             >
               <div className="flex items-center justify-center gap-1 capitalize">
                 <span>Ação</span>

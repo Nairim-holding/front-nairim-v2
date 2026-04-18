@@ -3,38 +3,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { 
-  Building2, FileText, Phone, MessageCircle, Globe, 
-  Home, MapPin, Hash, User, Mail, Calendar, CalendarDays,
-  Type, Bed, Bath, Car, Ruler, Sofa, CheckCircle, XCircle,
-  DollarSign, Percent, FileDigit, UserCircle, Briefcase,
-  Landmark, CreditCard, FileCheck, ClipboardCheck, Building,
-  X, Check, 
-  Users, Heart, Award, Shield, Lock, Key, Eye,
-  Clock, AlertTriangle, Activity, Star, Tag, Layers, Package,
-  Truck, ShoppingCart, ShoppingBag, Palette, Scale,
-  GraduationCap, School, Hospital, Hotel, Store, Utensils,
-  Flower, Droplets, Mountain, Trophy, Target,
-  Camera, Video, Printer, Cpu, Server, Database, Table,
-  Upload, Download, Save, Edit2, Trash2, PlusCircle, MinusCircle,
-  AlertCircle, Info, HelpCircle, Wifi, Radio, Tv, Music,
-  Headphones, Mouse, Keyboard, HardDrive, Smartphone,
-  Tablet, Monitor, Laptop, Router, Cloud, Sun, Moon,
-  Thermometer, Leaf, Apple, Carrot, Coffee,
-  Pizza, Cake, Church, Castle, Tent, Ship,
-  Plane, Train, Bike, Bus, Compass, Navigation, Map, Earth,
-  Medal, Crown, Zap, Scissors, PenTool, Brush, Image, Film,
-  Newspaper, File, FolderOpen, Archive, Inbox,
-  Send, Share, Copy, Atom, Brain,
-  HeartPulse, Stethoscope, Pill, Syringe, Wine, Beer,
-  Receipt, Wallet, Coins, Banknote, Bitcoin, Currency,
-  ChartBar, ChartLine, ChartArea, ChartPie,
-  UmbrellaIcon,
-  FlagIcon,
-  Trees,
-  RotateCcwIcon,
-  RefreshCw
-} from "lucide-react";
+import { X, Check } from "lucide-react";
 
 // Definição do tipo corrigido
 export interface DynamicFilter {
@@ -95,28 +64,6 @@ const isPhoneField = (fieldName: string): boolean => {
     'home_phone', 'work_phone', 'office_phone', 'business_phone'
   ];
   return phoneFields.some(phoneField => fieldName.toLowerCase().includes(phoneField.toLowerCase()));
-};
-
-const FIELD_ICONS: Record<string, any> = {
-  'name': User, 'email': Mail, 'birth_date': CalendarDays, 'created_at': Calendar, 'updated_at': Calendar,
-  'gender': UserCircle, 'title': Type, 'owner': User, 'type': Home, 'city': MapPin, 'state': MapPin,
-  'district': MapPin, 'street': MapPin, 'zip_code': Hash, 'bedrooms': Bed, 'bathrooms': Bath,
-  'half_bathrooms': Bath, 'garage_spaces': Car, 'area_total': Ruler, 'area_built': Ruler, 'frontage': Ruler,
-  'furnished': Sofa, 'floor_number': Building, 'tax_registration': Hash, 'notes': FileText, 'agency': Building,
-  'owner_id': User, 'type_id': Home, 'agency_id': Building, 'trade_name': Building2, 'legal_name': FileText,
-  'cnpj': CreditCard, 'state_registration': FileCheck, 'municipal_registration': ClipboardCheck, 'license_number': FileDigit,
-  'contact_name': UserCircle, 'contact_phone': Phone, 'contact_email': Mail, 'whatsapp': MessageCircle,
-  'contact_role': Briefcase, 'contact_department': Building, 'contact_notes': FileText, 'telephone': Phone,
-  'phone': Phone, 'cellphone': Phone, 'mobile': Phone, 'celular': Phone, 'number': Hash, 'country': Globe,
-  'status': CheckCircle, 'active': CheckCircle, 'inactive': XCircle, 'value': DollarSign, 'price': DollarSign,
-  'amount': DollarSign, 'percentage': Percent, 'rate': Percent, 'purchase_value': DollarSign, 'rental_value': DollarSign,
-  'condo_fee': DollarSign, 'property_tax': DollarSign, 'company': Building2, 'enterprise': Building2,
-  'institution': Landmark, 'organization': Building2, 'internal_code': Hash, 'occupation': Briefcase,
-  'marital_status': Heart, 'cpf': CreditCard, 'contact': UserCircle, 'contract_number': FileText,
-  'start_date': Calendar, 'end_date': Calendar, 'property_title': Home, 'tenant': Users, 'rent_amount': DollarSign,
-  'extra_charges': DollarSign, 'commission_amount': DollarSign, 'rent_due_day': CalendarDays, 'tax_due_day': CalendarDays,
-  'condo_due_day': CalendarDays, 'description': Type, 'code': Hash, 'id': Hash, 'reference': FileText,
-  'document': FileText, 'category': Tag, 'default': Type,
 };
 
 export default function DynamicFilterModal({ 
@@ -321,49 +268,6 @@ export default function DynamicFilterModal({
     updateFilterValue(field, 'value', valueToStore, displayLabel);
   }, [updateFilterValue, visibleFilters]);
 
-  const getFilterIcon = (field: string) => {
-    if (FIELD_ICONS[field]) {
-      const Icon = FIELD_ICONS[field];
-      return <Icon size={16} className="text-content-muted" />;
-    }
-    const fieldLower = field.toLowerCase();
-    const keywordMap = [
-      { keywords: ['name', 'nome', 'pessoa'], icon: User }, { keywords: ['email', 'e-mail'], icon: Mail },
-      { keywords: ['date', 'data', 'dia'], icon: Calendar }, { keywords: ['phone', 'telefone', 'celular', 'fone', 'cellphone'], icon: Phone },
-      { keywords: ['address', 'endereco', 'rua', 'logradouro'], icon: MapPin }, { keywords: ['city', 'cidade'], icon: MapPin },
-      { keywords: ['state', 'estado', 'uf'], icon: MapPin }, { keywords: ['zip', 'cep'], icon: Hash },
-      { keywords: ['code', 'codigo', 'id'], icon: Hash }, { keywords: ['number', 'numero', 'num'], icon: Hash },
-      { keywords: ['value', 'valor', 'price', 'preco', 'amount', 'montante'], icon: DollarSign },
-      { keywords: ['percent', 'porcentagem', 'rate', 'taxa'], icon: Percent }, { keywords: ['status', 'estado'], icon: CheckCircle },
-      { keywords: ['active', 'ativo'], icon: CheckCircle }, { keywords: ['inactive', 'inativo'], icon: XCircle },
-      { keywords: ['description', 'descricao'], icon: Type }, { keywords: ['note', 'observacao', 'obs'], icon: FileText },
-      { keywords: ['document', 'documento'], icon: FileText }, { keywords: ['contract', 'contrato'], icon: FileText },
-      { keywords: ['file', 'arquivo'], icon: FileText }, { keywords: ['category', 'categoria'], icon: Tag },
-      { keywords: ['type', 'tipo'], icon: Type }, { keywords: ['owner', 'proprietario'], icon: User },
-      { keywords: ['tenant', 'inquilino'], icon: Users }, { keywords: ['property', 'imovel'], icon: Home },
-      { keywords: ['bedroom', 'quarto'], icon: Bed }, { keywords: ['bathroom', 'banheiro'], icon: Bath },
-      { keywords: ['garage', 'garagem'], icon: Car }, { keywords: ['area', 'area'], icon: Ruler },
-      { keywords: ['furnished', 'mobiliado'], icon: Sofa }, { keywords: ['floor', 'andar'], icon: Building },
-      { keywords: ['tax', 'imposto'], icon: Landmark }, { keywords: ['contact', 'contato'], icon: UserCircle },
-      { keywords: ['role', 'cargo', 'funcao'], icon: Briefcase }, { keywords: ['department', 'departamento'], icon: Building },
-      { keywords: ['company', 'empresa'], icon: Building2 }, { keywords: ['trade', 'fantasia'], icon: Building2 },
-      { keywords: ['legal', 'razao'], icon: FileText }, { keywords: ['cnpj', 'cpf'], icon: CreditCard },
-      { keywords: ['registration', 'inscricao', 'registro'], icon: FileCheck }, { keywords: ['license', 'licenca'], icon: FileDigit },
-      { keywords: ['whatsapp', 'zap'], icon: MessageCircle }, { keywords: ['web', 'site', 'url'], icon: Globe },
-      { keywords: ['country', 'pais'], icon: Globe }, { keywords: ['default', 'padrao'], icon: Type },
-    ];
-    for (const mapping of keywordMap) {
-      for (const keyword of mapping.keywords) {
-        if (fieldLower.includes(keyword)) {
-          const Icon = mapping.icon;
-          return <Icon size={16} className="text-content-muted" />;
-        }
-      }
-    }
-    const Icon = FIELD_ICONS['default'] || Type;
-    return <Icon size={16} className="text-content-muted" />;
-  };
-
   const getFilteredSuggestions = (field: string) => {
     const filter = visibleFilters.find(f => f.field === field);
     const searchTerm = searchTerms[field]?.toLowerCase() || '';
@@ -386,18 +290,14 @@ export default function DynamicFilterModal({
     const searchTerm = searchTerms[filter.field] || '';
     const suggestions = getFilteredSuggestions(filter.field);
     const hasSuggestions = suggestions.length > 0;
-    const Icon = getFilterIcon(filter.field);
     const isDropdownOpen = Boolean(filterValue.showDropdown) && activeDropdown === filter.field;
     const isPhone = isPhoneField(filter.field);
     const hasOptions = filter.autocomplete || filter.options || filter.values;
-    
+
     return (
-      <div className="relative min-h-[50px]" key={filter.field}>
-        <label className="block text-sm font-medium text-content-secondary mb-1">
-          <div className="flex items-center gap-2">
-            {Icon}
-            <span className="truncate">{filter.label}</span>
-          </div>
+      <div className="relative flex flex-col gap-1" key={filter.field}>
+        <label className="block text-sm font-medium text-content-secondary truncate">
+          {filter.label}
         </label>
         
         {filter.dateRange ? (
@@ -513,9 +413,6 @@ export default function DynamicFilterModal({
           </div>
         )}
         
-        {filter.description && (
-          <p className="text-xs text-content-muted mt-1 truncate">{filter.description}</p>
-        )}
       </div>
     );
   };
@@ -552,19 +449,19 @@ export default function DynamicFilterModal({
           </button>
         </div>
         
-        <div 
+        <div
           ref={contentRef}
-          className={`p-4 grid gap-2 flex-1 min-h-0 ${
-            columns === 3 
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-              : columns === 2 
-                ? 'grid-cols-1 sm:grid-cols-2' 
-                : columns === 1 
-                  ? 'grid-cols-1' 
-                  : columns === 4 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : columns === 5 
-                      ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          className={`p-4 grid gap-4 flex-1 min-h-0 overflow-y-auto ${
+            columns === 3
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              : columns === 2
+                ? 'grid-cols-1 sm:grid-cols-2'
+                : columns === 1
+                  ? 'grid-cols-1'
+                  : columns === 4
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    : columns === 5
+                      ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
                       : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
           }`}
         >

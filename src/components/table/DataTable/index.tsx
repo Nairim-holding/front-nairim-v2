@@ -4,15 +4,17 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Filter, Trash2, Plus, Edit, Eye, X } from "lucide-react";
+import { Filter, Trash2, Plus, Edit, Eye, X, Settings2 } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
+import { authFetch } from "@/utils/authFetch";
 import SkeletonTable from "../TableSkeleton";
 import DynamicFilterModal from "../../filters/DynamicFilterModal";
 import SearchInput from "../../filters/SearchInput";
 import SelectLimit from "../../filters/PageSizeSelect";
 import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
+import ColumnCustomizer from "../ColumnCustomizer";
 import Input from "../../ui/Input";
 import { formatCurrency, formatDate, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/formatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
@@ -66,21 +68,135 @@ export default function DynamicTableManager({
   });
   
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [displayColumns, setDisplayColumns] = useState<ColumnDef[]>(columns);
+  const [isLoadingColumns, setIsLoadingColumns] = useState(true);
+  const [columnOrder, setColumnOrder] = useState<string[]>(columns.map(c => c.field).filter(f => f !== 'actions'));
+  const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
 
   const router = useRouter();
-  
+
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
   const isRestoringScrollRef = useRef(false);
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const columnWidthsRef = useRef<Record<string, number>>(columnWidths);
   
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
-  
-  const { 
-    filters: dynamicFilters, 
+
+  const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+
+  // Carregar preferências de colunas do servidor
+  const fetchColumnPreferences = useCallback(async () => {
+    try {
+      const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=${resource}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
+            setColumnWidths(result.data.columnWidths);
+            columnWidthsRef.current = result.data.columnWidths;
+          }
+          if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
+            setColumnOrder(result.data.columnOrder);
+            const orderedColumns: ColumnDef[] = [];
+            const remainingColumns = [...columns];
+
+            result.data.columnOrder.forEach((field: string) => {
+              const colIndex = remainingColumns.findIndex(c => c.field === field);
+              if (colIndex >= 0) {
+                orderedColumns.push(remainingColumns[colIndex]);
+                remainingColumns.splice(colIndex, 1);
+              }
+            });
+
+            setDisplayColumns([...orderedColumns, ...remainingColumns]);
+          }
+        }
+      } else if (response.status === 401) {
+        console.warn('[DataTable] Usuário não autenticado ao carregar preferências');
+      }
+    } catch (error) {
+      console.error('[DataTable] Erro ao carregar preferências:', error);
+    } finally {
+      setIsLoadingColumns(false);
+    }
+  }, [resource, columns]);
+
+  // Salvar preferências de colunas no servidor
+  const saveColumnPreferences = useCallback(async (widths: Record<string, number>) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      const MAX_RETRIES = 3;
+      let attempt = 0;
+
+      const attemptSave = async (): Promise<boolean> => {
+        try {
+          const body = {
+            resource,
+            columnOrder: columnOrder,
+            columnWidths: widths,
+          };
+          console.log('[DataTable] Enviando preferências:', body);
+          const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          });
+
+          console.log('[DataTable] Resposta do servidor:', response.status, response.statusText);
+
+          if (response.status === 401) {
+            throw new Error('Usuário não autenticado (401)');
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[DataTable] Erro no corpo da resposta:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          console.log('[DataTable] Resposta JSON:', result);
+
+          showMessage('Preferências de colunas salvas com sucesso', 'success', 2000);
+          return true;
+        } catch (error) {
+          attempt++;
+          if (attempt < MAX_RETRIES) {
+            const delayMs = Math.pow(2, attempt - 1) * 1000;
+            console.warn(`[DataTable] Tentativa ${attempt} falhou. Retentando em ${delayMs}ms...`, error);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            return attemptSave();
+          } else {
+            console.error('[DataTable] Falha ao salvar após 3 tentativas:', error);
+            showMessage('Erro ao salvar preferências de colunas. Tente novamente.', 'error', 5000);
+            return false;
+          }
+        }
+      };
+
+      await attemptSave();
+    }, 500);
+  }, [resource, columnOrder, showMessage]);
+
+  // Sincronizar columnWidthsRef
+  useEffect(() => {
+    columnWidthsRef.current = columnWidths;
+  }, [columnWidths]);
+
+  // Carregar preferências na montagem
+  useEffect(() => {
+    fetchColumnPreferences();
+  }, [fetchColumnPreferences]);
+
+  const {
+    filters: dynamicFilters,
     searchFields,
-    isLoading: isLoadingFilters 
+    isLoading: isLoadingFilters
   } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
   
   const { 
@@ -98,8 +214,8 @@ export default function DynamicTableManager({
   });
 
   const dataColumns = useMemo(() => {
-    return columns.filter(col => col.field !== "actions" && col.type !== "custom");
-  }, [columns]);
+    return displayColumns.filter(col => col.field !== "actions" && col.type !== "custom");
+  }, [displayColumns]);
 
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
@@ -132,25 +248,48 @@ export default function DynamicTableManager({
     isResizingRef.current = {
       field,
       startX: e.pageX,
-      startWidth: columnWidths[field] || 150
+      startWidth: columnWidthsRef.current[field] || 150
     };
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [columnWidths]);
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizingRef.current) return;
     const { field, startX, startWidth } = isResizingRef.current;
     const diff = e.pageX - startX;
     const newWidth = Math.max(60, startWidth + diff);
+    console.log(`[DataTable] Resizing ${field}: ${newWidth}px`);
     setColumnWidths(prev => ({ ...prev, [field]: newWidth }));
   }, []);
 
   const handleMouseUp = useCallback(() => {
+    if (isResizingRef.current) {
+      const currentWidths = { ...columnWidthsRef.current };
+      console.log('[DataTable] handleMouseUp - columnWidths:', currentWidths);
+      console.log('[DataTable] Campo redimensionado:', isResizingRef.current.field);
+      saveColumnPreferences(currentWidths);
+    }
     isResizingRef.current = null;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove]);
+  }, [handleMouseMove, saveColumnPreferences]);
+
+  const handleColumnsChange = useCallback((newColumns: ColumnDef[]) => {
+    setDisplayColumns(newColumns);
+    const orderedFields = newColumns.map(c => c.field).filter(f => f !== 'actions');
+    setColumnOrder(orderedFields);
+    saveColumnPreferences(columnWidthsRef.current);
+  }, [saveColumnPreferences]);
+
+  const handleResetColumns = useCallback(() => {
+    setDisplayColumns(columns);
+    const orderedFields = columns.map(c => c.field).filter(f => f !== 'actions');
+    setColumnOrder(orderedFields);
+    setColumnWidths({});
+    columnWidthsRef.current = {};
+    saveColumnPreferences({});
+  }, [columns, saveColumnPreferences]);
 
   const { items, meta } = useMemo(() => {
     if (!data) return { items: [], meta: null };
@@ -669,8 +808,15 @@ export default function DynamicTableManager({
                 </Link>
               )
             )}
+            <button
+              onClick={() => setIsColumnModalOpen(true)}
+              className="p-2 hover:bg-surface-subtle rounded transition-colors"
+              title="Personalizar colunas"
+            >
+              <Settings2 size={20} color="var(--color-text-muted)" />
+            </button>
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setFilterVisible(!filterVisible)}
                 className="p-2 hover:bg-surface-subtle rounded transition-colors"
                 title="Filtrar registros"
@@ -875,6 +1021,14 @@ export default function DynamicTableManager({
           ))}
         </TableInformations>
       </div>
+
+      <ColumnCustomizer
+        isOpen={isColumnModalOpen}
+        onClose={() => setIsColumnModalOpen(false)}
+        columns={displayColumns}
+        onReorder={handleColumnsChange}
+        onReset={handleResetColumns}
+      />
 
       {isCancelLeaseModalOpen && (
         <div className="fixed inset-0 bg-layer-overlay z-[1000001] flex items-center justify-center p-4">

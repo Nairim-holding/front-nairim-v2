@@ -72,10 +72,12 @@ export function buildTypeOptions(types: any[]) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildAgencyOptions(agencies: any[]) {
-  return agencies.map((a) => ({
+  const options = agencies.map((a) => ({
     label: a.trade_name || a.legal_name || a.name || 'Sem nome',
     value: a.id as string,
   }));
+  // Add "Nenhuma" option at the beginning to allow clearing the selection
+  return [{ label: 'Nenhuma', value: '' }, ...options];
 }
 
 // ─── API fetchers (server-side) ───────────────────────────────────────────────
@@ -228,7 +230,7 @@ export function buildPropertyFormData(
     notes:            data.notes,
     owner_id:         data.owner_id,
     type_id:          data.type_id,
-    agency_id:        data.agency_id,
+    agency_id:        data.agency_id || null,
     registration_number: data.registration_number || null,
   }));
 
