@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { X, GripVertical, RotateCcw } from 'lucide-react';
+import { X, RotateCcw } from 'lucide-react';
 import type { ColumnDef } from '@/types/types';
 
 interface ColumnCustomizerProps {
@@ -105,7 +105,14 @@ export default function ColumnCustomizer({
                   : 'bg-surface-subtle hover:bg-ui-border-soft border-2 border-transparent'
               }`}
             >
-              <GripVertical size={16} className="text-content-muted flex-shrink-0" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-content-secondary flex-shrink-0">
+                <circle cx="9" cy="5" r="1.5" />
+                <circle cx="9" cy="12" r="1.5" />
+                <circle cx="9" cy="19" r="1.5" />
+                <circle cx="15" cy="5" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+                <circle cx="15" cy="19" r="1.5" />
+              </svg>
               <span className="flex-1 text-sm text-content truncate">
                 {column.label}
               </span>
