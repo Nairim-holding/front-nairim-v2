@@ -90,7 +90,6 @@ export default function DynamicTableManager({
   
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
-<<<<<<< HEAD
 
   const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -200,23 +199,13 @@ export default function DynamicTableManager({
     fetchColumnPreferences();
   }, [fetchColumnPreferences]);
 
+  const useLocalMode = !!localData;
+
   const {
     filters: dynamicFilters,
     searchFields,
     isLoading: isLoadingFilters
   } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
-  
-=======
-  
-  const useLocalMode = !!localData;
-
-  const { 
-    filters: dynamicFilters = [], 
-    searchFields = [],
-    isLoading: isLoadingFilters = false 
-  } = useLocalMode ? { filters: [], searchFields: [], isLoading: false } : useDynamicFilters(`/${resource}/filters`, appliedFilters);
-
->>>>>>> 11b06b3400ef9ac4caf144921d68b5b2f7fde8bb
   const { 
     state = { page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: defaultFilters },
     data = null,
@@ -843,7 +832,6 @@ export default function DynamicTableManager({
                 </Link>
               )
             )}
-<<<<<<< HEAD
             <button
               onClick={() => setIsColumnModalOpen(true)}
               className="p-2 hover:bg-surface-subtle rounded transition-colors"
@@ -865,25 +853,6 @@ export default function DynamicTableManager({
                 </span>
               )}
             </div>
-=======
-            {!useLocalMode && (
-              <div className="relative">
-                <button 
-                  type="button"
-                  onClick={() => setFilterVisible(!filterVisible)}
-                  className="p-2 hover:bg-surface-subtle rounded transition-colors"
-                  title="Filtrar registros"
-                >
-                  <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
-                </button>
-                {hasActiveFilters && (
-                  <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </div>
-            )}
->>>>>>> 11b06b3400ef9ac4caf144921d68b5b2f7fde8bb
             {enableDelete && (
               <button 
                 type="button"
