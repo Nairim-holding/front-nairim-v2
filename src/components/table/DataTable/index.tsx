@@ -34,7 +34,10 @@ interface DynamicTableManagerProps {
   enableEdit?: boolean;
   enableDelete?: boolean;
   onRowClick?: (item: any) => void;
-  defaultFilters?: Record<string, any>; 
+  defaultFilters?: Record<string, any>;
+  localData?: any[];
+  onEdit?: (item: any, index: number) => void;
+  onDelete?: (item: any, index: number) => void;
 }
 
 export default function DynamicTableManager({
@@ -51,6 +54,9 @@ export default function DynamicTableManager({
   enableDelete = true,
   onRowClick,
   defaultFilters = {},
+  localData,
+  onEdit,
+  onDelete,
 }: DynamicTableManagerProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -77,19 +83,27 @@ export default function DynamicTableManager({
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   
+  const useLocalMode = !!localData;
+
   const { 
-    filters: dynamicFilters, 
-    searchFields,
-    isLoading: isLoadingFilters 
-  } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
-  
+    filters: dynamicFilters = [], 
+    searchFields = [],
+    isLoading: isLoadingFilters = false 
+  } = useLocalMode ? { filters: [], searchFields: [], isLoading: false } : useDynamicFilters(`/${resource}/filters`, appliedFilters);
+
   const { 
-    state, 
-    data, 
-    isLoading: isLoadingData, 
-    updateState, 
-    refreshData 
-  } = useOptimizedTableData(resource, {
+    state = { page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: defaultFilters },
+    data = null,
+    isLoading: isLoadingData = false,
+    updateState = () => {},
+    refreshData = () => {}
+  } = useLocalMode ? { 
+    state: { page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: defaultFilters },
+    data: null,
+    isLoading: false,
+    updateState: () => {},
+    refreshData: () => {}
+  } : useOptimizedTableData(resource, {
     page: 1,
     limit: defaultLimit,
     search: "",
@@ -153,6 +167,17 @@ export default function DynamicTableManager({
   }, [handleMouseMove]);
 
   const { items, meta } = useMemo(() => {
+    if (useLocalMode && localData) {
+      return {
+        items: localData,
+        meta: {
+          page: 1,
+          limit: localData.length,
+          total: localData.length,
+          totalPages: 1
+        }
+      };
+    }
     if (!data) return { items: [], meta: null };
     if (data.data && Array.isArray(data.data)) {
       return {
@@ -168,7 +193,7 @@ export default function DynamicTableManager({
     if (data.items && Array.isArray(data.items)) return { items: data.items, meta: data.meta };
     if (Array.isArray(data)) return { items: data, meta: { page: 1, limit: state.limit, total: data.length, totalPages: 1 } };
     return { items: [], meta: null };
-  }, [data, state.limit]);
+  }, [data, state.limit, useLocalMode, localData]);
 
   const getNestedValue = useCallback((obj: any, path: string) => {
     if (!obj || !path) return undefined;
@@ -669,22 +694,26 @@ export default function DynamicTableManager({
                 </Link>
               )
             )}
-            <div className="relative">
-              <button 
-                onClick={() => setFilterVisible(!filterVisible)}
-                className="p-2 hover:bg-surface-subtle rounded transition-colors"
-                title="Filtrar registros"
-              >
-                <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
-              </button>
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </div>
+            {!useLocalMode && (
+              <div className="relative">
+                <button 
+                  type="button"
+                  onClick={() => setFilterVisible(!filterVisible)}
+                  className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                  title="Filtrar registros"
+                >
+                  <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
+                </button>
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+            )}
             {enableDelete && (
               <button 
+                type="button"
                 onClick={handleDeleteClick}
                 className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title={resource === 'leases' ? "Cancelar selecionados" : "Excluir selecionados"}
@@ -707,16 +736,18 @@ export default function DynamicTableManager({
             />
           )}
 
-          <SearchInput 
-            initialValue={state.search}
-            onSearch={handleSearch}
-            placeholder={searchPlaceholder}
-            delay={600}
-            autoFocus={autoFocusSearch}
-          />
+          {!useLocalMode && (
+            <SearchInput 
+              initialValue={state.search}
+              onSearch={handleSearch}
+              placeholder={searchPlaceholder}
+              delay={600}
+              autoFocus={autoFocusSearch}
+            />
+          )}
         </div>
 
-        <SelectLimit limit={state.limit} onLimitChange={handleLimitChange} />
+        {!useLocalMode && <SelectLimit limit={state.limit} onLimitChange={handleLimitChange} />}
 
         <p className="text-[16px] font-normal text-content-secondary laptop:relative tablet:text-center tablet:w-full">
           {meta && meta.total > 0 
@@ -744,7 +775,7 @@ export default function DynamicTableManager({
           onSort={handleSort}
           onSelectAll={(e) => handleSelectAll(e.target.checked)}
           allSelected={tableData.allSelected}
-          hasActions={enableView || enableEdit}
+          hasActions={!!(enableView || enableEdit || onEdit || onDelete)}
           columnWidths={columnWidths}
           onMouseDownResize={handleMouseDownResize}
         >
@@ -845,7 +876,7 @@ export default function DynamicTableManager({
                 );
               })}
 
-              {(enableView || enableEdit) && (
+              {(enableView || enableEdit || onEdit || onDelete) && (
                 <td className="px-2 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[80px] min-w-[80px] max-w-[80px] p-0 h-[26px]">
                   <div className="flex items-center justify-center gap-2 h-full min-h-[26px]">
                     {enableView && (
@@ -858,7 +889,7 @@ export default function DynamicTableManager({
                         <Eye size={16} />
                       </Link>
                     )}
-                    {enableEdit && (
+                    {enableEdit && !onEdit && (
                       <Link 
                         href={`${basePath}/editar/${item.id}`} 
                         title="Editar"
@@ -867,6 +898,34 @@ export default function DynamicTableManager({
                       >
                         <Edit size={16} />
                       </Link>
+                    )}
+                    {onEdit && (
+                      <button
+                        type="button"
+                        title="Editar"
+                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const index = items.indexOf(item);
+                          onEdit(item, index);
+                        }}
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        type="button"
+                        title="Excluir"
+                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-state-error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const index = items.indexOf(item);
+                          onDelete(item, index);
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     )}
                   </div>
                 </td>

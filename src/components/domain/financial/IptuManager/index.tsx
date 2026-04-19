@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, X, Calendar, Check, Landmark, DollarSign, ListOrdered, Info, Copy } from 'lucide-react';
 import { maskMoney } from '@/utils';
 import { formatMoney, parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
+import DynamicTableManager from '@/components/table/DataTable';
+import { ColumnDef } from '@/types/types';
 
 interface IptuInstallment {
   due_date: string;
@@ -259,6 +261,63 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     return false;
   };
 
+  // Define column structure for IPTU table
+  const columns: ColumnDef[] = useMemo(() => [
+    { field: 'year', label: 'Ano', type: 'text' },
+    { field: 'baseIptu', label: 'Valor do IPTU', type: 'currency', formatter: 'currency' },
+    { field: 'cota15', label: 'Cota 15% de desconto', type: 'currency', formatter: 'currency' },
+    { field: 'cota10', label: 'Cota 10% de desconto', type: 'currency', formatter: 'currency' },
+    { field: 'parcela1', label: '1º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela2', label: '2º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela3', label: '3º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela4', label: '4º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela5', label: '5º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela6', label: '6º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela7', label: '7º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela8', label: '8º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela9', label: '9º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'parcela10', label: '10º parcela', type: 'currency', formatter: 'currency' },
+  ], []);
+
+  // Transform IPTU data to flat format for table
+  const tableData = useMemo(() => {
+    return iptus.map((item, index) => {
+      const cota15 = item.payment_condition === 'IN_FULL_15_DISCOUNT' ? item.property_tax_cash : null;
+      const cota10 = item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT'
+        ? (Number(item.property_tax_first_installment || 0) + Number(item.property_tax_second_installment || 0))
+        : null;
+
+      const installments = item.iptu_installments || [];
+      const row: any = {
+        id: item.id || index.toString(),
+        year: item.year,
+        baseIptu: baseIptu,
+        cota15: cota15,
+        cota10: cota10,
+      };
+
+      // Add installment columns - for SECOND_INSTALLMENT_10_DISCOUNT, use the individual installment values
+      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
+        row.parcela1 = item.property_tax_first_installment || null;
+        row.parcela2 = item.property_tax_second_installment || null;
+        for (let i = 3; i <= 10; i++) {
+          row[`parcela${i}`] = null;
+        }
+      } else {
+        // For other conditions, use installments array
+        for (let i = 1; i <= 10; i++) {
+          row[`parcela${i}`] = installments[i - 1]?.value || null;
+        }
+      }
+
+      // Store original data and index for edit/delete
+      row._original = item;
+      row._originalIndex = index;
+
+      return row;
+    });
+  }, [iptus, baseIptu]);
+
   return (
     <div className="w-full space-y-6">
       {activeLease && (
@@ -271,80 +330,32 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        {(() => {
-          // Agrupar por ano
-          const grouped = iptus.reduce((acc, item, idx) => {
-            const year = String(item.year);
-            if (!acc[year]) acc[year] = [];
-            acc[year].push({ ...item, originalIndex: idx });
-            return acc;
-          }, {} as Record<string, (IptuEntry & { originalIndex: number })[]>);
-
-          // Renderizar grupos ordenados por ano (descendente)
-          return Object.entries(grouped)
-            .sort(([a], [b]) => Number(b) - Number(a))
-            .map(([year, items]) => (
-              <div key={year} className="space-y-2">
-                {/* Cabeçalho do ano */}
-                <div className="flex items-center gap-2 py-1">
-                  <Calendar size={16} className="text-brand" />
-                  <span className="font-bold text-brand text-sm">Exercício {year}</span>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
-                {/* Itens do ano */}
-                <div className="space-y-2 pl-6">
-                  {items.map((item) => (
-                    <div key={item.originalIndex} className="p-3 border rounded-lg bg-surface shadow-sm relative group">
-                      <div className="flex justify-between mb-1">
-                        <p className="text-xs text-content-secondary font-medium">{getConditionLabel(item.payment_condition)}</p>
-                        {!readOnly && (
-                          <div className="flex gap-2">
-                            <Edit2 size={14} className="cursor-pointer text-content-muted hover:text-blue-500" onClick={() => openModal('edit', item.originalIndex)} />
-                            <Trash2 size={14} className="cursor-pointer text-state-error hover:opacity-70" onClick={() => handleRemove(item.originalIndex)} />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Detalhes dos valores baseados na condição de pagamento */}
-                      {item.payment_condition === 'IN_FULL_15_DISCOUNT' && item.property_tax_cash && (
-                        <p className="text-sm font-semibold text-content">Valor: {formatMoney(Number(item.property_tax_cash))}</p>
-                      )}
-                      
-                      {item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT' && (
-                        <div className="text-sm text-content space-y-1">
-                          {item.property_tax_first_installment && (
-                            <p className="font-medium">1ª: {formatMoney(Number(item.property_tax_first_installment))}</p>
-                          )}
-                          {item.property_tax_second_installment && (
-                            <p className="font-medium">2ª: {formatMoney(Number(item.property_tax_second_installment))}</p>
-                          )}
-                        </div>
-                      )}
-                      
-                      {item.payment_condition === 'INSTALLMENTS' && item.iptu_installments && item.iptu_installments.length > 0 && (
-                        <div className="text-sm text-content space-y-1">
-                          <p className="font-medium">{item.iptu_installments.length} parcela(s)</p>
-                          <div className="text-xs text-content-secondary space-y-0.5">
-                            {item.iptu_installments.map((inst, i) => (
-                              <p key={i}>
-                                Parcela {i + 1}: {formatMoney(Number(inst.value))} - {inst.due_date ? new Date(inst.due_date).toLocaleDateString('pt-BR') : 'Sem data'}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ));
-        })()}
+      <div className="space-y-4">
         {!readOnly && (
-          <button type="button" onClick={() => openModal('add')} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-content-muted hover:border-brand hover:text-brand hover:bg-brand/5 transition-all">
+          <button type="button" onClick={() => openModal('add')} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-content-muted hover:border-brand hover:text-brand hover:bg-brand/5 transition-all w-full">
             <Plus size={24} /> <span className="text-xs font-semibold mt-1">Lançar IPTU Anual</span>
           </button>
         )}
+        <DynamicTableManager
+          resource="iptu"
+          title="IPTU"
+          columns={columns}
+          basePath=""
+          enableCreate={false}
+          enableView={false}
+          enableEdit={false}
+          enableDelete={false}
+          localData={tableData}
+          onRowClick={() => {}}
+          onEdit={(item, index) => {
+            const originalIndex = item._originalIndex;
+            openModal('edit', originalIndex);
+          }}
+          onDelete={(item, index) => {
+            const originalIndex = item._originalIndex;
+            handleRemove(originalIndex);
+          }}
+        />
       </div>
 
       {isModalOpen && (
