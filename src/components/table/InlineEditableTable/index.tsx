@@ -294,6 +294,12 @@ interface CalendarPickerProps {
   onChange: (range: { from: string; to: string }) => void;
 }
 
+// Helper para converter string de data para Date local (sem timezone issues)
+function parseDateString(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function CalendarPicker({ dateRange, onChange }: CalendarPickerProps) {
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
@@ -448,11 +454,11 @@ function CalendarPicker({ dateRange, onChange }: CalendarPickerProps) {
       <div className="mt-2 text-center">
         <div className="inline-flex items-center gap-1.5 bg-surface-subtle rounded-md px-2 py-1">
           <span className="text-xs font-medium text-content">
-            {dateRange.from ? new Date(dateRange.from).toLocaleDateString('pt-BR') : '--/--/----'}
+            {dateRange.from ? parseDateString(dateRange.from).toLocaleDateString('pt-BR') : '--/--/----'}
           </span>
           <span className="text-content-muted text-xs">→</span>
           <span className="text-xs font-medium text-content">
-            {dateRange.to ? new Date(dateRange.to).toLocaleDateString('pt-BR') : '--/--/----'}
+            {dateRange.to ? parseDateString(dateRange.to).toLocaleDateString('pt-BR') : '--/--/----'}
           </span>
         </div>
       </div>
@@ -1097,7 +1103,7 @@ export default function InlineEditableTable({
               <Calendar size={14} className="text-content-muted" />
               <span className="text-content-secondary font-medium">
                 {hasDateFilter && dateRange.from && dateRange.to
-                  ? `${new Date(dateRange.from).toLocaleDateString('pt-BR')} - ${new Date(dateRange.to).toLocaleDateString('pt-BR')}`
+                  ? `${parseDateString(dateRange.from).toLocaleDateString('pt-BR')} - ${parseDateString(dateRange.to).toLocaleDateString('pt-BR')}`
                   : 'Período'
                 }
               </span>
