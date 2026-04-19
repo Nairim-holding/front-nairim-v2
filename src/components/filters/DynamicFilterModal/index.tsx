@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { X, Check } from "lucide-react";
 
 // Definição do tipo corrigido
@@ -66,7 +67,19 @@ const isPhoneField = (fieldName: string): boolean => {
   return phoneFields.some(phoneField => fieldName.toLowerCase().includes(phoneField.toLowerCase()));
 };
 
-export default function DynamicFilterModal({ 
+const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>, dropdownRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>) => {
+  const inputEl = inputRefs.current[field];
+  const dropdownEl = dropdownRefs.current[field];
+
+  if (inputEl && dropdownEl) {
+    const rect = inputEl.getBoundingClientRect();
+    dropdownEl.style.top = (rect.bottom + 4) + 'px';
+    dropdownEl.style.left = rect.left + 'px';
+    dropdownEl.style.width = rect.width + 'px';
+  }
+};
+
+export default function DynamicFilterModal({
   visible, setVisible, onApply, onClear, title, filters, initialValues = {}, columns, maxHeight, excludeFieldsFromCount = []
 }: DynamicFilterModalProps) {
   const [localFilters, setLocalFilters] = useState<Record<string, FilterValue>>({});
@@ -94,11 +107,11 @@ export default function DynamicFilterModal({
     if (visible) {
       const newFilters: Record<string, FilterValue> = {};
       const newSearchTerms: Record<string, string> = {};
-      
+
       visibleFilters.forEach(filter => {
         const initialValue = initialValues[filter.field];
         const isPhone = isPhoneField(filter.field);
-        
+
         if (filter.dateRange) {
           if (initialValue && typeof initialValue === 'object' && 'from' in initialValue && 'to' in initialValue) {
             newFilters[filter.field] = { value: initialValue.from, value2: initialValue.to, showDropdown: false };
@@ -112,7 +125,7 @@ export default function DynamicFilterModal({
           if (initialValue !== undefined && initialValue !== null && initialValue !== '') {
             if (typeof initialValue === 'object' && ('value' in initialValue || 'values' in initialValue)) {
               const { value, value2, values } = initialValue as any;
-              
+
               if (isPhone && value) {
                 newFilters[filter.field] = { value: removePhoneMask(String(value)), showDropdown: false };
                 newSearchTerms[filter.field] = String(value);
@@ -137,7 +150,7 @@ export default function DynamicFilterModal({
           }
         }
       });
-      
+
       setLocalFilters(newFilters);
       setSearchTerms(newSearchTerms);
       setActiveDropdown(null);
@@ -148,7 +161,7 @@ export default function DynamicFilterModal({
     let clickedInsideDropdown = false;
     Object.values(dropdownRefs.current).forEach(dropdown => { if (dropdown && dropdown.contains(event.target as Node)) clickedInsideDropdown = true; });
     Object.values(inputRefs.current).forEach(input => { if (input && input.contains(event.target as Node)) clickedInsideDropdown = true; });
-    
+
     if (!clickedInsideDropdown && activeDropdown) {
       setLocalFilters(prev => ({ ...prev, [activeDropdown]: { ...prev[activeDropdown], showDropdown: false } }));
       setActiveDropdown(null);
@@ -175,6 +188,27 @@ export default function DynamicFilterModal({
     return () => document.removeEventListener('keydown', handleEsc);
   }, [activeDropdown]);
 
+  useEffect(() => {
+    if (!activeDropdown) return;
+
+    const updateAllDropdownPositions = () => {
+      updateDropdownPosition(activeDropdown, inputRefs, dropdownRefs);
+    };
+
+    const scrollHandler = () => updateAllDropdownPositions();
+    const resizeHandler = () => updateAllDropdownPositions();
+
+    contentRef.current?.addEventListener('scroll', scrollHandler, true);
+    window.addEventListener('resize', resizeHandler);
+
+    setTimeout(updateAllDropdownPositions, 0);
+
+    return () => {
+      contentRef.current?.removeEventListener('scroll', scrollHandler, true);
+      window.removeEventListener('resize', resizeHandler);
+    };
+  }, [activeDropdown]);
+
   // Modificado para aceitar o displayLabel
   const updateFilterValue = useCallback((field: string, key: keyof FilterValue, value: any, displayLabel?: string) => {
     setLocalFilters(prev => {
@@ -182,18 +216,17 @@ export default function DynamicFilterModal({
       const updatedValue = { ...current, [key]: value, showDropdown: false };
       return { ...prev, [field]: updatedValue };
     });
-    
+
     if (key === 'value' && value !== '') {
       const filter = visibleFilters.find(f => f.field === field);
       if (!filter?.dateRange) {
         setSearchTerms(prev => ({
           ...prev,
-          // Se recebemos um label explícito, usamos ele, senão usamos o value
           [field]: displayLabel !== undefined ? displayLabel : String(value)
         }));
       }
     }
-    
+
     if (activeDropdown === field) setActiveDropdown(null);
   }, [activeDropdown, visibleFilters]);
 
@@ -258,13 +291,12 @@ export default function DynamicFilterModal({
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     const filter = visibleFilters.find(f => f.field === field);
     const isPhone = isPhoneField(field);
-    
+
     let valueToStore = value;
     if (isPhone && (filter?.autocomplete || filter?.options || filter?.values)) {
       valueToStore = removePhoneMask(String(value));
     }
-    
-    // Passamos o ID (valueToStore) pro filtro interno, e o TEXTO (displayLabel) para a exibição no Input
+
     updateFilterValue(field, 'value', valueToStore, displayLabel);
   }, [updateFilterValue, visibleFilters]);
 
@@ -272,15 +304,15 @@ export default function DynamicFilterModal({
     const filter = visibleFilters.find(f => f.field === field);
     const searchTerm = searchTerms[field]?.toLowerCase() || '';
     if (!filter) return [];
-    
+
     const source = filter.options || filter.values || [];
-    
+
     if (filter.type === 'select' && source.length > 0 && typeof source[0] === 'object') {
       const objectSource = source as Array<{ value: any; label: string }>;
       if (searchTerm) return objectSource.filter((item: { value: any; label: string }) => item.label.toLowerCase().includes(searchTerm));
       return objectSource;
     }
-    
+
     if (searchTerm) return source.filter((item: any) => String(item).toLowerCase().includes(searchTerm));
     return source;
   };
@@ -299,7 +331,7 @@ export default function DynamicFilterModal({
         <label className="block text-sm font-medium text-content-secondary truncate">
           {filter.label}
         </label>
-        
+
         {filter.dateRange ? (
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -334,20 +366,20 @@ export default function DynamicFilterModal({
                 onChange={(e) => {
                   const value = e.target.value;
                   const cleanedValue = isPhone ? removePhoneMask(value) : value;
-                  
+
                   setSearchTerms(prev => ({ ...prev, [filter.field]: value }));
                   setLocalFilters(prev => ({
                     ...prev,
                     [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(value.length > 0 && hasOptions) }
                   }));
-                  
+
                   if (value.length > 0 && hasOptions) handleInputFocus(filter.field);
                 }}
                 onFocus={() => handleInputFocus(filter.field)}
                 onBlur={() => handleInputBlur(filter.field)}
                 placeholder={isPhone ? "Ex: (11) 99999-9999" : `Digite...`}
               />
-              
+
               {hasOptions && !isPhone && (
                 <button
                   type="button"
@@ -370,11 +402,17 @@ export default function DynamicFilterModal({
                 </button>
               )}
             </div>
-            
-            {isDropdownOpen && hasOptions && (
-              <div 
-                ref={(el) => { if (el) dropdownRefs.current[filter.field] = el; }}
-                className="absolute z-50 w-full mt-1 bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+
+            {isDropdownOpen && hasOptions && createPortal(
+              <div
+                ref={(el) => {
+                  if (el) dropdownRefs.current[filter.field] = el;
+                }}
+                className="bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                style={{
+                  position: 'fixed',
+                  zIndex: 9999,
+                }}
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {hasSuggestions ? (
@@ -385,7 +423,6 @@ export default function DynamicFilterModal({
                         <div
                           key={index}
                           className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                          // Passando o label aqui!
                           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
                         >
@@ -393,7 +430,7 @@ export default function DynamicFilterModal({
                         </div>
                       );
                     }
-                    
+
                     return (
                       <div
                         key={index}
@@ -408,11 +445,12 @@ export default function DynamicFilterModal({
                 ) : (
                   <div className="px-3 py-2 text-sm text-content-muted">Nenhuma opção disponível</div>
                 )}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         )}
-        
+
       </div>
     );
   };
@@ -431,7 +469,7 @@ export default function DynamicFilterModal({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setVisible(false)} />
-      
+
       <div
         ref={modalRef}
         className="fixed top-[5%] left-1/2 -translate-x-1/2 z-50 bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col"
@@ -448,7 +486,7 @@ export default function DynamicFilterModal({
             <X size={20} className="text-content-secondary" />
           </button>
         </div>
-        
+
         <div
           ref={contentRef}
           className={`p-4 grid gap-4 flex-1 min-h-0 overflow-y-auto ${
@@ -467,7 +505,7 @@ export default function DynamicFilterModal({
         >
           {visibleFilters.map((filter) => renderFilterInput(filter))}
         </div>
-        
+
         <div className="p-4 flex justify-end gap-3 border-t border-ui-border-soft flex-shrink-0 bg-surface">
           <button onClick={handleClear} className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors">
             Limpar tudo

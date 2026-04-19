@@ -16,6 +16,9 @@ export async function authFetch(
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+    console.log('[authFetch] Authorization header adicionado');
+  } else {
+    console.warn('[authFetch] Token não foi encontrado, requisição será feita sem autenticação');
   }
 
   // Sempre garantir Content-Type para requisições com body
@@ -23,10 +26,17 @@ export async function authFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  return fetch(url, {
+  console.log('[authFetch] Requisição para:', url);
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (response.status === 401) {
+    console.error('[authFetch] Erro 401 - Não autorizado. Token pode estar expirado ou inválido.');
+  }
+
+  return response;
 }
 
 /**
@@ -44,9 +54,11 @@ function getAuthToken(): string | null {
     if (authTokenCookie) {
       const token = authTokenCookie.split('=')[1];
       if (token) {
-        return decodeURIComponent(token);
+        console.log('[authFetch] Token obtido do cookie:', token ? `${token.substring(0, 20)}...` : 'vazio');
+        return token;
       }
     }
+    console.warn('[authFetch] Cookie authToken não encontrado. Cookies disponíveis:', document.cookie ? document.cookie.substring(0, 100) + '...' : 'nenhum');
   } catch (error) {
     console.error('[authFetch] Erro ao obter token:', error);
   }

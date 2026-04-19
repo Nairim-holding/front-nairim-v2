@@ -51,21 +51,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const cookies = document.cookie.split('; ');
         const authTokenCookie = cookies.find(row => row.startsWith('authToken='));
-        const token = authTokenCookie ? authTokenCookie.split('=')[1] : null;
+        let token = null;
+
+        if (authTokenCookie) {
+          token = authTokenCookie.split('=')[1];
+        }
 
         if (token) {
           const userData = localStorage.getItem('userData');
           const user = userData ? JSON.parse(userData) : null;
-          
+
           setAuthState({
             user,
             token,
             isAuthenticated: !!token,
             isLoading: false,
           });
+          console.log('[AuthContext] Usuário já estava autenticado');
         } else {
           localStorage.removeItem('userData');
-          
+
           setAuthState(prev => ({
             ...prev,
             isAuthenticated: false,
@@ -89,9 +94,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (token: string, user: User) => {
-    document.cookie = `authToken=${token}; path=/`;
-    
+    const maxAge = 86400; // 24 horas
+    document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+
     localStorage.setItem('userData', JSON.stringify(user));
+
+    console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie.');
 
     setAuthState({
       user,

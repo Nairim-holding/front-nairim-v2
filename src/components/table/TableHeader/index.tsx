@@ -81,7 +81,6 @@ export default function TableInformations({
           {dataHeaders.map((header, idx) => {
             const isSortable = header?.sortParam && header.field !== "actions";
             const displayOrder = sort[header.sortParam!];
-            const isFirstColumn = idx === 0;
             const width = columnWidths[header.field] || 150;
             const isDragging = draggedIndex === idx;
             const isDragOver = dragOverIndex === idx;
@@ -95,7 +94,6 @@ export default function TableInformations({
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
                 className={`py-1 px-2 font-normal text-xs whitespace-nowrap relative select-none
-                  ${isFirstColumn ? "sticky left-0 bg-surface-muted z-20" : ""}
                   ${isSortable ? "cursor-pointer hover:bg-surface-subtle transition-colors" : ""}
                   ${onColumnReorder ? "cursor-move" : ""}
                   ${isDragging ? "opacity-50 bg-brand/10" : ""}
@@ -104,7 +102,7 @@ export default function TableInformations({
                 style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                 onClick={isSortable && !isDragging ? () => onSort(header.sortParam!) : undefined}
               >
-                <div className={`flex gap-1 capitalize w-full items-center ${isFirstColumn ? 'justify-start' : 'justify-center'}`}>
+                <div className="flex gap-1 capitalize w-full items-center justify-center">
                   {onColumnReorder && (
                     <GripHorizontal
                       size={12}
@@ -112,7 +110,7 @@ export default function TableInformations({
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
-                  {isFirstColumn && (
+                  {idx === 0 && (
                     <input
                       type="checkbox"
                       className="inp-checkbox-select ml-[4px] mr-[4px]"

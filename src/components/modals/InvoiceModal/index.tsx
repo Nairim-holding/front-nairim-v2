@@ -174,26 +174,6 @@ export default function InvoiceModal({
     }, 300);
   }, [onClose]);
 
-  const getStatusColor = (invoiceStatus: string) => {
-    switch (invoiceStatus) {
-      case "COMPLETED":
-        return "bg-state-success text-green-700 border-green-200";
-      case "PENDING":
-      default:
-        return "bg-state-error text-red-700 border-red-200";
-    }
-  };
-
-  const getStatusLabel = (invoiceStatus: string) => {
-    switch (invoiceStatus) {
-      case "COMPLETED":
-        return "Concluída";
-      case "PENDING":
-      default:
-        return "Pendente";
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -272,61 +252,54 @@ export default function InvoiceModal({
             </div>
           </div>
 
-          {/* Card Details */}
-          {selectedCardDetails && (
-            <div className="p-3 bg-surface-subtle rounded-lg border border-ui-border-soft">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-brand" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-content">
-                    {selectedCardDetails.label}
-                  </p>
-                  {selectedCardDetails.brand && (
-                    <p className="text-xs text-content-muted">
-                      {selectedCardDetails.brand}
-                    </p>
-                  )}
-                </div>
-                {selectedCardDetails.limit !== undefined && (
-                  <div className="text-right">
-                    <p className="text-xs text-content-muted">Limite</p>
-                    <p className="text-sm font-medium text-content">
-                      {formatCurrency(selectedCardDetails.limit)}
-                    </p>
-                  </div>
-                )}
-              </div>
+          {/* Invoice Total Card */}
+          {currentInvoice && (
+            <div className="p-6 bg-surface-subtle rounded-xl border border-ui-border-soft text-center">
+              <p className="text-sm font-medium text-content-secondary mb-3">
+                Valor total da fatura
+              </p>
+              <p className="text-4xl font-bold text-content">
+                {formatCurrency(currentInvoice.totalAmount)}
+              </p>
             </div>
           )}
 
-          {/* Invoice Total Card */}
-          <div className="p-6 bg-surface-subtle rounded-xl border border-ui-border-soft text-center">
-            <p className="text-sm font-medium text-content-secondary mb-2">
-              Valor total da fatura
-            </p>
-            <p className="text-4xl font-bold text-content mb-2">
-              {currentInvoice ? formatCurrency(currentInvoice.totalAmount) : formatCurrency(0)}
-            </p>
-            {!currentInvoice && (
-              <p className="text-sm text-content-muted">
-                Nenhum lançamento encontrado
-              </p>
-            )}
-            {currentInvoice && (
-              <div className="flex items-center justify-center gap-2 mt-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(currentInvoice.status)}`}>
-                  {getStatusLabel(currentInvoice.status)}
-                </span>
-                {currentInvoice.closingDate && (
-                  <span className="text-xs text-content-muted">
-                    Fechamento: {new Date(currentInvoice.closingDate).toLocaleDateString("pt-BR")}
-                  </span>
-                )}
+          {/* Transactions List - If invoice exists */}
+          {currentInvoice && currentInvoice.transactions.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wide">
+                Lançamentos na fatura
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {currentInvoice.transactions.map((transaction, index) => (
+                  <div
+                    key={transaction.id || index}
+                    className="p-3 bg-surface-subtle rounded-lg border border-ui-border-soft flex items-center justify-between"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-content">
+                        {transaction.description || "Sem descrição"}
+                      </p>
+                      <p className="text-xs text-content-muted">
+                        {transaction.category?.name || "Sem categoria"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-content">
+                        {formatCurrency(transaction.amount || 0)}
+                      </p>
+                      <p className="text-xs text-content-muted">
+                        {transaction.installment_number
+                          ? `Parcela ${transaction.installment_number}/${transaction.total_installments}`
+                          : "À vista"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Update Section - Only when invoice exists */}
           {currentInvoice && onUpdateStatus && (
@@ -421,43 +394,6 @@ export default function InvoiceModal({
                   "Atualizar Status"
                 )}
               </button>
-            </div>
-          )}
-
-          {/* Transactions List - If invoice exists */}
-          {currentInvoice && currentInvoice.transactions.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wide">
-                Lançamentos na fatura
-              </h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {currentInvoice.transactions.map((transaction, index) => (
-                  <div
-                    key={transaction.id || index}
-                    className="p-3 bg-surface-subtle rounded-lg border border-ui-border-soft flex items-center justify-between"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-content">
-                        {transaction.description || "Sem descrição"}
-                      </p>
-                      <p className="text-xs text-content-muted">
-                        {transaction.category?.name || "Sem categoria"}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-content">
-                        {formatCurrency(transaction.amount || 0)}
-                      </p>
-                      <p className="text-xs text-content-muted">
-                        {transaction.installment_number 
-                          ? `Parcela ${transaction.installment_number}/${transaction.total_installments}`
-                          : "À vista"
-                        }
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>
