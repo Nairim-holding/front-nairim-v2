@@ -587,6 +587,20 @@ export default function InlineEditableTable({
     }
   }, [isEventDate]);
 
+  const handleApplyFilters = useCallback((f: Record<string, any>) => {
+    const df = isEventDate ? 'event_date' : 'effective_date';
+    setAppliedFilters({ ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f });
+    updateState({ filters: { ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f }, page: 1 });
+    setFilterVisible(false);
+  }, [isEventDate, dateRange, updateState]);
+
+  const handleClearFilters = useCallback(() => {
+    const df = isEventDate ? 'event_date' : 'effective_date';
+    setAppliedFilters(dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {});
+    updateState({ filters: dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, page: 1 });
+    setFilterVisible(false);
+  }, [isEventDate, dateRange, updateState]);
+
   // Close date picker when clicking outside
   const datePickerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -1081,9 +1095,9 @@ export default function InlineEditableTable({
               className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-xs whitespace-nowrap"
             >
               <Calendar size={14} className="text-content-muted" />
-              <span className="text-content-secondary">
-                {hasDateFilter 
-                  ? `${dateRange.from ? new Date(dateRange.from).toLocaleDateString('pt-BR') : ''} - ${dateRange.to ? new Date(dateRange.to).toLocaleDateString('pt-BR') : ''}`
+              <span className="text-content-secondary font-medium">
+                {hasDateFilter && dateRange.from && dateRange.to
+                  ? `${new Date(dateRange.from).toLocaleDateString('pt-BR')} - ${new Date(dateRange.to).toLocaleDateString('pt-BR')}`
                   : 'Período'
                 }
               </span>
@@ -1130,7 +1144,7 @@ export default function InlineEditableTable({
             <span>Limpar</span>
             <X size={12} />
           </button>
-          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={f => { const df = isEventDate ? 'event_date' : 'effective_date'; setAppliedFilters({ ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f }); updateState({ filters: { ...dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, ...f }, page: 1 }); }} onClear={() => { const df = isEventDate ? 'event_date' : 'effective_date'; setAppliedFilters(dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}); updateState({ filters: dateRange.from && dateRange.to ? { [df]: { from: dateRange.from, to: dateRange.to } } : {}, page: 1 }); }} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={title === 'Lançamentos' ? 3 : undefined} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
+          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={title === 'Lançamentos' ? 3 : undefined} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
           
           {/* Pesquisa logo após Limpar */}
           <div className="w-[200px] sm:w-[250px] lg:w-[300px]">

@@ -63,12 +63,12 @@ const EMPTY_OPTIONS: FormOptions = {
 };
 
 const LANCAMENTOS_COLUMNS: ColumnDef[] = [
-  { field: 'event_date', label: 'Data do Evento', sortParam: 'event_date', type: 'date' },
-  { field: 'effective_date', label: 'Data de Efetivação', sortParam: 'effective_date', type: 'date' },
+  { field: 'event_date', label: 'Data Evento', sortParam: 'event_date', type: 'date' },
+  { field: 'effective_date', label: 'Data Efetiva', sortParam: 'effective_date', type: 'date' },
   { field: 'category_id', label: 'Categoria', sortParam: 'category.name', type: 'text' },
-  { field: 'subcategory_id', label: 'Subcategoria', sortParam: 'subcategory.name', type: 'text' },
-  { field: 'institution', label: 'Instituição Financeira', sortParam: 'financial_institution.name', type: 'text' },
-  { field: 'card_id', label: 'Cartão de Crédito', sortParam: 'card.name', type: 'text' },
+  { field: 'subcategory_id', label: 'Subcat.', sortParam: 'subcategory.name', type: 'text' },
+  { field: 'institution', label: 'Instituição', sortParam: 'financial_institution.name', type: 'text' },
+  { field: 'card_id', label: 'Cartão', sortParam: 'card.name', type: 'text' },
   { field: 'center_id', label: 'Centro', sortParam: 'center.name', type: 'text' },
   { field: 'supplier_id', label: 'Fornecedor', sortParam: 'supplier.name', type: 'text' },
   { field: 'description', label: 'Descrição', sortParam: 'description', type: 'text' },
@@ -328,6 +328,7 @@ export default function LancamentosPage() {
         autoFocusSearch
         enableCreate
         enableDelete
+        defaultLimit={150}
         formOptions={options}
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}
