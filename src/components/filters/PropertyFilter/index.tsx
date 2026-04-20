@@ -90,11 +90,11 @@ export default function PropertyFilter() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => onChange(cur <= min ? "" : cur - 1)}
+            onClick={() => onChange(cur - 1 <= min ? "" : cur - 1)}
             disabled={cur <= min}
             className="w-8 h-8 rounded-full border border-ui-border flex items-center justify-center text-content-secondary hover:border-purple-600 hover:text-purple-600 transition-colors disabled:opacity-30"
           >
-            <Icon icon="mingcute:minus-line" className="w-3.5 h-3.5" />
+            <Icon icon="mingcute:minimize-line" className="w-3.5 h-3.5 size-10" />
           </button>
           <span className="w-8 text-center text-sm font-semibold text-content">
             {cur === 0 ? "—" : `${cur}+`}
@@ -144,7 +144,7 @@ export default function PropertyFilter() {
               </div>
 
               {/* Divisor */}
-              <div className="w-px bg-ui-border-soft mx-1 self-stretch" />
+              <div className="w-px bg-ui-border-soft mx-0.5 self-stretch" />
 
               {/* Tipo de imóvel — pills sempre visíveis */}
               <div className="flex items-center gap-1 px-3 overflow-x-auto scrollbar-none">

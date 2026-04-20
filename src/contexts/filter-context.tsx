@@ -86,7 +86,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
   const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
     if (key === 'transactionType' || key === 'propertyType' || key === 'location') return false;
-    return value !== '' && value !== 'alugar' && value !== 'comprar' && value !== 'all';
+    return value !== '' && value !== 0 && value !== 'alugar' && value !== 'comprar' && value !== 'all';
   }).length;
 
   const resetFilters = () => setFilters(DEFAULT_FILTERS);

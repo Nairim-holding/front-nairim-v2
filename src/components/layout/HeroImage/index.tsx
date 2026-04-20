@@ -6,8 +6,12 @@ import { Autoplay, Navigation, EffectFade } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react"; // Usando ícones padrão
 
 // Estilos essenciais
+
+// @ts-ignore
 import 'swiper/css';
+// @ts-ignore
 import 'swiper/css/navigation';
+// @ts-ignore
 import 'swiper/css/effect-fade';
 
 interface Imovel {
