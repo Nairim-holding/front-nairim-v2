@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const PUBLIC_ROUTES = ['/', '/login', '/forgot-password', '/register'];
-const PUBLIC_PREFIXES = ['/casas/', '/apartamentos/', '/comerciais/', '/imoveis/', '/backend', '/backend-test'];
+const PUBLIC_PREFIXES = ['/casas/', '/apartamentos/', '/comerciais/', '/imoveis/', '/backend'];
 const DEFAULT_PRIVATE_ROUTE = '/dashboard';
 
 export function middleware(request: NextRequest) {
