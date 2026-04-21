@@ -24,7 +24,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className={`relative border-t overflow-hidden transition-colors duration-300 ${isDark ? "bg-[#0A0A0A] border-purple-900/20" : "bg-gray-50 border-purple-200/40"}`}>
+    <footer id="rodape" className={`relative border-t overflow-hidden transition-colors duration-300 ${isDark ? "bg-[#0A0A0A] border-purple-900/20" : "bg-gray-50 border-purple-200/40"}`}>
 
       {/* Glow roxo no canto */}
       <div className="absolute bottom-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-purple-900/[0.03] blur-[80px] md:blur-[150px] rounded-full pointer-events-none" />

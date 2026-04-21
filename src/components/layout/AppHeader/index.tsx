@@ -3,11 +3,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const scrollToSection = (id: string) => {
+    setIsMenuOpen(false);
+    if (pathname === "/") {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      router.push(`/#${id}`);
+    }
+  };
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -75,13 +87,13 @@ export default function Header() {
                   <Link href="/">Início</Link>
                 </li>
                 <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
-                  <Link href="/imoveis">Imóveis</Link>
+                  <button onClick={() => scrollToSection("imoveis")}>Imóveis</button>
                 </li>
                 <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
-                  <Link href="/sobre">Sobre</Link>
+                  <button onClick={() => scrollToSection("rodape")}>Sobre</button>
                 </li>
                 <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
-                  <Link href="/contato">Contato</Link>
+                  <button onClick={() => scrollToSection("rodape")}>Contato</button>
                 </li>
               </ul>
               
@@ -134,43 +146,31 @@ export default function Header() {
                     </Link>
                   </li>
                   <li>
-                    <Link 
-                      href="/imoveis" 
-                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
-                      onClick={handleLinkClick}
+                    <button
+                      onClick={() => scrollToSection("imoveis")}
+                      className="flex items-center w-full px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                     >
-                      <Icon 
-                        icon="mingcute:building-2-line" 
-                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
-                      />
+                      <Icon icon="mingcute:building-2-line" className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" />
                       <span className="font-medium font-roboto">Imóveis</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
-                    <Link 
-                      href="/sobre" 
-                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
-                      onClick={handleLinkClick}
+                    <button
+                      onClick={() => scrollToSection("rodape")}
+                      className="flex items-center w-full px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                     >
-                      <Icon 
-                        icon="mingcute:information-line" 
-                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
-                      />
+                      <Icon icon="mingcute:information-line" className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" />
                       <span className="font-medium font-roboto">Sobre</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
-                    <Link 
-                      href="/contato" 
-                      className="flex items-center px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
-                      onClick={handleLinkClick}
+                    <button
+                      onClick={() => scrollToSection("rodape")}
+                      className="flex items-center w-full px-4 py-3 text-content hover:bg-surface-subtle hover:text-brand-hover transition-colors duration-200 rounded-lg group"
                     >
-                      <Icon 
-                        icon="mingcute:phone-line" 
-                        className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" 
-                      />
+                      <Icon icon="mingcute:phone-line" className="w-5 h-5 mr-3 text-content-placeholder group-hover:text-brand" />
                       <span className="font-medium font-roboto">Contato</span>
-                    </Link>
+                    </button>
                   </li>
                   <li className="border-t border-ui-border-soft pt-3 mt-3">
                     <Link 

@@ -557,7 +557,7 @@ export default function ImoveisList() {
 
   // ── Render principal ─────────────────────────────────────────────────────
   return (
-    <section className="w-full py-10">
+    <section id="imoveis" className="w-full py-10">
       <div className="container mx-auto px-4 max-w-7xl">
 
         {/* Cabeçalho */}
