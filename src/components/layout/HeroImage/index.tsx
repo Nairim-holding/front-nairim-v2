@@ -18,6 +18,7 @@ interface Imovel {
   id: string;
   nome: string;
   imagem: string;
+  disponivel?: boolean;
 }
 
 export default function CarrosselDinamico({ imoveis }: { imoveis: Imovel[] }) {
@@ -47,10 +48,19 @@ export default function CarrosselDinamico({ imoveis }: { imoveis: Imovel[] }) {
                 alt={imovel.nome}
                 fill
                 priority
-                className="object-cover object-center"
+                className={`object-cover object-center transition-all duration-300 ${imovel.disponivel === false ? "brightness-50 grayscale" : ""}`}
                 sizes="100vw"
                 quality={90}
               />
+              {imovel.disponivel === false && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+                  <div className="flex items-center gap-2 bg-black/70 backdrop-blur-sm text-white px-5 py-2.5 rounded-full border border-white/20">
+                    <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse shrink-0" />
+                    <span className="text-sm font-semibold tracking-widest uppercase">Indisponível</span>
+                  </div>
+                  <p className="text-white/60 text-xs tracking-wide">{imovel.nome}</p>
+                </div>
+              )}
             </div>
           </SwiperSlide>
         ))}
