@@ -299,7 +299,7 @@ function PropertyCard({
         <button
           onClick={() => onVerDetalhes(imovel.id, imovel.tipo)}
           disabled={imovel.status !== "AVAILABLE"}
-          className="mt-auto w-full py-2.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-auto w-full py-2.5 rounded-xl bg-purple-900 cursor-pointer hover:bg-purple-900/50 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Icon icon="mingcute:eye-line" className="w-4 h-4" />
           {transactionType === "alugar" ? "Ver detalhes" : "Ver imóvel"}
@@ -343,8 +343,8 @@ export default function ImoveisList() {
         if (filters.garagem)   apiFilters.garage         = filters.garagem;
         if (filters.areaMin)   apiFilters.min_area       = Number(filters.areaMin);
         if (filters.areaMax)   apiFilters.max_area       = Number(filters.areaMax);
-        if (filters.valorMin)  apiFilters.min_price      = Number(filters.valorMin.replace(/\D/g, ""));
-        if (filters.valorMax)  apiFilters.max_price      = Number(filters.valorMax.replace(/\D/g, ""));
+        if (filters.valorMin)  apiFilters.min_price      = parseFloat(filters.valorMin.replace(/\./g, "").replace(",", ".")) || 0;
+        if (filters.valorMax)  apiFilters.max_price      = parseFloat(filters.valorMax.replace(/\./g, "").replace(",", ".")) || 0;
         if (filters.location)  apiFilters.search         = filters.location;
         if (filters.bairro)    apiFilters.district       = filters.bairro;
         if (filters.uf)        apiFilters.state          = filters.uf;
@@ -494,8 +494,8 @@ export default function ImoveisList() {
         if (filters.quartos)   fd = fd.filter((i) => i.quartos   >= Number(filters.quartos));
         if (filters.banheiros) fd = fd.filter((i) => i.banheiros >= Number(filters.banheiros));
         if (filters.vagas)     fd = fd.filter((i) => i.vagas     >= Number(filters.vagas));
-        if (filters.valorMin)  fd = fd.filter((i) => i.preco >= Number(filters.valorMin.replace(/\D/g, "")));
-        if (filters.valorMax)  fd = fd.filter((i) => i.preco <= Number(filters.valorMax.replace(/\D/g, "")));
+        if (filters.valorMin)  fd = fd.filter((i) => i.preco >= (parseFloat(filters.valorMin.replace(/\./g, "").replace(",", ".")) || 0));
+        if (filters.valorMax)  fd = fd.filter((i) => i.preco <= (parseFloat(filters.valorMax.replace(/\./g, "").replace(",", ".")) || 0));
         if (filters.areaMin)   fd = fd.filter((i) => i.area >= Number(filters.areaMin));
         if (filters.areaMax)   fd = fd.filter((i) => i.area <= Number(filters.areaMax));
         if (filters.location)  fd = fd.filter((i) =>
@@ -533,7 +533,7 @@ export default function ImoveisList() {
       t === "casa" ? "casas" :
       t === "apartamento" ? "apartamentos" :
       t.includes("comercial") ? "comerciais" : "imoveis";
-    router.push(`/${path}/${id}`);
+    router.push(`/${path}/${id}?t=${filters.transactionType}`);
   };
 
   const isAluguel = filters.transactionType === "alugar";
@@ -557,7 +557,7 @@ export default function ImoveisList() {
 
   // ── Render principal ─────────────────────────────────────────────────────
   return (
-    <section className="w-full py-10">
+    <section id="imoveis" className="w-full py-10">
       <div className="container mx-auto px-4 max-w-7xl">
 
         {/* Cabeçalho */}

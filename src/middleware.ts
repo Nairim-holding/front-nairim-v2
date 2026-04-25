@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const PUBLIC_ROUTES = ['/', '/login', '/forgot-password', '/register'];
+const PUBLIC_PREFIXES = ['/casas/', '/apartamentos/', '/comerciais/', '/imoveis/', '/backend', '/backend-test'];
 const DEFAULT_PRIVATE_ROUTE = '/dashboard';
 
 export function middleware(request: NextRequest) {
@@ -10,8 +11,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('authToken')?.value;
   const isPublicRoute =
     PUBLIC_ROUTES.includes(pathname) ||
-    pathname.startsWith('/backend') ||
-    pathname.startsWith('/backend-test');
+    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (token && isPublicRoute) {
     return NextResponse.redirect(

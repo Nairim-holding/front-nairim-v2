@@ -10,28 +10,34 @@ async function getImoveisDestaque() {
   try {
     const res = await fetch(`${API_URL}/properties`, { cache: 'no-store' });
     if (!res.ok) return [];
-    
+
     const result = await res.json();
-    
-    // Acessa a chave 'data' do seu JSON
-    const rawList = result.data || [];
+    const rawList: any[] = result.data || [];
 
+    const toSlide = (imovel: any, disponivel: boolean) => {
+      const destaque =
+        imovel.documents?.find((doc: any) => doc.is_featured && doc.type === "IMAGE") ||
+        imovel.documents?.find((doc: any) => doc.type === "IMAGE");
+      if (!destaque) return null;
+      return {
+        id: imovel.id,
+        nome: imovel.title,
+        imagem: destaque.file_path,
+        disponivel,
+      };
+    };
+
+    const disponiveis = rawList
+      .filter((i: any) => (i.values?.[0]?.status ?? i.status ?? "").toUpperCase() === "AVAILABLE")
+      .map((i: any) => toSlide(i, true))
+      .filter((i): i is NonNullable<typeof i> => i !== null);
+
+    if (disponiveis.length > 0) return disponiveis;
+
+    // Fallback: mostra indisponíveis com badge
     return rawList
-      .map((imovel: any) => {
-        // Busca a imagem de destaque ou a primeira imagem do array 'documents'
-        const destaque = imovel.documents?.find((doc: any) => doc.is_featured && doc.type === "IMAGE") 
-                        || imovel.documents?.find((doc: any) => doc.type === "IMAGE");
-
-        if (!destaque) return null;
-
-        return {
-          id: imovel.id,
-          nome: imovel.title,
-          imagem: destaque.file_path, // O JSON já envia a URL completa
-          preco: imovel.values?.[0]?.rental_value || "Sob consulta"
-        };
-      })
-      .filter((i: any) => i !== null); // Remove imóveis sem imagem
+      .map((i: any) => toSlide(i, false))
+      .filter((i): i is NonNullable<typeof i> => i !== null);
 
   } catch (error) {
     console.error("Erro ao processar dados da API:", error);
