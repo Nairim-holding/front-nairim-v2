@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
+import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, CreditCard, Copy
+  Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users
 } from 'lucide-react';
 
 const parseMoney = (value: string | number) => {
@@ -112,9 +113,11 @@ export default function CadastrarLocacaoPage() {
       const count = parseInt(value) || 0;
       const currentArr = Array.isArray(formValues.iptu_installments) ? formValues.iptu_installments : [];
       let newArr = [...currentArr];
-      
+
       if (newArr.length < count) {
-        newArr = [...newArr, ...Array(count - newArr.length).fill('')];
+        // Cria novos itens com estrutura { value, due_date }
+        const itemsToAdd = Array(count - newArr.length).fill(null).map(() => ({ value: '', due_date: '' }));
+        newArr = [...newArr, ...itemsToAdd];
       } else {
         newArr = newArr.slice(0, count);
       }
@@ -146,13 +149,32 @@ export default function CadastrarLocacaoPage() {
         tax_due_day: data.tax_due_day ? parseInt(data.tax_due_day) : null,
         condo_due_day: data.condo_due_day ? parseInt(data.condo_due_day) : null,
         payment_condition: data.payment_condition || null,
+        iptu_year: data.iptu_year ? parseInt(data.iptu_year) : new Date().getFullYear(),
 
         property_tax_cash: data.property_tax_cash ? parseMoney(data.property_tax_cash) : null,
         property_tax_first_installment: data.property_tax_first_installment ? parseMoney(data.property_tax_first_installment) : null,
         property_tax_second_installment: data.property_tax_second_installment ? parseMoney(data.property_tax_second_installment) : null,
         
         iptu_installments_count: data.iptu_installments_count ? parseInt(data.iptu_installments_count) : null,
-        iptu_installments: data.iptu_installments ? data.iptu_installments.map((v: string) => parseMoney(v)) : null,
+        iptu_installments: data.iptu_installments 
+          ? data.iptu_installments
+              .map((inst: any) => typeof inst === 'string' ? parseMoney(inst) : parseMoney(inst?.value || 0))
+              .filter((val: number) => val > 0)
+          : null,
+        iptu_installments_due_dates: data.iptu_installments
+          ? data.iptu_installments
+              .filter((inst: any) => {
+                const val = typeof inst === 'string' ? parseMoney(inst) : parseMoney(inst?.value || 0);
+                return val > 0;
+              })
+              .map((inst: any) => inst?.due_date || null)
+          : null,
+
+        insurance_company: data.insurance_company || null,
+        insurance_type: data.insurance_type || null,
+        insurance_policy: data.insurance_policy || null,
+
+        guarantors: data.guarantors || null,
       };
 
       const API_URL = process.env.NEXT_PUBLIC_URL_API;
@@ -235,6 +257,18 @@ export default function CadastrarLocacaoPage() {
             )
           },
           {
+            field: 'iptu_year',
+            label: 'Ano do Exercício (IPTU)',
+            type: 'number',
+            required: true,
+            icon: <Calendar size={20} />,
+            placeholder: new Date().getFullYear().toString(),
+            defaultValue: new Date().getFullYear().toString(),
+            maxLength: 4,
+            min: 2000,
+            max: 2100,
+          },
+          {
             field: 'payment_condition',
             label: 'Selecione o Método de Pagamento',
             type: 'select',
@@ -287,25 +321,49 @@ export default function CadastrarLocacaoPage() {
             label: '',
             type: 'custom',
             hidden: (fv) => fv?.payment_condition !== 'INSTALLMENTS',
-            render: (value: any, _: any, onChange: any) => {
+            render: (value: any, fv: any, onChange: any) => {
               const arr = Array.isArray(value) ? value : [];
               if (arr.length === 0) return null;
 
+              // Estrutura: cada item tem { value, due_date }
+              const normalizedArr = arr.map((item: any) => {
+                if (typeof item === 'string') {
+                  return { value: item, due_date: '' };
+                }
+                return item || { value: '', due_date: '' };
+              });
+
               const handleValChange = (index: number, val: string) => {
-                const newArr = [...arr];
-                newArr[index] = val;
+                const newArr = [...normalizedArr];
+                newArr[index] = { ...newArr[index], value: val };
+                onChange(newArr);
+              };
+
+              const handleDateChange = (index: number, date: string) => {
+                const newArr = [...normalizedArr];
+                newArr[index] = { ...newArr[index], due_date: date };
                 onChange(newArr);
               };
 
               const repeatFirst = () => {
-                if (arr.length > 0 && arr[0]) {
-                  const newArr = arr.map(() => arr[0]);
+                if (normalizedArr.length > 0 && normalizedArr[0].value) {
+                  const firstValue = normalizedArr[0].value;
+                  const firstDate = normalizedArr[0].due_date;
+                  const newArr = normalizedArr.map((item, idx) => {
+                    let newDate = firstDate;
+                    if (firstDate) {
+                      const date = new Date(firstDate);
+                      date.setMonth(date.getMonth() + idx);
+                      newDate = date.toISOString().split('T')[0];
+                    }
+                    return { value: firstValue, due_date: newDate };
+                  });
                   onChange(newArr);
                 }
               };
 
-              const titleText = arr.length === 1 
-                ? 'Detalhamento de 1 Parcela' 
+              const titleText = arr.length === 1
+                ? 'Detalhamento de 1 Parcela'
                 : `Detalhamento das ${arr.length} Parcelas`;
 
               return (
@@ -314,10 +372,10 @@ export default function CadastrarLocacaoPage() {
                     <span className="text-[15px] font-semibold text-content border-l-4 border-brand pl-3">
                       {titleText}
                     </span>
-                    {arr.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={repeatFirst} 
+                    {normalizedArr.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={repeatFirst}
                         className="flex items-center justify-center gap-2 text-sm bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-hover shadow-md transition-all active:scale-95 font-medium"
                       >
                         <Copy size={16} />
@@ -326,12 +384,12 @@ export default function CadastrarLocacaoPage() {
                     )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {arr.map((val, idx) => (
-                      <div key={`inst-${idx}`} className="bg-surface p-3 rounded-lg border border-ui-border">
-                        <label className="block text-xs text-content-muted mb-1.5 font-medium">{idx + 1}ª Parcela</label>
-                        <input 
-                          type="text" 
-                          value={val} 
+                    {normalizedArr.map((item, idx) => (
+                      <div key={`inst-${idx}`} className="bg-surface p-3 rounded-lg border border-ui-border space-y-2">
+                        <label className="block text-xs text-content-muted font-medium">{idx + 1}ª Parcela</label>
+                        <input
+                          type="text"
+                          value={item.value || ''}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, '');
                             if (!raw) { handleValChange(idx, ''); return; }
@@ -340,7 +398,13 @@ export default function CadastrarLocacaoPage() {
                             handleValChange(idx, formatted);
                           }}
                           placeholder="R$ 0,00"
-                          className="w-full h-10 px-3 border border-ui-border rounded-md text-sm outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                          className="w-full h-9 px-3 border border-ui-border rounded-md text-sm outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                        />
+                        <input
+                          type="date"
+                          value={item.due_date || ''}
+                          onChange={(e) => handleDateChange(idx, e.target.value)}
+                          className="w-full h-9 px-3 border border-ui-border rounded-md text-sm outline-none focus:ring-2 focus:ring-brand focus:border-brand"
                         />
                       </div>
                     ))}
@@ -350,6 +414,58 @@ export default function CadastrarLocacaoPage() {
             }
           }
         ]
+      },
+      {
+        title: 'Seguro',
+        icon: <Shield size={20} />,
+        fields: [
+          {
+            field: 'insurance_company',
+            label: 'Nome da Seguradora',
+            type: 'text',
+            required: true,
+            icon: <Building size={20} />,
+            placeholder: 'Ex: Porto Seguro CIA de Seguros Gerais',
+            className: 'col-span-full',
+          },
+          {
+            field: 'insurance_type',
+            label: 'Tipo de Seguro',
+            type: 'text',
+            required: true,
+            icon: <Shield size={20} />,
+            placeholder: 'Ex: Seguro Aluguel',
+            className: 'col-span-full',
+          },
+          {
+            field: 'insurance_policy',
+            label: 'Apólice',
+            type: 'text',
+            required: true,
+            icon: <FileText size={20} />,
+            placeholder: 'Ex: PAC – Nº 102216180',
+            className: 'col-span-full',
+          },
+        ],
+      },
+      {
+        title: 'Fiadores',
+        icon: <Users size={20} />,
+        fields: [
+          {
+            field: 'guarantors',
+            label: 'Lista de Fiadores',
+            type: 'custom',
+            defaultValue: [],
+            className: 'col-span-full',
+            render: (value: any, formValues: any, onChange: any) => (
+              <GuarantorManager 
+                value={value} 
+                onChange={onChange} 
+              />
+            )
+          }
+        ],
       }
     ];
   }, [properties, tenants, loadingData]);

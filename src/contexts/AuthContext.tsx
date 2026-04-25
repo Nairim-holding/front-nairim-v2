@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 
 interface User {
   id: string;
@@ -45,6 +45,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: false,
     isLoading: true,
   });
+
+  const navigation = useRouter();
+
+  const logout = useCallback(() => {
+    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+    localStorage.removeItem('userData');
+
+    setAuthState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+    navigation.refresh();
+  }, [navigation]);
+
+  const login = (token: string, user: User) => {
+    const maxAge = 86400; // 24 horas
+    document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+
+    localStorage.setItem('userData', JSON.stringify(user));
+
+    console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie.');
+
+    setAuthState({
+      user,
+      token,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+  };
 
   useEffect(() => {
     const checkAuth = () => {
@@ -91,40 +123,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuth();
-  }, []);
 
-  const login = (token: string, user: User) => {
-    const maxAge = 86400; // 24 horas
-    document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    // Escutar evento de logout forçado (ex: token expirado)
+    const handleLogoutEvent = () => {
+      console.log('[AuthContext] Evento auth:logout recebido. Deslogando usuário...');
+      logout();
+    };
 
-    localStorage.setItem('userData', JSON.stringify(user));
+    window.addEventListener('auth:logout', handleLogoutEvent);
 
-    console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie.');
-
-    setAuthState({
-      user,
-      token,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-  };
-
-
-  const navigation = useRouter();
-  
-  const logout = () => {
-    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    
-    localStorage.removeItem('userData');
-
-    setAuthState({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
-    navigation.refresh();
-  };
+    return () => {
+      window.removeEventListener('auth:logout', handleLogoutEvent);
+    };
+  }, [logout]);
 
   const setLoading = (loading: boolean) => {
     setAuthState(prev => ({

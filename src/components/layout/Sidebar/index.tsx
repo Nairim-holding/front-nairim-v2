@@ -113,7 +113,7 @@ export default function Aside() {
         { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias" },   
         { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },                                                                 
         { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },                                  
-        { href: "/dashboard/fornecedores", icon: Users, label: "Fornecedores" },        
+        { href: "/dashboard/fornecedores", icon: Users, label: "Contatos" },        
         { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },                                  
                           
       ]

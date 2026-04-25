@@ -34,6 +34,10 @@ export async function authFetch(
 
   if (response.status === 401) {
     console.error('[authFetch] Erro 401 - Não autorizado. Token pode estar expirado ou inválido.');
+    // Disparar evento global para deslogar o usuário
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
   }
 
   return response;

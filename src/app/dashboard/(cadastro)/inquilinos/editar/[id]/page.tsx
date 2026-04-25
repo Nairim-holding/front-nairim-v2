@@ -9,7 +9,7 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types'
 import {
-  User, MapPin, Phone, FileText, Hash,
+  User, MapPin, FileText, Hash,
   Briefcase, Heart, User as UserIcon,
   MapPin as MapPinIcon,
   Building as BuildingIcon, Globe
@@ -121,6 +121,8 @@ export default function EditarInquilinoPage() {
         formattedData.nationality = data.nationality || null;
         formattedData.cpf = data.cpf ? data.cpf.replace(/\D/g, '') : null;
         formattedData.rg = data.rg || null;
+        formattedData.rg_issuing_body = data.rg_issuing_body || null;
+        formattedData.rg_issuing_state = data.rg_issuing_state || null;
         formattedData.cnpj = null;
         formattedData.state_registration = null;
         formattedData.municipal_registration = null;
@@ -182,6 +184,8 @@ export default function EditarInquilinoPage() {
       cnpj: apiData.cnpj || '',
       cpf: apiData.cpf || '',
       rg: apiData.rg || '',
+      rg_issuing_body: apiData.rg_issuing_body || '',
+      rg_issuing_state: apiData.rg_issuing_state || '',
       municipal_registration: apiData.municipal_registration || '',
       state_registration: apiData.state_registration || '',
       zip_code: address.zip_code || '',
@@ -199,7 +203,7 @@ export default function EditarInquilinoPage() {
         email: c.contact?.email || c.email || '',
       })) || []
     };
-  }, []);
+  }, [lastFetchedCep]);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -224,6 +228,21 @@ export default function EditarInquilinoPage() {
         },
         { field: 'cpf', label: 'CPF', type: 'text', required: true, mask: 'cpf', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
         { field: 'rg', label: 'RG', type: 'text', required: false, mask: 'rg', placeholder: '00.000.000-0', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
+        { field: 'rg_issuing_body', label: 'Órgão Expedidor', type: 'text', required: false, placeholder: 'SSP (Secretaria Segurança Pública)', icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
+        { field: 'rg_issuing_state', label: 'UF Expedidor', type: 'text', required: false, placeholder: 'SP', icon: <Globe size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'juridica' },
+        {
+          field: 'contacts',
+          label: 'Contatos',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (value: any, formValues: any, onChange: any) => (
+            <ContactManager 
+              value={value} 
+              onChange={onChange} 
+              resourceType="tenants"
+            />
+          )
+        },
         { field: 'cnpj', label: 'CNPJ', type: 'text', required: true, mask: 'cnpj', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
@@ -237,30 +256,11 @@ export default function EditarInquilinoPage() {
         // NOVO: As propriedades readOnly e disabled dinâmicas
         { field: 'street', label: 'Rua', type: 'text', required: true, icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress, className: 'col-span-full' },
         { field: 'number', label: 'Número', type: 'text', required: true, icon: <Hash size={20} /> },
-        { field: 'complement', label: 'Complemento', type: 'text', required: false, placeholder: 'Apto 123, Bloco B', icon: <MapPinIcon size={20} /> },
+        { field: 'complement', label: 'Complemento', type: 'text', required: false, placeholder: 'Apto 123, Bloco B', icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'district', label: 'Bairro', type: 'text', required: true, icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'city', label: 'Cidade', type: 'text', required: true, icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'state', label: 'Estado', type: 'text', required: true, icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'country', label: 'País', type: 'text', required: true, defaultValue: 'Brasil', icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress }
-      ],
-    },
-    {
-      title: 'Contatos',
-      icon: <Phone size={20} />,
-      fields: [
-        {
-          field: 'contacts',
-          label: 'Lista de Contatos',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (value: any, formValues: any, onChange: any) => (
-            <ContactManager 
-              value={value} 
-              onChange={onChange} 
-              resourceType="tenants"
-            />
-          )
-        }
       ],
     },
   ], [isManualAddress]); // Dependência isManualAddress adicionada

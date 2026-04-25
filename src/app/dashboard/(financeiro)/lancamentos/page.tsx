@@ -5,10 +5,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Section from '@/components/layout/PageSection';
 import InlineEditableTable from '@/components/table/InlineEditableTable';
 import type { ColumnDef } from '@/types/types';
-import ColumnCustomizer from '@/components/table/ColumnCustomizer';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { authFetch } from '@/utils/authFetch';
-import { Settings2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -70,7 +68,7 @@ const LANCAMENTOS_COLUMNS: ColumnDef[] = [
   { field: 'institution', label: 'Instituição', sortParam: 'financial_institution.name', type: 'text' },
   { field: 'card_id', label: 'Cartão', sortParam: 'card.name', type: 'text' },
   { field: 'center_id', label: 'Centro', sortParam: 'center.name', type: 'text' },
-  { field: 'supplier_id', label: 'Fornecedor', sortParam: 'supplier.name', type: 'text' },
+  { field: 'supplier_id', label: 'Contato', sortParam: 'supplier.name', type: 'text' },
   { field: 'description', label: 'Descrição', sortParam: 'description', type: 'text' },
   { field: 'amount', label: 'Valor', sortParam: 'amount', type: 'currency' },
   { field: 'status', label: 'Status', sortParam: 'status', type: 'text' },
@@ -83,7 +81,6 @@ export default function LancamentosPage() {
   const [options, setOptions] = useState<FormOptions>(EMPTY_OPTIONS);
   const [columns, setColumns] = useState<ColumnDef[]>(LANCAMENTOS_COLUMNS);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -239,12 +236,6 @@ export default function LancamentosPage() {
     saveColumnPreferences(orderedFields, widths);
   }, [columns, saveColumnPreferences]);
 
-  const handleResetColumns = useCallback(() => {
-    setColumns(LANCAMENTOS_COLUMNS);
-    setColumnWidths({});
-    saveColumnPreferences(LANCAMENTOS_COLUMNS.map(c => c.field), {});
-  }, [saveColumnPreferences]);
-
   useEffect(() => {
     fetchOptions();
     fetchColumnPreferences();
@@ -308,19 +299,7 @@ export default function LancamentosPage() {
   }
 
   return (
-    <Section
-      title="Gerenciar Lançamentos"
-      action={
-        <button
-          onClick={() => setIsColumnModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-surface-subtle hover:bg-ui-border rounded-lg transition-colors text-sm text-content-secondary"
-          title="Personalizar colunas"
-        >
-          <Settings2 size={16} />
-          <span className="hidden sm:inline">Colunas</span>
-        </button>
-      }
-    >
+    <Section title="Gerenciar Lançamentos">
       <InlineEditableTable
         resource="financial-transaction"
         title="Lançamentos"
@@ -336,13 +315,6 @@ export default function LancamentosPage() {
         onColumnsChange={handleColumnsChange}
         onColumnWidthsChange={handleColumnWidthsChange}
         savedColumnWidths={columnWidths}
-      />
-      <ColumnCustomizer
-        isOpen={isColumnModalOpen}
-        onClose={() => setIsColumnModalOpen(false)}
-        columns={columns}
-        onReorder={handleColumnsChange}
-        onReset={handleResetColumns}
       />
     </Section>
   );

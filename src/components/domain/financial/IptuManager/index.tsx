@@ -267,15 +267,25 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     { field: 'baseIptu', label: 'Valor do IPTU', type: 'currency', formatter: 'currency' },
     { field: 'cota15', label: 'Cota 15% de desconto', type: 'currency', formatter: 'currency' },
     { field: 'cota10', label: 'Cota 10% de desconto', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento1', label: 'Venc. 1º', type: 'text' },
     { field: 'parcela1', label: '1º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento2', label: 'Venc. 2º', type: 'text' },
     { field: 'parcela2', label: '2º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento3', label: 'Venc. 3º', type: 'text' },
     { field: 'parcela3', label: '3º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento4', label: 'Venc. 4º', type: 'text' },
     { field: 'parcela4', label: '4º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento5', label: 'Venc. 5º', type: 'text' },
     { field: 'parcela5', label: '5º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento6', label: 'Venc. 6º', type: 'text' },
     { field: 'parcela6', label: '6º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento7', label: 'Venc. 7º', type: 'text' },
     { field: 'parcela7', label: '7º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento8', label: 'Venc. 8º', type: 'text' },
     { field: 'parcela8', label: '8º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento9', label: 'Venc. 9º', type: 'text' },
     { field: 'parcela9', label: '9º parcela', type: 'currency', formatter: 'currency' },
+    { field: 'vencimento10', label: 'Venc. 10º', type: 'text' },
     { field: 'parcela10', label: '10º parcela', type: 'currency', formatter: 'currency' },
   ], []);
 
@@ -296,17 +306,23 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         cota10: cota10,
       };
 
-      // Add installment columns - for SECOND_INSTALLMENT_10_DISCOUNT, use the individual installment values
+      // Add installment columns with due dates - for SECOND_INSTALLMENT_10_DISCOUNT, use the individual installment values
       if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
         row.parcela1 = item.property_tax_first_installment || null;
         row.parcela2 = item.property_tax_second_installment || null;
+        row.vencimento1 = installments[0]?.due_date ? new Date(installments[0].due_date).toLocaleDateString('pt-BR') : null;
+        row.vencimento2 = installments[1]?.due_date ? new Date(installments[1].due_date).toLocaleDateString('pt-BR') : null;
         for (let i = 3; i <= 10; i++) {
           row[`parcela${i}`] = null;
+          row[`vencimento${i}`] = null;
         }
       } else {
-        // For other conditions, use installments array
+        // For other conditions, use installments array with due dates
         for (let i = 1; i <= 10; i++) {
           row[`parcela${i}`] = installments[i - 1]?.value || null;
+          row[`vencimento${i}`] = installments[i - 1]?.due_date 
+            ? new Date(installments[i - 1].due_date).toLocaleDateString('pt-BR') 
+            : null;
         }
       }
 
@@ -369,8 +385,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
               <div className="p-4 bg-surface border border-ui-border rounded-lg flex items-center gap-4">
                 <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
-                <div>
-                  <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base de Referência</p>
+                <div className="flex-1">
+                  <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base do IPTU - Ano: {tempIptu.year}</p>
                   <p className="text-lg font-black text-content">{formatMoney(baseIptu)}</p>
                 </div>
               </div>

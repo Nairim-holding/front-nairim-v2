@@ -42,7 +42,7 @@ export default function FornecedoresPage() {
       const data = await res.json();
       setSuppliers(data?.data || data || []);
     } catch {
-      showMessage("Erro ao carregar os fornecedores.", "error");
+      showMessage("Erro ao carregar os contatos.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -89,14 +89,14 @@ export default function FornecedoresPage() {
 
   const handleDelete = (id: string, name: string) => {
     showPopup(
-      `Excluir Fornecedor`,
+      `Excluir Contato`,
       `Tem certeza que deseja excluir "${name}"?`,
       async () => {
         try {
           const res = await fetch(`${baseURL}/financial-supplier/${id}`, { method: 'DELETE' });
           if (!res.ok) {
             const result = await res.json().catch(() => ({}));
-            throw new Error(result.message || `Erro ao excluir Fornecedor.`);
+            throw new Error(result.message || `Erro ao excluir Contato.`);
           }
           
           showMessage("Excluído com sucesso!", "success");
@@ -250,7 +250,7 @@ export default function FornecedoresPage() {
 
     return [
       {
-        title: 'Dados do Fornecedor',
+        title: 'Dados do Contato',
         icon: isPF ? <User size={20} /> : <BuildingIcon size={20} />,
         fields: identificationFields,
       },
@@ -288,7 +288,7 @@ export default function FornecedoresPage() {
   }, [isManualAddress, personType]);
 
   return (
-    <Section title="Gerenciar Fornecedores">
+    <Section title="Gerenciar Contatos">
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border w-full">
         
         {isLoading ? (
@@ -301,12 +301,12 @@ export default function FornecedoresPage() {
             <div className="lg:col-span-1 flex flex-col border border-ui-border rounded-xl bg-surface-subtle overflow-hidden h-[calc(100vh-180px)] min-h-[600px]">
               <div className="bg-surface p-3 border-b border-ui-border">
                 <div className="flex justify-between items-center mb-3 px-1">
-                  <h3 className="font-bold text-content text-[15px]">Fornecedores</h3>
+                  <h3 className="font-bold text-content text-[15px]">Contatos</h3>
                   <div className="relative">
                     <button 
                       onClick={() => setShowTypeModal(true)}
                       className="p-1 hover:bg-brand/10 text-brand rounded-md transition-colors"
-                      title="Novo Fornecedor"
+                      title="Novo Contato"
                     >
                       <Plus size={18} />
                     </button>
@@ -336,7 +336,7 @@ export default function FornecedoresPage() {
               
               <div className="overflow-y-auto flex-1 p-2">
                 {displayedSuppliers.length === 0 ? (
-                  <p className="text-[13px] text-content-muted text-center mt-10">Nenhum fornecedor encontrado.</p>
+                  <p className="text-[13px] text-content-muted text-center mt-10">Nenhum contato encontrado.</p>
                 ) : (
                   displayedSuppliers.map(supplier => (
                     <div 
@@ -386,7 +386,7 @@ export default function FornecedoresPage() {
             <div className="lg:col-span-2 flex flex-col h-[calc(100vh-180px)] min-h-[600px] overflow-y-auto relative rounded-xl border border-ui-border bg-surface">
               {formMode === 'IDLE' ? (
                 <div className="flex flex-col items-center justify-center h-full border border-dashed border-ui-border rounded-xl bg-surface-subtle text-content-muted p-6 text-center m-4">
-                  <p className="text-[15px]">Selecione um fornecedor na lista ao lado para editar seus detalhes ou clique em <strong>+</strong> para cadastrar um novo.</p>
+                  <p className="text-[15px]">Selecione um contato na lista ao lado para editar seus detalhes ou clique em <strong>+</strong> para cadastrar um novo.</p>
                 </div>
               ) : (
                 <div className="relative p-2">
@@ -402,7 +402,7 @@ export default function FornecedoresPage() {
                     <DynamicFormManager
                       key={`${formMode}-${selectedId}-${personType}`}
                       resource="financial-supplier"
-                      title="Fornecedor"
+                      title="Contato"
                       basePath="" 
                       mode={formMode === 'CREATE' ? 'create' : 'edit'}
                       id={selectedId || undefined}
@@ -411,7 +411,7 @@ export default function FornecedoresPage() {
                       transformData={transformDataForLoad}
                       transformResponse={transformDataForSubmit}
                       onSubmitSuccess={() => {
-                        showMessage(`Fornecedor ${formMode === 'CREATE' ? 'criado' : 'atualizado'} com sucesso!`, 'success');
+                        showMessage(`Contato ${formMode === 'CREATE' ? 'criado' : 'atualizado'} com sucesso!`, 'success');
                         closeForm();
                       }}
                     />

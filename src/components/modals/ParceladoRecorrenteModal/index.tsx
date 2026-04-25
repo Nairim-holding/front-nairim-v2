@@ -415,7 +415,7 @@ export default function ParceladoRecorrenteModal({
           {transactionType === "EXPENSE" && (
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                Fornecedor
+                Contato
               </label>
               <select
                 value={formData.supplier}

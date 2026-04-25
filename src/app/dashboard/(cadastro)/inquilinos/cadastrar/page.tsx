@@ -8,7 +8,7 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
-  User, MapPin, Phone, FileText, Hash,
+  User, MapPin, FileText, Hash,
   Briefcase, Heart, Globe,
   User as UserIcon, MapPin as MapPinIcon,
   Building as BuildingIcon
@@ -32,6 +32,9 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
   
   // NOVO: Estado para controlar o desbloqueio dos campos de endereço
   const [isManualAddress, setIsManualAddress] = useState(false);
+  
+  // Estado para armazenar o código interno gerado automaticamente
+  const [generatedInternalCode, setGeneratedInternalCode] = useState<string>('');
 
   useEffect(() => {
     if (!tipoParam || !['fisica', 'juridica'].includes(tipoParam)) {
@@ -41,6 +44,39 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
     }
     setTipoSelecionado(tipoParam);
   }, [tipoParam, router, showMessage]);
+
+  // Buscar último inquilino para gerar código interno automaticamente
+  useEffect(() => {
+    const fetchLastTenant = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_URL_API;
+        const response = await fetch(`${API_URL}/tenants?sort=internal_code&order=desc&limit=1`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.length > 0) {
+            const lastCode = data.data[0].internal_code;
+            const codeNumber = parseInt(lastCode, 10);
+            
+            if (!isNaN(codeNumber)) {
+              setGeneratedInternalCode(String(codeNumber + 1));
+            } else {
+              setGeneratedInternalCode(lastCode);
+            }
+          } else {
+            setGeneratedInternalCode('1');
+          }
+        } else {
+          setGeneratedInternalCode('1');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar último inquilino:', error);
+        setGeneratedInternalCode('1');
+      }
+    };
+
+    fetchLastTenant();
+  }, []);
 
   const handleFieldChange = async (fieldName: string, value: any) => {
     if (fieldName === 'zip_code' && value) {
@@ -127,6 +163,8 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
         formattedData.nationality = data.nationality || null;
         formattedData.cpf = data.cpf ? data.cpf.replace(/\D/g, '') : null;
         formattedData.rg = data.rg || null;
+        formattedData.rg_issuing_body = data.rg_issuing_body || null;
+        formattedData.rg_issuing_state = data.rg_issuing_state || null;
         formattedData.cnpj = null;
         formattedData.state_registration = null;
         formattedData.municipal_registration = null;
@@ -195,6 +233,7 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
             required: true,
             placeholder: 'Código interno',
             icon: <Hash size={20} />,
+            defaultValue: generatedInternalCode,
           },
           ...(tipoSelecionado === 'fisica' ? [
             {
@@ -242,6 +281,34 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
               mask: 'rg',
               icon: <FileText size={20} />,
             } as any,
+            {
+              field: 'rg_issuing_body',
+              label: 'Órgão Expedidor',
+              type: 'text',
+              placeholder: 'SSP (Secretaria Segurança Pública)',
+              icon: <BuildingIcon size={20} />,
+            } as any,
+            {
+              field: 'rg_issuing_state',
+              label: 'UF Expedidor',
+              type: 'text',
+              placeholder: 'SP',
+              icon: <Globe size={20} />,
+            } as any,
+            {
+              field: 'contacts',
+              label: 'Contatos',
+              type: 'custom',
+              defaultValue: [],
+              className: 'col-span-full',
+              render: (value: any, formValues: any, onChange: any) => (
+                <ContactManager 
+                  value={value} 
+                  onChange={onChange} 
+                  resourceType="tenants"
+                />
+              )
+            } as any,
           ] : []),
           ...(tipoSelecionado === 'juridica' ? [
             {
@@ -285,28 +352,8 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
           { field: 'country', label: 'País', type: 'text', required: true, placeholder: 'Brasil', defaultValue: 'Brasil', icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress }
         ],
       },
-      {
-        title: 'Contatos',
-        icon: <Phone size={20} />,
-        fields: [
-          {
-            field: 'contacts',
-            label: 'Lista de Contatos',
-            type: 'custom',
-            defaultValue: [],
-            className: 'col-span-full',
-            render: (value: any, formValues: any, onChange: any) => (
-              <ContactManager 
-                value={value} 
-                onChange={onChange} 
-                resourceType="tenants"
-              />
-            )
-          }
-        ],
-      },
     ];
-  }, [tipoSelecionado, isManualAddress]); // Dependência isManualAddress adicionada
+  }, [tipoSelecionado, isManualAddress, generatedInternalCode]);
 
   const onSubmitSuccess = () => {
     showMessage('Inquilino criado com sucesso!', 'success');

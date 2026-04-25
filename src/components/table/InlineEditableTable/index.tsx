@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronLeft, ChevronRight, ChevronDown, Check, CreditCard, DollarSign } from "lucide-react";
+import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronLeft, ChevronRight, ChevronDown, Check, CreditCard, DollarSign, Settings2 } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import Toggle from "@/components/ui/Toggle";
@@ -13,6 +13,7 @@ import SearchInput from "../../filters/SearchInput";
 import SelectLimit from "../../filters/PageSizeSelect";
 import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
+import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
 import { formatCurrency, formatDate } from "@/utils/formatters";
@@ -39,6 +40,63 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justOpenedByFocus = useRef(false);
+
+  // Scroll horizontal quando o select é aberto
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const container = buttonRef.current.closest('.overflow-x-auto') as HTMLElement;
+      if (container) {
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Encontrar todas as colunas de ação fixa (sticky right-0)
+        const actionColumns = container.querySelectorAll('td.sticky.right-0');
+        let actionColumnWidth = 0;
+        actionColumns.forEach(col => {
+          actionColumnWidth += (col as HTMLElement).offsetWidth;
+        });
+
+        // Se não encontrou, tentar pelo className
+        if (actionColumnWidth === 0) {
+          const actionColumnsAlt = container.querySelectorAll('[class*="sticky"][class*="right"]');
+          actionColumnsAlt.forEach(col => {
+            actionColumnWidth += (col as HTMLElement).offsetWidth;
+          });
+        }
+
+        // Largura fixa de fallback se não conseguir detectar
+        if (actionColumnWidth === 0) {
+          actionColumnWidth = 70; // largura da coluna de ação
+        }
+
+        const buttonLeft = buttonRect.left - containerRect.left + container.scrollLeft;
+        const buttonRight = buttonLeft + buttonRect.width;
+        const containerWidth = containerRect.width - actionColumnWidth;
+        const currentScrollLeft = container.scrollLeft;
+
+        const isFullyVisible = buttonLeft >= currentScrollLeft && buttonRight <= currentScrollLeft + containerWidth;
+
+        if (!isFullyVisible) {
+          let newScrollLeft;
+
+          if (buttonRect.width > containerWidth) {
+            newScrollLeft = buttonLeft;
+          } else if (buttonLeft < currentScrollLeft) {
+            newScrollLeft = buttonLeft;
+          } else if (buttonRight > currentScrollLeft + containerWidth) {
+            newScrollLeft = buttonRight - containerWidth;
+          } else {
+            newScrollLeft = buttonLeft - (containerWidth / 2) + (buttonRect.width / 2);
+          }
+
+          container.scrollTo({
+            left: Math.max(0, newScrollLeft),
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+  }, [isOpen]);
 
   const flatOptions = useMemo(() => {
     if (groups) {
@@ -501,6 +559,7 @@ export default function InlineEditableTable({
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [maxRowHeight, setMaxRowHeight] = useState<number | undefined>(undefined);
   const tableBodyRef = useRef<HTMLTableSectionElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [isParceladoModalOpen, setIsParceladoModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
@@ -517,6 +576,7 @@ export default function InlineEditableTable({
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [hasDateFilter, setHasDateFilter] = useState(true);
+  const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
@@ -629,6 +689,72 @@ export default function InlineEditableTable({
     columnWidthsRef.current = columnWidths;
   }, [columnWidths]);
 
+// Scroll horizontal otimizado: funciona no foco e durante a digitação
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const scrollToElement = (element: HTMLElement) => {
+      if (!container.contains(element)) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+
+      // Calcula a largura da coluna de ações fixa para não escondermos o input atrás dela
+      const actionCols = container.querySelectorAll('.sticky.right-0, [class*="sticky"][class*="right"]');
+      let stickyWidth = 70; // Fallback
+      actionCols.forEach(col => {
+        stickyWidth = Math.max(stickyWidth, (col as HTMLElement).offsetWidth);
+      });
+
+      // Define as fronteiras visíveis e o respiro adicional
+      const padding = 24; 
+      const extraOffset = 80; // Os 80px extras que você pediu
+      const visibleLeft = containerRect.left;
+      const visibleRight = containerRect.right - stickyWidth;
+
+      let newScrollLeft = container.scrollLeft;
+
+      // Verifica se o input está cortado/escondido na esquerda
+      if (elementRect.left < visibleLeft + padding) {
+        newScrollLeft -= (visibleLeft - elementRect.left + padding + extraOffset);
+      } 
+      // Verifica se o input está escondido debaixo da coluna fixa à direita
+      else if (elementRect.right > visibleRight - padding) {
+        newScrollLeft += (elementRect.right - visibleRight + padding + extraOffset);
+      }
+
+      // IMPORTANTE: Só dispara o scroll se o input realmente estiver fora do campo de visão.
+      // Isso impede que a tela fique tremendo a cada letra digitada se o campo já estiver visível.
+      if (newScrollLeft !== container.scrollLeft) {
+        container.scrollTo({
+          left: Math.max(0, newScrollLeft),
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    const handleInteraction = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target && ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(target.tagName)) {
+        // Um pequeno delay garante que qualquer re-renderização do React ou
+        // expansão de texto termine antes de calcular a posição
+        setTimeout(() => scrollToElement(target), 50);
+      }
+    };
+
+    // Adicionamos de volta os eventos para capturar digitação e navegação pelo teclado
+    container.addEventListener('focusin', handleInteraction); // Quando clica ou entra no campo
+    container.addEventListener('input', handleInteraction);   // Quando digita algo
+    container.addEventListener('keyup', handleInteraction);   // Quando usa setas, Tab, etc.
+
+    return () => {
+      container.removeEventListener('focusin', handleInteraction);
+      container.removeEventListener('input', handleInteraction);
+      container.removeEventListener('keyup', handleInteraction);
+    };
+  }, []);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizingRef.current) return;
     const { field, startX, startWidth } = isResizingRef.current;
@@ -664,6 +790,10 @@ export default function InlineEditableTable({
     newColumns.splice(dropIndex, 0, draggedColumn);
     onColumnsChange?.(newColumns);
   }, [columns, onColumnsChange]);
+
+  const handleResetColumns = useCallback(() => {
+    onColumnWidthsChange?.({});
+  }, [onColumnWidthsChange]);
 
   const { items, meta } = useMemo(() => {
     if (!data) return { items: [], meta: null };
@@ -811,7 +941,7 @@ export default function InlineEditableTable({
         ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
         : {
             ...item,
-            event_date: safeDateInput(item.event_date), 
+            event_date: safeDateInput(item.event_date),
             effective_date: safeDateInput(item.effective_date),
             category_id: safeId(item.category_id || item.category?.id),
             subcategory_id: foundSubcategoryId,
@@ -822,6 +952,18 @@ export default function InlineEditableTable({
           },
       isEditing: true, isNew, isSaving: false, errors: {}
     }]);
+
+    // Fazer scroll horizontal para o primeiro campo editável após um pequeno delay
+    setTimeout(() => {
+      const container = tableContainerRef.current;
+      if (container) {
+        const firstInput = container.querySelector('input:not([type="checkbox"]):not([disabled]), select, textarea') as HTMLElement;
+        if (firstInput) {
+          firstInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          firstInput.focus();
+        }
+      }
+    }, 100);
   }, [items]);
 
   const saveEditingRow = useCallback(async (id: string) => {
@@ -919,7 +1061,7 @@ export default function InlineEditableTable({
             rows={1}
             className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
             placeholder="Descrição..."
-            style={{ minWidth: '120px', maxWidth: '160px' }}
+            style={{ minWidth: '120px', width: '100%' }}
             tabIndex={0}
           />
         );
@@ -1083,7 +1225,16 @@ export default function InlineEditableTable({
           {selectedCheckboxes.length > 0 ? (
             enableDelete && <button onClick={handleDeleteSelected} className="bg-surface-subtle p-2 rounded hover:bg-red-100 transition-colors"><Trash2 size={20} color="var(--color-error)" /></button>
           ) : (
-            enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>
+            <>
+              {enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>}
+              <button
+                onClick={() => setIsColumnModalOpen(true)}
+                className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                title="Personalizar colunas"
+              >
+                <Settings2 size={20} color="var(--color-text-muted)" />
+              </button>
+            </>
           )}
           {(() => {
             const activeFilterCount = Object.keys(appliedFilters).filter(key => key !== 'event_date' && key !== 'effective_date').length;
@@ -1094,7 +1245,7 @@ export default function InlineEditableTable({
               </button>
             );
           })()}
-          
+
           <div className="relative" ref={datePickerRef}>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
@@ -1156,6 +1307,7 @@ export default function InlineEditableTable({
           <div className="w-[200px] sm:w-[250px] lg:w-[300px]">
             <SearchInput initialValue={state.search} onSearch={s => updateState({ search: s, page: 1 })} placeholder={`Pesquisar ${title.toLowerCase()}...`} delay={600} autoFocus={autoFocusSearch} />
           </div>
+          <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
         </div>
 
         {/* Direita: Ícones + Saldo */}
@@ -1192,7 +1344,7 @@ export default function InlineEditableTable({
       {/* Container da tabela com altura fixa e rodapé fixo */}
       <div className="relative">
         {/* Tabela com scroll */}
-        <div className="overflow-x-auto rounded-lg shadow-sm max-h-[calc(100vh-280px)] overflow-y-auto">
+        <div ref={tableContainerRef} className="overflow-x-auto rounded-lg shadow-sm max-h-[calc(100vh-280px)] overflow-y-auto">
         <TableInformations
           headers={headers}
           sort={state.sort}
@@ -1241,17 +1393,16 @@ export default function InlineEditableTable({
       
       {/* Rodapé fixo na parte inferior da tela */}
       <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-4 py-2 z-50 shadow-lg">
-        <div className="flex flex-wrap justify-between items-center gap-2 max-w-[1400px] mx-auto">
+        <div className="flex flex-wrap justify-end items-end gap-2 max-w-[1400px] mx-auto">
           <p className="text-[13px] text-content-secondary">
             {meta && meta.total > 0 ? (
-              activeTab === 'ALL' 
+              activeTab === 'ALL'
                 ? `Total de registros: ${meta.total} (Exibindo ${tableData.start} a ${tableData.end})`
                 : `Total: ${filteredItems.length} registros de ${activeTab === 'INCOME' ? 'Receitas' : 'Despesas'}`
             ) : 'Nenhum registro encontrado'}
           </p>
-          
+
           <div className="flex items-center gap-3">
-            <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
             {meta?.totalPages > 1 && <Pagination currentPage={meta.page} totalPage={meta.totalPages} onPageChange={p => updateState({ page: p })} />}
           </div>
         </div>
@@ -1444,6 +1595,13 @@ export default function InlineEditableTable({
             throw error;
           }
         }}
+      />
+      <ColumnCustomizer
+        isOpen={isColumnModalOpen}
+        onClose={() => setIsColumnModalOpen(false)}
+        columns={columns}
+        onReorder={onColumnsChange || (() => {})}
+        onReset={handleResetColumns}
       />
     </>
   );

@@ -2,12 +2,12 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
-  User, MapPin, Phone, FileText, Hash,
+  User, MapPin, FileText, Hash,
   Briefcase, Heart, User as UserIcon,
   MapPin as MapPinIcon,
   Building as BuildingIcon, Globe
@@ -17,7 +17,7 @@ export default function VisualizarInquilinoPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const transformData = (apiData: any) => {
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     
     const address = apiData.addresses?.[0]?.address || {};
@@ -31,6 +31,8 @@ export default function VisualizarInquilinoPage() {
       cnpj: apiData.cnpj || '',
       cpf: apiData.cpf || '',
       rg: apiData.rg || '',
+      rg_issuing_body: apiData.rg_issuing_body || '',
+      rg_issuing_state: apiData.rg_issuing_state || '',
       municipal_registration: apiData.municipal_registration || '',
       state_registration: apiData.state_registration || '',
       zip_code: address.zip_code || '',
@@ -48,7 +50,7 @@ export default function VisualizarInquilinoPage() {
         email: c.contact?.email || c.email || '',
       })) || []
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -118,6 +120,35 @@ export default function VisualizarInquilinoPage() {
           hidden: (formValues: any) => !formValues.rg,
         },
         {
+          field: 'rg_issuing_body',
+          label: 'Órgão Expedidor',
+          type: 'text',
+          icon: <BuildingIcon size={20} />,
+          readOnly: true,
+          hidden: (formValues: any) => !formValues.rg_issuing_body,
+        },
+        {
+          field: 'rg_issuing_state',
+          label: 'UF Expedidor',
+          type: 'text',
+          icon: <Globe size={20} />,
+          readOnly: true,
+          hidden: (formValues: any) => !formValues.rg_issuing_state,
+        },
+        {
+          field: 'contacts',
+          label: 'Contatos',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (value: any) => (
+            <ContactManager 
+              value={value} 
+              resourceType="tenants"
+              readOnly={true}
+            />
+          )
+        },
+        {
           field: 'cnpj',
           label: 'CNPJ',
           type: 'text',
@@ -156,25 +187,6 @@ export default function VisualizarInquilinoPage() {
         { field: 'city', label: 'Cidade', type: 'text', icon: <MapPinIcon size={20} />, readOnly: true },
         { field: 'state', label: 'Estado', type: 'text', icon: <Globe size={20} />, readOnly: true },
         { field: 'country', label: 'País', type: 'text', icon: <Globe size={20} />, readOnly: true }
-      ],
-    },
-    {
-      title: 'Contatos',
-      icon: <Phone size={20} />,
-      fields: [
-        {
-          field: 'contacts',
-          label: 'Lista de Contatos',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (value: any) => (
-            <ContactManager 
-              value={value} 
-              resourceType="tenants"
-              readOnly={true}
-            />
-          )
-        }
       ],
     },
   ], []);

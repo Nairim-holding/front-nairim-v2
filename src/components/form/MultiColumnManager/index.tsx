@@ -227,10 +227,10 @@ export default function MultiColumnManager({
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`grid grid-cols-1 ${hasChild ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
+    <div className={`grid grid-cols-1 ${hasChild ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 min-h-screen md:min-h-[70vh] flex-1`}>
 
       {/* ── Column 1: Parent list ── */}
-      <div className="flex flex-col border border-ui-border rounded-xl bg-surface-subtle overflow-hidden h-[550px]">
+      <div className="flex flex-col border border-ui-border rounded-xl bg-surface-subtle overflow-hidden">
         <div className="bg-surface p-3 border-b border-ui-border">
           <div className="flex justify-between items-center mb-3 px-1">
             <h3 className="font-bold text-content text-[15px]">{titleParent}</h3>
@@ -295,7 +295,7 @@ export default function MultiColumnManager({
 
       {/* ── Column 2: Child list (conditional) ── */}
       {hasChild && (
-        <div className="flex flex-col border border-ui-border rounded-xl bg-surface-subtle overflow-hidden h-[550px]">
+        <div className="flex flex-col border border-ui-border rounded-xl bg-surface-subtle overflow-hidden">
           <div className="bg-surface p-3 border-b border-ui-border">
             <div className="flex justify-between items-center mb-3 px-1">
               <h3 className="font-bold text-content text-[15px]">{titleChild}</h3>
@@ -364,16 +364,16 @@ export default function MultiColumnManager({
       )}
 
       {/* ── Column 3: Inline form ── */}
-      <div className="flex flex-col h-[550px]">
+      <div className="flex flex-col">
         {formMode === 'IDLE' ? (
-          <div className="flex flex-col items-center justify-center h-full border border-dashed border-ui-border rounded-xl bg-surface-subtle text-content-muted p-6 text-center">
+          <div className="flex flex-col items-center justify-center border border-dashed border-ui-border rounded-xl bg-surface-subtle text-content-muted p-6 text-center">
             <p className="text-[14px]">
               Selecione uma ação nas listas {hasChild ? 'ao lado' : ''} para adicionar ou editar.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col border border-brand/30 rounded-xl bg-surface overflow-hidden h-fit shadow-md animate-fade-in">
-            <div className="flex justify-between items-center p-4 border-b border-ui-border bg-surface-subtle">
+          <div className="flex flex-col border border-brand/30 rounded-xl bg-surface overflow-hidden shadow-md animate-fade-in">
+            <div className="flex justify-between items-center p-4 border-b border-ui-border bg-surface-subtle flex-shrink-0">
               <h3 className="font-bold text-brand text-[15px]">{formTitle}</h3>
               <button onClick={closeForm} className="text-content-muted hover:text-content transition-colors">
                 <X size={18} />

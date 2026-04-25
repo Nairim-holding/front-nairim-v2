@@ -144,13 +144,13 @@ export default function ColumnCustomizer({
 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-ui-border-soft">
-          <button
+          {/*<button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-content-secondary hover:text-content hover:bg-surface-subtle rounded-lg transition-colors"
           >
             <RotateCcw size={14} />
             <span>Restaurar padrão</span>
-          </button>
+          </button> */}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-dark transition-colors"

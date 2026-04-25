@@ -157,8 +157,8 @@ export default function CategoriasPage() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <Section title="Gerenciar Categorias">
-      <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full">
+    <Section title="Gerenciar Categorias" >
+      <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border max-w-5xl mx-auto w-full min-h-[92vh] h-full flex flex-col pb-[10px]">
 
         {/* Seletor Despesa / Receita */}
         <div className="flex mb-6 rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">

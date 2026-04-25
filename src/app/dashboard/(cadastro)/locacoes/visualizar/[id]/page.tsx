@@ -5,10 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
+import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard
+  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Shield, Users
 } from 'lucide-react';
 
 const formatMoney = (value: number) => {
@@ -118,7 +119,20 @@ export default function VisualizarLocacaoPage() {
       property_tax_first_installment: apiData.property_tax_first_installment ? formatMoney(apiData.property_tax_first_installment) : '',
       property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
       iptu_installments_count: apiData.iptu_installments_count ? String(apiData.iptu_installments_count) : '',
-      iptu_installments: Array.isArray(apiData.iptu_installments) ? apiData.iptu_installments.map((val: number) => formatMoney(val)) : [],
+      iptu_installments: Array.isArray(apiData.iptu_installments)
+        ? apiData.iptu_installments.map((val: number, idx: number) => ({
+            value: formatMoney(val),
+            due_date: apiData.iptu_installments_due_dates?.[idx] || ''
+          }))
+        : [],
+
+      // Seguro
+      insurance_company: apiData.insurance_company || '',
+      insurance_type: apiData.insurance_type || '',
+      insurance_policy: apiData.insurance_policy || '',
+
+      // Fiadores
+      guarantors: apiData.guarantors || [],
 
       // Cancelamento
       canceled_at: apiData.canceled_at ? formatDate(apiData.canceled_at) : '',
@@ -424,16 +438,21 @@ export default function VisualizarLocacaoPage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {arr.map((val, idx) => (
+                    {arr.map((item: any, idx: number) => (
                       <div key={`inst-${idx}`} className="bg-surface p-3 rounded-lg border border-ui-border">
                         <label className="block text-xs text-content-muted mb-1.5 font-medium">{idx + 1}ª Parcela</label>
                         <input 
                           type="text" 
-                          value={val} 
+                          value={item.value || item} 
                           readOnly
                           disabled
-                          className="w-full h-10 px-3 border border-ui-border rounded-md text-sm bg-surface-muted cursor-not-allowed"
+                          className="w-full h-10 px-3 border border-ui-border rounded-md text-sm bg-surface-muted cursor-not-allowed mb-2"
                         />
+                        {item.due_date && (
+                          <div className="text-xs text-content-muted">
+                            <span className="font-medium">Vencimento:</span> {item.due_date}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -442,6 +461,59 @@ export default function VisualizarLocacaoPage() {
             }
           }
         ]
+      },
+      {
+        title: 'Seguro',
+        icon: <Shield size={20} />,
+        fields: [
+          {
+            field: 'insurance_company',
+            label: 'Nome da Seguradora',
+            type: 'text',
+            icon: <Building size={20} />,
+            readOnly: true,
+            disabled: true,
+            className: 'col-span-full',
+          },
+          {
+            field: 'insurance_type',
+            label: 'Tipo de Seguro',
+            type: 'text',
+            icon: <Shield size={20} />,
+            readOnly: true,
+            disabled: true,
+            className: 'col-span-full',
+          },
+          {
+            field: 'insurance_policy',
+            label: 'Apólice',
+            type: 'text',
+            icon: <FileText size={20} />,
+            readOnly: true,
+            disabled: true,
+            className: 'col-span-full',
+          },
+        ],
+      },
+      {
+        title: 'Fiadores',
+        icon: <Users size={20} />,
+        fields: [
+          {
+            field: 'guarantors',
+            label: 'Lista de Fiadores',
+            type: 'custom',
+            defaultValue: [],
+            className: 'col-span-full',
+            render: (value: any, formValues: any, onChange: any) => (
+              <GuarantorManager 
+                value={value} 
+                onChange={onChange} 
+                readOnly={true}
+              />
+            )
+          }
+        ],
       }
     ];
 

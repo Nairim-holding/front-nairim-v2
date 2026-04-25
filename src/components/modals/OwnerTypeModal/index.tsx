@@ -39,7 +39,7 @@ export default function ModalSelectTypeOwner({
       >
         <div className="p-4">
           <h3 className="text-sm font-semibold text-content mb-3">
-            Selecione o tipo de fornecedor
+            Selecione o tipo de contato
           </h3>
 
           <div className="space-y-2">
