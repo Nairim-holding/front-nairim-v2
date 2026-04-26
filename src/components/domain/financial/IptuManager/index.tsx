@@ -1,12 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, X, Calendar, Check, Landmark, DollarSign, ListOrdered, Info, Copy } from 'lucide-react';
-import { maskMoney } from '@/utils';
-import { formatMoney, parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, X, Check, Landmark, DollarSign, ListOrdered, Info, Copy } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
+import { parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
 import DynamicTableManager from '@/components/table/DataTable';
 import { ColumnDef } from '@/types/types';
+
+// Converte "YYYY-MM-DD" → "DD/MM/YYYY" sem criar objeto Date (evita bug de timezone UTC)
+function isoToDisplay(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
+}
 
 interface IptuInstallment {
   due_date: string;
@@ -18,8 +25,11 @@ interface IptuEntry {
   year: string | number;
   payment_condition: string;
   property_tax_cash?: string | number | null;
+  property_tax_cash_due_date?: string | null;
   property_tax_first_installment?: string | number | null;
+  property_tax_first_installment_due_date?: string | null;
   property_tax_second_installment?: string | number | null;
+  property_tax_second_installment_due_date?: string | null;
   iptu_installments_count?: string | number | null;
   iptu_installments?: IptuInstallment[];
 }
@@ -37,29 +47,74 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
   const [iptus, setIptus] = useState<IptuEntry[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const installmentsCountRef = useRef<HTMLInputElement>(null);
 
   const [tempIptu, setTempIptu] = useState<IptuEntry>({
     year: new Date().getFullYear().toString(),
     payment_condition: 'IN_FULL_15_DISCOUNT',
+    property_tax_cash: '',
+    property_tax_cash_due_date: '',
+    property_tax_first_installment: '',
+    property_tax_first_installment_due_date: '',
+    property_tax_second_installment: '',
+    property_tax_second_installment_due_date: '',
+    iptu_installments_count: '',
+    iptu_installments: []
   });
 
   useEffect(() => {
     const valueArray = Array.isArray(value) ? value : [];
     console.log('IPTU Manager - Dados recebidos do back-end:', valueArray);
-    if (JSON.stringify(valueArray) !== JSON.stringify(iptus)) {
-      setIptus(valueArray);
+    
+    // Normalizar datas para formato ISO (YYYY-MM-DD) ao receber do back-end
+    const normalizedArray = valueArray.map((item: any) => {
+      const normalized = { ...item };
+      
+      // Função auxiliar para normalizar data
+      const normalizeDate = (dateStr: string | null | undefined): string | null => {
+        if (!dateStr) return null;
+        
+        // Se já está em formato ISO simples (YYYY-MM-DD), retorna como está
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return dateStr;
+        }
+        
+        // Se tem timestamp (YYYY-MM-DDTHH:mm:ss.sssZ), extrai apenas a data
+        const date = new Date(dateStr);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+        
+        return dateStr;
+      };
+      
+      // Normalizar datas para formato ISO
+      normalized.property_tax_cash_due_date = normalizeDate(item.property_tax_cash_due_date);
+      normalized.property_tax_first_installment_due_date = normalizeDate(item.property_tax_first_installment_due_date);
+      normalized.property_tax_second_installment_due_date = normalizeDate(item.property_tax_second_installment_due_date);
+      
+      // Normalizar datas das parcelas
+      if (item.iptu_installments && Array.isArray(item.iptu_installments)) {
+        normalized.iptu_installments = item.iptu_installments.map((inst: any) => ({
+          ...inst,
+          due_date: normalizeDate(inst.due_date)
+        }));
+      }
+      
+      return normalized;
+    });
+    
+    if (JSON.stringify(normalizedArray) !== JSON.stringify(iptus)) {
+      setIptus(normalizedArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  const getConditionLabel = (condition: string) => {
-    switch (condition) {
-      case 'IN_FULL_15_DISCOUNT': return 'Cota única 15%';
-      case 'SECOND_INSTALLMENT_10_DISCOUNT': return '1ª parcela e 2ª cota com 10% de desconto';
-      case 'INSTALLMENTS': return 'Parcelado';
-      default: return condition;
+  useEffect(() => {
+    if (tempIptu.payment_condition === 'INSTALLMENTS' && isModalOpen) {
+      installmentsCountRef.current?.focus();
     }
-  };
+  }, [tempIptu.payment_condition, isModalOpen]);
 
   const openModal = (mode: 'add' | 'edit', index?: number) => {
     if (readOnly) return;
@@ -74,8 +129,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         year: new Date().getFullYear().toString(),
         payment_condition: 'IN_FULL_15_DISCOUNT',
         property_tax_cash: '',
+        property_tax_cash_due_date: '',
         property_tax_first_installment: '',
+        property_tax_first_installment_due_date: '',
         property_tax_second_installment: '',
+        property_tax_second_installment_due_date: '',
         iptu_installments_count: '',
         iptu_installments: []
       });
@@ -104,12 +162,15 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     if (tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT') {
       const val = Number(tempIptu.property_tax_cash);
       if (!val || val <= 0) return setErrorMsg('Informe o valor.');
+      if (!tempIptu.property_tax_cash_due_date) return setErrorMsg('Informe a data de vencimento.');
     }
     else if (tempIptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
       const firstInstallment = Number(tempIptu.property_tax_first_installment);
       const secondInstallment = Number(tempIptu.property_tax_second_installment);
       if (!firstInstallment || firstInstallment <= 0) return setErrorMsg('Informe o valor da 1ª parcela.');
       if (!secondInstallment || secondInstallment <= 0) return setErrorMsg('Informe o valor da 2ª parcela.');
+      if (!tempIptu.property_tax_first_installment_due_date) return setErrorMsg('Informe a data de vencimento da 1ª parcela.');
+      if (!tempIptu.property_tax_second_installment_due_date) return setErrorMsg('Informe a data de vencimento da 2ª parcela.');
     }
     else if (tempIptu.payment_condition === 'INSTALLMENTS') {
       const sum = (tempIptu.iptu_installments || []).reduce((acc, curr) => acc + Number(curr.value || 0), 0);
@@ -139,8 +200,16 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
   const generateInstallments = (count: string | number) => {
     const num = parseInt(String(count));
-    if (isNaN(num) || num <= 0) return setTempIptu(prev => ({ ...prev, iptu_installments: [] }));
-    const val = baseIptu > 0 ? (baseIptu / num).toFixed(2) : '';
+    console.log('generateInstallments - count:', count, 'num:', num);
+    if (isNaN(num) || num <= 0) return setTempIptu(prev => ({ ...prev, iptu_installments_count: count, iptu_installments: [] }));
+    
+    const baseIptuNum = Number(baseIptu);
+    console.log('generateInstallments - baseIptu:', baseIptu, 'baseIptuNum:', baseIptuNum);
+    
+    // Corrigido: Remoção da multiplicação indevida por 100
+    const val = baseIptuNum > 0 ? Number((baseIptuNum / num).toFixed(2)) : 0;
+    
+    console.log('generateInstallments - calculated val:', val);
     const newInsts = Array.from({ length: num }).map(() => ({ due_date: '', value: val }));
     setTempIptu(prev => ({ ...prev, iptu_installments_count: num, iptu_installments: newInsts }));
   };
@@ -168,21 +237,19 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     const installments = tempIptu.iptu_installments || [];
     if (installments.length === 0) return;
     
-    // Pega o valor e data da primeira parcela como referência
     const firstInstallment = installments[0];
     const referenceValue = Number(firstInstallment.value) || 0;
     const referenceDate = firstInstallment.due_date;
     
     if (referenceValue <= 0 || !referenceDate) return;
     
-    // Cria novas parcelas replicando o valor e incrementando as datas
     const newInstallments = installments.map((_, index) => {
       const date = new Date(referenceDate);
-      date.setMonth(date.getMonth() + index); // Incrementa +1 mês para cada parcela
+      date.setMonth(date.getMonth() + index);
       
       return {
-        due_date: date.toISOString().split('T')[0], // Formata YYYY-MM-DD
-        value: referenceValue.toString()
+        due_date: date.toISOString().split('T')[0],
+        value: referenceValue
       };
     });
     
@@ -194,8 +261,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     
     if (tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT') {
       const val = Number(tempIptu.property_tax_cash);
-      const expectedValue = baseIptu * 0.85; // 15% de desconto
-      const margin = baseIptu * 0.01; // 1% de margem para maior precisão
+      const expectedValue = baseIptu * 0.85; 
+      const margin = baseIptu * 0.01; 
       return val < (expectedValue - margin) || val > (expectedValue + margin);
     }
     
@@ -203,20 +270,14 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const firstInstallment = Number(tempIptu.property_tax_first_installment);
       const secondInstallment = Number(tempIptu.property_tax_second_installment);
       
-      // Verifica se os valores são positivos
       if (!firstInstallment || !secondInstallment || firstInstallment <= 0 || secondInstallment <= 0) {
-        return false; // Não mostra alerta se valores não foram preenchidos
+        return false; 
       }
       
-      // Para 2 parcelas com 10% de desconto apenas na segunda parcela:
-      // 1ª parcela: 50% do valor base (sem descontoss)
-      // 2ª parcela: 40% do valor base (50% - 10% de desconto)
-      // Total: 90% do valor base
       const totalActual = firstInstallment + secondInstallment;
       const totalExpected = baseIptu * 0.90;
-      const margin = baseIptu * 0.02; // 2% de margem para acomodar variações
+      const margin = baseIptu * 0.02; 
       
-      // Verifica se o total está dentro da margem esperada
       return totalActual < (totalExpected - margin) || totalActual > (totalExpected + margin);
     }
     
@@ -224,75 +285,70 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const installments = tempIptu.iptu_installments || [];
       if (installments.length === 0) return false;
       
-      // Verifica se todos os valores são positivos
       const allValuesPositive = installments.every(inst => Number(inst.value) > 0);
       if (!allValuesPositive) return false;
-      
-      // Para parcelado, o padrão esperado é que a maioria das parcelas tenha o mesmo valor
-      // e a última parcela possa ter um valor ligeiramente diferente para ajustar o total
       
       const values = installments.map(inst => Number(inst.value));
       const uniqueValues = [...new Set(values)];
       
-      // Se todas as parcelas têm o mesmo valor, isso é aceitável
       if (uniqueValues.length === 1) return false;
       
-      // Se há exatamente 2 valores diferentes, verificar se corresponde ao padrão esperado
       if (uniqueValues.length === 2) {
         const [value1, value2] = uniqueValues.sort((a, b) => a - b);
         const countValue1 = values.filter(v => v === value1).length;
         const countValue2 = values.filter(v => v === value2).length;
         
-        // Verifica se o padrão é: maioria das parcelas com um valor, última parcela com valor diferente
-        // Exemplo: 9 parcelas de R$ 62,99 e 1 parcela de R$ 63,07
         const diff = Math.abs(value2 - value1);
-        const maxDiff = Math.max(value1, value2) * 0.02; // 2% de diferença máxima permitida
+        const maxDiff = Math.max(value1, value2) * 0.02; 
         
-        // Se a diferença é pequena e há apenas uma parcela com valor diferente, é aceitável
         if (diff <= maxDiff && (countValue1 === 1 || countValue2 === 1)) {
-          return false; // Não mostra alerta - padrão correto
+          return false; 
         }
       }
       
-      // Para qualquer outra combinação, mostra o alerta
       return true;
     }
     
     return false;
   };
 
-  // Define column structure for IPTU table
-  const columns: ColumnDef[] = useMemo(() => [
-    { field: 'year', label: 'Ano', type: 'text' },
-    { field: 'baseIptu', label: 'Valor do IPTU', type: 'currency', formatter: 'currency' },
-    { field: 'cota15', label: 'Cota 15% de desconto', type: 'currency', formatter: 'currency' },
-    { field: 'cota10', label: 'Cota 10% de desconto', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento1', label: 'Venc. 1º', type: 'text' },
-    { field: 'parcela1', label: '1º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento2', label: 'Venc. 2º', type: 'text' },
-    { field: 'parcela2', label: '2º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento3', label: 'Venc. 3º', type: 'text' },
-    { field: 'parcela3', label: '3º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento4', label: 'Venc. 4º', type: 'text' },
-    { field: 'parcela4', label: '4º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento5', label: 'Venc. 5º', type: 'text' },
-    { field: 'parcela5', label: '5º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento6', label: 'Venc. 6º', type: 'text' },
-    { field: 'parcela6', label: '6º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento7', label: 'Venc. 7º', type: 'text' },
-    { field: 'parcela7', label: '7º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento8', label: 'Venc. 8º', type: 'text' },
-    { field: 'parcela8', label: '8º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento9', label: 'Venc. 9º', type: 'text' },
-    { field: 'parcela9', label: '9º parcela', type: 'currency', formatter: 'currency' },
-    { field: 'vencimento10', label: 'Venc. 10º', type: 'text' },
-    { field: 'parcela10', label: '10º parcela', type: 'currency', formatter: 'currency' },
-  ], []);
+  const columns: ColumnDef[] = useMemo(() => {
+    const baseColumns: ColumnDef[] = [
+      { field: 'year', label: 'Ano', type: 'text' },
+      { field: 'baseIptu', label: 'Valor do IPTU', type: 'currency', formatter: 'currency' },
+      { field: 'cota15', label: 'Cota 15% de desconto', type: 'currency', formatter: 'currency' },
+      { field: 'cota10', label: 'Cota 10% de desconto', type: 'currency', formatter: 'currency' },
+    ];
 
-  // Transform IPTU data to flat format for table
+    const maxInstallments = iptus.reduce((max, item) => {
+      if (item.payment_condition === 'IN_FULL_15_DISCOUNT') return Math.max(max, 1);
+      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') return Math.max(max, 2);
+      if (item.payment_condition === 'INSTALLMENTS') return Math.max(max, (item.iptu_installments || []).length);
+      return max;
+    }, 0);
+
+    for (let i = 1; i <= maxInstallments; i++) {
+      baseColumns.push({ field: `vencimento${i}`, label: `Venc. ${i}º`, type: 'text' });
+      baseColumns.push({ field: `parcela${i}`, label: `${i}º parcela`, type: 'currency', formatter: 'currency' });
+    }
+
+    console.log('IPTU Manager - columns:', baseColumns);
+    return baseColumns;
+  }, [iptus]);
+
   const tableData = useMemo(() => {
-    return iptus.map((item, index) => {
-      const cota15 = item.payment_condition === 'IN_FULL_15_DISCOUNT' ? item.property_tax_cash : null;
+    const maxInstallments = iptus.reduce((max, item) => {
+      if (item.payment_condition === 'IN_FULL_15_DISCOUNT') return Math.max(max, 1);
+      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') return Math.max(max, 2);
+      if (item.payment_condition === 'INSTALLMENTS') return Math.max(max, (item.iptu_installments || []).length);
+      return max;
+    }, 0);
+
+    console.log('IPTU Manager - maxInstallments:', maxInstallments);
+    console.log('IPTU Manager - iptus:', iptus);
+
+    const data = iptus.map((item, index) => {
+      const cota15 = item.payment_condition === 'IN_FULL_15_DISCOUNT' ? Number(item.property_tax_cash || 0) : null;
       const cota10 = item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT'
         ? (Number(item.property_tax_first_installment || 0) + Number(item.property_tax_second_installment || 0))
         : null;
@@ -306,32 +362,43 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         cota10: cota10,
       };
 
-      // Add installment columns with due dates - for SECOND_INSTALLMENT_10_DISCOUNT, use the individual installment values
-      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
-        row.parcela1 = item.property_tax_first_installment || null;
-        row.parcela2 = item.property_tax_second_installment || null;
-        row.vencimento1 = installments[0]?.due_date ? new Date(installments[0].due_date).toLocaleDateString('pt-BR') : null;
-        row.vencimento2 = installments[1]?.due_date ? new Date(installments[1].due_date).toLocaleDateString('pt-BR') : null;
-        for (let i = 3; i <= 10; i++) {
+      if (item.payment_condition === 'IN_FULL_15_DISCOUNT') {
+        row.parcela1 = Number(item.property_tax_cash || 0);
+        row.vencimento1 = isoToDisplay(item.property_tax_cash_due_date);
+        for (let i = 2; i <= maxInstallments; i++) {
           row[`parcela${i}`] = null;
           row[`vencimento${i}`] = null;
         }
+      } else if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
+        row.parcela1 = Number(item.property_tax_first_installment || 0);
+        row.parcela2 = Number(item.property_tax_second_installment || 0);
+        row.vencimento1 = isoToDisplay(item.property_tax_first_installment_due_date);
+        row.vencimento2 = isoToDisplay(item.property_tax_second_installment_due_date);
+        for (let i = 3; i <= maxInstallments; i++) {
+          row[`parcela${i}`] = null;
+          row[`vencimento${i}`] = null;
+        }
+      } else if (item.payment_condition === 'INSTALLMENTS') {
+        for (let i = 1; i <= maxInstallments; i++) {
+          row[`parcela${i}`] = Number(installments[i - 1]?.value || 0);
+          row[`vencimento${i}`] = isoToDisplay(installments[i - 1]?.due_date);
+        }
       } else {
-        // For other conditions, use installments array with due dates
-        for (let i = 1; i <= 10; i++) {
-          row[`parcela${i}`] = installments[i - 1]?.value || null;
-          row[`vencimento${i}`] = installments[i - 1]?.due_date 
-            ? new Date(installments[i - 1].due_date).toLocaleDateString('pt-BR') 
-            : null;
+        for (let i = 1; i <= maxInstallments; i++) {
+          row[`parcela${i}`] = null;
+          row[`vencimento${i}`] = null;
         }
       }
 
-      // Store original data and index for edit/delete
       row._original = item;
       row._originalIndex = index;
 
+      console.log(`IPTU Manager - Row ${index}:`, row);
       return row;
     });
+
+    console.log('IPTU Manager - tableData:', data);
+    return data;
   }, [iptus, baseIptu]);
 
   return (
@@ -359,15 +426,16 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
           basePath=""
           enableCreate={false}
           enableView={false}
-          enableEdit={false}
-          enableDelete={false}
+          enableEdit={true}
+          enableDelete={true}
           localData={tableData}
+          hideActionButtons={true}
           onRowClick={() => {}}
-          onEdit={(item, index) => {
+          onEdit={(item) => {
             const originalIndex = item._originalIndex;
             openModal('edit', originalIndex);
           }}
-          onDelete={(item, index) => {
+          onDelete={(item) => {
             const originalIndex = item._originalIndex;
             handleRemove(originalIndex);
           }}
@@ -387,7 +455,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                 <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
                 <div className="flex-1">
                   <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base do IPTU - Ano: {tempIptu.year}</p>
-                  <p className="text-lg font-black text-content">{formatMoney(baseIptu)}</p>
+                  <p className="text-lg font-black text-content">{formatCurrency(baseIptu)}</p>
                 </div>
               </div>
 
@@ -417,21 +485,27 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
               </div>
 
               {tempIptu.payment_condition === 'IN_FULL_15_DISCOUNT' && (
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold block text-content-secondary">Valor Total</label>
-                    {(tempIptu.iptu_installments || []).length > 0 && (
-                      <button
-                        type="button"
-                        onClick={replicateFromInstallments}
-                        className="text-xs px-2 py-1 bg-brand/10 text-brand rounded hover:bg-brand/20 transition-colors flex items-center gap-1"
-                        title="Replicar valores do parcelado"
-                      >
-                        <Copy size={12} /> Replicar do Parcelado
-                      </button>
-                    )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold block text-content-secondary">Valor Total</label>
+                      {(tempIptu.iptu_installments || []).length > 0 && (
+                        <button
+                          type="button"
+                          onClick={replicateFromInstallments}
+                          className="text-xs px-2 py-1 bg-brand/10 text-brand rounded hover:bg-brand/20 transition-colors flex items-center gap-1"
+                          title="Replicar valores do parcelado"
+                        >
+                          <Copy size={12} /> Replicar do Parcelado
+                        </button>
+                      )}
+                    </div>
+                    <input type="text" value={formatCurrency(tempIptu.property_tax_cash ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
-                  <input type="text" value={maskMoney(tempIptu.property_tax_cash ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block text-content-secondary">Data de Vencimento</label>
+                    <input type="date" value={tempIptu.property_tax_cash_due_date || ''} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash_due_date: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
+                  </div>
                 </div>
               )}
 
@@ -453,11 +527,15 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold mb-1.5 block text-content-secondary">1ª Parcela</label>
-                      <input type="text" value={maskMoney(tempIptu.property_tax_first_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <input type="text" value={formatCurrency(tempIptu.property_tax_first_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <label className="text-xs font-bold mb-1.5 block text-content-secondary mt-2">Vencimento 1ª Parcela</label>
+                      <input type="date" value={tempIptu.property_tax_first_installment_due_date || ''} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment_due_date: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
                     </div>
                     <div>
-                      <label className="text-xs font-bold mb-1.5 block text-content-secondary">2ª Parcela</label>
-                      <input type="text" value={maskMoney(tempIptu.property_tax_second_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <label className="text-xs font-bold mb-1.5 block text-content-secondary">2ª Cota com 10% de desconto.</label>
+                      <input type="text" value={formatCurrency(tempIptu.property_tax_second_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <label className="text-xs font-bold mb-1.5 block text-content-secondary mt-2">Vencimento 2ª Cota</label>
+                      <input type="date" value={tempIptu.property_tax_second_installment_due_date || ''} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment_due_date: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
                     </div>
                   </div>
                 </div>
@@ -478,13 +556,13 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                       </button>
                     )}
                   </div>
-                  <input type="number" value={tempIptu.iptu_installments_count || '0'} onChange={e => generateInstallments(e.target.value)} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm mb-4" />
+                  <input type="number" ref={installmentsCountRef} value={tempIptu.iptu_installments_count || ''} onChange={e => generateInstallments(e.target.value)} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm mb-4" placeholder="Digite a quantidade" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                     {tempIptu.iptu_installments?.map((inst, i) => (
                       <div key={i} className="p-3 border rounded-lg space-y-2 bg-surface-subtle">
                         <span className="text-[10px] font-bold text-brand">Parcela {i + 1}</span>
+                        <input type="text" value={formatCurrency(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" placeholder="R$ 0,00" />
                         <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
-                        <input type="text" value={maskMoney(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" />
                       </div>
                     ))}
                   </div>

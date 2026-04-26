@@ -334,6 +334,20 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
               placeholder: 'Inscrição Municipal',
               icon: <BuildingIcon size={20} />,
             } as any,
+            {
+              field: 'contacts',
+              label: 'Contatos',
+              type: 'custom',
+              defaultValue: [],
+              className: 'col-span-full',
+              render: (value: any, formValues: any, onChange: any) => (
+                <ContactManager
+                  value={value}
+                  onChange={onChange}
+                  resourceType="tenants"
+                />
+              )
+            } as any,
           ] : []),
         ],
       },

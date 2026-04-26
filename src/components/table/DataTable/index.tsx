@@ -40,6 +40,7 @@ interface DynamicTableManagerProps {
   localData?: any[];
   onEdit?: (item: any, index: number) => void;
   onDelete?: (item: any, index: number) => void;
+  hideActionButtons?: boolean;
 }
 
 export default function DynamicTableManager({
@@ -59,6 +60,7 @@ export default function DynamicTableManager({
   localData,
   onEdit,
   onDelete,
+  hideActionButtons = false,
 }: DynamicTableManagerProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -118,13 +120,20 @@ export default function DynamicTableManager({
             });
 
             setDisplayColumns([...orderedColumns, ...remainingColumns]);
+          } else {
+            // Sem columnOrder salvo: usa as colunas atuais (inclui dinâmicas como vencimento*)
+            setDisplayColumns(columns);
           }
+        } else {
+          setDisplayColumns(columns);
         }
       } else if (response.status === 401) {
         console.warn('[DataTable] Usuário não autenticado ao carregar preferências');
+        setDisplayColumns(columns);
       }
     } catch (error) {
       console.error('[DataTable] Erro ao carregar preferências:', error);
+      setDisplayColumns(columns);
     } finally {
       setIsLoadingColumns(false);
     }
@@ -504,6 +513,7 @@ export default function DynamicTableManager({
         'address': { path: 'addresses[0].address', field: 'street' },
         'street': { path: 'addresses[0].address', field: 'street' },
         'cep': { path: 'addresses[0].address', field: 'zip_code' },
+        'number': { path: 'addresses[0].address', field: 'number' },
         'complement': { path: 'addresses[0].address', field: 'complement' }
       };
 
@@ -800,69 +810,73 @@ export default function DynamicTableManager({
       <div className="flex justify-center gap-1 sm:justify-between items-center flex-wrap mb-1 mt-2">
         <div className="flex items-center justify-center sm:justify-start gap-5 max-w-[500px] w-full flex-wrap sm:flex-nowrap relative">
           <div className="flex items-center gap-4">
-            {enableCreate && (
-              resource === 'owners' || resource === 'tenants' ? (
+            {!hideActionButtons && (
+              <>
+                {enableCreate && (
+                  resource === 'owners' || resource === 'tenants' ? (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowOwnerTypeModal(true)}
+                        className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors relative group"
+                        title={`Adicionar novo ${title.toLowerCase()}`}
+                      >
+                        <Plus size={20} color="var(--color-text-muted)" />
+                        <span className="absolute -top-2 -right-2 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">↓</span>
+                      </button>
+                      {showOwnerTypeModal && (
+                        <ModalSelectTypeOwner
+                          onSelect={(type) => {
+                            router.push(`${basePath}/cadastrar?tipo=${type}`);
+                            setShowOwnerTypeModal(false);
+                          }}
+                          onClose={() => setShowOwnerTypeModal(false)}
+                          className="left-0 top-full"
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <Link 
+                      href={`${basePath}/cadastrar`} 
+                      className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"
+                      title={`Adicionar novo ${title.toLowerCase()}`}
+                    >
+                      <Plus size={20} color="var(--color-text-muted)" />
+                    </Link>
+                  )
+                )}
+                <button
+                  onClick={() => setIsColumnModalOpen(true)}
+                  className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                  title="Personalizar colunas"
+                >
+                  <Settings2 size={20} color="var(--color-text-muted)" />
+                </button>
                 <div className="relative">
                   <button
-                    onClick={() => setShowOwnerTypeModal(true)}
-                    className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors relative group"
-                    title={`Adicionar novo ${title.toLowerCase()}`}
+                    onClick={() => setFilterVisible(!filterVisible)}
+                    className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                    title="Filtrar registros"
                   >
-                    <Plus size={20} color="var(--color-text-muted)" />
-                    <span className="absolute -top-2 -right-2 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">↓</span>
+                    <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
                   </button>
-                  {showOwnerTypeModal && (
-                    <ModalSelectTypeOwner
-                      onSelect={(type) => {
-                        router.push(`${basePath}/cadastrar?tipo=${type}`);
-                        setShowOwnerTypeModal(false);
-                      }}
-                      onClose={() => setShowOwnerTypeModal(false)}
-                      className="left-0 top-full"
-                    />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
                   )}
                 </div>
-              ) : (
-                <Link 
-                  href={`${basePath}/cadastrar`} 
-                  className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"
-                  title={`Adicionar novo ${title.toLowerCase()}`}
-                >
-                  <Plus size={20} color="var(--color-text-muted)" />
-                </Link>
-              )
-            )}
-            <button
-              onClick={() => setIsColumnModalOpen(true)}
-              className="p-2 hover:bg-surface-subtle rounded transition-colors"
-              title="Personalizar colunas"
-            >
-              <Settings2 size={20} color="var(--color-text-muted)" />
-            </button>
-            <div className="relative">
-              <button
-                onClick={() => setFilterVisible(!filterVisible)}
-                className="p-2 hover:bg-surface-subtle rounded transition-colors"
-                title="Filtrar registros"
-              >
-                <Filter size={20} color={hasActiveFilters ? "var(--color-brand-primary)" : "var(--color-text-muted)"} />
-              </button>
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </div>
-            {enableDelete && (
-              <button 
-                type="button"
-                onClick={handleDeleteClick}
-                className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title={resource === 'leases' ? "Cancelar selecionados" : "Excluir selecionados"}
-                disabled={!selectedCheckboxes.length}
-              >
-                <Trash2 size={20} color="var(--color-text-muted)" />
-              </button>
+                {enableDelete && (
+                  <button 
+                    type="button"
+                    onClick={handleDeleteClick}
+                    className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={resource === 'leases' ? "Cancelar selecionados" : "Excluir selecionados"}
+                    disabled={!selectedCheckboxes.length}
+                  >
+                    <Trash2 size={20} color="var(--color-text-muted)" />
+                  </button>
+                )}
+              </>
             )}
           </div>
 

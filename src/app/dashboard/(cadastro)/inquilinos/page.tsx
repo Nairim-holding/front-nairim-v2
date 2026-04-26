@@ -21,6 +21,7 @@ const COLUMNS: ColumnDef[] = [
   { field: 'city',                   label: 'Cidade',             sortParam: 'city',                  type: 'text' },
   { field: 'district',               label: 'Bairro',             sortParam: 'district',              type: 'text' },
   { field: 'address',                label: 'Endereço',           sortParam: 'street',                type: 'text' },
+  { field: 'number',                 label: 'Número',             sortParam: 'number',                type: 'text' },
   { field: 'complement',             label: 'Complemento',        sortParam: 'complement',            type: 'text' },
   { field: 'contact',                label: 'Contato',            sortParam: 'contact_name',          type: 'text' },
   { field: 'telephone',              label: 'Fone',                                                   type: 'text', formatter: 'phone' },

@@ -136,19 +136,6 @@ export default function VisualizarInquilinoPage() {
           hidden: (formValues: any) => !formValues.rg_issuing_state,
         },
         {
-          field: 'contacts',
-          label: 'Contatos',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (value: any) => (
-            <ContactManager 
-              value={value} 
-              resourceType="tenants"
-              readOnly={true}
-            />
-          )
-        },
-        {
           field: 'cnpj',
           label: 'CNPJ',
           type: 'text',
@@ -156,6 +143,14 @@ export default function VisualizarInquilinoPage() {
           icon: <FileText size={20} />,
           readOnly: true,
           hidden: (formValues: any) => !formValues.cnpj,
+        },
+        {
+          field: 'state_registration',
+          label: 'Inscrição Estadual',
+          type: 'text',
+          icon: <BuildingIcon size={20} />,
+          readOnly: true,
+          hidden: (formValues: any) => !formValues.state_registration,
         },
         {
           field: 'municipal_registration',
@@ -166,12 +161,17 @@ export default function VisualizarInquilinoPage() {
           hidden: (formValues: any) => !formValues.municipal_registration,
         },
         {
-          field: 'state_registration',
-          label: 'Inscrição Estadual',
-          type: 'text',
-          icon: <BuildingIcon size={20} />,
-          readOnly: true,
-          hidden: (formValues: any) => !formValues.state_registration,
+          field: 'contacts',
+          label: 'Contatos',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (value: any) => (
+            <ContactManager
+              value={value}
+              resourceType="tenants"
+              readOnly={true}
+            />
+          )
         },
       ],
     },
