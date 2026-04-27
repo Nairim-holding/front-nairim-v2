@@ -66,8 +66,8 @@ export default function Footer() {
               </div>
             </motion.div>
             
-            <div className={`flex flex-col gap-4 md:gap-6 border-l pl-6 md:pl-8 sm:items-center md:items-start ${isDark ? "border-purple-800/30" : "border-purple-300/40"}`}>
-              <p className={`text-[12px] md:text-[14px] font-light leading-relaxed max-w-md text-center md:text-left ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            <div className={`flex flex-col gap-4 md:gap-6 border-l pl-6 md:pl-8 sm:items-center md:items-start ${isDark ? "border-purple-800/30" : "border-purple-400"}`}>
+              <p className={`text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center md:text-left ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                 Grupo familiar com tradição, investindo no futuro através de 
                 inovação, desenvolvimento e crescimento sustentável.
               </p>
