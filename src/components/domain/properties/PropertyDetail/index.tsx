@@ -417,9 +417,7 @@ export default function PropertyDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   property.year_built && { label: "Ano de construção", value: property.year_built },
-                  property.tax_registration && { label: "Matrícula", value: property.tax_registration },
-                  addr.zip_code && { label: "CEP", value: addr.zip_code },
-                  addr.country && { label: "País", value: addr.country },
+                  addr.city && { label: "Cidade", value: addr.city },
                   condoFee > 0 && { label: "Condomínio", value: formatCurrency(condoFee) + "/mês" },
                   propertyTax > 0 && { label: "IPTU", value: formatCurrency(propertyTax) + "/ano" },
                 ].filter(Boolean).map((item: any) => (
@@ -471,7 +469,7 @@ export default function PropertyDetailPage() {
                       property.bedrooms > 0 && { icon: "mingcute:bed-line", value: `${property.bedrooms} quarto${property.bedrooms > 1 ? "s" : ""}` },
                       property.bathrooms > 0 && { icon: "mingcute:shower-line", value: `${property.bathrooms} banho${property.bathrooms > 1 ? "s" : ""}` },
                       property.garage_spaces > 0 && { icon: "mingcute:car-line", value: `${property.garage_spaces} vaga${property.garage_spaces > 1 ? "s" : ""}` },
-                      property.area_built > 0 && { icon: "mingcute:ruler-line", value: `${formatArea(property.area_built)} m²` },
+                      property.frontage > 0 && { icon: "mingcute:house-line", value: `${formatArea(property.frontage)} m` },
                     ].filter(Boolean).map((item: any) => (
                       <div key={item.value} className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
                         <Icon icon={item.icon} className="w-3.5 h-3.5 text-purple-600 shrink-0" />
@@ -534,22 +532,6 @@ export default function PropertyDetailPage() {
                     </div>
                   );
                 })()
-              )}
-
-              {/* Localização resumida */}
-              {addr.city && (
-                <div className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-bg-surface)] px-5 py-4 space-y-2">
-                  <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide flex items-center gap-1.5">
-                    <Icon icon="mingcute:map-pin-2-line" className="w-4 h-4 text-purple-600" />
-                    Localização
-                  </h3>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    {[addr.district, addr.city, addr.state].filter(Boolean).join(", ")}
-                  </p>
-                  {addr.zip_code && (
-                    <p className="text-xs text-[var(--color-text-muted)]">CEP {addr.zip_code}</p>
-                  )}
-                </div>
               )}
             </div>
           </aside>
