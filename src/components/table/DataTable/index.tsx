@@ -41,6 +41,7 @@ interface DynamicTableManagerProps {
   onEdit?: (item: any, index: number) => void;
   onDelete?: (item: any, index: number) => void;
   hideActionButtons?: boolean;
+  onSortChange?: (sort: Record<string, 'asc' | 'desc'>) => void;
 }
 
 export default function DynamicTableManager({
@@ -61,6 +62,7 @@ export default function DynamicTableManager({
   onEdit,
   onDelete,
   hideActionButtons = false,
+  onSortChange,
 }: DynamicTableManagerProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -315,12 +317,63 @@ export default function DynamicTableManager({
 
   const { items, meta } = useMemo(() => {
     if (useLocalMode && localData) {
+      // Aplicar filtros aos dados locais
+      let filteredData = localData;
+      
+      if (appliedFilters && Object.keys(appliedFilters).length > 0) {
+        filteredData = localData.filter((item: any) => {
+          return Object.entries(appliedFilters).every(([field, filterValue]) => {
+            if (filterValue === null || filterValue === undefined || filterValue === '') return true;
+            
+            const itemValue = item[field];
+            
+            // Filtro de range (date/number between)
+            if (typeof filterValue === 'object' && filterValue !== null && 'from' in filterValue && 'to' in filterValue) {
+              const from = filterValue.from;
+              const to = filterValue.to;
+              if (from && to) {
+                const val = Number(itemValue) || 0;
+                return val >= Number(from) && val <= Number(to);
+              }
+              if (from) {
+                const val = Number(itemValue) || 0;
+                return val >= Number(from);
+              }
+              if (to) {
+                const val = Number(itemValue) || 0;
+                return val <= Number(to);
+              }
+              return true;
+            }
+            
+            // Filtro de array (select com múltiplos valores)
+            if (Array.isArray(filterValue)) {
+              return filterValue.some(v => String(itemValue) === String(v));
+            }
+            
+            // Filtro de valor simples - comparação string
+            const strItemValue = String(itemValue ?? '').toLowerCase();
+            const strFilterValue = String(filterValue).toLowerCase();
+            
+            if (strItemValue === strFilterValue) return true;
+            if (strItemValue.includes(strFilterValue)) return true;
+            
+            // Comparação numérica
+            const numItem = Number(itemValue);
+            const numFilter = Number(filterValue);
+            if (!isNaN(numItem) && !isNaN(numFilter) && numItem === numFilter) return true;
+            
+            return false;
+          });
+        });
+      }
+      
       return {
-        items: localData,
+        items: filteredData,
         meta: {
           page: 1,
-          limit: localData.length,
-          total: localData.length,
+          limit: filteredData.length,
+          total: filteredData.length,
           totalPages: 1
         }
       };
@@ -340,7 +393,7 @@ export default function DynamicTableManager({
     if (data.items && Array.isArray(data.items)) return { items: data.items, meta: data.meta };
     if (Array.isArray(data)) return { items: data, meta: { page: 1, limit: state.limit, total: data.length, totalPages: 1 } };
     return { items: [], meta: null };
-  }, [data, state.limit, useLocalMode, localData]);
+  }, [data, state.limit, useLocalMode, localData, appliedFilters]);
 
   const getNestedValue = useCallback((obj: any, path: string) => {
     if (!obj || !path) return undefined;
@@ -492,6 +545,9 @@ export default function DynamicTableManager({
       }
 
       const isProperty = resource === 'properties';
+      const isTenantOrOwner = resource === 'tenants' || resource === 'owners';
+      const isAgency = resource === 'agencies';
+      
       if (isProperty) {
         const addressFieldMap: Record<string, string> = {
           'zip_code': 'zip_code', 'state': 'state', 'city': 'city',
@@ -499,10 +555,29 @@ export default function DynamicTableManager({
           'complement': 'complement'
         };
         const addressField = addressFieldMap[column.field];
-        if (addressField) return formatValue(item.addresses?.[0]?.address?.[addressField], column);
+        if (addressField) {
+          // Concatenar número no endereço (campo street)
+          if (column.field === 'street' || column.field === 'address') {
+            const street = item.addresses?.[0]?.address?.street || '';
+            const number = item.addresses?.[0]?.address?.number || '';
+            const fullAddress = number ? `${street}, ${number}` : street;
+            return formatValue(fullAddress, column);
+          }
+          return formatValue(item.addresses?.[0]?.address?.[addressField], column);
+        }
         if (column.field === "owner") return formatValue(item.owner?.name, column);
         if (column.field === "type") return formatValue(item.type?.description, column);
         if (column.field === "status") return formatValue(item.values?.[0]?.status, column);
+      }
+
+      if (isTenantOrOwner || isAgency) {
+        // Concatenar número no endereço (campo street/address) para tenants, owners e agencies
+        if (column.field === 'street' || column.field === 'address') {
+          const street = item.addresses?.[0]?.address?.street || '';
+          const number = item.addresses?.[0]?.address?.number || '';
+          const fullAddress = number ? `${street}, ${number}` : street;
+          return formatValue(fullAddress, column);
+        }
       }
 
       const addressFieldMap: Record<string, {path: string, field: string}> = {
@@ -594,8 +669,14 @@ export default function DynamicTableManager({
     if (currentOrder === "desc") nextOrder = "asc";
     else if (currentOrder === "asc") nextOrder = "desc";
 
-    updateState({ sort: { [sortParam]: nextOrder }, page: 1 });
-  }, [state.sort, updateState]);
+    const newSort = { [sortParam]: nextOrder };
+    updateState({ sort: newSort, page: 1 });
+    
+    // Se estiver em modo local, notifica o componente pai sobre a mudança de ordenação
+    if (useLocalMode && onSortChange) {
+      onSortChange(newSort);
+    }
+  }, [state.sort, updateState, useLocalMode, onSortChange]);
 
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked && items.length > 0) {
@@ -636,6 +717,19 @@ export default function DynamicTableManager({
       }
 
       setIsCancelLeaseModalOpen(true);
+      return;
+    }
+
+    // Se estiver em modo local (localData) e tiver onDelete callback, usa ele diretamente
+    // O componente pai (IptuManager) já tem seu próprio modal de confirmação no handleRemove
+    if (useLocalMode && onDelete) {
+      const selectedItems = items.filter((item: any) => selectedCheckboxes.includes(item.id));
+      selectedItems.forEach((item: any) => {
+        // Usar _originalIndex se disponível, senão usar o índice no array items
+        const index = item._originalIndex !== undefined ? item._originalIndex : items.indexOf(item);
+        onDelete(item, index);
+      });
+      setSelectedCheckboxes([]);
       return;
     }
     
@@ -688,7 +782,7 @@ export default function DynamicTableManager({
       },
       () => {}
     );
-  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title, items]);
+  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title, items, useLocalMode, onDelete]);
 
   const handleConfirmCancelLeases = useCallback(async () => {
     try {
@@ -845,6 +939,7 @@ export default function DynamicTableManager({
                   )
                 )}
                 <button
+                  type="button"
                   onClick={() => setIsColumnModalOpen(true)}
                   className="p-2 hover:bg-surface-subtle rounded transition-colors"
                   title="Personalizar colunas"
@@ -853,6 +948,7 @@ export default function DynamicTableManager({
                 </button>
                 <div className="relative">
                   <button
+                    type="button"
                     onClick={() => setFilterVisible(!filterVisible)}
                     className="p-2 hover:bg-surface-subtle rounded transition-colors"
                     title="Filtrar registros"
@@ -889,6 +985,7 @@ export default function DynamicTableManager({
               title={title}
               filters={dynamicFilters}
               initialValues={appliedFilters}
+              columns={4}
             />
           )}
 
@@ -949,7 +1046,7 @@ export default function DynamicTableManager({
                 return (
                   <td 
                     key={col.field} 
-                    className={`align-middle border-r border-ui-border-soft p-0 ${isFirst ? 'sticky left-0 bg-surface z-20' : ''}`}
+                    className="align-middle border-r border-ui-border-soft p-0"
                     style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                   >
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${isFirst ? 'justify-start' : 'justify-center'}`}>
@@ -990,9 +1087,9 @@ export default function DynamicTableManager({
                 );
               })}
 
-              {(enableView || enableEdit || onEdit || onDelete) && (
-                <td className="px-2 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[80px] min-w-[80px] max-w-[80px] p-0 h-[26px]">
-                  <div className="flex items-center justify-center gap-2 h-full min-h-[26px]">
+              {(enableView || enableEdit || onEdit) && (
+                <td className="px-1 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[50px] min-w-[50px] max-w-[50px] p-0 h-[26px]">
+                  <div className="flex items-center justify-center h-full min-h-[26px]">
                     {enableView && (
                       <Link 
                         href={`${basePath}/visualizar/${item.id}`} 
@@ -1025,20 +1122,6 @@ export default function DynamicTableManager({
                         }}
                       >
                         <Edit size={16} />
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        type="button"
-                        title="Excluir"
-                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-state-error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const index = items.indexOf(item);
-                          onDelete(item, index);
-                        }}
-                      >
-                        <Trash2 size={16} />
                       </button>
                     )}
                   </div>

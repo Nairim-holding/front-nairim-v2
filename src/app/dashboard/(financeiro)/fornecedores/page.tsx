@@ -33,6 +33,9 @@ export default function FornecedoresPage() {
   const [personType, setPersonType] = useState<OwnerType>('juridica');
 
   const [isManualAddress, setIsManualAddress] = useState(false);
+  
+  // Estado para armazenar o código interno gerado automaticamente
+  const [generatedInternalCode, setGeneratedInternalCode] = useState<string>('');
 
   const baseURL = process.env.NEXT_PUBLIC_URL_API;
 
@@ -53,6 +56,40 @@ export default function FornecedoresPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Buscar último fornecedor para gerar código interno automaticamente (último código global + 1)
+  useEffect(() => {
+    const fetchLastSupplier = async () => {
+      try {
+        // Buscar todos os fornecedores ordenados por código interno descendente
+        const response = await fetch(`${baseURL}/financial-supplier?sort=internal_code&order=desc&limit=1`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.data && data.data.length > 0) {
+            const lastCode = data.data[0].internal_code;
+            const codeNumber = parseInt(lastCode, 10);
+            
+            if (!isNaN(codeNumber)) {
+              setGeneratedInternalCode(String(codeNumber + 1));
+            } else {
+              setGeneratedInternalCode(lastCode);
+            }
+          } else {
+            setGeneratedInternalCode('1');
+          }
+        }
+      } catch {
+        // Silenciar erro - código interno pode ser preenchido manualmente
+        setGeneratedInternalCode('');
+      }
+    };
+
+    if (formMode === 'CREATE') {
+      fetchLastSupplier();
+    }
+  }, [formMode, baseURL]);
+
   const normalizeText = (text: string) => 
     text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
 
@@ -68,11 +105,18 @@ export default function FornecedoresPage() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const getPersonType = (supplier: any): OwnerType => {
-    if (supplier.cnpj) return 'juridica';
-    if (supplier.cpf || supplier.internal_code || supplier.occupation || supplier.marital_status) return 'fisica';
-    if (supplier.trade_name || supplier.state_registration || supplier.municipal_registration) return 'juridica';
-    return 'juridica'; 
+    // Prioriza PJ se tiver qualquer campo típico de PJ (CNPJ, Nome Fantasia, Inscrições)
+    if (supplier.cnpj || supplier.trade_name || supplier.state_registration || supplier.municipal_registration) return 'juridica';
+    // Só é PF se tiver CPF ou campos típicos de PF
+    if (supplier.cpf || supplier.occupation || supplier.marital_status) return 'fisica';
+    // Default é PJ para novos cadastros sem documento
+    return 'juridica';
   };
+
+  // Toggle PJ/PF sempre habilitado tanto em CREATE quanto em EDIT — a troca
+  // remonta os steps com os campos do tipo escolhido (CPF/Nome para PF, CNPJ/Razão Social para PJ).
+  // Campos incompatíveis são descartados pelo transformDataForSubmit (ele zera os
+  // que não pertencem ao tipo atual antes de enviar ao backend).
 
   const openForm = (mode: FormMode, id: string | null = null, type: OwnerType = 'juridica') => {
     setSelectedId(id);
@@ -234,7 +278,8 @@ export default function FornecedoresPage() {
     const identificationFields: any[] = isPF 
       ? [
           { field: 'legal_name', label: 'Nome Completo', type: 'text', required: true, placeholder: 'Nome Completo', autoFocus: true, icon: <User size={20} />, className: 'col-span-full' },
-          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} /> },
+          { field: 'trade_name', label: 'Nome Fantasia', type: 'text', required: false, placeholder: 'Nome Fantasia', icon: <BuildingIcon size={20} />, className: 'col-span-full' },
+          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} />, defaultValue: generatedInternalCode },
           { field: 'occupation', label: 'Profissão', type: 'text', required: false, placeholder: 'Profissão', icon: <User size={20} /> },
           { field: 'marital_status', label: 'Estado Civil', type: 'select', required: false, placeholder: 'Selecione...', options: maritalStatusOptions, icon: <User size={20} /> },
           { field: 'cpf', label: 'CPF', type: 'text', required: false, placeholder: '000.000.000-00', mask: 'cpf', icon: <FileText size={20} /> },
@@ -243,7 +288,7 @@ export default function FornecedoresPage() {
           { field: 'legal_name', label: 'Razão Social', type: 'text', required: true, placeholder: 'Razão Social', autoFocus: true, icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'trade_name', label: 'Nome Fantasia', type: 'text', required: false, placeholder: 'Nome Fantasia', icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'cnpj', label: 'CNPJ', type: 'text', required: false, placeholder: '00.000.000/0000-00', mask: 'cnpj', icon: <FileText size={20} />, className: 'col-span-full' },
-          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} /> },
+          { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} />, defaultValue: generatedInternalCode },
           { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, placeholder: 'Inscrição Estadual', icon: <Hash size={20} /> },
           { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, placeholder: 'Inscrição Municipal', icon: <Hash size={20} /> },
         ];
@@ -285,7 +330,7 @@ export default function FornecedoresPage() {
         ],
       },
     ];
-  }, [isManualAddress, personType]);
+  }, [isManualAddress, personType, generatedInternalCode]);
 
   return (
     <Section title="Gerenciar Contatos">
@@ -353,6 +398,7 @@ export default function FornecedoresPage() {
                           {supplier.trade_name || supplier.legal_name}
                         </span>
                         <span className="text-[11px] text-content-muted truncate mt-0.5">
+                          {supplier.internal_code ? `Cód: ${supplier.internal_code} | ` : ''}
                           {supplier.cnpj 
                             ? `CNPJ: ${supplier.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}` 
                             : supplier.cpf 
@@ -399,13 +445,35 @@ export default function FornecedoresPage() {
                   </button>
 
                   <div className="pointer-events-auto">
+                    <div className="px-4 pt-2 pb-1 flex items-center gap-2 text-[12px] text-content-secondary">
+                      <span className="font-medium">Tipo de contato:</span>
+                      <div className="inline-flex border border-ui-border rounded-md overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setPersonType('juridica')}
+                          className={`px-3 py-1 text-[12px] transition-colors ${personType === 'juridica' ? 'bg-brand text-white' : 'bg-surface hover:bg-surface-subtle text-content'}`}
+                        >
+                          Pessoa Jurídica
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPersonType('fisica')}
+                          className={`px-3 py-1 text-[12px] transition-colors border-l border-ui-border ${personType === 'fisica' ? 'bg-brand text-white' : 'bg-surface hover:bg-surface-subtle text-content'}`}
+                        >
+                          Pessoa Física
+                        </button>
+                      </div>
+                    </div>
                     <DynamicFormManager
                       key={`${formMode}-${selectedId}-${personType}`}
                       resource="financial-supplier"
                       title="Contato"
-                      basePath="" 
+                      basePath=""
                       mode={formMode === 'CREATE' ? 'create' : 'edit'}
                       id={selectedId || undefined}
+                      // Persistência local apenas no cadastro novo. A chave inclui o tipo
+                      // para que PJ e PF tenham rascunhos independentes.
+                      draftKey={formMode === 'CREATE' ? `form:financial-supplier:create:${personType}` : undefined}
                       steps={steps}
                       onFieldChange={handleFieldChange}
                       transformData={transformDataForLoad}

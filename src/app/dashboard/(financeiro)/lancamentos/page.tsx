@@ -7,6 +7,7 @@ import InlineEditableTable from '@/components/table/InlineEditableTable';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { authFetch } from '@/utils/authFetch';
+import { isNewSupplierSentinel, extractNewSupplierName } from '@/components/ui/SupplierAutocomplete';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -241,25 +242,65 @@ export default function LancamentosPage() {
     fetchColumnPreferences();
   }, [fetchOptions, fetchColumnPreferences]);
 
+  // Cria contato (fornecedor) sob demanda quando o usuário usou a opção
+  // "+ adicionar novo contato" no autocomplete. Só roda no momento em que
+  // o lançamento é salvo, garantindo que digitação cancelada não polui o banco.
+  const resolveNewSupplier = useCallback(async (data: Record<string, unknown>) => {
+    const supplierField = data.supplier_id;
+    if (typeof supplierField !== 'string' || !isNewSupplierSentinel(supplierField)) {
+      return data;
+    }
+
+    const legalName = extractNewSupplierName(supplierField);
+    const response = await authFetch(`${API_URL}/financial-supplier/quick-create`, {
+      method: 'POST',
+      body: JSON.stringify({ legal_name: legalName }),
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message ?? 'Erro ao criar contato.');
+    }
+
+    const result = await response.json();
+    const created = result?.data ?? result;
+    if (!created?.id) {
+      throw new Error('Resposta inválida ao criar contato.');
+    }
+
+    // Atualiza a lista local de fornecedores para que o autocomplete reconheça o novo id imediatamente.
+    setOptions(prev => ({
+      ...prev,
+      suppliers: [
+        ...prev.suppliers,
+        { value: created.id, label: created.legal_name || created.trade_name || legalName },
+      ],
+    }));
+
+    return { ...data, supplier_id: created.id };
+  }, []);
+
   const handleRowSave = useCallback(async (id: string, data: Record<string, unknown>) => {
+    const resolved = await resolveNewSupplier(data);
     const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(resolved),
     });
-    
+
     if (!response.ok) {
       const result = await response.json().catch(() => ({}));
       throw new Error(result.message ?? 'Erro ao atualizar lançamento.');
     }
-  }, []);
+  }, [resolveNewSupplier]);
 
   const handleRowCreate = useCallback(async (data: Record<string, unknown>) => {
     try {
+      const resolved = await resolveNewSupplier(data);
       const response = await fetch(`${API_URL}/financial-transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(resolved),
       });
 
       if (!response.ok) {
@@ -270,7 +311,7 @@ export default function LancamentosPage() {
       console.error(error);
       throw error instanceof Error ? error : new Error('Erro ao criar lançamento.');
     }
-  }, []);
+  }, [resolveNewSupplier]);
 
   const handleRowDelete = useCallback(async (id: string) => {
     try {

@@ -7,11 +7,15 @@ import type { Option } from "@/types/types";
 
 // Função de máscara monetária para formatar enquanto digita
 const formatCurrencyInput = (value: string): string => {
+  if (!value) return '';
+  
   // Remove tudo que não é dígito
   const numericValue = value.replace(/\D/g, "");
   
-  // Converte para número (em centavos)
-  const numberValue = parseInt(numericValue, 10) || 0;
+  if (!numericValue) return '';
+  
+  // Converte para número
+  const numberValue = parseFloat(numericValue) / 100;
   
   // Formata como moeda brasileira
   return new Intl.NumberFormat("pt-BR", {
@@ -19,13 +23,18 @@ const formatCurrencyInput = (value: string): string => {
     currency: "BRL",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(numberValue / 100);
+  }).format(numberValue);
 };
 
-// Extrai apenas os números do valor formatado (para enviar à API)
-const extractNumericValue = (formattedValue: string): string => {
-  const numeric = formattedValue.replace(/[^\d,]/g, "").replace(",", ".");
-  return numeric;
+// Extrai valor numérico do valor formatado em pt-BR (para enviar à API)
+const extractNumericValue = (formattedValue: string): number => {
+  if (!formattedValue) return 0;
+  // Remove R$ e espaços
+  const cleaned = formattedValue.replace(/[R$\s]/g, '');
+  // Remove separador de milhar (ponto) e substitui vírgula por ponto (decimal)
+  const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+  const num = parseFloat(normalized);
+  return isNaN(num) ? 0 : num;
 };
 
 interface FormOptions {

@@ -83,6 +83,7 @@ export default function ColumnCustomizer({
         <div className="flex items-center justify-between p-4 border-b border-ui-border-soft">
           <h2 className="text-lg font-semibold text-content">Personalizar Colunas</h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 hover:bg-surface-subtle rounded-lg transition-colors"
           >
@@ -118,6 +119,7 @@ export default function ColumnCustomizer({
               </span>
               <div className="flex items-center gap-1">
                 <button
+                  type="button"
                   onClick={() => handleMoveUp(index)}
                   disabled={index === 0}
                   className="p-1 hover:bg-surface rounded disabled:opacity-30 disabled:cursor-not-allowed"
@@ -128,6 +130,7 @@ export default function ColumnCustomizer({
                   </svg>
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleMoveDown(index)}
                   disabled={index === localColumns.length - 1}
                   className="p-1 hover:bg-surface rounded disabled:opacity-30 disabled:cursor-not-allowed"
@@ -152,6 +155,7 @@ export default function ColumnCustomizer({
             <span>Restaurar padrão</span>
           </button> */}
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-dark transition-colors"
           >

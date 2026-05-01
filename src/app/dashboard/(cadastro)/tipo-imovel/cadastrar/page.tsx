@@ -99,6 +99,7 @@ export default function CadastrarTipoImovelPage() {
       title="Tipo de Imóvel"
       basePath="/dashboard/tipo-imovel"
       mode="create"
+      draftKey="form:property-type:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}

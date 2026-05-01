@@ -133,6 +133,7 @@ export default function CadastrarAdministradorPage() {
       title="Administrador"
       basePath="/dashboard/administradores"
       mode="create"
+      draftKey="form:users:create"
       fields={fields}
       transformResponse={transformResponse}
     />

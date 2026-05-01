@@ -9,7 +9,7 @@ import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
   User, MapPin, FileText, Hash,
-  Briefcase, Heart, Globe,
+  Briefcase, Heart, Globe, Phone,
   User as UserIcon, MapPin as MapPinIcon,
   Building as BuildingIcon
 } from 'lucide-react';
@@ -295,20 +295,6 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
               placeholder: 'SP',
               icon: <Globe size={20} />,
             } as any,
-            {
-              field: 'contacts',
-              label: 'Contatos',
-              type: 'custom',
-              defaultValue: [],
-              className: 'col-span-full',
-              render: (value: any, formValues: any, onChange: any) => (
-                <ContactManager 
-                  value={value} 
-                  onChange={onChange} 
-                  resourceType="tenants"
-                />
-              )
-            } as any,
           ] : []),
           ...(tipoSelecionado === 'juridica' ? [
             {
@@ -334,20 +320,6 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
               placeholder: 'Inscrição Municipal',
               icon: <BuildingIcon size={20} />,
             } as any,
-            {
-              field: 'contacts',
-              label: 'Contatos',
-              type: 'custom',
-              defaultValue: [],
-              className: 'col-span-full',
-              render: (value: any, formValues: any, onChange: any) => (
-                <ContactManager
-                  value={value}
-                  onChange={onChange}
-                  resourceType="tenants"
-                />
-              )
-            } as any,
           ] : []),
         ],
       },
@@ -364,6 +336,26 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
           { field: 'city', label: 'Cidade', type: 'text', required: true, placeholder: 'São Paulo', icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
           { field: 'state', label: 'Estado', type: 'text', required: true, placeholder: 'SP', icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
           { field: 'country', label: 'País', type: 'text', required: true, placeholder: 'Brasil', defaultValue: 'Brasil', icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress }
+        ],
+      },
+      {
+        title: 'Contatos',
+        icon: <Phone size={20} />,
+        fields: [
+          {
+            field: 'contacts',
+            label: 'Lista de Contatos',
+            type: 'custom',
+            defaultValue: [],
+            className: 'col-span-full',
+            render: (value: any, formValues: any, onChange: any) => (
+              <ContactManager 
+                value={value} 
+                onChange={onChange} 
+                resourceType="tenants"
+              />
+            )
+          }
         ],
       },
     ];
@@ -391,6 +383,7 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
       title="Inquilino"
       basePath="/dashboard/inquilinos"
       mode="create"
+      draftKey="form:tenants:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}

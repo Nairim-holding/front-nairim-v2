@@ -299,6 +299,7 @@ export default function CartoesPage() {
                   basePath=""
                   mode={formMode === 'CREATE' ? 'create' : 'edit'}
                   id={selectedId ?? undefined}
+                  draftKey={formMode === 'CREATE' ? 'form:financial-card:create' : undefined}
                   steps={FORM_STEPS}
                   transformData={transformDataForLoad}
                   transformResponse={transformPayloadForSave}

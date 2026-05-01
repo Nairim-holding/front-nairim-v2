@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
@@ -14,6 +14,7 @@ interface LoginFormProps {
   error: string;
   timeRemaining: number;
   formatTimeRemaining: (seconds: number) => string;
+  emailInputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
@@ -25,12 +26,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   error,
   timeRemaining,
   formatTimeRemaining,
+  emailInputRef,
 }) => {
+  const internalEmailRef = useRef<HTMLInputElement>(null);
+  const emailRef = emailInputRef || internalEmailRef;
+
   return (
     <form className="flex flex-col gap-6 w-full max-w-md" onSubmit={onSubmit}>
       <div className="relative">
         <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-content-placeholder" size={20} />
         <input
+          ref={emailRef}
           type="email"
           name="email"
           placeholder="exemplo@gmail.com"
@@ -39,6 +45,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           disabled={isLoading || isBlocked}
           aria-label="Email"
           autoComplete="email"
+          autoFocus
         />
       </div>
 

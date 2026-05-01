@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import Form from '@/components/ui/Form';
@@ -32,7 +32,64 @@ interface DynamicFormManagerProps {
   completedSteps?: number[];
   onStepComplete?: (stepIndex: number) => void;
   canNavigateToStep?: (targetStep: number, currentStep: number, data: any) => boolean;
+  /**
+   * Quando informado, persiste `formValues` + `currentStep` em sessionStorage
+   * sob essa chave. Restaura no mount e limpa em onSubmitSuccess. Útil em
+   * wizards de cadastro para evitar perda de dados ao navegar entre etapas.
+   */
+  draftKey?: string;
+  /** Desabilita o banner de "alterações não salvas" no modo edit. Default: true. */
+  enableDirtyDetection?: boolean;
 }
+
+const DRAFT_STORAGE_PREFIX = 'nairim:draft:';
+
+const readDraft = (key: string): { values: Record<string, any>; step: number } | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(`${DRAFT_STORAGE_PREFIX}${key}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      values: parsed.values && typeof parsed.values === 'object' ? parsed.values : {},
+      step: typeof parsed.step === 'number' ? parsed.step : 0,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeDraft = (key: string, values: Record<string, any>, step: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(
+      `${DRAFT_STORAGE_PREFIX}${key}`,
+      JSON.stringify({ values, step }),
+    );
+  } catch {
+    /* storage cheio / bloqueado — falha silenciosa */
+  }
+};
+
+const clearDraft = (key: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.removeItem(`${DRAFT_STORAGE_PREFIX}${key}`);
+  } catch {
+    /* ignore */
+  }
+};
+
+// Comparação estável que ignora chaves com valor "vazio equivalente" para evitar
+// falso positivo de dirty quando o form preenche '' por default e o backend devolve null.
+const isEmptyish = (v: any): boolean =>
+  v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0);
+
+const stableStringify = (obj: Record<string, any>): string => {
+  const keys = Object.keys(obj).filter(k => !isEmptyish(obj[k])).sort();
+  return JSON.stringify(keys.map(k => [k, obj[k]]));
+};
 
 export default function DynamicFormManager({
   resource,
@@ -52,17 +109,27 @@ export default function DynamicFormManager({
   completedSteps: externalCompletedSteps,
   onStepComplete,
   canNavigateToStep: externalCanNavigateToStep,
+  draftKey,
+  enableDirtyDetection = true,
 }: DynamicFormManagerProps) {
   const router = useRouter();
   const { showMessage } = useMessageContext();
   const formRef = useRef<HTMLFormElement>(null);
-  
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [internalCompletedSteps, setInternalCompletedSteps] = useState<number[]>([]);
+
+  // Snapshot dos valores "limpos" (defaults para create, dados carregados para edit).
+  // Usado para detecção de dirty state. null = ainda não inicializado (não comparar).
+  const [initialSnapshot, setInitialSnapshot] = useState<Record<string, any> | null>(null);
+
+  // Flag que vira true após o restore inicial do draft. Antes disso, a persistência
+  // não escreve (para evitar sobrescrever rascunho com {} no primeiro render).
+  const [draftHydrated, setDraftHydrated] = useState(false);
   
   const isViewMode = mode === 'view';
   const completedSteps = externalCompletedSteps || internalCompletedSteps;
@@ -170,43 +237,98 @@ export default function DynamicFormManager({
     if (!hasSteps || isViewMode || externalCompletedSteps) return;
 
     const isCurrentStepComplete = validateStep(currentStep, formValues);
-    
+
     if (isCurrentStepComplete && !internalCompletedSteps.includes(currentStep)) {
       setInternalCompletedSteps(prev => [...prev, currentStep]);
     }
   }, [formValues, currentStep, internalCompletedSteps, hasSteps, validateStep, isViewMode, externalCompletedSteps]);
 
+  // Hydrate ÚNICO no mount: lê o rascunho salvo e mescla nos formValues atuais.
+  // Roda só uma vez (deps vazios) e usa updater funcional para não depender de
+  // closures que possam estar desatualizadas com mudanças de `steps`.
   useEffect(() => {
-    const initialValues: Record<string, any> = {};
-    const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
-    
-    allFields.forEach(field => {
-      // Preserva valores existentes para não perder dados quando campos são re-habilitados
-      if (formValues[field.field] !== undefined && formValues[field.field] !== '') {
-        initialValues[field.field] = formValues[field.field];
-      } else if (field.defaultValue !== undefined) {
-        initialValues[field.field] = field.defaultValue;
-      } else {
-        switch (field.type) {
-          case 'checkbox':
-          case 'boolean':
-            initialValues[field.field] = false;
-            break;
-          case 'number':
-            initialValues[field.field] = 0;
-            break;
-          case 'file':
-          case 'custom':
-            // IPTU cai em 'custom' e recebe '[]' de padrão
-            initialValues[field.field] = [];
-            break;
-          default:
-            initialValues[field.field] = '';
-        }
+    if (draftKey && mode === 'create') {
+      const draft = readDraft(draftKey);
+      if (draft) {
+        setFormValues(prev => ({ ...prev, ...draft.values }));
+        setCurrentStep(draft.step ?? 0);
       }
+    }
+    setDraftHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persistência SÍNCRONA pós-hydrate. Sem debounce — a escrita em sessionStorage
+  // é barata e elimina perda em reload rápido. Cobre tanto digitação quanto
+  // mudança de step (Próximo / Voltar).
+  useEffect(() => {
+    if (!draftHydrated || !draftKey || mode !== 'create') return;
+    writeDraft(draftKey, formValues, currentStep);
+  }, [draftHydrated, draftKey, mode, formValues, currentStep]);
+
+  // Safety-net: força a gravação imediatamente antes do unload da aba/recarregar.
+  useEffect(() => {
+    if (!draftKey || mode !== 'create') return;
+    const flush = () => writeDraft(draftKey, formValues, currentStep);
+    window.addEventListener('beforeunload', flush);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.removeEventListener('beforeunload', flush);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [draftKey, mode, formValues, currentStep]);
+
+  // Detecção de dirty state: só ativa quando o snapshot foi capturado.
+  const isDirty = useMemo(() => {
+    if (!enableDirtyDetection || !initialSnapshot || isViewMode) return false;
+    return stableStringify(formValues) !== stableStringify(initialSnapshot);
+  }, [enableDirtyDetection, initialSnapshot, formValues, isViewMode]);
+
+  // Inicialização IDEMPOTENTE: para cada campo definido em steps/fields, garante
+  // que existe um valor (default) sem nunca sobrescrever o que já está em formValues.
+  // Isso é crucial porque `steps` em vários wizards muda de referência ao longo
+  // do tempo (CEP, isManualAddress, generatedInternalCode), e a versão antiga
+  // resetava o formulário a cada mudança.
+  useEffect(() => {
+    setFormValues(prev => {
+      const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
+      let mutated = false;
+      const next: Record<string, any> = { ...prev };
+
+      allFields.forEach(field => {
+        if (next[field.field] !== undefined) return; // já existe — preserva
+        let defaultValue: any;
+        if (field.defaultValue !== undefined) {
+          defaultValue = field.defaultValue;
+        } else {
+          switch (field.type) {
+            case 'checkbox':
+            case 'boolean':
+              defaultValue = false;
+              break;
+            case 'number':
+              defaultValue = 0;
+              break;
+            case 'file':
+            case 'custom':
+              defaultValue = [];
+              break;
+            default:
+              defaultValue = '';
+          }
+        }
+        next[field.field] = defaultValue;
+        mutated = true;
+      });
+
+      return mutated ? next : prev;
     });
-    
-    setFormValues(initialValues);
+
+    // Em create, snapshot é capturado uma vez (após primeira inicialização)
+    // para detecção de dirty state.
+    if (mode === 'create') {
+      setInitialSnapshot(snap => snap ?? {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps, fields]);
 
@@ -235,7 +357,12 @@ export default function DynamicFormManager({
             }
           });
           
-          setFormValues((prev: Record<string, any>) => ({ ...prev, ...updatedValues }));
+          setFormValues((prev: Record<string, any>) => {
+            const merged = { ...prev, ...updatedValues };
+            // Snapshot dos valores carregados para detecção de dirty state.
+            setInitialSnapshot(merged);
+            return merged;
+          });
 
           if (steps && !externalCompletedSteps) {
             const allStepsCompleted = steps.map((_, index) => index);
@@ -464,6 +591,79 @@ export default function DynamicFormManager({
     return false;
   };
 
+  const handleSaveAndProceed = async () => {
+    if (isViewMode) return;
+    
+    setSubmitting(true);
+
+    try {
+      // Salvar no backend
+      if (onSubmit) {
+        const result = await onSubmit(formValues);
+        
+        // Atualizar snapshot após salvar
+        setInitialSnapshot(formValues);
+        
+        // Se for modo create, agora temos um ID
+        if (mode === 'create' && result?.data?.id) {
+          // Mudar para modo edit com o novo ID
+          const url = new URL(window.location.href);
+          url.searchParams.delete('mode');
+          url.pathname = url.pathname.replace('/cadastrar', `/editar/${result.data.id}`);
+          window.history.replaceState({}, '', url.toString());
+        }
+        
+        // Prosseguir para próxima etapa
+        if (handleNextStep()) {
+          return;
+        }
+      } else {
+        // Fallback: tentar salvar direto na API
+        const url = mode === 'create'
+          ? `${process.env.NEXT_PUBLIC_URL_API}/${resource}`
+          : `${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`;
+
+        const method = mode === 'create' ? 'POST' : 'PUT';
+        const dataToSend = transformResponse ? transformResponse(formValues) : formValues;
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dataToSend),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Erro ao ${mode === 'create' ? 'cadastrar' : 'atualizar'}`);
+        }
+
+        const result = await response.json();
+        
+        // Atualizar snapshot após salvar
+        setInitialSnapshot(formValues);
+        
+        // Se for modo create, agora temos um ID
+        if (mode === 'create' && result?.data?.id) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('mode');
+          url.pathname = url.pathname.replace('/cadastrar', `/editar/${result.data.id}`);
+          window.history.replaceState({}, '', url.toString());
+        }
+        
+        // Prosseguir para próxima etapa
+        if (handleNextStep()) {
+          return;
+        }
+      }
+    } catch (error: any) {
+      showMessage(error.message || `Erro ao salvar ${title.toLowerCase()}.`, 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handlePrevStep = () => {
     if (hasSteps && currentStep > 0) {
       setCurrentStep(prev => prev - 1);
@@ -500,20 +700,25 @@ export default function DynamicFormManager({
     }
 
     setSubmitting(true);
-    
+
+    const finalizeSuccess = (resultData: any) => {
+      if (draftKey) clearDraft(draftKey);
+      setInitialSnapshot(formValues);
+      if (onSubmitSuccess) {
+        onSubmitSuccess(resultData);
+      } else {
+        showMessage(
+          `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
+          'success'
+        );
+        router.push(basePath);
+      }
+    };
+
     try {
       if (onSubmit) {
         const result = await onSubmit(formValues);
-
-        if (onSubmitSuccess) {
-          onSubmitSuccess(result.data || result);
-        } else {
-          showMessage(
-            result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
-            'success'
-          );
-          router.push(basePath);
-        }
+        finalizeSuccess(result?.data || result);
       } else {
         const url = mode === 'create'
           ? `${process.env.NEXT_PUBLIC_URL_API}/${resource}`
@@ -536,16 +741,7 @@ export default function DynamicFormManager({
         }
 
         const result = await response.json();
-
-        if (onSubmitSuccess) {
-          onSubmitSuccess(result.data || result);
-        } else {
-          showMessage(
-            result.message || `${title} ${mode === 'create' ? 'cadastrado' : 'atualizado'} com sucesso!`,
-            'success'
-          );
-          router.push(basePath);
-        }
+        finalizeSuccess(result?.data || result);
       }
     } catch (error: any) {
       showMessage(error.message || `Erro ao salvar ${title.toLowerCase()}.`, 'error');
@@ -869,6 +1065,19 @@ export default function DynamicFormManager({
       hrefText="Voltar"
     >
       <div className="bg-surface p-5 rounded-xl" style={{ boxShadow: '0px 4px 8px 3px var(--color-shadow-soft)' }}>
+        {mode === 'edit' && isDirty && (
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm">
+            <span>Você possui alterações não salvas.</span>
+            <button
+              type="button"
+              onClick={handleSaveAndProceed}
+              disabled={submitting}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-medium disabled:opacity-60"
+            >
+              {submitting ? 'Salvando...' : 'Salvar alterações'}
+            </button>
+          </div>
+        )}
         {hasSteps && (
           <ProgressBar
             steps={steps!.map((step, index) => ({

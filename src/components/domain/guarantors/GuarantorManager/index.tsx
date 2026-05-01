@@ -31,6 +31,8 @@ interface Guarantor {
   marital_status?: string;
   cpf?: string;
   rg?: string;
+  rg_issuing?: string;
+  rg_issuing_state?: string;
   address?: Address;
   contacts?: Contact[];
 }
@@ -98,6 +100,8 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
     marital_status: '',
     cpf: '',
     rg: '',
+    rg_issuing: '',
+    rg_issuing_state: '',
     address: {
       zip_code: '',
       street: '',
@@ -128,6 +132,8 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
         marital_status: '',
         cpf: '',
         rg: '',
+        rg_issuing: '',
+        rg_issuing_state: '',
         address: {
           zip_code: '',
           street: '',
@@ -471,6 +477,57 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
                       placeholder="00.000.000-0"
                       maxLength={12}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                      Expedidor
+                    </label>
+                    <input
+                      type="text"
+                      value={tempGuarantor.rg_issuing || ''}
+                      onChange={(e) => setTempGuarantor({...tempGuarantor, rg_issuing: e.target.value})}
+                      className="w-full p-2.5 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none"
+                      placeholder="Ex: SSP"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                      UF do Expedidor
+                    </label>
+                    <select
+                      value={tempGuarantor.rg_issuing_state || ''}
+                      onChange={(e) => setTempGuarantor({...tempGuarantor, rg_issuing_state: e.target.value})}
+                      className="w-full p-2.5 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none bg-surface"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="AC">AC</option>
+                      <option value="AL">AL</option>
+                      <option value="AP">AP</option>
+                      <option value="AM">AM</option>
+                      <option value="BA">BA</option>
+                      <option value="CE">CE</option>
+                      <option value="DF">DF</option>
+                      <option value="ES">ES</option>
+                      <option value="GO">GO</option>
+                      <option value="MA">MA</option>
+                      <option value="MT">MT</option>
+                      <option value="MS">MS</option>
+                      <option value="MG">MG</option>
+                      <option value="PA">PA</option>
+                      <option value="PB">PB</option>
+                      <option value="PR">PR</option>
+                      <option value="PE">PE</option>
+                      <option value="PI">PI</option>
+                      <option value="RJ">RJ</option>
+                      <option value="RN">RN</option>
+                      <option value="RS">RS</option>
+                      <option value="RO">RO</option>
+                      <option value="RR">RR</option>
+                      <option value="SC">SC</option>
+                      <option value="SP">SP</option>
+                      <option value="SE">SE</option>
+                      <option value="TO">TO</option>
+                    </select>
                   </div>
                 </div>
               </div>

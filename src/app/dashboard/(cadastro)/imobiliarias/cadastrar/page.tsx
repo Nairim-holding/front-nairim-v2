@@ -233,6 +233,7 @@ export default function CadastrarImobiliariaPage() {
       title="Imobiliária"
       basePath="/dashboard/imobiliarias"
       mode="create"
+      draftKey="form:agencies:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}

@@ -10,7 +10,7 @@ import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types'
 import {
   User, MapPin, FileText, Hash,
-  Briefcase, Heart, User as UserIcon,
+  Briefcase, Heart, Phone, User as UserIcon,
   MapPin as MapPinIcon,
   Building as BuildingIcon, Globe
 } from 'lucide-react';
@@ -233,19 +233,6 @@ export default function EditarInquilinoPage() {
         { field: 'cnpj', label: 'CNPJ', type: 'text', required: true, mask: 'cnpj', icon: <FileText size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
         { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, icon: <BuildingIcon size={20} />, hidden: (formValues: any) => formValues.tenant_type === 'fisica' },
-        {
-          field: 'contacts',
-          label: 'Contatos',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (value: any, formValues: any, onChange: any) => (
-            <ContactManager
-              value={value}
-              onChange={onChange}
-              resourceType="tenants"
-            />
-          )
-        },
       ],
     },
     {
@@ -261,6 +248,25 @@ export default function EditarInquilinoPage() {
         { field: 'city', label: 'Cidade', type: 'text', required: true, icon: <MapPinIcon size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'state', label: 'Estado', type: 'text', required: true, icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress },
         { field: 'country', label: 'País', type: 'text', required: true, defaultValue: 'Brasil', icon: <Globe size={20} />, disabled: !isManualAddress, readOnly: !isManualAddress }
+      ],
+    },
+    {
+      title: 'Contatos',
+      icon: <Phone size={20} />,
+      fields: [
+        {
+          field: 'contacts',
+          label: 'Lista de Contatos',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (value: any, formValues: any, onChange: any) => (
+            <ContactManager
+              value={value}
+              onChange={onChange}
+              resourceType="tenants"
+            />
+          )
+        },
       ],
     },
   ], [isManualAddress]); // Dependência isManualAddress adicionada

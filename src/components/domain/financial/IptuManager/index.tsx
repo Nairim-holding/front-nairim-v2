@@ -7,6 +7,7 @@ import { formatCurrency } from '@/utils/formatters';
 import { parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
 import DynamicTableManager from '@/components/table/DataTable';
 import { ColumnDef } from '@/types/types';
+import { usePopupContext } from '@/contexts/PopupContext';
 
 // Converte "YYYY-MM-DD" → "DD/MM/YYYY" sem criar objeto Date (evita bug de timezone UTC)
 function isoToDisplay(dateStr: string | null | undefined): string | null {
@@ -48,6 +49,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const installmentsCountRef = useRef<HTMLInputElement>(null);
+  const { showPopup } = usePopupContext();
+  const [sortConfig, setSortConfig] = useState<Record<string, 'asc' | 'desc'>>({});
 
   const [tempIptu, setTempIptu] = useState<IptuEntry>({
     year: new Date().getFullYear().toString(),
@@ -193,9 +196,36 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
   const handleRemove = (index: number) => {
     if (readOnly) return;
-    const newIptus = iptus.filter((_, i) => i !== index);
-    setIptus(newIptus);
-    if (onChange) onChange(newIptus);
+    const item = iptus[index];
+    showPopup(
+      'Confirmar Exclusão',
+      `Tem certeza que deseja excluir o lançamento de IPTU do ano ${item.year}?`,
+      () => {
+        const newIptus = iptus.filter((_, i) => i !== index);
+        setIptus(newIptus);
+        if (onChange) onChange(newIptus);
+      },
+      () => {} // callback de cancelamento vazio
+    );
+  };
+
+  // Verifica se a 1ª parcela já foi lançada para o ano atual
+  const getFirstInstallmentNumber = () => {
+    const currentYear = tempIptu.year;
+    // Verifica se já existe algum lançamento para o ano atual (exceto o que está sendo editado)
+    const existingForYear = iptus.find((item, idx) => {
+      if (editingIndex !== null && idx === editingIndex) return false; // Ignora o item sendo editado
+      return String(item.year) === String(currentYear);
+    });
+    
+    // Se já existe um lançamento com 1ª parcela definida (IN_FULL_15_DISCOUNT ou SECOND_INSTALLMENT_10_DISCOUNT), começa da 2ª
+    if (existingForYear) {
+      const hasFirstInstallment = existingForYear.payment_condition === 'IN_FULL_15_DISCOUNT' || 
+                                   existingForYear.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT';
+      if (hasFirstInstallment) return 2;
+    }
+    
+    return 1;
   };
 
   const generateInstallments = (count: string | number) => {
@@ -401,6 +431,33 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     return data;
   }, [iptus, baseIptu]);
 
+  // Aplicar ordenação aos dados
+  const sortedTableData = useMemo(() => {
+    if (!sortConfig || Object.keys(sortConfig).length === 0) {
+      return tableData;
+    }
+
+    const sortField = Object.keys(sortConfig)[0];
+    const sortOrder = sortConfig[sortField];
+
+    return [...tableData].sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+
+      let comparison = 0;
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        comparison = aVal - bVal;
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal), 'pt-BR');
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [tableData, sortConfig]);
+
   return (
     <div className="w-full space-y-6">
       {activeLease && (
@@ -420,16 +477,14 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
           </button>
         )}
         <DynamicTableManager
-          resource="iptu"
+          resource="iptu-property"
           title="IPTU"
           columns={columns}
           basePath=""
           enableCreate={false}
           enableView={false}
-          enableEdit={true}
           enableDelete={true}
-          localData={tableData}
-          hideActionButtons={true}
+          localData={sortedTableData}
           onRowClick={() => {}}
           onEdit={(item) => {
             const originalIndex = item._originalIndex;
@@ -439,6 +494,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
             const originalIndex = item._originalIndex;
             handleRemove(originalIndex);
           }}
+          onSortChange={setSortConfig}
         />
       </div>
 
@@ -549,8 +605,13 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                       <button
                         type="button"
                         onClick={replicateToAllInstallments}
-                        className="text-xs px-2 py-1 bg-brand/10 text-brand rounded hover:bg-brand/20 transition-colors flex items-center gap-1"
-                        title="Replicar valor e data para todas as parcelas"
+                        disabled={!tempIptu.iptu_installments?.[0]?.due_date}
+                        className={`text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                          tempIptu.iptu_installments?.[0]?.due_date
+                            ? 'bg-brand/10 text-brand hover:bg-brand/20 cursor-pointer'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                        }`}
+                        title={tempIptu.iptu_installments?.[0]?.due_date ? 'Replicar valor e data para todas as parcelas' : 'Informe a data de vencimento da primeira parcela para habilitar'}
                       >
                         <Copy size={12} /> Replicar para Todas
                       </button>
@@ -560,7 +621,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                     {tempIptu.iptu_installments?.map((inst, i) => (
                       <div key={i} className="p-3 border rounded-lg space-y-2 bg-surface-subtle">
-                        <span className="text-[10px] font-bold text-brand">Parcela {i + 1}</span>
+                        <span className="text-[10px] font-bold text-brand">Parcela {i + getFirstInstallmentNumber()}</span>
                         <input type="text" value={formatCurrency(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" placeholder="R$ 0,00" />
                         <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
                       </div>

@@ -31,6 +31,9 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
   
   // NOVO: Estado para controle de fallback do endereço
   const [isManualAddress, setIsManualAddress] = useState(false);
+  
+  // Estado para armazenar o código interno gerado automaticamente
+  const [generatedInternalCode, setGeneratedInternalCode] = useState<string>('');
 
   useEffect(() => {
     if (!tipoParam || !['fisica', 'juridica'].includes(tipoParam)) {
@@ -41,6 +44,39 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
     
     setTipoSelecionado(tipoParam);
   }, [tipoParam, router, showMessage]);
+
+  // Buscar último proprietário para gerar código interno automaticamente
+  useEffect(() => {
+    const fetchLastOwner = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_URL_API;
+        const response = await fetch(`${API_URL}/owners?sort=internal_code&order=desc&limit=1`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.length > 0) {
+            const lastCode = data.data[0].internal_code;
+            const codeNumber = parseInt(lastCode, 10);
+            
+            if (!isNaN(codeNumber)) {
+              setGeneratedInternalCode(String(codeNumber + 1));
+            } else {
+              setGeneratedInternalCode(lastCode);
+            }
+          } else {
+            setGeneratedInternalCode('1');
+          }
+        } else {
+          setGeneratedInternalCode('1');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar último proprietário:', error);
+        setGeneratedInternalCode('1');
+      }
+    };
+
+    fetchLastOwner();
+  }, []);
 
   const handleFieldChange = async (fieldName: string, value: any) => {
     if (fieldName === 'zip_code' && value) {
@@ -193,6 +229,7 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
             required: true,
             placeholder: 'Código interno',
             icon: <Hash size={20} />,
+            defaultValue: generatedInternalCode,
           },
           ...(tipoSelecionado === 'fisica' ? [
             { field: 'occupation', label: 'Profissão', type: 'text', icon: <Briefcase size={20} />, className: 'col-span-full', placeholder: 'Profissão' } as any,
@@ -256,9 +293,9 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
     ];
 
     return baseSteps;
-  }, [tipoSelecionado, isManualAddress]); // Dependência adicionada
+  }, [tipoSelecionado, isManualAddress, generatedInternalCode]); // Dependência adicionada
 
-  const onSubmitSuccess = (data: any) => {
+  const onSubmitSuccess = () => {
     showMessage('Proprietário criado com sucesso!', 'success');
     router.push('/dashboard/proprietarios');
   };
@@ -280,6 +317,7 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
       title="Proprietário"
       basePath="/dashboard/proprietarios"
       mode="create"
+      draftKey="form:owners:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}

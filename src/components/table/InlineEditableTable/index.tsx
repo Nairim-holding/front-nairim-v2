@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronLeft, ChevronRight, ChevronDown, Check, CreditCard, DollarSign, Settings2 } from "lucide-react";
+import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2 } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import Toggle from "@/components/ui/Toggle";
@@ -16,10 +16,12 @@ import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate, parseCurrencyFromPTBR, maskCurrencyInput } from "@/utils/formatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
+import CalendarPicker from "@/components/ui/CalendarPicker";
+import SupplierAutocomplete from "@/components/ui/SupplierAutocomplete";
 
 // Componente Select customizado que abre no foco e permite navegação por Tab
 interface CustomSelectProps {
@@ -346,184 +348,6 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
   );
 }
 
-// Componente de Calendário para seleção de período
-interface CalendarPickerProps {
-  dateRange: { from: string; to: string };
-  onChange: (range: { from: string; to: string }) => void;
-}
-
-// Helper para converter string de data para Date local (sem timezone issues)
-function parseDateString(dateStr: string): Date {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function CalendarPicker({ dateRange, onChange }: CalendarPickerProps) {
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-  const [selecting, setSelecting] = useState<'from' | 'to'>('from');
-
-  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-  const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDayOfWeek = firstDay.getDay();
-    
-    const days: Array<{ date: number | null; isCurrentMonth: boolean }> = [];
-    
-    // Empty cells for days before the first day of month
-    for (let i = 0; i < startDayOfWeek; i++) {
-      days.push({ date: null, isCurrentMonth: false });
-    }
-    
-    // Days of the month
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push({ date: i, isCurrentMonth: true });
-    }
-    
-    return days;
-  };
-
-  const isDateInRange = (day: number) => {
-    if (!dateRange.from || !dateRange.to) return false;
-    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return dateStr > dateRange.from && dateStr < dateRange.to;
-  };
-
-  const isDateSelected = (day: number, type: 'from' | 'to') => {
-    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return dateStr === (type === 'from' ? dateRange.from : dateRange.to);
-  };
-
-  const isToday = (day: number) => {
-    const today = new Date();
-    return day === today.getDate() && 
-           currentMonth.getMonth() === today.getMonth() && 
-           currentMonth.getFullYear() === today.getFullYear();
-  };
-
-  const handleDateClick = (day: number) => {
-    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    
-    if (selecting === 'from') {
-      onChange({ from: dateStr, to: dateStr });
-      setSelecting('to');
-    } else {
-      if (dateStr < dateRange.from) {
-        onChange({ from: dateStr, to: dateRange.from });
-      } else {
-        onChange({ from: dateRange.from, to: dateStr });
-      }
-      setSelecting('from');
-    }
-  };
-
-  const days = getDaysInMonth(currentMonth);
-
-  return (
-    <div className="mb-2">
-      {/* Instruction compacta */}
-      <div className="mb-2 text-[11px] text-content-secondary bg-surface-subtle rounded-md p-1.5">
-        {selecting === 'from' ? (
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-            Clique na <strong>data inicial</strong>
-          </span>
-        ) : (
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-            Agora clique na <strong>data final</strong>
-          </span>
-        )}
-      </div>
-
-      {/* Header com mês/ano e navegação */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <button
-          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
-          className="p-1 hover:bg-surface-subtle rounded transition-colors"
-        >
-          <ChevronLeft size={16} className="text-content-secondary" />
-        </button>
-        <span className="text-xs font-semibold text-content">
-          {monthNames[currentMonth.getMonth()]} <span className="text-content-muted font-normal">{currentMonth.getFullYear()}</span>
-        </span>
-        <button
-          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
-          className="p-1 hover:bg-surface-subtle rounded transition-colors"
-        >
-          <ChevronRight size={16} className="text-content-secondary" />
-        </button>
-      </div>
-
-      {/* Dias da semana */}
-      <div className="grid grid-cols-7 gap-0.5 mb-1">
-        {weekDays.map((day, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold text-content-muted py-0.5">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Grid de dias - mais compacto */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {days.map((day, index) => (
-          <div key={index} className="aspect-square">
-            {day.date ? (
-              <button
-                onClick={() => handleDateClick(day.date!)}
-                className={`w-full h-full rounded-md text-xs font-medium transition-all relative ${
-                  isDateSelected(day.date!, 'from') && isDateSelected(day.date!, 'to')
-                    ? 'bg-brand text-content-inverse shadow-sm'
-                    : isDateSelected(day.date!, 'from')
-                    ? 'bg-brand text-content-inverse shadow-sm ring-2 ring-brand/30'
-                    : isDateSelected(day.date!, 'to')
-                    ? 'bg-brand text-content-inverse shadow-sm ring-2 ring-brand/30'
-                    : isDateInRange(day.date!)
-                    ? 'bg-brand/15 text-brand hover:bg-brand/25'
-                    : isToday(day.date!)
-                    ? 'ring-1 ring-brand text-brand hover:bg-surface-subtle'
-                    : 'hover:bg-surface-subtle text-content-secondary'
-                }`}
-              >
-                <span className="relative z-10">{day.date}</span>
-                {isDateSelected(day.date!, 'from') && !isDateSelected(day.date!, 'to') && (
-                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[7px] font-normal text-brand">De</span>
-                )}
-                {isDateSelected(day.date!, 'to') && !isDateSelected(day.date!, 'from') && (
-                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[7px] font-normal text-brand">Até</span>
-                )}
-              </button>
-            ) : (
-              <div className="w-full h-full" />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Resumo compacto */}
-      <div className="mt-2 text-center">
-        <div className="inline-flex items-center gap-1.5 bg-surface-subtle rounded-md px-2 py-1">
-          <span className="text-xs font-medium text-content">
-            {dateRange.from ? parseDateString(dateRange.from).toLocaleDateString('pt-BR') : '--/--/----'}
-          </span>
-          <span className="text-content-muted text-xs">→</span>
-          <span className="text-xs font-medium text-content">
-            {dateRange.to ? parseDateString(dateRange.to).toLocaleDateString('pt-BR') : '--/--/----'}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface InlineEditableTableProps {
   resource: string;
   title: string;
@@ -818,14 +642,18 @@ export default function InlineEditableTable({
   }, [items, activeTab]);
 
   const totals = useMemo(() => {
-    if (!showTotals || !filteredItems?.length) return { totalIncome: 0, totalExpense: 0, balance: 0 };
+    if (!showTotals) return { totalIncome: 0, totalExpense: 0, balance: 0 };
+    
+    // Calcular no frontend com base nos itens filtrados
+    // O summary do backend não tem informação de INCOME/EXPENSE, apenas status
+    if (!filteredItems?.length) return { totalIncome: 0, totalExpense: 0, balance: 0 };
     return filteredItems.reduce((acc: any, item: any) => {
-      const amount = parseFloat(String(item.amount).replace(/[R$\s]/g, '').replace(/[^\d,-]/g, '').replace(',', '.') || '0');
+      const amount = typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount);
       item.category?.type === 'INCOME' ? (acc.totalIncome += amount) : (acc.totalExpense += amount);
       acc.balance = acc.totalIncome - acc.totalExpense;
       return acc;
     }, { totalIncome: 0, totalExpense: 0, balance: 0 });
-  }, [filteredItems, showTotals]);
+  }, [filteredItems, showTotals, activeTab]);
 
   const displayItems = useMemo(() => [
     ...editingRows.filter(row => row.isNew),
@@ -912,7 +740,7 @@ export default function InlineEditableTable({
 
   const validateEditingRow = useCallback((row: EditingRow) => {
     const d = row.data, e: Record<string, string> = {};
-    if (!d.amount || parseFloat(String(d.amount).replace(/[^\d,-]/g, '').replace(',', '.')) <= 0) e.amount = 'Valor deve ser maior que zero';
+    if (!d.amount || parseCurrencyFromPTBR(d.amount) <= 0) e.amount = 'Valor deve ser maior que zero';
     if (!d.category_id) e.category_id = 'Categoria é obrigatória';
     if (d.category_id && formOptions.subcategories[d.category_id]?.length > 0 && !d.subcategory_id) e.subcategory_id = 'Subcategoria é obrigatória';
     if (!d.financial_institution_id) e.financial_institution_id = 'Instituição é obrigatória';
@@ -938,9 +766,10 @@ export default function InlineEditableTable({
     setEditingRows(prev => [...prev.filter(r => !r.isNew), {
       id: newRowId,
       data: isNew
-        ? { description: '', amount: '', status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
+        ? { description: '', amount: 0, status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
         : {
             ...item,
+            amount: typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount),
             event_date: safeDateInput(item.event_date),
             effective_date: safeDateInput(item.effective_date),
             category_id: safeId(item.category_id || item.category?.id),
@@ -976,7 +805,7 @@ export default function InlineEditableTable({
     try {
       const payload = { 
         ...row.data, 
-        amount: parseFloat(String(row.data.amount).replace(/[^\d,-]/g, '').replace(',', '.')), 
+        amount: typeof row.data.amount === 'number' ? row.data.amount : parseCurrencyFromPTBR(row.data.amount), 
         card_id: row.data.card_id || null, 
         center_id: row.data.center_id || null,
         supplier_id: row.data.supplier_id || null,
@@ -1065,24 +894,30 @@ export default function InlineEditableTable({
             tabIndex={0}
           />
         );
-      case 'amount':
-        const amountDisplay = typeof val === 'number' ? formatCurrency(val) : (val || '');
+      case 'amount': {
+        // Máscara pt-BR em tempo real, baseada em centavos.
+        // Estado pode ser número (valor inicial / após blur) ou string mascarada (durante digitação).
+        const amountDisplay = typeof val === 'number'
+          ? (val > 0 ? maskCurrencyInput(Math.round(val * 100).toString()) : '')
+          : (val ?? '');
         return renderWrapper(
-          <input 
-            type="text" 
-            value={amountDisplay} 
+          <input
+            type="text"
+            inputMode="numeric"
+            value={amountDisplay}
             onChange={e => {
-              const rawDigits = e.target.value.replace(/\D/g, '');
-              if (!rawDigits) return upd('');
-              const floatValue = parseFloat(rawDigits) / 100;
-              upd(formatCurrency(floatValue));
-            }} 
-            disabled={dis} 
-            className={inputClasses} 
-            placeholder="R$ 0,00" 
+              upd(maskCurrencyInput(e.target.value));
+            }}
+            onBlur={e => {
+              upd(parseCurrencyFromPTBR(e.target.value));
+            }}
+            disabled={dis}
+            className={inputClasses}
+            placeholder="0,00"
             tabIndex={0}
           />
         );
+      }
       case 'status':
         return renderWrapper(
           <CustomSelect 
@@ -1192,11 +1027,11 @@ export default function InlineEditableTable({
       }
       case 'supplier_id':
         return renderWrapper(
-          <CustomSelect 
-            value={val || ''} 
-            onChange={v => upd(v)} 
+          <SupplierAutocomplete
+            value={val || ''}
+            onChange={v => upd(v)}
             disabled={dis}
-            options={[{ value: '', label: 'Nenhum' }, ...formOptions.suppliers]}
+            options={formOptions.suppliers}
           />
         );
       default:
@@ -1254,7 +1089,13 @@ export default function InlineEditableTable({
               <Calendar size={14} className="text-content-muted" />
               <span className="text-content-secondary font-medium">
                 {hasDateFilter && dateRange.from && dateRange.to
-                  ? `${parseDateString(dateRange.from).toLocaleDateString('pt-BR')} - ${parseDateString(dateRange.to).toLocaleDateString('pt-BR')}`
+                  ? `${(() => {
+                      const parseDateString = (dateStr: string): Date => {
+                        const [year, month, day] = dateStr.split('-').map(Number);
+                        return new Date(year, month - 1, day);
+                      };
+                      return `${parseDateString(dateRange.from).toLocaleDateString('pt-BR')} - ${parseDateString(dateRange.to).toLocaleDateString('pt-BR')}`;
+                    })()}`
                   : 'Período'
                 }
               </span>
@@ -1301,7 +1142,7 @@ export default function InlineEditableTable({
             <span>Limpar</span>
             <X size={12} />
           </button>
-          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={title === 'Lançamentos' ? 3 : undefined} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
+          {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={4} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
           
           {/* Pesquisa logo após Limpar */}
           <div className="w-[200px] sm:w-[250px] lg:w-[300px]">
@@ -1437,7 +1278,7 @@ export default function InlineEditableTable({
               
               if (numInstallments > 1) {
                 // Receita parcelada - criar múltiplas receitas
-                const installmentAmount = parseFloat(data.amount);
+                const installmentAmount = parseCurrencyFromPTBR(data.amount);
                 endpoint = '/financial-transaction/installments';
                 payload = {
                   transaction_type: 'INCOME',
@@ -1458,10 +1299,10 @@ export default function InlineEditableTable({
                 payload = {
                   category_id: data.category,
                   subcategory_id: data.subcategory || null,
-                  financial_institution_id: data.institution || null,  // ✅ Enviar null se vazio
+                  financial_institution_id: data.institution || null,  // Enviar null se vazio
                   center_id: data.center || null,
-                  description: data.description || null,  // ✅ Enviar null se vazio
-                  amount: parseFloat(data.amount),
+                  description: data.description || null,  // Enviar null se vazio
+                  amount: parseCurrencyFromPTBR(data.amount),
                   event_date: data.startDate,
                   effective_date: data.firstPaymentDate,
                   status: 'PENDING',
@@ -1469,7 +1310,7 @@ export default function InlineEditableTable({
               }
             } else if (data.paymentMode === 'PARCELADO') {
               // Despesa parcelada - amount é o valor DA PARCELA
-              const installmentAmount = parseFloat(data.amount);
+              const installmentAmount = parseCurrencyFromPTBR(data.amount);
               const numInstallments = parseInt(data.numInstallments);
               endpoint = '/financial-transaction/installments';
               payload = {
@@ -1480,7 +1321,7 @@ export default function InlineEditableTable({
                 subcategory_id: data.subcategory || null,
                 center_id: data.center || null,
                 supplier_id: data.supplier || null,
-                description: data.description,
+                description: data.description || null,
                 installment_amount: installmentAmount,  // Valor de CADA parcela
                 num_installments: numInstallments,
                 total_amount: installmentAmount * numInstallments,  // Total calculado
@@ -1488,9 +1329,9 @@ export default function InlineEditableTable({
                 first_payment_date: data.firstPaymentDate,
               };
             } else if (data.paymentMode === 'RECORRENTE') {
-              // Despesa recorrente
-              const numInstallments = parseInt(data.numInstallments);
-              endpoint = '/financial-transaction/recurring';
+              // Despesa recorrente - amount é o valor mensal
+              const installmentAmount = parseCurrencyFromPTBR(data.amount);
+              endpoint = '/financial-transaction/installments';
               payload = {
                 transaction_type: 'EXPENSE',
                 institution_id: data.institution,
@@ -1499,11 +1340,28 @@ export default function InlineEditableTable({
                 subcategory_id: data.subcategory || null,
                 center_id: data.center || null,
                 supplier_id: data.supplier || null,
-                description: data.description,
-                amount: parseFloat(data.amount),
-                num_installments: numInstallments,
+                description: data.description || null,
+                installment_amount: installmentAmount,
+                num_installments: parseInt(data.numInstallments),
+                total_amount: installmentAmount * parseInt(data.numInstallments),
                 start_date: data.startDate,
                 first_payment_date: data.firstPaymentDate,
+              };
+            } else {
+              // Despesa simples (avulsa)
+              endpoint = '/financial-transaction';
+              payload = {
+                category_id: data.category,
+                subcategory_id: data.subcategory || null,
+                financial_institution_id: data.institution || null,
+                card_id: data.card || null,
+                center_id: data.center || null,
+                supplier_id: data.supplier || null,
+                description: data.description || null,
+                amount: parseCurrencyFromPTBR(data.amount),
+                event_date: data.startDate,
+                effective_date: data.firstPaymentDate,
+                status: 'PENDING',
               };
             }
             

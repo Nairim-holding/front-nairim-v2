@@ -8,7 +8,7 @@ import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import {
   User, MapPin, FileText, Hash,
-  Briefcase, Heart, User as UserIcon,
+  Briefcase, Heart, Phone, User as UserIcon,
   MapPin as MapPinIcon,
   Building as BuildingIcon, Globe
 } from 'lucide-react';
@@ -160,19 +160,6 @@ export default function VisualizarInquilinoPage() {
           readOnly: true,
           hidden: (formValues: any) => !formValues.municipal_registration,
         },
-        {
-          field: 'contacts',
-          label: 'Contatos',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (value: any) => (
-            <ContactManager
-              value={value}
-              resourceType="tenants"
-              readOnly={true}
-            />
-          )
-        },
       ],
     },
     {
@@ -187,6 +174,25 @@ export default function VisualizarInquilinoPage() {
         { field: 'city', label: 'Cidade', type: 'text', icon: <MapPinIcon size={20} />, readOnly: true },
         { field: 'state', label: 'Estado', type: 'text', icon: <Globe size={20} />, readOnly: true },
         { field: 'country', label: 'País', type: 'text', icon: <Globe size={20} />, readOnly: true }
+      ],
+    },
+    {
+      title: 'Contatos',
+      icon: <Phone size={20} />,
+      fields: [
+        {
+          field: 'contacts',
+          label: 'Lista de Contatos',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (value: any) => (
+            <ContactManager
+              value={value}
+              resourceType="tenants"
+              readOnly={true}
+            />
+          )
+        },
       ],
     },
   ], []);

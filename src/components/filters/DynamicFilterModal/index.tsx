@@ -4,7 +4,8 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, Check } from "lucide-react";
+import { X, Check, Calendar } from "lucide-react";
+import CalendarPicker from "@/components/ui/CalendarPicker";
 
 // Definição do tipo corrigido
 export interface DynamicFilter {
@@ -78,6 +79,157 @@ const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject
     dropdownEl.style.width = rect.width + 'px';
   }
 };
+
+// Componente de filtro de data com botão que abre o calendário
+interface DateRangeFilterProps {
+  filter: DynamicFilter;
+  filterValue: FilterValue;
+  onChange: (from: string, to: string) => void;
+}
+
+function DateRangeFilter({ filterValue, onChange }: DateRangeFilterProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  // Calcular posição do dropdown
+  const calculatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownWidth = 320;
+    const dropdownHeight = 380; // altura aproximada do calendário
+    const margin = 8;
+    
+    // Calcular espaço disponível
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    const spaceAbove = rect.top - margin;
+    const viewportWidth = window.innerWidth;
+    
+    // Decidir se mostra acima ou abaixo
+    let top: number;
+    const showAbove = spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
+    
+    if (showAbove) {
+      top = Math.max(margin, rect.top - dropdownHeight - margin);
+    } else {
+      top = Math.min(rect.bottom + margin, window.innerHeight - dropdownHeight - margin);
+    }
+    
+    // Calcular left alinhado com o botão, mas garantindo que não saia da tela
+    let left = rect.left;
+    
+    // Se ultrapassar a borda direita, alinhar pela direita do botão
+    if (left + dropdownWidth > viewportWidth - margin) {
+      left = Math.max(margin, rect.right - dropdownWidth);
+    }
+    
+    // Se ainda ultrapassar, colocar no máximo possível
+    if (left < margin) {
+      left = margin;
+    }
+    
+    // Garantir que não saia pela direita
+    if (left + dropdownWidth > viewportWidth - margin) {
+      left = viewportWidth - dropdownWidth - margin;
+    }
+    
+    setDropdownPosition({ top, left });
+  }, []);
+
+  // Atualizar posição ao abrir e ao redimensionar
+  useEffect(() => {
+    if (isOpen) {
+      calculatePosition();
+      window.addEventListener('resize', calculatePosition);
+      window.addEventListener('scroll', calculatePosition, true);
+      return () => {
+        window.removeEventListener('resize', calculatePosition);
+        window.removeEventListener('scroll', calculatePosition, true);
+      };
+    }
+  }, [isOpen, calculatePosition]);
+
+  // Fechar ao clicar fora
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (buttonRef.current && !buttonRef.current.contains(target)) {
+        const dropdownEl = document.querySelector('[data-date-range-dropdown]');
+        if (!dropdownEl || !dropdownEl.contains(target)) {
+          setIsOpen(false);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  // Helper para converter string de data para Date local (sem timezone issues)
+  const parseDateString = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const hasValue = filterValue.value && filterValue.value2;
+  const displayText = hasValue
+    ? `${parseDateString(filterValue.value).toLocaleDateString('pt-BR')} - ${parseDateString(filterValue.value2).toLocaleDateString('pt-BR')}`
+    : 'Selecionar período';
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center gap-2 px-3 h-10 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-sm"
+      >
+        <Calendar size={16} className="text-content-muted flex-shrink-0" />
+        <span className={`truncate ${hasValue ? 'text-content' : 'text-content-muted'}`}>
+          {displayText}
+        </span>
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          data-date-range-dropdown
+          className="bg-surface rounded-xl shadow-2xl border border-ui-border-soft p-3 overflow-y-auto"
+          style={{
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: '320px',
+            minWidth: '280px',
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'min(85vh, 500px)',
+            zIndex: 9999,
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-ui-border-soft">
+            <span className="text-sm font-medium text-content">Selecione o período</span>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1 hover:bg-surface-subtle rounded transition-colors"
+            >
+              <X size={18} className="text-content-muted" />
+            </button>
+          </div>
+          <CalendarPicker
+            dateRange={{ from: filterValue.value || '', to: filterValue.value2 || '' }}
+            onChange={(range) => {
+              onChange(range.from, range.to);
+              if (range.from && range.to && range.from !== range.to) {
+                setIsOpen(false);
+              }
+            }}
+          />
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
 
 export default function DynamicFilterModal({
   visible, setVisible, onApply, onClear, title, filters, initialValues = {}, columns, maxHeight, excludeFieldsFromCount = []
@@ -158,15 +310,22 @@ export default function DynamicFilterModal({
   }, [visible, visibleFilters, initialValues, getLabelForValue]);
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
+    const target = event.target as Node;
     let clickedInsideDropdown = false;
-    Object.values(dropdownRefs.current).forEach(dropdown => { if (dropdown && dropdown.contains(event.target as Node)) clickedInsideDropdown = true; });
-    Object.values(inputRefs.current).forEach(input => { if (input && input.contains(event.target as Node)) clickedInsideDropdown = true; });
+    Object.values(dropdownRefs.current).forEach(dropdown => { if (dropdown && dropdown.contains(target)) clickedInsideDropdown = true; });
+    Object.values(inputRefs.current).forEach(input => { if (input && input.contains(target)) clickedInsideDropdown = true; });
+
+    // Verificar se clicou no dropdown de data (que está em portal fora do modal)
+    const dateRangeDropdown = document.querySelector('[data-date-range-dropdown]');
+    if (dateRangeDropdown && dateRangeDropdown.contains(target)) {
+      clickedInsideDropdown = true;
+    }
 
     if (!clickedInsideDropdown && activeDropdown) {
       setLocalFilters(prev => ({ ...prev, [activeDropdown]: { ...prev[activeDropdown], showDropdown: false } }));
       setActiveDropdown(null);
     }
-    if (modalRef.current && !modalRef.current.contains(event.target as Node)) setVisible(false);
+    if (modalRef.current && !modalRef.current.contains(target) && !clickedInsideDropdown) setVisible(false);
   }, [activeDropdown, setVisible]);
 
   useEffect(() => {
@@ -333,28 +492,14 @@ export default function DynamicFilterModal({
         </label>
 
         {filter.dateRange ? (
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <input
-                type="date"
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
-                value={filterValue.value || ''}
-                onChange={(e) => updateFilterValue(filter.field, 'value', e.target.value)}
-                min={filter.min}
-                max={filter.max}
-              />
-            </div>
-            <div>
-              <input
-                type="date"
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
-                value={filterValue.value2 || ''}
-                onChange={(e) => updateFilterValue(filter.field, 'value2', e.target.value)}
-                min={filterValue.value || filter.min}
-                max={filter.max}
-              />
-            </div>
-          </div>
+          <DateRangeFilter
+            filter={filter}
+            filterValue={filterValue}
+            onChange={(from, to) => {
+              updateFilterValue(filter.field, 'value', from);
+              updateFilterValue(filter.field, 'value2', to);
+            }}
+          />
         ) : (
           <div className="relative">
             <div className="relative">
@@ -473,7 +618,7 @@ export default function DynamicFilterModal({
       <div
         ref={modalRef}
         className="fixed top-[5%] left-1/2 -translate-x-1/2 z-50 bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col"
-        style={{ width: 'min(90vw, 1200px)', maxHeight: maxHeight || '85vh' }}
+        style={{ width: 'min(90vw, 1400px)', maxHeight: maxHeight || '85vh' }}
       >
         <div className="p-4 flex justify-between items-center border-b border-ui-border-soft flex-shrink-0 bg-surface">
           <div>
@@ -482,14 +627,14 @@ export default function DynamicFilterModal({
               {getActiveFilterCount() > 0 ? `${getActiveFilterCount()} filtro(s) ativo(s)` : "Selecione os critérios de filtro"}
             </p>
           </div>
-          <button onClick={() => setVisible(false)} className="p-2 hover:bg-surface-subtle rounded-lg transition-colors flex-shrink-0" aria-label="Fechar filtro">
+          <button type="button" onClick={() => setVisible(false)} className="p-2 hover:bg-surface-subtle rounded-lg transition-colors flex-shrink-0" aria-label="Fechar filtro">
             <X size={20} className="text-content-secondary" />
           </button>
         </div>
 
         <div
           ref={contentRef}
-          className={`p-4 grid gap-4 flex-1 min-h-0 overflow-y-auto ${
+          className={`p-4 grid gap-3 flex-1 min-h-0 overflow-y-auto ${
             columns === 3
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
               : columns === 2
@@ -500,17 +645,17 @@ export default function DynamicFilterModal({
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
                     : columns === 5
                       ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
           }`}
         >
           {visibleFilters.map((filter) => renderFilterInput(filter))}
         </div>
 
         <div className="p-4 flex justify-end gap-3 border-t border-ui-border-soft flex-shrink-0 bg-surface">
-          <button onClick={handleClear} className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors">
+          <button type="button" onClick={handleClear} className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors">
             Limpar tudo
           </button>
-          <button onClick={handleApply} className="px-4 py-2 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+          <button type="button" onClick={handleApply} className="px-4 py-2 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
             <Check size={16} />
             Aplicar filtros
           </button>

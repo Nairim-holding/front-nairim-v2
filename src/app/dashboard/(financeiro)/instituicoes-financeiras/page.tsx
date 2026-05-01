@@ -286,6 +286,7 @@ export default function InstituicoesFinanceirasPage() {
                   basePath=""
                   mode={formMode === 'CREATE' ? 'create' : 'edit'}
                   id={selectedId ?? undefined}
+                  draftKey={formMode === 'CREATE' ? 'form:financial-institution:create' : undefined}
                   steps={FORM_STEPS}
                   transformData={transformDataForLoad}
                   transformResponse={transformPayloadForSave}

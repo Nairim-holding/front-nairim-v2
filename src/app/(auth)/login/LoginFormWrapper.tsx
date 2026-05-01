@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRateLimit } from '@/hooks/useRateLimit';
@@ -15,6 +15,7 @@ export const LoginFormWrapper = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const emailInputRef = useRef<HTMLInputElement>(null);
   
   const {
     failedAttempts,
@@ -90,6 +91,10 @@ export const LoginFormWrapper = () => {
       }
       
       setError(errorMessage);
+      // Focar no campo de email após erro de login
+      setTimeout(() => {
+        emailInputRef.current?.focus();
+      }, 0);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +128,7 @@ export const LoginFormWrapper = () => {
         error={error}
         timeRemaining={timeRemaining}
         formatTimeRemaining={formatTimeRemaining}
+        emailInputRef={emailInputRef}
       />
     </>
   );

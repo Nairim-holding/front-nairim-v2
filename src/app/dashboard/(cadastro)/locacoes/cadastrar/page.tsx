@@ -423,7 +423,7 @@ export default function CadastrarLocacaoPage() {
             field: 'insurance_company',
             label: 'Nome da Seguradora',
             type: 'text',
-            required: true,
+            required: false,
             icon: <Building size={20} />,
             placeholder: 'Ex: Porto Seguro CIA de Seguros Gerais',
             className: 'col-span-full',
@@ -432,7 +432,7 @@ export default function CadastrarLocacaoPage() {
             field: 'insurance_type',
             label: 'Tipo de Seguro',
             type: 'text',
-            required: true,
+            required: false,
             icon: <Shield size={20} />,
             placeholder: 'Ex: Seguro Aluguel',
             className: 'col-span-full',
@@ -441,7 +441,7 @@ export default function CadastrarLocacaoPage() {
             field: 'insurance_policy',
             label: 'Apólice',
             type: 'text',
-            required: true,
+            required: false,
             icon: <FileText size={20} />,
             placeholder: 'Ex: PAC – Nº 102216180',
             className: 'col-span-full',
@@ -489,6 +489,7 @@ export default function CadastrarLocacaoPage() {
       title="Locação"
       basePath="/dashboard/locacoes"
       mode="create"
+      draftKey="form:leases:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}

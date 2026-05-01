@@ -2,14 +2,67 @@
 
 // ─── Moeda ──────────────────────────────────────────────────────────────────
 
+// Converte string monetária para número, tolerando formato pt-BR ("1.023,31")
+// e formato cru/US vindo da API ("1023.31"). Regras:
+//   - se houver vírgula → pt-BR: ponto = milhar, vírgula = decimal
+//   - se só houver ponto e parecer decimal (1 ponto + 1-2 dígitos finais) → decimal
+//   - caso contrário, ponto é tratado como separador de milhar
+export const parseCurrencyFromPTBR = (value: string | number): number => {
+  if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return isNaN(value) ? 0 : value;
+
+  const strValue = value.toString();
+
+  const cleaned = strValue
+    .replace(/[R$\s ]/g, '')
+    .replace(/[^\d.,-]/g, '');
+
+  if (!cleaned) return 0;
+
+  const hasComma = cleaned.includes(',');
+  const dotCount = (cleaned.match(/\./g) || []).length;
+
+  let normalized: string;
+  if (hasComma) {
+    normalized = cleaned.replace(/\./g, '').replace(',', '.');
+  } else if (dotCount === 1 && /\.\d{1,2}$/.test(cleaned)) {
+    normalized = cleaned;
+  } else {
+    normalized = cleaned.replace(/\./g, '');
+  }
+
+  const num = parseFloat(normalized);
+  return isNaN(num) ? 0 : num;
+};
+
+// Formata valor monetário para exibição (com R$)
 export const formatCurrency = (value: any): string => {
   if (value === null || value === undefined || value === '') return '';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  const num = parseCurrencyFromPTBR(value);
   if (typeof num !== 'number' || isNaN(num)) return '';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(num);
+};
+
+// Máscara de input para digitação de dinheiro (formata enquanto digita)
+export const maskCurrencyInput = (value: string): string => {
+  if (!value) return '';
+  
+  // Remove tudo que não é dígito
+  const digits = value.replace(/\D/g, '');
+  
+  if (!digits) return '';
+  
+  // Divide em parte inteira e decimal (últimos 2 dígitos são centavos)
+  const integerPart = digits.slice(0, -2) || '0';
+  const decimalPart = digits.slice(-2).padEnd(2, '0');
+  
+  // Formata parte inteira com separador de milhar
+  const formattedInteger = parseInt(integerPart, 10).toLocaleString('pt-BR');
+  
+  return `${formattedInteger},${decimalPart}`;
 };
 
 export const formatCurrencyFixed = (v?: number): string =>

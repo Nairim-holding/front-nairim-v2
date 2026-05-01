@@ -129,6 +129,7 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
       title="Imóvel"
       basePath="/dashboard/imoveis"
       mode="create"
+      draftKey="form:properties:create"
       steps={steps}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
