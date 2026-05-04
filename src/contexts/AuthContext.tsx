@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
-    localStorage.removeItem('userData');
+    sessionStorage.removeItem('userData');
 
     setAuthState({
       user: null,
@@ -63,12 +63,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [navigation]);
 
   const login = (token: string, user: User) => {
-    const maxAge = 86400; // 24 horas
-    document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    // Ao remover max-age, o cookie torna-se de sessão (deletado ao fechar o navegador)
+    document.cookie = `authToken=${token}; path=/; SameSite=Lax`;
 
-    localStorage.setItem('userData', JSON.stringify(user));
+    sessionStorage.setItem('userData', JSON.stringify(user));
 
-    console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie.');
+    console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie de sessão.');
 
     setAuthState({
       user,
@@ -90,8 +90,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         if (token) {
-          const userData = localStorage.getItem('userData');
-          const user = userData ? JSON.parse(userData) : null;
+          const userData = sessionStorage.getItem('userData');
+          
+          if (!userData) {
+            // Cenário: O cookie existe (browser aberto) mas a aba é nova (sessionStorage vazio)
+            // Para forçar o login ao fechar a aba, deslogamos se os dados do usuário sumirem
+            console.log('[AuthContext] Token encontrado mas dados da sessão sumiram. Forçando logout...');
+            logout();
+            return;
+          }
+
+          const user = JSON.parse(userData);
 
           setAuthState({
             user,
@@ -101,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
           console.log('[AuthContext] Usuário já estava autenticado');
         } else {
-          localStorage.removeItem('userData');
+          sessionStorage.removeItem('userData');
 
           setAuthState(prev => ({
             ...prev,

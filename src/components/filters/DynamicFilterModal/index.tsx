@@ -6,9 +6,12 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, Calendar } from "lucide-react";
 import CalendarPicker from "@/components/ui/CalendarPicker";
+import { maskCurrencyInput, parseCurrencyFromPTBR } from "@/utils/formatters";
 
 // Definição do tipo corrigido
 export interface DynamicFilter {
+  field: string;
+  type: 'string' | 'date' | 'enum' | 'number' | 'boolean' | 'select' | 'currency';
   field: string;
   type: 'string' | 'date' | 'enum' | 'number' | 'boolean' | 'select';
   label: string;
@@ -66,6 +69,15 @@ const isPhoneField = (fieldName: string): boolean => {
     'home_phone', 'work_phone', 'office_phone', 'business_phone'
   ];
   return phoneFields.some(phoneField => fieldName.toLowerCase().includes(phoneField.toLowerCase()));
+};
+
+const isCurrencyField = (fieldName: string, type?: string): boolean => {
+  if (type === 'currency') return true;
+  const currencyFields = [
+    'value', 'price', 'amount', 'total', 'tax', 'fee', 'valor', 'preco', 'custo', 'pagamento',
+    'cota', 'parcela', 'iptu', 'condo_fee', 'property_tax', 'purchase_value', 'rental_value', 'sale_value', 'market_value'
+  ];
+  return currencyFields.some(currencyField => fieldName.toLowerCase().includes(currencyField.toLowerCase()));
 };
 
 const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>, dropdownRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>) => {
@@ -180,6 +192,7 @@ function DateRangeFilter({ filterValue, onChange }: DateRangeFilterProps) {
   return (
     <div className="relative">
       <button
+        type="button"
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center gap-2 px-3 h-10 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-sm"
@@ -209,6 +222,7 @@ function DateRangeFilter({ filterValue, onChange }: DateRangeFilterProps) {
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-ui-border-soft">
             <span className="text-sm font-medium text-content">Selecione o período</span>
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
               className="p-1 hover:bg-surface-subtle rounded transition-colors"
             >
@@ -263,6 +277,7 @@ export default function DynamicFilterModal({
       visibleFilters.forEach(filter => {
         const initialValue = initialValues[filter.field];
         const isPhone = isPhoneField(filter.field);
+        const isCurrency = isCurrencyField(filter.field, filter.type);
 
         if (filter.dateRange) {
           if (initialValue && typeof initialValue === 'object' && 'from' in initialValue && 'to' in initialValue) {
@@ -281,6 +296,10 @@ export default function DynamicFilterModal({
               if (isPhone && value) {
                 newFilters[filter.field] = { value: removePhoneMask(String(value)), showDropdown: false };
                 newSearchTerms[filter.field] = String(value);
+              } else if (isCurrency && value) {
+                const numericVal = parseCurrencyFromPTBR(value);
+                newFilters[filter.field] = { value: numericVal, showDropdown: false };
+                newSearchTerms[filter.field] = maskCurrencyInput((numericVal * 100).toFixed(0));
               } else {
                 newFilters[filter.field] = { value: value || '', value2: value2 || '', values: values || [], showDropdown: false };
                 if (value) {
@@ -291,6 +310,10 @@ export default function DynamicFilterModal({
               if (isPhone) {
                 newFilters[filter.field] = { value: removePhoneMask(String(initialValue)), showDropdown: false };
                 newSearchTerms[filter.field] = String(initialValue);
+              } else if (isCurrency) {
+                const numericVal = parseCurrencyFromPTBR(initialValue);
+                newFilters[filter.field] = { value: numericVal, showDropdown: false };
+                newSearchTerms[filter.field] = maskCurrencyInput((numericVal * 100).toFixed(0));
               } else {
                 newFilters[filter.field] = { value: initialValue, showDropdown: false };
                 newSearchTerms[filter.field] = getLabelForValue(filter, initialValue);
@@ -450,10 +473,13 @@ export default function DynamicFilterModal({
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     const filter = visibleFilters.find(f => f.field === field);
     const isPhone = isPhoneField(field);
+    const isCurrency = isCurrencyField(field, filter?.type);
 
     let valueToStore = value;
     if (isPhone && (filter?.autocomplete || filter?.options || filter?.values)) {
       valueToStore = removePhoneMask(String(value));
+    } else if (isCurrency && (filter?.autocomplete || filter?.options || filter?.values)) {
+      valueToStore = parseCurrencyFromPTBR(String(value));
     }
 
     updateFilterValue(field, 'value', valueToStore, displayLabel);
@@ -485,6 +511,8 @@ export default function DynamicFilterModal({
     const isPhone = isPhoneField(filter.field);
     const hasOptions = filter.autocomplete || filter.options || filter.values;
 
+    const isCurrency = isCurrencyField(filter.field, filter.type);
+
     return (
       <div className="relative flex flex-col gap-1" key={filter.field}>
         <label className="block text-sm font-medium text-content-secondary truncate">
@@ -507,22 +535,30 @@ export default function DynamicFilterModal({
                 ref={(el) => { if (el) inputRefs.current[filter.field] = el; }}
                 type={filter.inputType || 'text'}
                 className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10 h-10"
-                value={isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm)}
+                value={isCurrency ? searchTerm : (isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm))}
                 onChange={(e) => {
                   const value = e.target.value;
-                  const cleanedValue = isPhone ? removePhoneMask(value) : value;
+                  let cleanedValue: any = value;
+                  let newSearchTerm = value;
 
-                  setSearchTerms(prev => ({ ...prev, [filter.field]: value }));
+                  if (isPhone) {
+                    cleanedValue = removePhoneMask(value);
+                  } else if (isCurrency) {
+                    newSearchTerm = maskCurrencyInput(value);
+                    cleanedValue = newSearchTerm === '' ? '' : parseCurrencyFromPTBR(newSearchTerm);
+                  }
+
+                  setSearchTerms(prev => ({ ...prev, [filter.field]: newSearchTerm }));
                   setLocalFilters(prev => ({
                     ...prev,
-                    [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(value.length > 0 && hasOptions) }
+                    [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(newSearchTerm.length > 0 && hasOptions) }
                   }));
 
-                  if (value.length > 0 && hasOptions) handleInputFocus(filter.field);
+                  if (newSearchTerm.length > 0 && hasOptions) handleInputFocus(filter.field);
                 }}
                 onFocus={() => handleInputFocus(filter.field)}
                 onBlur={() => handleInputBlur(filter.field)}
-                placeholder={isPhone ? "Ex: (11) 99999-9999" : `Digite...`}
+                placeholder={isCurrency ? "0,00" : (isPhone ? "Ex: (11) 99999-9999" : `Digite...`)}
               />
 
               {hasOptions && !isPhone && (
@@ -576,14 +612,19 @@ export default function DynamicFilterModal({
                       );
                     }
 
+                    let formattedLabel = String(suggestion);
+                    if (isCurrency && !isNaN(Number(suggestion))) {
+                      formattedLabel = maskCurrencyInput((Number(suggestion) * 100).toFixed(0));
+                    }
+
                     return (
                       <div
                         key={index}
                         className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, String(suggestion)); }}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, String(suggestion)); }}
+                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, formattedLabel); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, formattedLabel); }}
                       >
-                        {String(suggestion)}
+                        {formattedLabel}
                       </div>
                     );
                   })

@@ -62,6 +62,7 @@ function SearchInputComponent({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== 'Enter') return;
+      e.preventDefault();
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       onSearch(inputValue.trim());
     },

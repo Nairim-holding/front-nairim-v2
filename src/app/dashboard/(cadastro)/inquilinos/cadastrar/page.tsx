@@ -50,7 +50,7 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
     const fetchLastTenant = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_URL_API;
-        const response = await fetch(`${API_URL}/tenants?sort=internal_code&order=desc&limit=1`);
+        const response = await fetch(`${API_URL}/tenants?sort[internal_code]=desc&limit=1`);
         
         if (response.ok) {
           const data = await response.json();

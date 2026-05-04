@@ -7,7 +7,7 @@ import InlineEditableTable from '@/components/table/InlineEditableTable';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { authFetch } from '@/utils/authFetch';
-import { isNewSupplierSentinel, extractNewSupplierName } from '@/components/ui/SupplierAutocomplete';
+import { isQuickCreateSentinel, extractQuickCreateName } from '@/components/ui/QuickCreateAutocomplete';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -64,12 +64,12 @@ const EMPTY_OPTIONS: FormOptions = {
 const LANCAMENTOS_COLUMNS: ColumnDef[] = [
   { field: 'event_date', label: 'Data Evento', sortParam: 'event_date', type: 'date' },
   { field: 'effective_date', label: 'Data Efetiva', sortParam: 'effective_date', type: 'date' },
-  { field: 'category_id', label: 'Categoria', sortParam: 'category.name', type: 'text' },
-  { field: 'subcategory_id', label: 'Subcat.', sortParam: 'subcategory.name', type: 'text' },
-  { field: 'institution', label: 'Instituição', sortParam: 'financial_institution.name', type: 'text' },
-  { field: 'card_id', label: 'Cartão', sortParam: 'card.name', type: 'text' },
-  { field: 'center_id', label: 'Centro', sortParam: 'center.name', type: 'text' },
-  { field: 'supplier_id', label: 'Contato', sortParam: 'supplier.name', type: 'text' },
+  { field: 'category_id', label: 'Categoria', sortParam: 'category.name', type: 'select', optionsKey: 'categories' },
+  { field: 'subcategory_id', label: 'Subcat.', sortParam: 'subcategory.name', type: 'select', optionsKey: 'subcategories' },
+  { field: 'financial_institution_id', label: 'Instituição', sortParam: 'financial_institution.name', type: 'select', optionsKey: 'institutions' },
+  { field: 'card_id', label: 'Cartão', sortParam: 'card.name', type: 'select', optionsKey: 'cards' },
+  { field: 'center_id', label: 'Centro', sortParam: 'center.name', type: 'select', optionsKey: 'centers' },
+  { field: 'supplier_id', label: 'Contato', sortParam: 'supplier.name', type: 'select', optionsKey: 'suppliers' },
   { field: 'description', label: 'Descrição', sortParam: 'description', type: 'text' },
   { field: 'amount', label: 'Valor', sortParam: 'amount', type: 'currency' },
   { field: 'status', label: 'Status', sortParam: 'status', type: 'text' },
@@ -245,43 +245,140 @@ export default function LancamentosPage() {
   // Cria contato (fornecedor) sob demanda quando o usuário usou a opção
   // "+ adicionar novo contato" no autocomplete. Só roda no momento em que
   // o lançamento é salvo, garantindo que digitação cancelada não polui o banco.
-  const resolveNewSupplier = useCallback(async (data: Record<string, unknown>) => {
-    const supplierField = data.supplier_id;
-    if (typeof supplierField !== 'string' || !isNewSupplierSentinel(supplierField)) {
-      return data;
+  // Cria entidades financeiras sob demanda (Categoria, Subcategoria, Instituição, Cartão, Centro, Contato)
+  const resolveQuickCreates = useCallback(async (data: Record<string, any>) => {
+    const resolved = { ...data };
+    
+    // 1. Resolve Category
+    if (isQuickCreateSentinel(resolved.category_id)) {
+      const name = extractQuickCreateName(resolved.category_id);
+      // O tipo depende do valor (AMOUNT > 0 ? INCOME : EXPENSE) ou do contexto. 
+      // Como o InlineEditableTable gerencia INCOME/EXPENSE via tabs, podemos tentar detectar.
+      // Simplificação: vamos assumir que se o valor for positivo é INCOME, negativo é EXPENSE.
+      // Mas o usuário informou que o Centro deve seguir a categoria informada.
+      const amount = typeof resolved.amount === 'number' ? resolved.amount : 0;
+      const type = amount >= 0 ? 'INCOME' : 'EXPENSE';
+      
+      const res = await authFetch(`${API_URL}/financial-category/quick-create`, {
+        method: 'POST',
+        body: JSON.stringify({ name, type }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        resolved.category_id = result.data.id;
+        // Atualiza opções locais
+        setOptions(prev => ({
+          ...prev,
+          categories: [...prev.categories, result.data],
+          [type === 'INCOME' ? 'incomeCategories' : 'expenseCategories']: [...(type === 'INCOME' ? prev.incomeCategories : prev.expenseCategories), { label: name, value: result.data.id }]
+        }));
+      }
     }
 
-    const legalName = extractNewSupplierName(supplierField);
-    const response = await authFetch(`${API_URL}/financial-supplier/quick-create`, {
-      method: 'POST',
-      body: JSON.stringify({ legal_name: legalName }),
-    });
-
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      throw new Error(result.message ?? 'Erro ao criar contato.');
+    // 2. Resolve Subcategory
+    if (isQuickCreateSentinel(resolved.subcategory_id)) {
+      const name = extractQuickCreateName(resolved.subcategory_id);
+      if (resolved.category_id && !isQuickCreateSentinel(resolved.category_id)) {
+        const res = await authFetch(`${API_URL}/financial-subcategory/quick-create`, {
+          method: 'POST',
+          body: JSON.stringify({ name, category_id: resolved.category_id }),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          resolved.subcategory_id = result.data.id;
+          setOptions(prev => {
+            const subs = { ...prev.subcategories };
+            if (!subs[resolved.category_id]) subs[resolved.category_id] = [];
+            subs[resolved.category_id].push({ label: name, value: result.data.id });
+            return { ...prev, subcategories: subs };
+          });
+        }
+      }
     }
 
-    const result = await response.json();
-    const created = result?.data ?? result;
-    if (!created?.id) {
-      throw new Error('Resposta inválida ao criar contato.');
+    // 3. Resolve Institution
+    if (isQuickCreateSentinel(resolved.financial_institution_id)) {
+      const name = extractQuickCreateName(resolved.financial_institution_id);
+      const res = await authFetch(`${API_URL}/financial-institution/quick-create`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        resolved.financial_institution_id = result.data.id;
+        setOptions(prev => ({
+          ...prev,
+          institutions: [...prev.institutions, { label: name, value: result.data.id }]
+        }));
+      }
     }
 
-    // Atualiza a lista local de fornecedores para que o autocomplete reconheça o novo id imediatamente.
-    setOptions(prev => ({
-      ...prev,
-      suppliers: [
-        ...prev.suppliers,
-        { value: created.id, label: created.legal_name || created.trade_name || legalName },
-      ],
-    }));
+    // 4. Resolve Card
+    if (isQuickCreateSentinel(resolved.card_id)) {
+      const name = extractQuickCreateName(resolved.card_id);
+      const res = await authFetch(`${API_URL}/financial-card/quick-create`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        resolved.card_id = result.data.id;
+        setOptions(prev => ({
+          ...prev,
+          cards: [...prev.cards, { label: name, value: result.data.id }]
+        }));
+      }
+    }
 
-    return { ...data, supplier_id: created.id };
-  }, []);
+    // 5. Resolve Center
+    if (isQuickCreateSentinel(resolved.center_id)) {
+      const name = extractQuickCreateName(resolved.center_id);
+      
+      let type = 'EXPENSE';
+      if (resolved.category_id && !isQuickCreateSentinel(resolved.category_id)) {
+        const isIncomeCat = options.incomeCategories?.some(c => String(c.value) === String(resolved.category_id));
+        if (isIncomeCat) type = 'INCOME';
+      } else {
+        const amount = typeof resolved.amount === 'number' ? resolved.amount : 0;
+        if (amount >= 0) type = 'INCOME';
+      }
+      
+      const res = await authFetch(`${API_URL}/financial-center/quick-create`, {
+        method: 'POST',
+        body: JSON.stringify({ name, type }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        resolved.center_id = result.data.id;
+        setOptions(prev => ({
+          ...prev,
+          centers: [...prev.centers, { label: name, value: result.data.id, type }]
+        }));
+      }
+    }
+
+    // 6. Resolve Supplier
+    if (isQuickCreateSentinel(resolved.supplier_id)) {
+      const name = extractQuickCreateName(resolved.supplier_id);
+      const res = await authFetch(`${API_URL}/financial-supplier/quick-create`, {
+        method: 'POST',
+        body: JSON.stringify({ legal_name: name }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        resolved.supplier_id = result.data.id;
+        setOptions(prev => ({
+          ...prev,
+          suppliers: [...prev.suppliers, { label: name, value: result.data.id }]
+        }));
+      }
+    }
+
+    return resolved;
+  }, [options]);
 
   const handleRowSave = useCallback(async (id: string, data: Record<string, unknown>) => {
-    const resolved = await resolveNewSupplier(data);
+    const resolved = await resolveQuickCreates(data);
     const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -292,11 +389,11 @@ export default function LancamentosPage() {
       const result = await response.json().catch(() => ({}));
       throw new Error(result.message ?? 'Erro ao atualizar lançamento.');
     }
-  }, [resolveNewSupplier]);
+  }, [resolveQuickCreates]);
 
   const handleRowCreate = useCallback(async (data: Record<string, unknown>) => {
     try {
-      const resolved = await resolveNewSupplier(data);
+      const resolved = await resolveQuickCreates(data);
       const response = await fetch(`${API_URL}/financial-transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -311,7 +408,7 @@ export default function LancamentosPage() {
       console.error(error);
       throw error instanceof Error ? error : new Error('Erro ao criar lançamento.');
     }
-  }, [resolveNewSupplier]);
+  }, [resolveQuickCreates]);
 
   const handleRowDelete = useCallback(async (id: string) => {
     try {

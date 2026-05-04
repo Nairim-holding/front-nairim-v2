@@ -115,6 +115,7 @@ export default function DynamicFormManager({
   const router = useRouter();
   const { showMessage } = useMessageContext();
   const formRef = useRef<HTMLFormElement>(null);
+  const prevDefaultValues = useRef<Record<string, any>>({});
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -262,7 +263,7 @@ export default function DynamicFormManager({
   // é barata e elimina perda em reload rápido. Cobre tanto digitação quanto
   // mudança de step (Próximo / Voltar).
   useEffect(() => {
-    if (!draftHydrated || !draftKey || mode !== 'create') return;
+    if (!draftHydrated || !draftKey || mode !== 'create' || submitting) return;
     writeDraft(draftKey, formValues, currentStep);
   }, [draftHydrated, draftKey, mode, formValues, currentStep]);
 
@@ -296,29 +297,47 @@ export default function DynamicFormManager({
       const next: Record<string, any> = { ...prev };
 
       allFields.forEach(field => {
-        if (next[field.field] !== undefined) return; // já existe — preserva
-        let defaultValue: any;
-        if (field.defaultValue !== undefined) {
-          defaultValue = field.defaultValue;
+        const currentValue = next[field.field];
+        const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== '';
+        
+        const prevDV = prevDefaultValues.current[field.field];
+        const newDV = field.defaultValue;
+
+        if (hasValue) {
+          // Se for código interno e o valor padrão recebido for diferente do anterior (novo fetch), nós forçamos a atualização
+          if (field.field === 'internal_code' && newDV !== undefined && newDV !== prevDV) {
+            next[field.field] = newDV;
+            mutated = true;
+          }
         } else {
-          switch (field.type) {
-            case 'checkbox':
-            case 'boolean':
-              defaultValue = false;
-              break;
-            case 'number':
-              defaultValue = 0;
-              break;
-            case 'file':
-            case 'custom':
-              defaultValue = [];
-              break;
-            default:
-              defaultValue = '';
+          let defaultValue: any;
+          if (newDV !== undefined) {
+            defaultValue = newDV;
+          } else {
+            switch (field.type) {
+              case 'checkbox':
+              case 'boolean':
+                defaultValue = false;
+                break;
+              case 'number':
+                defaultValue = 0;
+                break;
+              case 'file':
+              case 'custom':
+                defaultValue = [];
+                break;
+              default:
+                defaultValue = '';
+            }
+          }
+          
+          if (!hasValue) {
+            next[field.field] = defaultValue;
+            mutated = true;
           }
         }
-        next[field.field] = defaultValue;
-        mutated = true;
+
+        prevDefaultValues.current[field.field] = newDV;
       });
 
       return mutated ? next : prev;

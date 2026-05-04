@@ -61,19 +61,22 @@ export default function FornecedoresPage() {
     const fetchLastSupplier = async () => {
       try {
         // Buscar todos os fornecedores ordenados por código interno descendente
-        const response = await fetch(`${baseURL}/financial-supplier?sort=internal_code&order=desc&limit=1`);
+        const response = await fetch(`${baseURL}/financial-supplier`);
         
         if (response.ok) {
           const data = await response.json();
-          
-          if (data.data && data.data.length > 0) {
-            const lastCode = data.data[0].internal_code;
-            const codeNumber = parseInt(lastCode, 10);
+          const suppliersList = data.data || data || [];
+
+          if (Array.isArray(suppliersList) && suppliersList.length > 0) {
+            const numericCodes = suppliersList
+              .map((s: any) => parseInt(s.internal_code, 10))
+              .filter((n: number) => !isNaN(n));
             
-            if (!isNaN(codeNumber)) {
-              setGeneratedInternalCode(String(codeNumber + 1));
+            if (numericCodes.length > 0) {
+              const maxCode = Math.max(...numericCodes);
+              setGeneratedInternalCode(String(maxCode + 1));
             } else {
-              setGeneratedInternalCode(lastCode);
+              setGeneratedInternalCode('1');
             }
           } else {
             setGeneratedInternalCode('1');
@@ -280,15 +283,15 @@ export default function FornecedoresPage() {
           { field: 'legal_name', label: 'Nome Completo', type: 'text', required: true, placeholder: 'Nome Completo', autoFocus: true, icon: <User size={20} />, className: 'col-span-full' },
           { field: 'trade_name', label: 'Nome Fantasia', type: 'text', required: false, placeholder: 'Nome Fantasia', icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} />, defaultValue: generatedInternalCode },
+          { field: 'cpf', label: 'CPF', type: 'text', required: false, placeholder: '000.000.000-00', mask: 'cpf', icon: <FileText size={20} /> },
           { field: 'occupation', label: 'Profissão', type: 'text', required: false, placeholder: 'Profissão', icon: <User size={20} /> },
           { field: 'marital_status', label: 'Estado Civil', type: 'select', required: false, placeholder: 'Selecione...', options: maritalStatusOptions, icon: <User size={20} /> },
-          { field: 'cpf', label: 'CPF', type: 'text', required: false, placeholder: '000.000.000-00', mask: 'cpf', icon: <FileText size={20} /> },
         ]
       : [
           { field: 'legal_name', label: 'Razão Social', type: 'text', required: true, placeholder: 'Razão Social', autoFocus: true, icon: <BuildingIcon size={20} />, className: 'col-span-full' },
           { field: 'trade_name', label: 'Nome Fantasia', type: 'text', required: false, placeholder: 'Nome Fantasia', icon: <BuildingIcon size={20} />, className: 'col-span-full' },
-          { field: 'cnpj', label: 'CNPJ', type: 'text', required: false, placeholder: '00.000.000/0000-00', mask: 'cnpj', icon: <FileText size={20} />, className: 'col-span-full' },
           { field: 'internal_code', label: 'Código Interno', type: 'text', required: false, placeholder: 'Código interno', icon: <Hash size={20} />, defaultValue: generatedInternalCode },
+          { field: 'cnpj', label: 'CNPJ', type: 'text', required: false, placeholder: '00.000.000/0000-00', mask: 'cnpj', icon: <FileText size={20} /> },
           { field: 'state_registration', label: 'Inscrição Estadual', type: 'text', required: false, placeholder: 'Inscrição Estadual', icon: <Hash size={20} /> },
           { field: 'municipal_registration', label: 'Inscrição Municipal', type: 'text', required: false, placeholder: 'Inscrição Municipal', icon: <Hash size={20} /> },
         ];

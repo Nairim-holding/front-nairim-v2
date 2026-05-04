@@ -21,7 +21,7 @@ import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
 import CalendarPicker from "@/components/ui/CalendarPicker";
-import SupplierAutocomplete from "@/components/ui/SupplierAutocomplete";
+import QuickCreateAutocomplete, { isQuickCreateSentinel, extractQuickCreateName } from "@/components/ui/QuickCreateAutocomplete";
 
 // Componente Select customizado que abre no foco e permite navegação por Tab
 interface CustomSelectProps {
@@ -697,12 +697,12 @@ export default function InlineEditableTable({
     }
     if (field === "amount") {
       const isIncome = item.category?.type === 'INCOME';
-      return <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>{isIncome ? '+ ' : '- '}{formatCellValue(item[field], column)}</span>;
+      return <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>{formatCellValue(item[field], column)}</span>;
     }
     
     const specialFields: Record<string, any> = {
       category_id: item.category?.name, card_id: item.card?.name, subcategory_id: item.subcategory?.name,
-      institution: formOptions.institutions.find(i => i.value === item.financial_institution_id)?.label, center_id: item.center?.name,
+      financial_institution_id: item.financial_institution?.name || formOptions.institutions.find(i => i.value === item.financial_institution_id)?.label, center_id: item.center?.name,
       supplier_id: item.supplier?.name || formOptions.suppliers.find(s => s.value === item.supplier_id)?.label
     };
     if (field in specialFields) return formatCellValue(specialFields[field] || '', column);
@@ -951,7 +951,7 @@ export default function InlineEditableTable({
           ...(activeTab === 'ALL' || activeTab === 'EXPENSE' ? [{ label: 'Despesas', options: formOptions.expenseCategories }] : [])
         ];
         return renderWrapper(
-          <CustomSelect 
+          <QuickCreateAutocomplete 
             value={val || ''} 
             onChange={v => { 
               updateEditingRow(row.id, 'category_id', v); 
@@ -966,18 +966,18 @@ export default function InlineEditableTable({
         );
       case 'subcategory_id':
         const subcategories = formOptions.subcategories[row.data.category_id] || [];
-        return subcategories.length ? renderWrapper(
-          <CustomSelect 
+        return renderWrapper(
+          <QuickCreateAutocomplete 
             value={val || ''} 
             onChange={v => upd(v)} 
             disabled={dis}
             options={subcategories}
             placeholder="Selecione..."
           />
-        ) : renderWrapper(<div className="h-[32px]"></div>);
-      case 'institution':
+        );
+      case 'financial_institution_id':
         return renderWrapper(
-          <CustomSelect 
+          <QuickCreateAutocomplete 
             value={row.data.financial_institution_id || ''} 
             onChange={v => updateEditingRow(row.id, 'financial_institution_id', v)} 
             disabled={dis}
@@ -987,11 +987,12 @@ export default function InlineEditableTable({
         );
       case 'card_id':
         return renderWrapper(
-          <CustomSelect 
+          <QuickCreateAutocomplete 
             value={val || ''} 
             onChange={v => upd(v)} 
             disabled={dis}
             options={[{ value: '', label: 'Nenhum' }, ...formOptions.cards]}
+            placeholder="Selecione..."
           />
         );
       case 'center_id': {
@@ -1015,7 +1016,7 @@ export default function InlineEditableTable({
           : formOptions.centers.filter((c: any) => !c.type);
         
         return renderWrapper(
-          <CustomSelect 
+          <QuickCreateAutocomplete
             value={val || ''} 
             onChange={v => upd(v)} 
             disabled={dis}
@@ -1027,7 +1028,7 @@ export default function InlineEditableTable({
       }
       case 'supplier_id':
         return renderWrapper(
-          <SupplierAutocomplete
+          <QuickCreateAutocomplete
             value={val || ''}
             onChange={v => upd(v)}
             disabled={dis}

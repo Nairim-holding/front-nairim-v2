@@ -199,6 +199,7 @@ const DOCUMENT_TYPES = [
   { field: 'arquivosMatricula', type: 'REGISTRATION' },
   { field: 'arquivosRegistro',  type: 'PROPERTY_RECORD' },
   { field: 'arquivosEscritura', type: 'TITLE_DEED' },
+  { field: 'arquivosOutros',    type: 'OTHER' },
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

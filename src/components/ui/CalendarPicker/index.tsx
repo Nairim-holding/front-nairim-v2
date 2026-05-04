@@ -103,6 +103,7 @@ export default function CalendarPicker({ dateRange, onChange }: CalendarPickerPr
       {/* Header com mês/ano e navegação */}
       <div className="flex items-center justify-between mb-2 px-1">
         <button
+          type="button"
           onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
           className="p-1 hover:bg-surface-subtle rounded transition-colors"
         >
@@ -112,6 +113,7 @@ export default function CalendarPicker({ dateRange, onChange }: CalendarPickerPr
           {monthNames[currentMonth.getMonth()]} <span className="text-content-muted font-normal">{currentMonth.getFullYear()}</span>
         </span>
         <button
+          type="button"
           onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
           className="p-1 hover:bg-surface-subtle rounded transition-colors"
         >
@@ -134,6 +136,7 @@ export default function CalendarPicker({ dateRange, onChange }: CalendarPickerPr
           <div key={index} className="aspect-square">
             {day.date ? (
               <button
+                type="button"
                 onClick={() => handleDateClick(day.date!)}
                 className={`w-full h-full rounded-md text-xs font-medium transition-all relative ${
                   isDateSelected(day.date!, 'from') && isDateSelected(day.date!, 'to')

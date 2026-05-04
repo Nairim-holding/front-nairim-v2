@@ -910,6 +910,7 @@ export default function DynamicTableManager({
                   resource === 'owners' || resource === 'tenants' ? (
                     <div className="relative">
                       <button
+                        type="button"
                         onClick={() => setShowOwnerTypeModal(true)}
                         className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors relative group"
                         title={`Adicionar novo ${title.toLowerCase()}`}

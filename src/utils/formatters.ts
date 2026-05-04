@@ -77,8 +77,15 @@ export const formatCurrencyRounded = (v?: number): string =>
 
 export const formatDate = (v: any): string => {
   if (!v) return 'N/A';
+  if (typeof v === 'string') {
+    const match = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[3]}/${match[2]}/${match[1]}`;
+    }
+  }
   const date = new Date(v);
-  return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('pt-BR');
+  if (isNaN(date.getTime())) return 'N/A';
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
 };
 
 // ─── Número / Área ───────────────────────────────────────────────────────────

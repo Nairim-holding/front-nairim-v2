@@ -97,8 +97,12 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       normalized.property_tax_second_installment_due_date = normalizeDate(item.property_tax_second_installment_due_date);
       
       // Normalizar datas das parcelas
-      if (item.iptu_installments && Array.isArray(item.iptu_installments)) {
-        normalized.iptu_installments = item.iptu_installments.map((inst: any) => ({
+      let installmentsArray = item.iptu_installments;
+      if (typeof installmentsArray === 'string') {
+        try { installmentsArray = JSON.parse(installmentsArray); } catch(e) { installmentsArray = []; }
+      }
+      if (installmentsArray && Array.isArray(installmentsArray)) {
+        normalized.iptu_installments = installmentsArray.map((inst: any) => ({
           ...inst,
           due_date: normalizeDate(inst.due_date)
         }));
@@ -169,11 +173,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     }
     else if (tempIptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
       const firstInstallment = Number(tempIptu.property_tax_first_installment);
-      const secondInstallment = Number(tempIptu.property_tax_second_installment);
       if (!firstInstallment || firstInstallment <= 0) return setErrorMsg('Informe o valor da 1ª parcela.');
-      if (!secondInstallment || secondInstallment <= 0) return setErrorMsg('Informe o valor da 2ª parcela.');
       if (!tempIptu.property_tax_first_installment_due_date) return setErrorMsg('Informe a data de vencimento da 1ª parcela.');
-      if (!tempIptu.property_tax_second_installment_due_date) return setErrorMsg('Informe a data de vencimento da 2ª parcela.');
     }
     else if (tempIptu.payment_condition === 'INSTALLMENTS') {
       const sum = (tempIptu.iptu_installments || []).reduce((acc, curr) => acc + Number(curr.value || 0), 0);
@@ -300,7 +301,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const firstInstallment = Number(tempIptu.property_tax_first_installment);
       const secondInstallment = Number(tempIptu.property_tax_second_installment);
       
-      if (!firstInstallment || !secondInstallment || firstInstallment <= 0 || secondInstallment <= 0) {
+      if (!firstInstallment || firstInstallment <= 0 || !secondInstallment || secondInstallment <= 0) {
         return false; 
       }
       
@@ -345,89 +346,92 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
   const columns: ColumnDef[] = useMemo(() => {
     const baseColumns: ColumnDef[] = [
       { field: 'year', label: 'Ano', type: 'text' },
-      { field: 'baseIptu', label: 'Valor do IPTU', type: 'currency', formatter: 'currency' },
-      { field: 'cota15', label: 'Cota 15% de desconto', type: 'currency', formatter: 'currency' },
-      { field: 'cota10', label: 'Cota 10% de desconto', type: 'currency', formatter: 'currency' },
+      { field: 'baseIptu', label: 'Valor Base IPTU', type: 'currency', formatter: 'currency' },
+      { field: 'cota15', label: 'Cota 15%', type: 'currency', formatter: 'currency' },
+      { field: 'venc_cota15', label: 'Venc. Cota 15%', type: 'text' },
+      { field: 'parcela1', label: '1ª Parcela', type: 'currency', formatter: 'currency' },
+      { field: 'venc_parcela1', label: 'Venc. 1ª Parc.', type: 'text' },
+      { field: 'cota10', label: 'Cota 10%', type: 'currency', formatter: 'currency' },
+      { field: 'venc_cota10', label: 'Venc. Cota 10%', type: 'text' },
     ];
 
     const maxInstallments = iptus.reduce((max, item) => {
-      if (item.payment_condition === 'IN_FULL_15_DISCOUNT') return Math.max(max, 1);
-      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') return Math.max(max, 2);
-      if (item.payment_condition === 'INSTALLMENTS') return Math.max(max, (item.iptu_installments || []).length);
+      if (item.payment_condition === 'INSTALLMENTS') {
+        const countFromField = Number(item.iptu_installments_count) || 0;
+        const countFromArray = (item.iptu_installments || []).length;
+        const totalItems = Math.max(countFromField, countFromArray);
+        
+        const existingForYear = iptus.find((other) => {
+           return String(other.year) === String(item.year) &&
+                  (other.payment_condition === 'IN_FULL_15_DISCOUNT' || 
+                   other.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT');
+        });
+        const startIdx = existingForYear ? 2 : 1;
+        const highestParcela = startIdx + totalItems - 1;
+        
+        return Math.max(max, highestParcela);
+      }
       return max;
     }, 0);
 
-    for (let i = 1; i <= maxInstallments; i++) {
-      baseColumns.push({ field: `vencimento${i}`, label: `Venc. ${i}º`, type: 'text' });
-      baseColumns.push({ field: `parcela${i}`, label: `${i}º parcela`, type: 'currency', formatter: 'currency' });
+    for (let parcelaNum = 2; parcelaNum <= maxInstallments; parcelaNum++) {
+      baseColumns.push({ field: `parcela${parcelaNum}`, label: `${parcelaNum}ª Parcela`, type: 'currency', formatter: 'currency' });
+      baseColumns.push({ field: `vencimento${parcelaNum}`, label: `Venc. ${parcelaNum}ª Parc.`, type: 'text' });
     }
 
-    console.log('IPTU Manager - columns:', baseColumns);
     return baseColumns;
   }, [iptus]);
 
   const tableData = useMemo(() => {
-    const maxInstallments = iptus.reduce((max, item) => {
-      if (item.payment_condition === 'IN_FULL_15_DISCOUNT') return Math.max(max, 1);
-      if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') return Math.max(max, 2);
-      if (item.payment_condition === 'INSTALLMENTS') return Math.max(max, (item.iptu_installments || []).length);
-      return max;
-    }, 0);
-
-    console.log('IPTU Manager - maxInstallments:', maxInstallments);
-    console.log('IPTU Manager - iptus:', iptus);
-
     const data = iptus.map((item, index) => {
-      const cota15 = item.payment_condition === 'IN_FULL_15_DISCOUNT' ? Number(item.property_tax_cash || 0) : null;
-      const cota10 = item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT'
-        ? (Number(item.property_tax_first_installment || 0) + Number(item.property_tax_second_installment || 0))
-        : null;
-
-      const installments = item.iptu_installments || [];
       const row: any = {
+        ...item,
         id: item.id || index.toString(),
         year: item.year,
         baseIptu: baseIptu,
-        cota15: cota15,
-        cota10: cota10,
       };
 
       if (item.payment_condition === 'IN_FULL_15_DISCOUNT') {
-        row.parcela1 = Number(item.property_tax_cash || 0);
-        row.vencimento1 = isoToDisplay(item.property_tax_cash_due_date);
-        for (let i = 2; i <= maxInstallments; i++) {
-          row[`parcela${i}`] = null;
-          row[`vencimento${i}`] = null;
-        }
-      } else if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
+        row.cota15 = Number(item.property_tax_cash || 0);
+        row.venc_cota15 = isoToDisplay(item.property_tax_cash_due_date);
+      } 
+      else if (item.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
         row.parcela1 = Number(item.property_tax_first_installment || 0);
-        row.parcela2 = Number(item.property_tax_second_installment || 0);
-        row.vencimento1 = isoToDisplay(item.property_tax_first_installment_due_date);
-        row.vencimento2 = isoToDisplay(item.property_tax_second_installment_due_date);
-        for (let i = 3; i <= maxInstallments; i++) {
-          row[`parcela${i}`] = null;
-          row[`vencimento${i}`] = null;
-        }
-      } else if (item.payment_condition === 'INSTALLMENTS') {
-        for (let i = 1; i <= maxInstallments; i++) {
-          row[`parcela${i}`] = Number(installments[i - 1]?.value || 0);
-          row[`vencimento${i}`] = isoToDisplay(installments[i - 1]?.due_date);
-        }
-      } else {
-        for (let i = 1; i <= maxInstallments; i++) {
-          row[`parcela${i}`] = null;
-          row[`vencimento${i}`] = null;
+        row.venc_parcela1 = isoToDisplay(item.property_tax_first_installment_due_date);
+        
+        row.cota10 = Number(item.property_tax_second_installment || 0);
+        row.venc_cota10 = isoToDisplay(item.property_tax_second_installment_due_date);
+      } 
+      else if (item.payment_condition === 'INSTALLMENTS') {
+        const installments = item.iptu_installments || [];
+        const countFromField = Number(item.iptu_installments_count) || 0;
+        const countFromArray = installments.length;
+        const totalItems = Math.max(countFromField, countFromArray);
+        
+        const existingForYear = iptus.find((other) => {
+           return String(other.year) === String(item.year) &&
+                  (other.payment_condition === 'IN_FULL_15_DISCOUNT' || 
+                   other.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT');
+        });
+        const startIdx = existingForYear ? 2 : 1;
+        
+        for (let i = 0; i < totalItems; i++) {
+          const parcelaNum = startIdx + i;
+          if (parcelaNum === 1) {
+             row.parcela1 = installments[i] ? Number(installments[i].value || 0) : null;
+             row.venc_parcela1 = installments[i] ? isoToDisplay(installments[i].due_date) : null;
+          } else {
+             row[`parcela${parcelaNum}`] = installments[i] ? Number(installments[i].value || 0) : null;
+             row[`vencimento${parcelaNum}`] = installments[i] ? isoToDisplay(installments[i].due_date) : null;
+          }
         }
       }
 
       row._original = item;
       row._originalIndex = index;
-
-      console.log(`IPTU Manager - Row ${index}:`, row);
       return row;
     });
 
-    console.log('IPTU Manager - tableData:', data);
     return data;
   }, [iptus, baseIptu]);
 

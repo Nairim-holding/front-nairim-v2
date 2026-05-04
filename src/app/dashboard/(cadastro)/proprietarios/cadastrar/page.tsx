@@ -50,7 +50,7 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
     const fetchLastOwner = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_URL_API;
-        const response = await fetch(`${API_URL}/owners?sort=internal_code&order=desc&limit=1`);
+        const response = await fetch(`${API_URL}/owners`);
         
         if (response.ok) {
           const data = await response.json();
