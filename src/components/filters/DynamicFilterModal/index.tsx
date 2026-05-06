@@ -12,8 +12,6 @@ import { maskCurrencyInput, parseCurrencyFromPTBR } from "@/utils/formatters";
 export interface DynamicFilter {
   field: string;
   type: 'string' | 'date' | 'enum' | 'number' | 'boolean' | 'select' | 'currency';
-  field: string;
-  type: 'string' | 'date' | 'enum' | 'number' | 'boolean' | 'select';
   label: string;
   description: string;
   searchable?: boolean;

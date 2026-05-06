@@ -17,7 +17,7 @@ export interface ApiResponse {
   message: string;
 }
 
-export type ColumnType = 'text' | 'date' | 'number' | 'currency' | 'boolean' | 'custom';
+export type ColumnType = 'text' | 'date' | 'number' | 'currency' | 'boolean' | 'custom' | 'select';
 
 export interface ColumnDef {
   field: string;
@@ -28,6 +28,7 @@ export interface ColumnDef {
   nestedField?: string;
   width?: string;
   align?: 'left' | 'center' | 'right';
+  optionsKey?: string;
 }
 
 export interface Option {

@@ -960,7 +960,7 @@ export default function InlineEditableTable({
             }} 
             disabled={dis}
             groups={categoryGroups.length > 0 ? categoryGroups : undefined}
-            options={categoryGroups.length === 0 ? [] : undefined}
+            options={categoryGroups.length === 0 ? [] : []}
             placeholder="Selecione..."
           />
         );
