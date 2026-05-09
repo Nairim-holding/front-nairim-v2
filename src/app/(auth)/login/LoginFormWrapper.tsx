@@ -16,7 +16,6 @@ export const LoginFormWrapper = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const emailInputRef = useRef<HTMLInputElement>(null);
-      console.log(process.env.NEXT_PUBLIC_URL_API)
   const {
     failedAttempts,
     isBlocked,

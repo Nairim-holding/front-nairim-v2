@@ -665,7 +665,7 @@ export default function InlineEditableTable({
     if (tableBodyRef.current && displayItems.length > 0) {
       const rows = tableBodyRef.current.querySelectorAll('tr');
       let maxHeight = 0;
-      rows.forEach(row => {
+      rows?.forEach(row => {
         const height = row.getBoundingClientRect().height;
         if (height > maxHeight) maxHeight = height;
       });
