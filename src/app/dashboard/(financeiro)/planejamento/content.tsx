@@ -63,12 +63,15 @@ export default function PlanningPageContent() {
         endDate: dateRange.to,
       });
       const res = await authFetch(`${API_URL}/planning/dashboard?${params}`);
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`API Error ${res.status}: ${errorText || 'Falha ao carregar dados'}`);
+      }
       const json = await res.json();
       setData(json.data ?? json);
     } catch (e) {
-      console.error('[PlanejamentoPage]', e);
-      showMessage('Erro ao carregar planejamento', 'error');
+      const message = e instanceof Error ? e.message : 'Erro ao carregar planejamento';
+      showMessage(message, 'error');
     } finally {
       setIsLoading(false);
     }
