@@ -1,9 +1,11 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useCallback, useMemo } from 'react';
 import { useMessageContext } from '@/contexts';
-import { maskCurrencyInput, parseCurrencyFromPTBR } from '@/utils/formatters';
 import { authFetch } from '@/utils/authFetch';
+import { maskCurrencyInput, parseCurrencyFromPTBR } from '@/utils/displayFormatters';
 import type { DashboardItem, CategoryDashboard } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -13,13 +15,8 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-const initAmount = (v?: number | null): string => {
-  if (!v) return '';
-  return maskCurrencyInput(Math.round(v * 100).toString());
-};
-
 interface Props {
-  item: DashboardItem | CategoryDashboard;
+  item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string };
   year: number;
   onClose: () => void;
   onSaved: () => void;
@@ -28,16 +25,36 @@ interface Props {
 export default function PlanningEditModal({ item, year, onClose, onSaved }: Props) {
   const { showMessage } = useMessageContext();
 
-  const categoryId = useMemo(() => {
-    if ('type' in item) return item.id;
-    return item.id;
-  }, [item]);
+  const isSubcategory = !!item.parentCategoryId;
 
-  const [planType, setPlanType] = useState<'FIXED' | 'VARIABLE'>('FIXED');
-  const [defaultAmount, setDefaultAmount] = useState('');
-  const [monthlyValues, setMonthlyValues] = useState<Record<number, string>>({});
-  const [minRecommended, setMinRecommended] = useState(() => initAmount(item.min));
-  const [maxRecommended, setMaxRecommended] = useState(() => initAmount(item.max));
+  const categoryId = useMemo(() => {
+    return isSubcategory ? item.parentCategoryId! : item.id;
+  }, [item, isSubcategory]);
+
+  const subcategoryId = useMemo(() => {
+    return isSubcategory ? item.id : undefined;
+  }, [item, isSubcategory]);
+
+  const [planType, setPlanType] = useState<'FIXED' | 'VARIABLE'>(() => {
+    const itemAny = item as any;
+    return (itemAny.monthly_values && Array.isArray(itemAny.monthly_values) && itemAny.monthly_values.length > 0) ? 'VARIABLE' : 'FIXED';
+  });
+  const [defaultAmount, setDefaultAmount] = useState<number | string>(() => {
+    const itemAny = item as any;
+    return itemAny.planned_amount ?? 0;
+  });
+  const [monthlyValues, setMonthlyValues] = useState<Record<number, number | string>>(() => {
+    const itemAny = item as any;
+    if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
+      return itemAny.monthly_values.reduce((acc: Record<number, number | string>, mv: any) => {
+        acc[mv.month] = mv.amount ?? 0;
+        return acc;
+      }, {});
+    }
+    return {};
+  });
+  const [minRecommended, setMinRecommended] = useState<number | string>(item.min ?? 0);
+  const [maxRecommended, setMaxRecommended] = useState<number | string>(item.max ?? 0);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -49,33 +66,59 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     return item.planned_amount > 0 && planningId;
   }, [item, planningId]);
 
-  const applyMask = useCallback(
-    (setter: (v: string) => void) =>
+  const getAmountDisplay = (val: number | string): string => {
+    const numVal = typeof val === 'number' ? val : parseCurrencyFromPTBR(val);
+    return numVal > 0 ? maskCurrencyInput(Math.round(numVal * 100).toString()) : '';
+  };
+
+  const handleAmountChange = useCallback(
+    (setter: (v: number | string) => void) =>
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        setter(maskCurrencyInput(e.target.value.replace(/\D/g, '')));
+        setter(maskCurrencyInput(e.target.value));
       },
     [],
   );
 
-  const handleMonthChange = useCallback((month: number, raw: string) => {
-    setMonthlyValues(prev => ({ ...prev, [month]: maskCurrencyInput(raw.replace(/\D/g, '')) }));
+  const handleAmountBlur = useCallback(
+    (setter: (v: number | string) => void) =>
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        setter(parseCurrencyFromPTBR(e.target.value));
+      },
+    [],
+  );
+
+  const handleMonthChange = useCallback((month: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    setMonthlyValues(prev => ({ ...prev, [month]: maskCurrencyInput(e.target.value) }));
+  }, []);
+
+  const handleMonthBlur = useCallback((month: number, e: React.FocusEvent<HTMLInputElement>) => {
+    setMonthlyValues(prev => ({ ...prev, [month]: parseCurrencyFromPTBR(e.target.value) }));
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (planType === 'FIXED' && !defaultAmount) {
-      showMessage('Informe um valor para o planejamento fixo', 'error');
-      return;
+    if (planType === 'FIXED') {
+      const val = parseCurrencyFromPTBR(defaultAmount);
+      if (!val || val <= 0) {
+        showMessage('Informe um valor maior que zero para o planejamento fixo', 'error');
+        return;
+      }
     }
 
-    if (planType === 'VARIABLE' && !Object.values(monthlyValues).some(v => v)) {
-      showMessage('Informe pelo menos um valor mensal', 'error');
-      return;
+    if (planType === 'VARIABLE') {
+      const hasValue = Object.values(monthlyValues).some(v => {
+        const num = parseCurrencyFromPTBR(v);
+        return num > 0;
+      });
+      if (!hasValue) {
+        showMessage('Informe pelo menos um valor mensal', 'error');
+        return;
+      }
     }
 
-    const minRecValue = minRecommended ? parseCurrencyFromPTBR(minRecommended) : undefined;
-    const maxRecValue = maxRecommended ? parseCurrencyFromPTBR(maxRecommended) : undefined;
+    const minRecVal = parseCurrencyFromPTBR(minRecommended);
+    const maxRecVal = parseCurrencyFromPTBR(maxRecommended);
 
-    if (minRecValue !== undefined && maxRecValue !== undefined && minRecValue >= maxRecValue) {
+    if (minRecVal > 0 && maxRecVal > 0 && minRecVal >= maxRecVal) {
       showMessage('O mínimo recomendado deve ser menor que o máximo', 'error');
       return;
     }
@@ -88,19 +131,24 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
         type: planType,
       };
 
+      if (subcategoryId) {
+        payload.subcategory_id = subcategoryId;
+      }
+
       if (planType === 'FIXED') {
         payload.default_amount = parseCurrencyFromPTBR(defaultAmount);
       } else {
-        payload.monthly_values = MONTH_NAMES.map((_, i) => ({
-          month: i + 1,
-          amount: parseCurrencyFromPTBR(monthlyValues[i + 1] ?? '0'),
-        })).filter(mv => mv.amount > 0);
+        payload.monthly_values = MONTH_NAMES.map((_, i) => {
+          const monthNum = i + 1;
+          const amount = parseCurrencyFromPTBR(monthlyValues[monthNum] ?? 0);
+          return { month: monthNum, amount };
+        }).filter(mv => mv.amount > 0);
       }
 
-      if (minRecValue !== undefined) payload.min_recommended = minRecValue;
-      if (maxRecValue !== undefined) payload.max_recommended = maxRecValue;
+      if (minRecVal > 0) payload.min_recommended = minRecVal;
+      if (maxRecVal > 0) payload.max_recommended = maxRecVal;
 
-      const res = await authFetch(`${API_URL}/planning`, {
+      const res = await authFetch(`${API_URL}/plannings`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
@@ -117,7 +165,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     } finally {
       setIsSaving(false);
     }
-  }, [categoryId, year, planType, defaultAmount, monthlyValues, minRecommended, maxRecommended, showMessage, onSaved]);
+  }, [categoryId, subcategoryId, year, planType, defaultAmount, monthlyValues, minRecommended, maxRecommended, showMessage, onSaved]);
 
   const handleDelete = useCallback(async () => {
     if (!hasExistingPlanning || !planningId) return;
@@ -126,15 +174,18 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
 
     setIsDeleting(true);
     try {
-      const res = await authFetch(`${API_URL}/planning/${planningId}`, {
+      const res = await authFetch(`${API_URL}/plannings/${planningId}`, {
         method: 'DELETE',
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Erro ao remover');
+      }
       showMessage('Planejamento removido com sucesso', 'success');
       onSaved();
     } catch (e) {
-      showMessage('Erro ao remover planejamento', 'error');
+      showMessage(e instanceof Error ? e.message : 'Erro ao remover planejamento', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -189,8 +240,9 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
             <input
               type="text"
               inputMode="numeric"
-              value={defaultAmount}
-              onChange={applyMask(setDefaultAmount)}
+              value={getAmountDisplay(defaultAmount)}
+              onChange={handleAmountChange(setDefaultAmount)}
+              onBlur={handleAmountBlur(setDefaultAmount)}
               placeholder="0,00"
               className={inputClass}
               autoFocus
@@ -200,19 +252,23 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
           <div className="mb-5">
             <label className="block text-xs font-medium text-content-muted mb-2">Valores mensais (R$)</label>
             <div className="grid grid-cols-3 gap-3">
-              {MONTH_NAMES.map((name, i) => (
-                <div key={i}>
-                  <label className="block text-xs font-medium text-content-secondary mb-1">{name}</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={monthlyValues[i + 1] ?? ''}
-                    onChange={e => handleMonthChange(i + 1, e.target.value)}
-                    placeholder="0,00"
-                    className={inputClass}
-                  />
-                </div>
-              ))}
+              {MONTH_NAMES.map((name, i) => {
+                const monthNum = i + 1;
+                return (
+                  <div key={i}>
+                    <label className="block text-xs font-medium text-content-secondary mb-1">{name}</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={getAmountDisplay(monthlyValues[monthNum] ?? 0)}
+                      onChange={e => handleMonthChange(monthNum, e)}
+                      onBlur={e => handleMonthBlur(monthNum, e)}
+                      placeholder="0,00"
+                      className={inputClass}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -225,8 +281,9 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
             <input
               type="text"
               inputMode="numeric"
-              value={minRecommended}
-              onChange={applyMask(setMinRecommended)}
+              value={getAmountDisplay(minRecommended)}
+              onChange={handleAmountChange(setMinRecommended)}
+              onBlur={handleAmountBlur(setMinRecommended)}
               placeholder="0,00"
               className={inputClass}
             />
@@ -238,8 +295,9 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
             <input
               type="text"
               inputMode="numeric"
-              value={maxRecommended}
-              onChange={applyMask(setMaxRecommended)}
+              value={getAmountDisplay(maxRecommended)}
+              onChange={handleAmountChange(setMaxRecommended)}
+              onBlur={handleAmountBlur(setMaxRecommended)}
               placeholder="0,00"
               className={inputClass}
             />

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, X, Check, Landmark, DollarSign, ListOrdered, Info, Copy } from 'lucide-react';
-import { formatCurrency } from '@/utils/formatters';
+import { maskMoney } from '@/utils/masks';
 import { parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
 import DynamicTableManager from '@/components/table/DataTable';
 import { ColumnDef } from '@/types/types';
@@ -515,7 +515,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                 <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
                 <div className="flex-1">
                   <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base do IPTU - Ano: {tempIptu.year}</p>
-                  <p className="text-lg font-black text-content">{formatCurrency(baseIptu)}</p>
+                  <p className="text-lg font-black text-content">{maskMoney(baseIptu)}</p>
                 </div>
               </div>
 
@@ -560,7 +560,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                         </button>
                       )}
                     </div>
-                    <input type="text" value={formatCurrency(tempIptu.property_tax_cash ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                    <input type="text" value={maskMoney(tempIptu.property_tax_cash ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_cash: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                   </div>
                   <div>
                     <label className="text-xs font-bold mb-1.5 block text-content-secondary">Data de Vencimento</label>
@@ -587,13 +587,13 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold mb-1.5 block text-content-secondary">1ª Parcela</label>
-                      <input type="text" value={formatCurrency(tempIptu.property_tax_first_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <input type="text" value={maskMoney(tempIptu.property_tax_first_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                       <label className="text-xs font-bold mb-1.5 block text-content-secondary mt-2">Vencimento 1ª Parcela</label>
                       <input type="date" value={tempIptu.property_tax_first_installment_due_date || ''} onChange={e => setTempIptu({ ...tempIptu, property_tax_first_installment_due_date: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
                     </div>
                     <div>
                       <label className="text-xs font-bold mb-1.5 block text-content-secondary">2ª Cota com 10% de desconto.</label>
-                      <input type="text" value={formatCurrency(tempIptu.property_tax_second_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
+                      <input type="text" value={maskMoney(tempIptu.property_tax_second_installment ?? 0)} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment: parseMoney(e.target.value) })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" placeholder="R$ 0,00" />
                       <label className="text-xs font-bold mb-1.5 block text-content-secondary mt-2">Vencimento 2ª Cota</label>
                       <input type="date" value={tempIptu.property_tax_second_installment_due_date || ''} onChange={e => setTempIptu({ ...tempIptu, property_tax_second_installment_due_date: e.target.value })} className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm" />
                     </div>
@@ -626,7 +626,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                     {tempIptu.iptu_installments?.map((inst, i) => (
                       <div key={i} className="p-3 border rounded-lg space-y-2 bg-surface-subtle">
                         <span className="text-[10px] font-bold text-brand">Parcela {i + getFirstInstallmentNumber()}</span>
-                        <input type="text" value={formatCurrency(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" placeholder="R$ 0,00" />
+                        <input type="text" value={maskMoney(inst.value ?? 0)} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].value = parseMoney(e.target.value); setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full font-bold outline-none focus:border-brand" placeholder="R$ 0,00" />
                         <input type="date" value={inst.due_date} onChange={e => { const n = [...tempIptu.iptu_installments!]; n[i].due_date = e.target.value; setTempIptu({ ...tempIptu, iptu_installments: n }) }} className="text-xs p-2 border rounded w-full outline-none focus:border-brand" />
                       </div>
                     ))}

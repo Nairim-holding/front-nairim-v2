@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Search, User, Phone, Mail, Smartphone, X, Edit2, Loader2, Check } from 'lucide-react';
-import { formatPhone } from '@/utils/formatters';
+import { maskPhone } from '@/utils/masks';
 
 interface Contact {
   id?: string;
@@ -198,7 +198,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                     {c.cellphone ? <Smartphone size={13} className="text-content-placeholder" /> : <Phone size={13} className="text-content-placeholder" />}
                   </div>
                   <span className="break-all whitespace-normal leading-tight">
-                    {c.cellphone ? formatPhone(c.cellphone) : formatPhone(c.phone || '')}
+                    {c.cellphone ? maskPhone(c.cellphone) : maskPhone(c.phone || '')}
                   </span>
                 </div>
               )}
@@ -386,7 +386,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                                 <div className="flex items-start gap-1.5 text-xs text-content-muted group-hover:text-content-secondary min-w-0">
                                   <Phone size={12} className="shrink-0 mt-0.5" />
                                   <span className="break-all whitespace-normal leading-tight">
-                                    {contact.cellphone ? formatPhone(contact.cellphone) : formatPhone(contact.phone || '')}
+                                    {contact.cellphone ? maskPhone(contact.cellphone) : maskPhone(contact.phone || '')}
                                   </span>
                                 </div>
                               )}

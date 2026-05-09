@@ -21,7 +21,7 @@ const getMonthlyValue = (monthlyData: MonthlyData[], month: number, year: number
 
 interface Props {
   data: DashboardResponse;
-  onEditItem?: (item: DashboardItem | CategoryDashboard) => void;
+  onEditItem?: (item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string }) => void;
 }
 
 export default function PlanningTable({ data, onEditItem }: Props) {
@@ -37,9 +37,19 @@ export default function PlanningTable({ data, onEditItem }: Props) {
       .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year));
   }, [data]);
 
-  const renderCategoryRow = (category: CategoryDashboard | DashboardItem, isSubcategory: boolean = false) => {
+  const renderCategoryRow = (category: CategoryDashboard | DashboardItem, isSubcategory: boolean = false, parentId?: string) => {
     const hasSubcategories = !isSubcategory && 'subcategories' in category && category.subcategories.length > 0;
     const isEditable = !hasSubcategories;
+
+    const handleEdit = () => {
+      const itemToEdit: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string } = {
+        ...category,
+      };
+      if (parentId) {
+        itemToEdit.parentCategoryId = parentId;
+      }
+      onEditItem?.(itemToEdit);
+    };
 
     return (
       <tr
@@ -52,11 +62,11 @@ export default function PlanningTable({ data, onEditItem }: Props) {
           {category.name}
         </td>
         <td
-          onClick={() => isEditable && onEditItem?.(category)}
+          onClick={() => isEditable && handleEdit()}
           onKeyDown={(e) => {
             if (isEditable && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault();
-              onEditItem?.(category);
+              handleEdit();
             }
           }}
           tabIndex={isEditable ? 0 : -1}
@@ -105,6 +115,42 @@ export default function PlanningTable({ data, onEditItem }: Props) {
     );
   };
 
+  const renderGlobalRow = (category: CategoryDashboard | DashboardItem, bgColor: string, isIncome: boolean) => {
+    return (
+      <tr style={{ backgroundColor: bgColor }}>
+        <td className="px-3 py-2 text-xs font-bold text-white sticky left-0 pl-6" style={{ backgroundColor: bgColor }}>
+          {category.name}
+        </td>
+        <td className="px-3 py-2 text-xs font-bold text-white text-right">
+          {formatCurrency(category.planned_amount)}
+        </td>
+        <td className="px-3 py-2 text-xs font-bold text-white text-center">
+          {category.percentage > 0 ? `${category.percentage.toFixed(2)}%` : '---'}
+        </td>
+        <td className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20">
+          {formatCurrency(category.min)}
+        </td>
+        <td className="px-3 py-2 text-xs font-bold text-white text-right">
+          {formatCurrency(category.med)}
+        </td>
+        <td className="px-3 py-2 text-xs font-bold text-white text-right">
+          {formatCurrency(category.max)}
+        </td>
+        {months.map(({ month, year }) => {
+          const monthVal = getMonthlyValue(category.monthly_data, month, year);
+          return (
+            <td
+              key={`${isIncome ? 'income' : 'expense'}-global-${month}-${year}`}
+              className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20"
+            >
+              {monthVal === null || monthVal === 0 ? '---' : formatCurrency(monthVal)}
+            </td>
+          );
+        })}
+      </tr>
+    );
+  };
+
   const thClass = 'px-3 py-2 text-xs font-semibold text-content-secondary whitespace-nowrap text-right';
 
   return (
@@ -131,43 +177,12 @@ export default function PlanningTable({ data, onEditItem }: Props) {
         <tbody>
           {data.incomes.length > 0 && (
             <>
-              <tr style={{ backgroundColor: '#0d9488' }}>
-                <td className="px-3 py-2 text-xs font-bold text-white sticky left-0 pl-6" style={{ backgroundColor: '#0d9488' }}>
-                  Receitas
-                </td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">
-                  {data.incomes.reduce((sum, cat) => sum + cat.planned_amount, 0).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}
-                </td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-center">100%</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20">---</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">---</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">---</td>
-                {months.map(({ month, year }) => (
-                  <td
-                    key={`total-${month}-${year}`}
-                    className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20"
-                  >
-                    {data.incomes.reduce((sum, cat) => {
-                      const monthVal = getMonthlyValue(cat.monthly_data, month, year);
-                      return sum + (monthVal ?? 0);
-                    }, 0) === 0
-                      ? '---'
-                      : data.incomes
-                          .reduce((sum, cat) => {
-                            const monthVal = getMonthlyValue(cat.monthly_data, month, year);
-                            return sum + (monthVal ?? 0);
-                          }, 0)
-                          .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </td>
-                ))}
-              </tr>
-              {data.incomes.map(category => (
+              {renderGlobalRow(data.incomes[0], '#0d9488', true)}
+              {data.incomes.slice(1).map(category => (
                 <Fragment key={`income-${category.id}`}>
                   {renderCategoryRow(category)}
                   {category.subcategories.map(sub => (
-                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true)}</Fragment>
+                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id)}</Fragment>
                   ))}
                 </Fragment>
               ))}
@@ -176,43 +191,12 @@ export default function PlanningTable({ data, onEditItem }: Props) {
 
           {data.expenses.length > 0 && (
             <>
-              <tr style={{ backgroundColor: '#ea580c' }}>
-                <td className="px-3 py-2 text-xs font-bold text-white sticky left-0 pl-6" style={{ backgroundColor: '#ea580c' }}>
-                  Despesas Mensais
-                </td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">
-                  {data.expenses.reduce((sum, cat) => sum + cat.planned_amount, 0).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}
-                </td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-center">100%</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20">---</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">---</td>
-                <td className="px-3 py-2 text-xs font-bold text-white text-right">---</td>
-                {months.map(({ month, year }) => (
-                  <td
-                    key={`total-exp-${month}-${year}`}
-                    className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20"
-                  >
-                    {data.expenses.reduce((sum, cat) => {
-                      const monthVal = getMonthlyValue(cat.monthly_data, month, year);
-                      return sum + (monthVal ?? 0);
-                    }, 0) === 0
-                      ? '---'
-                      : data.expenses
-                          .reduce((sum, cat) => {
-                            const monthVal = getMonthlyValue(cat.monthly_data, month, year);
-                            return sum + (monthVal ?? 0);
-                          }, 0)
-                          .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </td>
-                ))}
-              </tr>
-              {data.expenses.map(category => (
+              {renderGlobalRow(data.expenses[0], '#ea580c', false)}
+              {data.expenses.slice(1).map(category => (
                 <Fragment key={`expense-${category.id}`}>
                   {renderCategoryRow(category)}
                   {category.subcategories.map(sub => (
-                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true)}</Fragment>
+                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id)}</Fragment>
                   ))}
                 </Fragment>
               ))}

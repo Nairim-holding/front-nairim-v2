@@ -11,7 +11,7 @@ import {
   formatLastLeaseInfo,
   formatMissingDocs,
   formatPropertyList,
-} from "@/utils/formatters";
+} from "@/utils/displayFormatters";
 
 // ─── Re-usable column presets ──────────────────────────────────────────────
 const col = (key: string, label: string, extra?: Partial<{ width: string; format: (v: any) => any }>) => ({

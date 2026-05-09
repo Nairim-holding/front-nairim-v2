@@ -5,7 +5,7 @@ import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { MetricResponse, MetricWithData } from "@/types/types";
 import NumericCard from "@/components/charts/MetricCard";
-import { formatCurrencyFixed, formatCurrencyRounded } from "@/utils/formatters";
+import { formatCurrencyFixed, formatCurrencyRounded } from "@/utils/displayFormatters";
 import {
   COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_TAX_FEE, COLS_ACQUISITION,
   COLS_FINANCIAL_VACANCY_GAUGE, COLS_VACANCY_MONTHS,

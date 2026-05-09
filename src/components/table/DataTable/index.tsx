@@ -16,7 +16,7 @@ import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import Input from "../../ui/Input";
-import { formatCurrency, formatDate, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/formatters";
+import { formatCurrency, formatDate, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/displayFormatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef } from "@/types/types";

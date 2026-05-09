@@ -16,7 +16,7 @@ import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
-import { formatCurrency, formatDate, parseCurrencyFromPTBR, maskCurrencyInput } from "@/utils/formatters";
+import { formatCurrency, formatDate, parseCurrencyFromPTBR, maskCurrencyInput } from "@/utils/displayFormatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";

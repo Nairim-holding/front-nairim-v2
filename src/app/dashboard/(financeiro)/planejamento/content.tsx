@@ -53,7 +53,7 @@ export default function PlanningPageContent() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState<DashboardItem | CategoryDashboard | null>(null);
+  const [editingItem, setEditingItem] = useState<(DashboardItem | CategoryDashboard) & { parentCategoryId?: string } | null>(null);
 
   const fetchDashboard = useCallback(async () => {
     setIsLoading(true);
@@ -62,7 +62,7 @@ export default function PlanningPageContent() {
         startDate: dateRange.from,
         endDate: dateRange.to,
       });
-      const res = await authFetch(`${API_URL}/planning/dashboard?${params}`);
+      const res = await authFetch(`${API_URL}/plannings/dashboard?${params}`);
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`API Error ${res.status}: ${errorText || 'Falha ao carregar dados'}`);
@@ -95,8 +95,10 @@ export default function PlanningPageContent() {
   }, [isCalendarOpen]);
 
   const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
-    setDateRange(range);
-    setIsCalendarOpen(false);
+    if (range.from && range.to && range.from !== range.to) {
+      setDateRange(range);
+      setIsCalendarOpen(false);
+    }
   }, []);
 
   const handleShortcutChange = useCallback((days: number) => {
