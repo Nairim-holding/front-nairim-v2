@@ -16,7 +16,7 @@ export const LoginFormWrapper = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const emailInputRef = useRef<HTMLInputElement>(null);
-  
+      console.log(process.env.NEXT_PUBLIC_URL_API)
   const {
     failedAttempts,
     isBlocked,
@@ -45,7 +45,6 @@ export const LoginFormWrapper = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_URL_API}/auth/login`,
