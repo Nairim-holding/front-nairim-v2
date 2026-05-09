@@ -41,9 +41,13 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const hasExistingPlanning = useMemo(() => {
-    return item.planned_amount > 0;
+  const planningId = useMemo(() => {
+    return 'planning_id' in item ? item.planning_id : undefined;
   }, [item]);
+
+  const hasExistingPlanning = useMemo(() => {
+    return item.planned_amount > 0 && planningId;
+  }, [item, planningId]);
 
   const applyMask = useCallback(
     (setter: (v: string) => void) =>
@@ -68,6 +72,14 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
       return;
     }
 
+    const minRecValue = minRecommended ? parseCurrencyFromPTBR(minRecommended) : undefined;
+    const maxRecValue = maxRecommended ? parseCurrencyFromPTBR(maxRecommended) : undefined;
+
+    if (minRecValue !== undefined && maxRecValue !== undefined && minRecValue >= maxRecValue) {
+      showMessage('O mínimo recomendado deve ser menor que o máximo', 'error');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const payload: Record<string, unknown> = {
@@ -85,26 +97,22 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
         })).filter(mv => mv.amount > 0);
       }
 
-      if (minRecommended) payload.min_recommended = parseCurrencyFromPTBR(minRecommended);
-      if (maxRecommended) payload.max_recommended = parseCurrencyFromPTBR(maxRecommended);
+      if (minRecValue !== undefined) payload.min_recommended = minRecValue;
+      if (maxRecValue !== undefined) payload.max_recommended = maxRecValue;
 
-      console.log('[PlanningEditModal] Enviando:', payload);
-
-      const res = await authFetch(`${API_URL}/plannings`, {
+      const res = await authFetch(`${API_URL}/planning`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('[PlanningEditModal] Erro:', res.status, errorText);
         throw new Error(errorText || 'Erro ao salvar');
       }
 
       showMessage('Planejamento salvo com sucesso', 'success');
       onSaved();
     } catch (e) {
-      console.error('[PlanningEditModal] Erro ao salvar:', e);
       showMessage(e instanceof Error ? e.message : 'Erro ao salvar planejamento', 'error');
     } finally {
       setIsSaving(false);
@@ -112,18 +120,13 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
   }, [categoryId, year, planType, defaultAmount, monthlyValues, minRecommended, maxRecommended, showMessage, onSaved]);
 
   const handleDelete = useCallback(async () => {
-    if (!hasExistingPlanning) return;
+    if (!hasExistingPlanning || !planningId) return;
 
     if (!window.confirm('Tem certeza que deseja remover este planejamento?')) return;
 
     setIsDeleting(true);
     try {
-      const queryParams = new URLSearchParams({
-        category_id: categoryId,
-        year: String(year),
-      });
-
-      const res = await authFetch(`${API_URL}/plannings?${queryParams}`, {
+      const res = await authFetch(`${API_URL}/planning/${planningId}`, {
         method: 'DELETE',
       });
 
@@ -131,12 +134,11 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
       showMessage('Planejamento removido com sucesso', 'success');
       onSaved();
     } catch (e) {
-      console.error('[PlanningEditModal] Erro ao deletar:', e);
       showMessage('Erro ao remover planejamento', 'error');
     } finally {
       setIsDeleting(false);
     }
-  }, [hasExistingPlanning, categoryId, year, showMessage, onSaved]);
+  }, [hasExistingPlanning, planningId, showMessage, onSaved]);
 
   const inputClass =
     'w-full border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface focus:outline-none focus:border-brand';

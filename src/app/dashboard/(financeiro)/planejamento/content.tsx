@@ -62,7 +62,7 @@ export default function PlanningPageContent() {
         startDate: dateRange.from,
         endDate: dateRange.to,
       });
-      const res = await authFetch(`${API_URL}/plannings/dashboard?${params}`);
+      const res = await authFetch(`${API_URL}/planning/dashboard?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setData(json.data ?? json);

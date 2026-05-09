@@ -16,6 +16,7 @@ export interface DashboardItem {
   med: number;
   max: number | null;
   monthly_data: MonthlyData[];
+  planning_id?: string;
 }
 
 export interface CategoryDashboard extends DashboardItem {
