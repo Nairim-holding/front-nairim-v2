@@ -248,14 +248,14 @@ function PropertyCard({
               <span className="text-xs text-content-muted font-medium">/mês</span>
             )}
           </div>
-          {!isCasa && imovel.precoCondominio && imovel.precoCondominio > 0 && (
+          {!isCasa && (imovel.precoCondominio ?? 0) > 0 && (
             <p className="text-xs text-content-muted mt-0.5">
-              + {formatCurrency(imovel.precoCondominio)} cond.
+              + {formatCurrency(imovel.precoCondominio!)} cond.
             </p>
           )}
-          {isCasa && imovel.areaTerreno && imovel.areaTerreno > 0 && (
+          {isCasa && (imovel.areaTerreno ?? 0) > 0 && (
             <p className="text-xs text-content-muted mt-0.5">
-              Terreno: {formatArea(imovel.areaTerreno)} m²
+              Terreno: {formatArea(imovel.areaTerreno!)} m²
             </p>
           )}
         </div>
