@@ -8,7 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_URL_API;
 
 async function getImoveisDestaque() {
   try {
-    const res = await fetch(`${API_URL}/properties`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/properties?limit=100`, { cache: 'no-store' });
     if (!res.ok) return [];
 
     const result = await res.json();
@@ -27,8 +27,14 @@ async function getImoveisDestaque() {
       };
     };
 
+    const isAvailable = (i: any) => {
+      const valStatus = (i.values?.[0]?.status ?? "").toUpperCase();
+      const propStatus = (i.status ?? "").toUpperCase();
+      return valStatus === "AVAILABLE" || (valStatus === "" && propStatus === "ACTIVE");
+    };
+
     const disponiveis = rawList
-      .filter((i: any) => (i.values?.[0]?.status ?? i.status ?? "").toUpperCase() === "AVAILABLE")
+      .filter(isAvailable)
       .map((i: any) => toSlide(i, true))
       .filter((i): i is NonNullable<typeof i> => i !== null);
 

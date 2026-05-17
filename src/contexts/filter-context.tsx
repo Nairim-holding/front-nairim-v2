@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type PropertyTransactionType = 'comprar' | 'alugar';
-export type PropertySearchType = 'apartment' | 'house' | 'all';
+export type PropertySearchType = string;
 
 export interface PropertyFiltersState {
   transactionType: PropertyTransactionType;
