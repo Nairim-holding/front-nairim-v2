@@ -16,7 +16,23 @@ import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
-import { formatCurrency, formatDate, parseCurrencyFromPTBR, maskCurrencyInput } from "@/utils/displayFormatters";
+import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
+import { maskMoney } from "@/utils/masks";
+
+const formatCurrencyRealtime = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 0) return '';
+
+  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
+  const amount = parseInt(trimmedNumbers) / 100;
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
@@ -895,21 +911,19 @@ export default function InlineEditableTable({
           />
         );
       case 'amount': {
-        // Máscara pt-BR em tempo real, baseada em centavos.
-        // Estado pode ser número (valor inicial / após blur) ou string mascarada (durante digitação).
-        const amountDisplay = typeof val === 'number'
-          ? (val > 0 ? maskCurrencyInput(Math.round(val * 100).toString()) : '')
-          : (val ?? '');
+        // Mantém string formatada no estado durante digitação, parseia no blur
+        const displayValue = typeof val === 'string' ? val : (typeof val === 'number' && val > 0 ? maskMoney(val) : '');
         return renderWrapper(
           <input
             type="text"
             inputMode="numeric"
-            value={amountDisplay}
+            value={displayValue}
             onChange={e => {
-              upd(maskCurrencyInput(e.target.value));
+              upd(formatCurrencyRealtime(e.target.value));
             }}
             onBlur={e => {
-              upd(parseCurrencyFromPTBR(e.target.value));
+              const parsed = parseCurrencyFromPTBR(e.target.value);
+              upd(parsed);
             }}
             disabled={dis}
             className={inputClasses}

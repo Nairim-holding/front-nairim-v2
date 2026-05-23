@@ -5,7 +5,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useMessageContext } from '@/contexts';
 import { authFetch } from '@/utils/authFetch';
-import { maskCurrencyInput, parseCurrencyFromPTBR } from '@/utils/displayFormatters';
+import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
+import { maskMoney } from '@/utils/masks';
 import type { DashboardItem, CategoryDashboard } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -15,8 +16,23 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
+const formatCurrencyRealtime = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 0) return '';
+
+  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
+  const amount = parseInt(trimmedNumbers) / 100;
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
 interface Props {
-  item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string };
+  item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string; initialPlanType?: 'FIXED' | 'VARIABLE' };
   year: number;
   onClose: () => void;
   onSaved: () => void;
@@ -37,24 +53,38 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
 
   const [planType, setPlanType] = useState<'FIXED' | 'VARIABLE'>(() => {
     const itemAny = item as any;
+    if (itemAny.initialPlanType) return itemAny.initialPlanType;
     return (itemAny.monthly_values && Array.isArray(itemAny.monthly_values) && itemAny.monthly_values.length > 0) ? 'VARIABLE' : 'FIXED';
   });
-  const [defaultAmount, setDefaultAmount] = useState<number | string>(() => {
+  const [defaultAmount, setDefaultAmount] = useState<number>(() => {
     const itemAny = item as any;
     return itemAny.planned_amount ?? 0;
   });
-  const [monthlyValues, setMonthlyValues] = useState<Record<number, number | string>>(() => {
+  const [defaultAmountInput, setDefaultAmountInput] = useState<string>(() => {
+    const itemAny = item as any;
+    const val = itemAny.planned_amount ?? 0;
+    return val > 0 ? val.toString() : '';
+  });
+  const [monthlyValues, setMonthlyValues] = useState<Record<number, number>>(() => {
     const itemAny = item as any;
     if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
-      return itemAny.monthly_values.reduce((acc: Record<number, number | string>, mv: any) => {
+      return itemAny.monthly_values.reduce((acc: Record<number, number>, mv: any) => {
         acc[mv.month] = mv.amount ?? 0;
         return acc;
       }, {});
     }
     return {};
   });
-  const [minRecommended, setMinRecommended] = useState<number | string>(item.min ?? 0);
-  const [maxRecommended, setMaxRecommended] = useState<number | string>(item.max ?? 0);
+  const [monthlyValuesInput, setMonthlyValuesInput] = useState<Record<number, string>>(() => {
+    const itemAny = item as any;
+    const result: Record<number, string> = {};
+    if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
+      itemAny.monthly_values.forEach((mv: any) => {
+        result[mv.month] = mv.amount > 0 ? mv.amount.toString() : '';
+      });
+    }
+    return result;
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -66,61 +96,48 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     return item.planned_amount > 0 && planningId;
   }, [item, planningId]);
 
-  const getAmountDisplay = (val: number | string): string => {
-    const numVal = typeof val === 'number' ? val : parseCurrencyFromPTBR(val);
-    return numVal > 0 ? maskCurrencyInput(Math.round(numVal * 100).toString()) : '';
-  };
-
   const handleAmountChange = useCallback(
-    (setter: (v: number | string) => void) =>
+    (setInput: (v: string) => void) =>
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        setter(maskCurrencyInput(e.target.value));
+        const formatted = formatCurrencyRealtime(e.target.value);
+        setInput(formatted);
       },
     [],
   );
 
   const handleAmountBlur = useCallback(
-    (setter: (v: number | string) => void) =>
-      (e: React.FocusEvent<HTMLInputElement>) => {
-        setter(parseCurrencyFromPTBR(e.target.value));
+    (inputVal: string, setParsed: (v: number) => void) =>
+      () => {
+        const parsed = parseCurrencyFromPTBR(inputVal);
+        setParsed(parsed);
       },
     [],
   );
 
   const handleMonthChange = useCallback((month: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    setMonthlyValues(prev => ({ ...prev, [month]: maskCurrencyInput(e.target.value) }));
+    const formatted = formatCurrencyRealtime(e.target.value);
+    setMonthlyValuesInput(prev => ({ ...prev, [month]: formatted }));
   }, []);
 
-  const handleMonthBlur = useCallback((month: number, e: React.FocusEvent<HTMLInputElement>) => {
-    setMonthlyValues(prev => ({ ...prev, [month]: parseCurrencyFromPTBR(e.target.value) }));
+  const handleMonthBlur = useCallback((month: number, inputVal: string) => {
+    const parsed = parseCurrencyFromPTBR(inputVal);
+    setMonthlyValues(prev => ({ ...prev, [month]: parsed }));
   }, []);
 
   const handleSave = useCallback(async () => {
     if (planType === 'FIXED') {
-      const val = parseCurrencyFromPTBR(defaultAmount);
-      if (!val || val <= 0) {
+      if (!defaultAmount || defaultAmount <= 0) {
         showMessage('Informe um valor maior que zero para o planejamento fixo', 'error');
         return;
       }
     }
 
     if (planType === 'VARIABLE') {
-      const hasValue = Object.values(monthlyValues).some(v => {
-        const num = parseCurrencyFromPTBR(v);
-        return num > 0;
-      });
+      const hasValue = Object.values(monthlyValues).some(v => v > 0);
       if (!hasValue) {
         showMessage('Informe pelo menos um valor mensal', 'error');
         return;
       }
-    }
-
-    const minRecVal = parseCurrencyFromPTBR(minRecommended);
-    const maxRecVal = parseCurrencyFromPTBR(maxRecommended);
-
-    if (minRecVal > 0 && maxRecVal > 0 && minRecVal >= maxRecVal) {
-      showMessage('O mínimo recomendado deve ser menor que o máximo', 'error');
-      return;
     }
 
     setIsSaving(true);
@@ -136,19 +153,16 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
       }
 
       if (planType === 'FIXED') {
-        payload.default_amount = parseCurrencyFromPTBR(defaultAmount);
+        payload.default_amount = defaultAmount;
       } else {
         payload.monthly_values = MONTH_NAMES.map((_, i) => {
           const monthNum = i + 1;
-          const amount = parseCurrencyFromPTBR(monthlyValues[monthNum] ?? 0);
+          const amount = monthlyValues[monthNum] ?? 0;
           return { month: monthNum, amount };
         }).filter(mv => mv.amount > 0);
       }
 
-      if (minRecVal > 0) payload.min_recommended = minRecVal;
-      if (maxRecVal > 0) payload.max_recommended = maxRecVal;
-
-      const res = await authFetch(`${API_URL}/plannings`, {
+      const res = await authFetch(`${API_URL}/planning`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
@@ -165,7 +179,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     } finally {
       setIsSaving(false);
     }
-  }, [categoryId, subcategoryId, year, planType, defaultAmount, monthlyValues, minRecommended, maxRecommended, showMessage, onSaved]);
+  }, [categoryId, subcategoryId, year, planType, defaultAmount, monthlyValues, showMessage, onSaved]);
 
   const handleDelete = useCallback(async () => {
     if (!hasExistingPlanning || !planningId) return;
@@ -174,7 +188,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
 
     setIsDeleting(true);
     try {
-      const res = await authFetch(`${API_URL}/plannings/${planningId}`, {
+      const res = await authFetch(`${API_URL}/planning/${planningId}`, {
         method: 'DELETE',
       });
 
@@ -202,15 +216,9 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     >
       <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <div className="flex justify-between items-start mb-4">
-          <div>
-            <p className="text-xs text-content-muted uppercase tracking-wide">
-              {'type' in item ? item.name : item.name}
-            </p>
-            <h2 className="text-lg font-semibold text-content">{item.name}</h2>
-          </div>
           <button
             onClick={onClose}
-            className="text-content-muted hover:text-content text-2xl leading-none ml-4"
+            className="text-content-muted hover:text-content text-2xl leading-none ml-auto"
           >
             ×
           </button>
@@ -240,9 +248,9 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
             <input
               type="text"
               inputMode="numeric"
-              value={getAmountDisplay(defaultAmount)}
-              onChange={handleAmountChange(setDefaultAmount)}
-              onBlur={handleAmountBlur(setDefaultAmount)}
+              value={defaultAmountInput}
+              onChange={handleAmountChange(setDefaultAmountInput)}
+              onBlur={handleAmountBlur(defaultAmountInput, setDefaultAmount)}
               placeholder="0,00"
               className={inputClass}
               autoFocus
@@ -260,11 +268,12 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={getAmountDisplay(monthlyValues[monthNum] ?? 0)}
+                      value={monthlyValuesInput[monthNum] ?? ''}
                       onChange={e => handleMonthChange(monthNum, e)}
-                      onBlur={e => handleMonthBlur(monthNum, e)}
+                      onBlur={() => handleMonthBlur(monthNum, monthlyValuesInput[monthNum] ?? '')}
                       placeholder="0,00"
                       className={inputClass}
+                      pattern="[0-9,.]*"
                     />
                   </div>
                 );
@@ -273,36 +282,6 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 pt-4 mb-6 border-t border-ui-border-soft">
-          <div>
-            <label className="block text-xs font-medium text-content-muted mb-1">
-              Mínimo recomendado (R$)
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={getAmountDisplay(minRecommended)}
-              onChange={handleAmountChange(setMinRecommended)}
-              onBlur={handleAmountBlur(setMinRecommended)}
-              placeholder="0,00"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-content-muted mb-1">
-              Máximo recomendado (R$)
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={getAmountDisplay(maxRecommended)}
-              onChange={handleAmountChange(setMaxRecommended)}
-              onBlur={handleAmountBlur(setMaxRecommended)}
-              placeholder="0,00"
-              className={inputClass}
-            />
-          </div>
-        </div>
 
         <div className="flex items-center gap-2">
           {hasExistingPlanning && (

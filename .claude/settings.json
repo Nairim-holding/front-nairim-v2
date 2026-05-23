@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -rn \"from ''@/components/\" c:/Users/Marcio/Desktop/front-nairim-v2/src/components --include=\"*.tsx\" --include=\"*.ts\")",
-      "Bash(xargs sed:*)"
-    ]
-  }
-}

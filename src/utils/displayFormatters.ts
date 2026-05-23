@@ -29,15 +29,6 @@ export const parseCurrencyFromPTBR = (value: string | number): number => {
   return isNaN(num) ? 0 : num;
 };
 
-export const maskCurrencyInput = (value: string): string => {
-  if (!value) return '';
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
-  const integerPart = digits.slice(0, -2) || '0';
-  const decimalPart = digits.slice(-2).padEnd(2, '0');
-  const formattedInteger = parseInt(integerPart, 10).toLocaleString('pt-BR');
-  return `${formattedInteger},${decimalPart}`;
-};
 
 export const formatCurrency = (value: any): string => {
   if (value === null || value === undefined || value === '') return '';

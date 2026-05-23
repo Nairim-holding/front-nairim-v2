@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
 import { RefreshCw, Calendar } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
 import { useMessageContext } from '@/contexts';
 import { authFetch } from '@/utils/authFetch';
-import PlanningTable from '@/components/planejamento/PlanningTable';
+import PlanningTable, { FIXED_COL_COUNT, type PlanningTableHandle } from '@/components/planejamento/PlanningTable';
 import PlanningEditModal from '@/components/planejamento/PlanningEditModal';
-import type { DashboardResponse, DashboardItem, CategoryDashboard } from '@/components/planejamento/types';
+import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from '@/components/planejamento/types';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -55,27 +55,272 @@ export default function PlanningPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<(DashboardItem | CategoryDashboard) & { parentCategoryId?: string } | null>(null);
 
+  const planningTableRef = useRef<PlanningTableHandle>(null);
+  const balanceCardTableRef = useRef<HTMLTableElement>(null);
+
   const fetchDashboard = useCallback(async () => {
+    const fetchStartTime = new Date().toISOString();
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('📊 [FETCH DASHBOARD] INICIANDO');
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`Horário: ${fetchStartTime}`);
+    console.log(`Período: ${dateRange.from} até ${dateRange.to}`);
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
         startDate: dateRange.from,
         endDate: dateRange.to,
       });
-      const res = await authFetch(`${API_URL}/plannings/dashboard?${params}`);
+
+      const urlFinal = `${API_URL}/planning/dashboard?${params}`;
+      console.log(`\n📤 URL: GET ${urlFinal}`);
+
+      const res = await authFetch(urlFinal);
+
+      console.log(`\n📥 Status: ${res.status} ${res.statusText}`);
+
       if (!res.ok) {
         const errorText = await res.text();
+        console.error(`❌ Erro HTTP:`, errorText);
         throw new Error(`API Error ${res.status}: ${errorText || 'Falha ao carregar dados'}`);
       }
+
       const json = await res.json();
-      setData(json.data ?? json);
+      const responseData = json.data ?? json;
+
+      console.log('\n📊 DADOS RECEBIDOS:');
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log(`Data de início: ${responseData.start_date}`);
+      console.log(`Data de fim: ${responseData.end_date}`);
+      console.log(`Categorias de Receita: ${responseData.incomes?.length || 0}`);
+      console.log(`Categorias de Despesa: ${responseData.expenses?.length || 0}`);
+
+      if (responseData.incomes?.length > 0) {
+        console.log('\n💰 RECEITAS:');
+        responseData.incomes.forEach((income: CategoryDashboard, idx: number) => {
+          console.log(`  [${idx}] ${income.name}`);
+          console.log(`      ID: ${income.id}`);
+          console.log(`      Planejado: ${income.planned_amount}`);
+          console.log(`      Realizado: ${income.realized_amount}`);
+          console.log(`      Percentual: ${income.percentage}%`);
+          console.log(`      Min/Med/Max: ${income.min}/${income.med}/${income.max}`);
+          console.log(`      Dados Mensais: ${income.monthly_data?.length || 0} meses`);
+          if (income.monthly_data?.length > 0) {
+            income.monthly_data.forEach(m => {
+              console.log(`        → ${m.year}-${String(m.month).padStart(2, '0')}: ${m.realized_amount}`);
+            });
+          }
+          console.log(`      Subcategorias: ${income.subcategories?.length || 0}`);
+
+          if (income.subcategories?.length > 0) {
+            income.subcategories.forEach((sub: DashboardItem, subIdx: number) => {
+              console.log(`        └─ [${subIdx}] ${sub.name}`);
+              console.log(`            ID: ${sub.id}`);
+              console.log(`            Planejado: ${sub.planned_amount}`);
+              console.log(`            Realizado: ${sub.realized_amount}`);
+              if (sub.monthly_data?.length > 0) {
+                console.log(`            Dados Mensais:`);
+                sub.monthly_data.forEach(m => {
+                  console.log(`              → ${m.year}-${String(m.month).padStart(2, '0')}: ${m.realized_amount}`);
+                });
+              }
+            });
+          }
+        });
+      }
+
+      if (responseData.expenses?.length > 0) {
+        console.log('\n💸 DESPESAS:');
+        responseData.expenses.forEach((expense: CategoryDashboard, idx: number) => {
+          console.log(`  [${idx}] ${expense.name}`);
+          console.log(`      ID: ${expense.id}`);
+          console.log(`      Planejado: ${expense.planned_amount}`);
+          console.log(`      Realizado: ${expense.realized_amount}`);
+          console.log(`      Percentual: ${expense.percentage}%`);
+          console.log(`      Dados Mensais: ${expense.monthly_data?.length || 0} meses`);
+          if (expense.monthly_data?.length > 0) {
+            expense.monthly_data.forEach(m => {
+              console.log(`        → ${m.year}-${String(m.month).padStart(2, '0')}: ${m.realized_amount}`);
+            });
+          }
+          if (expense.subcategories?.length > 0) {
+            console.log(`      Subcategorias: ${expense.subcategories?.length || 0}`);
+            expense.subcategories.forEach((sub: DashboardItem, subIdx: number) => {
+              console.log(`        └─ [${subIdx}] ${sub.name}`);
+              console.log(`            Planejado: ${sub.planned_amount}`);
+              if (sub.monthly_data?.length > 0) {
+                console.log(`            Dados Mensais:`);
+                sub.monthly_data.forEach(m => {
+                  console.log(`              → ${m.year}-${String(m.month).padStart(2, '0')}: ${m.realized_amount}`);
+                });
+              }
+            });
+          }
+        });
+      }
+
+      if (responseData.balances?.monthly?.length > 0) {
+        console.log('\n📅 SALDOS MENSAIS:');
+        responseData.balances.monthly.forEach((balance: MonthlyData) => {
+          console.log(`  ${balance.year}-${String(balance.month).padStart(2, '0')}: ${balance.realized_amount}`);
+        });
+      }
+
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log('✅ Dashboard carregado com sucesso');
+
+      setData(responseData);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro ao carregar planejamento';
+      console.error(`\n❌ [FETCH DASHBOARD] ERRO:`, message);
       showMessage(message, 'error');
     } finally {
       setIsLoading(false);
+      console.log('═══════════════════════════════════════════════════════════════\n');
     }
   }, [dateRange, showMessage]);
+
+  const handleSaveInline = useCallback(async (item: { id: string; parentCategoryId?: string; amount: number }) => {
+    const startTime = new Date().toISOString();
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('📝 [INLINE SAVE] INICIANDO');
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`Horário: ${startTime}`);
+    console.log(`Item recebido:`, JSON.stringify(item, null, 2));
+
+    if (!item.amount || item.amount <= 0) {
+      console.warn('[INLINE SAVE] ❌ Valor inválido:', item.amount);
+      showMessage('Informe um valor maior que zero', 'error');
+      return;
+    }
+
+    try {
+      const categoryId = item.parentCategoryId || item.id;
+      const year = new Date(dateRange.from).getFullYear();
+
+      const payload: Record<string, unknown> = {
+        category_id: categoryId,
+        year: year,
+        type: 'FIXED',
+        default_amount: item.amount,
+      };
+
+      if (item.parentCategoryId) {
+        payload.subcategory_id = item.id;
+      }
+
+      console.log('\n📤 [INLINE SAVE] PAYLOAD A ENVIAR:');
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log(JSON.stringify(payload, null, 2));
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log(`URL: POST ${API_URL}/planning`);
+      console.log(`Content-Type: application/json`);
+      console.log(`Authorization: Bearer [TOKEN]`);
+
+      const res = await authFetch(`${API_URL}/planning`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      console.log('\n📥 [INLINE SAVE] RESPOSTA RECEBIDA:');
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log(`Status HTTP: ${res.status} ${res.statusText}`);
+      console.log(`Headers:`, {
+        'content-type': res.headers.get('content-type'),
+        'content-length': res.headers.get('content-length'),
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.text();
+        console.log(`❌ Erro na resposta:`, errorBody);
+        throw new Error(`Falha ao salvar: HTTP ${res.status} - ${errorBody}`);
+      }
+
+      const responseData = await res.json();
+      console.log('\n✅ Resposta JSON:');
+      console.log(JSON.stringify(responseData, null, 2));
+      console.log('─────────────────────────────────────────────────────────────');
+
+      if (responseData.data) {
+        console.log('\n📊 Dados retornados:');
+        console.log(`  ID do Planning: ${responseData.data.id}`);
+        console.log(`  Category ID: ${responseData.data.category_id}`);
+        console.log(`  Subcategory ID: ${responseData.data.subcategory_id || 'null'}`);
+        console.log(`  Year: ${responseData.data.year}`);
+        console.log(`  Type: ${responseData.data.type}`);
+        console.log(`  Default Amount: ${responseData.data.default_amount}`);
+        console.log(`  Min Recommended: ${responseData.data.min_recommended}`);
+        console.log(`  Max Recommended: ${responseData.data.max_recommended}`);
+        console.log(`  Created At: ${responseData.data.created_at}`);
+        console.log(`  Updated At: ${responseData.data.updated_at}`);
+        console.log(`  Monthly Values Count: ${responseData.data.monthly_values?.length || 0}`);
+      }
+
+      showMessage('Planejamento salvo com sucesso', 'success');
+
+      console.log('\n🔄 [INLINE SAVE] UPDATE OTIMISTA:');
+      console.log('─────────────────────────────────────────────────────────────');
+      setData(prev => {
+        if (!prev) {
+          console.log('❌ Data anterior é null');
+          return prev;
+        }
+
+        const updateArray = (items: (DashboardItem | CategoryDashboard)[]) => {
+          return items.map(cat => {
+            if ('subcategories' in cat) {
+              const isCategoryMatch = cat.id === categoryId;
+
+              if (isCategoryMatch && !item.parentCategoryId) {
+                console.log(`✅ Categoria principal atualizada: ${cat.id}`);
+                console.log(`   Valor anterior: ${cat.planned_amount} → Novo: ${item.amount}`);
+                return { ...cat, planned_amount: item.amount };
+              }
+
+              if (isCategoryMatch && item.parentCategoryId) {
+                const newSubs = cat.subcategories.map(sub =>
+                  sub.id === item.id ? { ...sub, planned_amount: item.amount } : sub
+                );
+                if (newSubs.some((s, i) => s !== cat.subcategories[i])) {
+                  console.log(`✅ Subcategoria atualizada: ${item.id}`);
+                  console.log(`   Em categoria: ${categoryId}`);
+                  return { ...cat, subcategories: newSubs };
+                }
+              }
+              return cat;
+            } else {
+              const isMatch = cat.id === categoryId;
+              if (isMatch) {
+                console.log(`✅ Item atualizado: ${cat.id}`);
+                console.log(`   Valor anterior: ${cat.planned_amount} → Novo: ${item.amount}`);
+                return { ...cat, planned_amount: item.amount };
+              }
+              return cat;
+            }
+          });
+        };
+
+        const updated = {
+          ...prev,
+          incomes: updateArray(prev.incomes) as CategoryDashboard[],
+          expenses: updateArray(prev.expenses) as CategoryDashboard[],
+        } as DashboardResponse;
+
+        console.log('✅ Estado atualizado localmente');
+        return updated;
+      });
+
+      console.log('\n🔁 [INLINE SAVE] REFETCH DASHBOARD:');
+      console.log('─────────────────────────────────────────────────────────────');
+      fetchDashboard();
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido ao salvar planejamento';
+      console.error('\n❌ [INLINE SAVE] ERRO:', errorMessage);
+      console.log('═══════════════════════════════════════════════════════════════\n');
+      showMessage(errorMessage, 'error');
+    }
+  }, [dateRange.from, showMessage, fetchDashboard]);
 
   useEffect(() => {
     fetchDashboard();
@@ -87,7 +332,6 @@ export default function PlanningPageContent() {
         setIsCalendarOpen(false);
       }
     };
-
     if (isCalendarOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -117,115 +361,104 @@ export default function PlanningPageContent() {
 
   const balanceMonths = useMemo(() => {
     if (!data) return [];
+    const [fromYear, fromMonth] = dateRange.from.split('-').slice(0, 2).map(Number);
     const months = new Set<string>();
-    data.balances.monthly.forEach(b => {
-      months.add(JSON.stringify({ month: b.month, year: b.year }));
+    [...data.incomes, ...data.expenses].forEach(cat => {
+      cat.monthly_data.forEach(m => {
+        if (m.year > fromYear || (m.year === fromYear && m.month >= fromMonth)) {
+          months.add(JSON.stringify({ month: m.month, year: m.year }));
+        }
+      });
     });
     return Array.from(months)
       .map(m => JSON.parse(m) as { month: number; year: number })
       .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year));
-  }, [data]);
+  }, [data, dateRange.from]);
+
+  useLayoutEffect(() => {
+    if (!data) return;
+    const balanceTable = balanceCardTableRef.current;
+    if (!balanceTable) return;
+
+    const syncWidths = () => {
+      const mainTable = planningTableRef.current?.getTableElement();
+      if (!mainTable || !balanceTable) return;
+
+      const headerRow = mainTable.querySelector('thead tr');
+      if (!headerRow) return;
+
+      const monthThs = Array.from(headerRow.querySelectorAll('th')).slice(FIXED_COL_COUNT);
+      const widths = monthThs.map(th => th.getBoundingClientRect().width);
+
+      const balanceRows = Array.from(balanceTable.querySelectorAll('tr'));
+      balanceRows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td')).slice(1) as HTMLTableCellElement[];
+        widths.forEach((width, i) => {
+          const cell = cells[i];
+          if (cell) {
+            cell.style.width = `${width}px`;
+            cell.style.minWidth = `${width}px`;
+            cell.style.maxWidth = `${width}px`;
+          }
+        });
+      });
+    };
+
+    syncWidths();
+
+    const mainTable = planningTableRef.current?.getTableElement();
+    if (!mainTable) return;
+
+    const ro = new ResizeObserver(syncWidths);
+    ro.observe(mainTable);
+    window.addEventListener('resize', syncWidths);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', syncWidths);
+    };
+  }, [data, balanceMonths]);
 
   return (
     <Section title="Planejamento e Controle">
       <div className="flex flex-col gap-4">
-        <div className="flex justify-between gap-4 flex-wrap items-center">
-          <div className="flex gap-4 items-center">
-            <div className="relative" ref={popoverRef}>
-              <button
-                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className="flex items-center gap-2 border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
-              >
-                <Calendar size={16} className="text-content-secondary" />
-                <span className="font-medium">
-                  {formatDateDisplay(dateRange.from)} — {formatDateDisplay(dateRange.to)}
-                </span>
-              </button>
-
-              {isCalendarOpen && (
-                <div className="absolute top-full left-0 mt-2 bg-surface border border-ui-border-soft rounded-lg shadow-lg z-50 p-4">
-                  <CalendarPicker dateRange={dateRange} onChange={handleDateRangeChange} />
-                </div>
-              )}
-            </div>
-
-            <select
-              value={getSelectedShortcut() ?? ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  handleShortcutChange(Number(e.target.value));
-                }
-              }}
-              className="border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
-            >
-              <option value="">Personalizado</option>
-              {SHORTCUTS.map(s => (
-                <option key={s.days} value={s.days}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-
+        <div className="flex gap-4 items-center flex-wrap">
+          <div className="relative" ref={popoverRef}>
             <button
-              onClick={() => fetchDashboard()}
-              disabled={isLoading}
-              className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
-              title="Recarregar"
+              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              className="flex items-center gap-2 border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
             >
-              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+              <Calendar size={16} className="text-content-secondary" />
+              <span className="font-medium">
+                {formatDateDisplay(dateRange.from)} — {formatDateDisplay(dateRange.to)}
+              </span>
             </button>
+
+            {isCalendarOpen && (
+              <div className="absolute top-full left-0 mt-2 bg-surface border border-ui-border-soft rounded-lg shadow-lg z-50 p-4">
+                <CalendarPicker dateRange={dateRange} onChange={handleDateRangeChange} />
+              </div>
+            )}
           </div>
 
-          {data && balanceMonths.length > 0 && (
-            <div className="border border-ui-border-soft rounded-xl overflow-hidden bg-surface text-xs">
-              <table className="border-collapse">
-                <tbody>
-                  <tr className="border-b border-ui-border-soft">
-                    <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap">
-                      Saldo Acumulado
-                    </td>
-                    {balanceMonths.map(({ month, year }) => {
-                      const v = data.balances.accumulated.find(
-                        b => b.month === month && b.year === year,
-                      )?.realized_amount ?? null;
-                      const positive = v !== null && v >= 0;
-                      return (
-                        <td
-                          key={`acc-${month}-${year}`}
-                          className={`px-4 py-2 text-right font-medium border-l border-ui-border-soft whitespace-nowrap ${
-                            positive ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {formatCurrency(v)}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap">
-                      Saldo Mensal
-                    </td>
-                    {balanceMonths.map(({ month, year }) => {
-                      const v = data.balances.monthly.find(
-                        b => b.month === month && b.year === year,
-                      )?.realized_amount ?? null;
-                      const positive = v !== null && v >= 0;
-                      return (
-                        <td
-                          key={`month-${month}-${year}`}
-                          className={`px-4 py-2 text-right font-medium border-l border-ui-border-soft whitespace-nowrap ${
-                            positive ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {formatCurrency(v)}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+          <select
+            value={getSelectedShortcut() ?? ''}
+            onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
+            className="border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
+          >
+            <option value="">Personalizado</option>
+            {SHORTCUTS.map(s => (
+              <option key={s.days} value={s.days}>{s.label}</option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => fetchDashboard()}
+            disabled={isLoading}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Recarregar"
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+          </button>
         </div>
 
         {isLoading && (
@@ -241,10 +474,65 @@ export default function PlanningPageContent() {
         )}
 
         {!isLoading && data && (
-          <PlanningTable
-            data={data}
-            onEditItem={setEditingItem}
-          />
+          <div className="overflow-x-auto">
+            <div className="inline-block align-top min-w-full">
+              {balanceMonths.length > 0 && (
+                <div className="flex justify-end mb-2">
+                  <div className="border border-ui-border-soft rounded-xl overflow-hidden bg-surface text-xs shadow-sm">
+                    <table ref={balanceCardTableRef} className="border-collapse">
+                      <tbody>
+                        <tr className="border-b border-ui-border-soft">
+                          <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap sticky left-0">
+                            Saldo Acumulado
+                          </td>
+                          {balanceMonths.map(({ month, year }) => {
+                            const v = data.balances.accumulated.find(b => b.month === month && b.year === year)?.realized_amount ?? null;
+                            const positive = v !== null && v >= 0;
+                            return (
+                              <td
+                                key={`acc-${month}-${year}`}
+                                className={`px-3 py-2 text-right font-semibold border-l border-ui-border-soft whitespace-nowrap ${
+                                  v === null ? 'text-content-muted' : positive ? 'text-green-600' : 'text-red-600'
+                                }`}
+                              >
+                                {v !== null && v < 0 ? '-' : ''}{formatCurrency(v)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap sticky left-0">
+                            Saldo Mensal
+                          </td>
+                          {balanceMonths.map(({ month, year }) => {
+                            const v = data.balances.monthly.find(b => b.month === month && b.year === year)?.realized_amount ?? null;
+                            const positive = v !== null && v >= 0;
+                            return (
+                              <td
+                                key={`monthly-${month}-${year}`}
+                                className={`px-3 py-2 text-right font-semibold border-l border-ui-border-soft whitespace-nowrap ${
+                                  v === null ? 'text-content-muted' : positive ? 'text-green-600' : 'text-red-600'
+                                }`}
+                              >
+                                {v !== null && v < 0 ? '-' : ''}{formatCurrency(v)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              <PlanningTable
+                ref={planningTableRef}
+                data={data}
+                dateRangeFrom={dateRange.from}
+                onEditItem={setEditingItem}
+                onSaveInline={handleSaveInline}
+              />
+            </div>
+          </div>
         )}
       </div>
 
