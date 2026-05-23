@@ -7,7 +7,7 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import Toggle from '@/components/ui/Toggle';
-import { formatCurrency } from '@/utils/formatters';
+import { maskMoney } from '@/utils/masks';
 import type { FormStep } from '@/types/types';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -20,6 +20,9 @@ type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 
 const normalizeText = (text: string) =>
   text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
+
+const formatCurrency = (val: number | null | undefined): string =>
+  val == null || val === 0 ? '---' : maskMoney(val);
 
 const formatLimit = (val: number | null | undefined): string =>
   val == null ? 'Sem limite' : formatCurrency(val);

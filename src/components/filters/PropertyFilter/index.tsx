@@ -4,11 +4,41 @@ import { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 import { useFilters } from "@/contexts/filter-context";
 
-const PROPERTY_TYPES = [
-  { value: "all",       label: "Todos",        icon: "mingcute:grid-2-line" },
-  { value: "house",     label: "Casa",          icon: "mingcute:home-2-line" },
-  { value: "apartment", label: "Apartamento",   icon: "mingcute:building-2-line" },
-];
+// ─── Type icon helper ─────────────────────────────────────────────────────────
+
+function getLabelFromRaw(raw: string, property: any): string {
+  if (raw === "house" || raw === "casa" || raw.includes("residential_house")) return "Casa";
+  if (raw.includes("apart") || raw === "flat") return "Apartamento";
+  if (raw.includes("commercial") || raw.includes("comercial") || raw.includes("sala")) return "Sala Comercial";
+  if (raw.includes("terreno") || raw.includes("land") || raw.includes("lote")) return "Terreno";
+  if (raw.includes("rural") || raw.includes("sitio") || raw.includes("chacara")) return "Rural";
+  // Fallback: usa o nome do tipo no objeto ou capitaliza o raw
+  return property.type?.description || property.type?.name ||
+    raw.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+}
+
+function typeIcon(name: string = ""): string {
+  const n = name.toLowerCase();
+  if (n.includes("house") || n.includes("casa") || n.includes("residential")) return "mingcute:home-2-line";
+  if (n.includes("apart") || n.includes("flat")) return "mingcute:building-2-line";
+  if (n.includes("comercial") || n.includes("commercial") || n.includes("sala") || n.includes("office")) return "mingcute:store-line";
+  if (n.includes("terreno") || n.includes("land") || n.includes("lote")) return "mingcute:landscape-line";
+  if (n.includes("rural") || n.includes("farm") || n.includes("sitio") || n.includes("chacara")) return "mingcute:leaf-line";
+  if (n.includes("galpao") || n.includes("warehouse") || n.includes("industrial")) return "mingcute:warehouse-line";
+  return "mingcute:building-3-line";
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface PropertyTypeOption {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+const TYPE_ALL: PropertyTypeOption = { value: "all", label: "Todos", icon: "mingcute:grid-2-line" };
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PropertyFilter() {
   const {
@@ -21,7 +51,41 @@ export default function PropertyFilter() {
   } = useFilters();
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const [propertyTypes, setPropertyTypes] = useState<PropertyTypeOption[]>([]);
+  const [typeSearch, setTypeSearch] = useState("");
 
+  // Deriva tipos diretamente dos imóveis disponíveis na API —
+  // garante que os valores de filtro batem 100% com o campo property_type da API.
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_URL_API;
+    if (!API_URL) return;
+    fetch(`${API_URL}/properties?limit=100&status=AVAILABLE`)
+      .then((r) => r.json())
+      .then((res) => {
+        const list: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+        const seen = new Set<string>();
+        const types: PropertyTypeOption[] = [];
+        list.forEach((p) => {
+          const raw = (p.property_type ?? "").toLowerCase().trim();
+          if (!raw || seen.has(raw)) return;
+          seen.add(raw);
+          types.push({
+            value: raw,
+            label: getLabelFromRaw(raw, p),
+            icon: typeIcon(raw),
+          });
+        });
+        if (types.length > 0) setPropertyTypes(types);
+      })
+      .catch(() => {
+        setPropertyTypes([
+          { value: "house", label: "Casa", icon: "mingcute:home-2-line" },
+          { value: "apartment", label: "Apartamento", icon: "mingcute:building-2-line" },
+        ]);
+      });
+  }, []);
+
+  // Fecha modal com ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isFilterOpen) setIsFilterOpen(false);
@@ -30,10 +94,33 @@ export default function PropertyFilter() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isFilterOpen, setIsFilterOpen]);
 
+  // Trava scroll do body quando modal aberto
   useEffect(() => {
     document.body.style.overflow = isFilterOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isFilterOpen]);
+
+  // ─── Tipos visíveis na barra (máx 3 + "Todos") ───────────────────────────
+
+  const BAR_LIMIT = 3;
+  const barTypes = propertyTypes.slice(0, BAR_LIMIT);
+  const hiddenCount = Math.max(0, propertyTypes.length - BAR_LIMIT);
+
+  // Se o tipo selecionado não está nos visíveis, adicioná-lo
+  const selectedNotVisible =
+    filters.propertyType !== "all" &&
+    !barTypes.some((t) => t.value === filters.propertyType);
+  const selectedType = selectedNotVisible
+    ? propertyTypes.find((t) => t.value === filters.propertyType)
+    : null;
+
+  // ─── Tipos filtrados no modal ─────────────────────────────────────────────
+
+  const filteredTypes = propertyTypes.filter((t) =>
+    t.label.toLowerCase().includes(typeSearch.toLowerCase())
+  );
+
+  // ─── Handlers ────────────────────────────────────────────────────────────
 
   const formatCurrencyInput = (value: string): string => {
     const digits = value.replace(/\D/g, "");
@@ -69,13 +156,10 @@ export default function PropertyFilter() {
     "RS","RO","RR","SC","SP","SE","TO",
   ];
 
-  // ── Contador +/− ──────────────────────────────────────────────────────────
+  // ─── CounterInput ─────────────────────────────────────────────────────────
+
   const CounterInput = ({
-    label,
-    value,
-    onChange,
-    min = 0,
-    max = 10,
+    label, value, onChange, min = 0, max = 10,
   }: {
     label: string;
     value: number | "";
@@ -94,7 +178,7 @@ export default function PropertyFilter() {
             disabled={cur <= min}
             className="w-8 h-8 rounded-full border border-ui-border flex items-center justify-center text-content-secondary hover:border-purple-600 hover:text-purple-600 transition-colors disabled:opacity-30"
           >
-            <Icon icon="mingcute:minimize-line" className="w-3.5 h-3.5 size-10" />
+            <Icon icon="mingcute:minus-line" className="w-3.5 h-3.5" />
           </button>
           <span className="w-8 text-center text-sm font-semibold text-content">
             {cur === 0 ? "—" : `${cur}+`}
@@ -112,9 +196,28 @@ export default function PropertyFilter() {
     );
   };
 
+  // ─── Pill de tipo ─────────────────────────────────────────────────────────
+
+  const TypePill = ({ opt }: { opt: PropertyTypeOption }) => (
+    <button
+      type="button"
+      onClick={() => handleFilterChange("propertyType", opt.value)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+        filters.propertyType === opt.value
+          ? "bg-purple-100 text-purple-800 ring-1 ring-purple-300"
+          : "text-content-secondary hover:bg-surface-subtle"
+      }`}
+    >
+      <Icon icon={opt.icon} className="w-3.5 h-3.5" />
+      {opt.label}
+    </button>
+  );
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+
   return (
     <>
-      {/* ── Barra de pesquisa principal ─────────────────────────────────── */}
+      {/* ── Barra de pesquisa principal ────────────────────────────────────── */}
       <section className="relative z-20 w-full px-4 md:px-8 -mt-8 md:-mt-16 pb-6">
         <div className="max-w-5xl mx-auto">
           <div className="bg-surface rounded-2xl shadow-2xl border border-ui-border-soft overflow-hidden">
@@ -143,32 +246,37 @@ export default function PropertyFilter() {
                 ))}
               </div>
 
-              {/* Divisor */}
-              <div className="w-px bg-ui-border-soft mx-0.5 self-stretch" />
+              <div className="w-px bg-ui-border-soft self-stretch" />
 
-              {/* Tipo de imóvel — pills sempre visíveis */}
-              <div className="flex items-center gap-1 px-3 overflow-x-auto scrollbar-none">
-                {PROPERTY_TYPES.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleFilterChange("propertyType", opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                      filters.propertyType === opt.value
-                        ? "bg-purple-100 text-purple-800 ring-1 ring-purple-300"
-                        : "text-content-secondary hover:bg-surface-subtle"
-                    }`}
-                  >
-                    <Icon icon={opt.icon} className="w-3.5 h-3.5" />
-                    {opt.label}
-                  </button>
+              {/* Pills de tipo — dinâmico */}
+              <div className="flex items-center gap-1 px-3 overflow-x-auto scrollbar-none flex-1 min-w-0">
+                {/* Todos */}
+                <TypePill opt={TYPE_ALL} />
+
+                {/* Tipos visíveis da API */}
+                {barTypes.map((opt) => (
+                  <TypePill key={opt.value} opt={opt} />
                 ))}
+
+                {/* Tipo selecionado fora dos visíveis */}
+                {selectedType && <TypePill opt={selectedType} />}
+
+                {/* Indicador de mais tipos → abre modal */}
+                {hiddenCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setIsFilterOpen(true); setTypeSearch(""); }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap text-purple-700 bg-purple-50 hover:bg-purple-100 transition-all"
+                  >
+                    <Icon icon="mingcute:more-1-line" className="w-3.5 h-3.5" />
+                    +{hiddenCount} mais
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Linha 2 — Busca + Ações */}
             <div className="flex flex-col md:flex-row items-stretch">
-              {/* Campo de busca */}
               <div className="flex-1 flex items-center gap-3 px-4 py-3 border-b md:border-b-0 md:border-r border-ui-border-soft">
                 <Icon icon="mingcute:search-line" className="w-5 h-5 text-content-placeholder shrink-0" />
                 <input
@@ -192,7 +300,6 @@ export default function PropertyFilter() {
                 )}
               </div>
 
-              {/* Filtros avançados */}
               <button
                 type="button"
                 onClick={() => setIsFilterOpen(true)}
@@ -207,7 +314,6 @@ export default function PropertyFilter() {
                 )}
               </button>
 
-              {/* Buscar */}
               <button
                 type="button"
                 onClick={handleSearch}
@@ -221,16 +327,14 @@ export default function PropertyFilter() {
         </div>
       </section>
 
-      {/* ── Modal de Filtros Avançados ───────────────────────────────────── */}
+      {/* ── Modal de Filtros Avançados ──────────────────────────────────────── */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsFilterOpen(false)}
           />
 
-          {/* Painel */}
           <div
             ref={modalRef}
             className="relative z-10 bg-surface shadow-2xl flex flex-col w-full md:w-[600px] max-h-[92dvh] md:max-h-[85vh] rounded-t-2xl md:rounded-2xl overflow-hidden"
@@ -274,6 +378,88 @@ export default function PropertyFilter() {
             {/* Conteúdo rolável */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-7">
 
+              {/* ── Tipo de imóvel (dinâmico + pesquisável) ── */}
+              <div>
+                <h3 className="text-sm font-semibold text-content mb-3 flex items-center gap-2">
+                  <Icon icon="mingcute:building-3-line" className="w-4 h-4 text-purple-600" />
+                  Tipo de imóvel
+                </h3>
+
+                {/* Search — só aparece se tiver muitos tipos */}
+                {propertyTypes.length > 6 && (
+                  <div className="relative mb-3">
+                    <Icon
+                      icon="mingcute:search-line"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-content-placeholder"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Buscar tipo..."
+                      value={typeSearch}
+                      onChange={(e) => setTypeSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-ui-border text-content rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-surface"
+                    />
+                    {typeSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setTypeSearch("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-content-placeholder hover:text-content"
+                      >
+                        <Icon icon="mingcute:close-circle-line" className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Lista de tipos */}
+                <div className={`grid grid-cols-2 gap-2 ${filteredTypes.length > 8 ? "max-h-52 overflow-y-auto pr-1" : ""}`}>
+                  {/* Opção "Todos" */}
+                  {(typeSearch === "" || "todos".includes(typeSearch.toLowerCase())) && (
+                    <button
+                      type="button"
+                      onClick={() => handleFilterChange("propertyType", "all")}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                        filters.propertyType === "all"
+                          ? "bg-purple-900 text-white border-purple-900"
+                          : "border-ui-border text-content-secondary hover:border-purple-400 hover:text-content"
+                      }`}
+                    >
+                      <Icon icon="mingcute:grid-2-line" className="w-4 h-4 shrink-0" />
+                      Todos
+                      {filters.propertyType === "all" && (
+                        <Icon icon="mingcute:check-line" className="w-3.5 h-3.5 ml-auto" />
+                      )}
+                    </button>
+                  )}
+
+                  {/* Tipos dinâmicos */}
+                  {filteredTypes.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleFilterChange("propertyType", opt.value)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                        filters.propertyType === opt.value
+                          ? "bg-purple-900 text-white border-purple-900"
+                          : "border-ui-border text-content-secondary hover:border-purple-400 hover:text-content"
+                      }`}
+                    >
+                      <Icon icon={opt.icon} className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{opt.label}</span>
+                      {filters.propertyType === opt.value && (
+                        <Icon icon="mingcute:check-line" className="w-3.5 h-3.5 ml-auto shrink-0" />
+                      )}
+                    </button>
+                  ))}
+
+                  {filteredTypes.length === 0 && typeSearch && (
+                    <p className="col-span-2 text-sm text-content-muted text-center py-3">
+                      Nenhum tipo encontrado para "{typeSearch}"
+                    </p>
+                  )}
+                </div>
+              </div>
+
               {/* ── Faixa de valor ── */}
               <div>
                 <h3 className="text-sm font-semibold text-content mb-3 flex items-center gap-2">
@@ -286,9 +472,7 @@ export default function PropertyFilter() {
                       Valor mínimo
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-content-placeholder">
-                        R$
-                      </span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-content-placeholder">R$</span>
                       <input
                         id="valor-min"
                         name="valorMin"
@@ -306,9 +490,7 @@ export default function PropertyFilter() {
                       Valor máximo
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-content-placeholder">
-                        R$
-                      </span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-content-placeholder">R$</span>
                       <input
                         id="valor-max"
                         name="valorMax"

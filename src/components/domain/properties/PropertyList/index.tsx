@@ -39,6 +39,15 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+function matchesPropertyType(tipo: string, filterType: string): boolean {
+  const p = tipo.toLowerCase();
+  const f = filterType.toLowerCase();
+  if (f === "house" || f === "casa" || f.includes("residential_house")) return p === "casa";
+  if (f === "apartment" || f === "apartamento" || f.includes("residential_apartment")) return p === "apartamento";
+  if (f.includes("comercial") || f.includes("commercial")) return p.includes("comercial") || p.includes("sala");
+  return p.includes(f) || f.includes(p);
+}
+
 const formatArea = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
     style: "decimal",
@@ -239,14 +248,14 @@ function PropertyCard({
               <span className="text-xs text-content-muted font-medium">/mês</span>
             )}
           </div>
-          {!isCasa && imovel.precoCondominio && imovel.precoCondominio > 0 && (
+          {!isCasa && (imovel.precoCondominio ?? 0) > 0 && (
             <p className="text-xs text-content-muted mt-0.5">
-              + {formatCurrency(imovel.precoCondominio)} cond.
+              + {formatCurrency(imovel.precoCondominio!)} cond.
             </p>
           )}
-          {isCasa && imovel.areaTerreno && imovel.areaTerreno > 0 && (
+          {isCasa && (imovel.areaTerreno ?? 0) > 0 && (
             <p className="text-xs text-content-muted mt-0.5">
-              Terreno: {formatArea(imovel.areaTerreno)} m²
+              Terreno: {formatArea(imovel.areaTerreno!)} m²
             </p>
           )}
         </div>
@@ -462,9 +471,7 @@ export default function ImoveisList() {
         const available = mapped.filter((p) => {
           if (p.status !== "AVAILABLE") return false;
           if (!filters.propertyType || filters.propertyType === "all") return true;
-          if (filters.propertyType === "house") return p.tipo === "Casa";
-          if (filters.propertyType === "apartment") return p.tipo === "Apartamento";
-          return true;
+          return matchesPropertyType(p.tipo, filters.propertyType);
         });
         const newTotal  = available.length;
         const newPages  = Math.max(1, Math.ceil(newTotal / itemsPerPage));
@@ -487,10 +494,7 @@ export default function ImoveisList() {
 
         let fd = [...exampleData];
         if (filters.propertyType && filters.propertyType !== "all")
-          fd = fd.filter((i) =>
-            (filters.propertyType === "house" && i.tipo === "Casa") ||
-            (filters.propertyType === "apartment" && i.tipo === "Apartamento")
-          );
+          fd = fd.filter((i) => matchesPropertyType(i.tipo, filters.propertyType));
         if (filters.quartos)   fd = fd.filter((i) => i.quartos   >= Number(filters.quartos));
         if (filters.banheiros) fd = fd.filter((i) => i.banheiros >= Number(filters.banheiros));
         if (filters.vagas)     fd = fd.filter((i) => i.vagas     >= Number(filters.vagas));

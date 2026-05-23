@@ -43,11 +43,3 @@ export function maskMoney(value: string | number): string {
   const floatValue = parseFloat(numbers) / 100;
   return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-
-
-// Metros quadrados: 0,00 m²
-export function maskSquareMeters(value: string): string {
-  const numbers = value.replace(/\D/g, '');
-  const floatValue = parseFloat(numbers) / 100;
-  return `${floatValue.toFixed(2).replace('.', ',')} m²`;
-}

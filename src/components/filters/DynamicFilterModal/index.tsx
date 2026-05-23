@@ -6,7 +6,23 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, Calendar } from "lucide-react";
 import CalendarPicker from "@/components/ui/CalendarPicker";
-import { maskCurrencyInput, parseCurrencyFromPTBR } from "@/utils/formatters";
+import { parseCurrencyFromPTBR } from "@/utils/formatters";
+import { maskMoney } from "@/utils/masks";
+
+const formatCurrencyRealtime = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 0) return '';
+
+  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
+  const amount = parseInt(trimmedNumbers) / 100;
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
 
 // Definição do tipo corrigido
 export interface DynamicFilter {
@@ -542,8 +558,8 @@ export default function DynamicFilterModal({
                   if (isPhone) {
                     cleanedValue = removePhoneMask(value);
                   } else if (isCurrency) {
-                    newSearchTerm = maskCurrencyInput(value);
-                    cleanedValue = newSearchTerm === '' ? '' : parseCurrencyFromPTBR(newSearchTerm);
+                    newSearchTerm = formatCurrencyRealtime(value);
+                    cleanedValue = parseCurrencyFromPTBR(newSearchTerm);
                   }
 
                   setSearchTerms(prev => ({ ...prev, [filter.field]: newSearchTerm }));

@@ -24,7 +24,8 @@ import {
   ChartColumnStacked,
   HandCoins,
   Users,
-  FolderInput
+  FolderInput,
+  BarChart2
 } from "lucide-react";
 import Logo from "../Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -114,8 +115,9 @@ export default function Aside() {
         { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },                                                                 
         { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },                                  
         { href: "/dashboard/fornecedores", icon: Users, label: "Contatos" },        
-        { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },                                  
-                          
+        { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },
+        { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle" },
+
       ]
     },
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
