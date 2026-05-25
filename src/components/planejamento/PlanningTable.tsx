@@ -53,9 +53,11 @@ interface Props {
   dateRangeFrom?: string;
   onEditItem?: (item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string }) => void;
   onSaveInline?: (item: { id: string; parentCategoryId?: string; amount: number }) => Promise<void>;
+  balanceMonths?: { month: number; year: number }[];
+  balances?: DashboardResponse['balances'];
 }
 
-const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, onSaveInline }, ref) => {
+const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, onSaveInline, balanceMonths, balances }, ref) => {
   const tableRef = useRef<HTMLTableElement>(null);
   const [inlineEditing, setInlineEditing] = useState<{ id: string; parentId?: string; value: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -244,10 +246,53 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
 
   const thClass = 'px-3 py-2 text-xs font-semibold text-content-secondary whitespace-nowrap text-right';
 
+  const balanceFmt = (v: number | null) =>
+    v === null ? '---' : (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const balanceColor = (v: number | null) =>
+    v === null ? 'text-content-muted' : v >= 0 ? 'text-green-600' : 'text-red-600';
+
   return (
     <div className="rounded-xl border border-ui-border-soft">
       <table ref={tableRef} className="w-full border-collapse text-sm">
         <thead>
+          {balanceMonths && balanceMonths.length > 0 && balances && (
+            <>
+              <tr>
+                <th className="bg-page sticky z-10" style={{ left: 0, minWidth: 240, width: 240 }} />
+                <th className="bg-page sticky z-[9]" style={{ left: 240, width: 160, minWidth: 160 }} />
+                <th className="bg-page sticky z-[8]" style={{ left: 400, width: 70, minWidth: 70 }} />
+                <th className="bg-page sticky z-[7]" style={{ left: 470, width: 90, minWidth: 90 }} />
+                <th className="bg-page sticky z-[6]" style={{ left: 560, width: 90, minWidth: 90 }} />
+                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[5] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, width: 90, minWidth: 90, borderTopLeftRadius: '0.75rem' }}>Saldo Acumulado</th>
+                {months.map(({ month, year }) => {
+                  const inBal = balanceMonths.some(b => b.month === month && b.year === year);
+                  const v = inBal ? (balances.accumulated.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
+                  return (
+                    <th key={`acc-${month}-${year}`} className={`px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                      {balanceFmt(v)}
+                    </th>
+                  );
+                })}
+              </tr>
+              <tr className="border-b-2 border-ui-border-soft">
+                <th className="bg-page sticky z-10" style={{ left: 0, minWidth: 240, width: 240 }} />
+                <th className="bg-page sticky z-[9]" style={{ left: 240, width: 160, minWidth: 160 }} />
+                <th className="bg-page sticky z-[8]" style={{ left: 400, width: 70, minWidth: 70 }} />
+                <th className="bg-page sticky z-[7]" style={{ left: 470, width: 90, minWidth: 90 }} />
+                <th className="bg-page sticky z-[6]" style={{ left: 560, width: 90, minWidth: 90 }} />
+                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[5] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, width: 90, minWidth: 90, borderBottomLeftRadius: '0.75rem' }}>Saldo Mensal</th>
+                {months.map(({ month, year }) => {
+                  const inBal = balanceMonths.some(b => b.month === month && b.year === year);
+                  const v = inBal ? (balances.monthly.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
+                  return (
+                    <th key={`monthly-${month}-${year}`} className={`px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                      {balanceFmt(v)}
+                    </th>
+                  );
+                })}
+              </tr>
+            </>
+          )}
           <tr className="bg-surface-subtle border-b border-ui-border-soft">
             <th className="px-3 py-2 text-xs font-semibold text-content-secondary text-left whitespace-nowrap sticky left-0 z-10 bg-surface-subtle min-w-[240px]">
               Categorias e Subcategorias

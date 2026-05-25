@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { RefreshCw, Calendar } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
 import { useMessageContext } from '@/contexts';
 import { authFetch } from '@/utils/authFetch';
-import PlanningTable, { FIXED_COL_COUNT, type PlanningTableHandle } from '@/components/planejamento/PlanningTable';
+import PlanningTable, { type PlanningTableHandle } from '@/components/planejamento/PlanningTable';
 import PlanningEditModal from '@/components/planejamento/PlanningEditModal';
 import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from '@/components/planejamento/types';
 
@@ -35,10 +35,6 @@ function getDefaultDates(): { from: string; to: string } {
   return { from: formatDateISO(from), to: formatDateISO(to) };
 }
 
-const formatCurrency = (value: number | null | undefined): string => {
-  if (value === null || value === undefined || value === 0) return '---';
-  return Math.abs(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 
 export default function PlanningPageContent() {
   const { showMessage } = useMessageContext();
@@ -56,7 +52,6 @@ export default function PlanningPageContent() {
   const [editingItem, setEditingItem] = useState<(DashboardItem | CategoryDashboard) & { parentCategoryId?: string } | null>(null);
 
   const planningTableRef = useRef<PlanningTableHandle>(null);
-  const balanceCardTableRef = useRef<HTMLTableElement>(null);
 
   const fetchDashboard = useCallback(async () => {
     const fetchStartTime = new Date().toISOString();
@@ -375,53 +370,10 @@ export default function PlanningPageContent() {
       .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year));
   }, [data, dateRange.from]);
 
-  useLayoutEffect(() => {
-    if (!data) return;
-    const balanceTable = balanceCardTableRef.current;
-    if (!balanceTable) return;
-
-    const syncWidths = () => {
-      const mainTable = planningTableRef.current?.getTableElement();
-      if (!mainTable || !balanceTable) return;
-
-      const headerRow = mainTable.querySelector('thead tr');
-      if (!headerRow) return;
-
-      const monthThs = Array.from(headerRow.querySelectorAll('th')).slice(FIXED_COL_COUNT);
-      const widths = monthThs.map(th => th.getBoundingClientRect().width);
-
-      const balanceRows = Array.from(balanceTable.querySelectorAll('tr'));
-      balanceRows.forEach(row => {
-        const cells = Array.from(row.querySelectorAll('td')).slice(1) as HTMLTableCellElement[];
-        widths.forEach((width, i) => {
-          const cell = cells[i];
-          if (cell) {
-            cell.style.width = `${width}px`;
-            cell.style.minWidth = `${width}px`;
-            cell.style.maxWidth = `${width}px`;
-          }
-        });
-      });
-    };
-
-    syncWidths();
-
-    const mainTable = planningTableRef.current?.getTableElement();
-    if (!mainTable) return;
-
-    const ro = new ResizeObserver(syncWidths);
-    ro.observe(mainTable);
-    window.addEventListener('resize', syncWidths);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', syncWidths);
-    };
-  }, [data, balanceMonths]);
-
   return (
     <Section title="Planejamento e Controle">
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-4 items-center flex-wrap">
+      <div className="flex flex-col gap-4 relative">
+        <div className="flex gap-4 items-center flex-wrap absolute top-3 z-[100]">
           <div className="relative" ref={popoverRef}>
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
@@ -476,60 +428,14 @@ export default function PlanningPageContent() {
         {!isLoading && data && (
           <div className="overflow-x-auto">
             <div className="inline-block align-top min-w-full">
-              {balanceMonths.length > 0 && (
-                <div className="flex justify-end mb-2">
-                  <div className="border border-ui-border-soft rounded-xl overflow-hidden bg-surface text-xs shadow-sm">
-                    <table ref={balanceCardTableRef} className="border-collapse">
-                      <tbody>
-                        <tr className="border-b border-ui-border-soft">
-                          <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap sticky left-0">
-                            Saldo Acumulado
-                          </td>
-                          {balanceMonths.map(({ month, year }) => {
-                            const v = data.balances.accumulated.find(b => b.month === month && b.year === year)?.realized_amount ?? null;
-                            const positive = v !== null && v >= 0;
-                            return (
-                              <td
-                                key={`acc-${month}-${year}`}
-                                className={`px-3 py-2 text-right font-semibold border-l border-ui-border-soft whitespace-nowrap ${
-                                  v === null ? 'text-content-muted' : positive ? 'text-green-600' : 'text-red-600'
-                                }`}
-                              >
-                                {v !== null && v < 0 ? '-' : ''}{formatCurrency(v)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                        <tr>
-                          <td className="px-4 py-2 font-semibold text-content-secondary bg-surface-subtle whitespace-nowrap sticky left-0">
-                            Saldo Mensal
-                          </td>
-                          {balanceMonths.map(({ month, year }) => {
-                            const v = data.balances.monthly.find(b => b.month === month && b.year === year)?.realized_amount ?? null;
-                            const positive = v !== null && v >= 0;
-                            return (
-                              <td
-                                key={`monthly-${month}-${year}`}
-                                className={`px-3 py-2 text-right font-semibold border-l border-ui-border-soft whitespace-nowrap ${
-                                  v === null ? 'text-content-muted' : positive ? 'text-green-600' : 'text-red-600'
-                                }`}
-                              >
-                                {v !== null && v < 0 ? '-' : ''}{formatCurrency(v)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
               <PlanningTable
                 ref={planningTableRef}
                 data={data}
                 dateRangeFrom={dateRange.from}
                 onEditItem={setEditingItem}
                 onSaveInline={handleSaveInline}
+                balanceMonths={balanceMonths.length > 0 ? balanceMonths : undefined}
+                balances={data.balances}
               />
             </div>
           </div>
