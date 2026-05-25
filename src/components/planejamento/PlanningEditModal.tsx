@@ -63,7 +63,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
   const [defaultAmountInput, setDefaultAmountInput] = useState<string>(() => {
     const itemAny = item as any;
     const val = itemAny.planned_amount ?? 0;
-    return val > 0 ? val.toString() : '';
+    return val > 0 ? maskMoney(val) : '';
   });
   const [monthlyValues, setMonthlyValues] = useState<Record<number, number>>(() => {
     const itemAny = item as any;
@@ -80,7 +80,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     const result: Record<number, string> = {};
     if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
       itemAny.monthly_values.forEach((mv: any) => {
-        result[mv.month] = mv.amount > 0 ? mv.amount.toString() : '';
+        result[mv.month] = mv.amount > 0 ? maskMoney(mv.amount) : '';
       });
     }
     return result;
