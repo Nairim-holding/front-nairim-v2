@@ -33,7 +33,9 @@ export const parseCurrencyFromPTBR = (value: string | number): number => {
 export const formatCurrency = (value: any): string => {
   if (value === null || value === undefined || value === '') return '';
   const num = typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : Number(value);
-  return isNaN(num) ? '' : maskMoney(num);
+  if (isNaN(num)) return '';
+  // maskMoney espera centavos (string de dígitos), então converte reais para centavos
+  return maskMoney(num * 100);
 };
 
 export const formatDate = (v: any): string => {

@@ -371,6 +371,9 @@ export default function LancamentosPage() {
           ...prev,
           suppliers: [...prev.suppliers, { label: name, value: result.data.id }]
         }));
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erro ao criar fornecedor');
       }
     }
 
