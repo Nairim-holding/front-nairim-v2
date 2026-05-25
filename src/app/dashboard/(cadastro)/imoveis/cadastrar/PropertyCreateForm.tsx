@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../_lib/propertySteps';
 import { buildPropertyFormData } from '../_lib/propertyTransform';
+import { useUploadSSE } from '@/hooks/useUploadSSE';
+import UploadProgressOverlay from '@/components/feedback/UploadProgress/UploadProgressOverlay';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API;
 
@@ -23,6 +25,7 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
 
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isManualAddress, setIsManualAddress] = useState(false);
+  const { state: uploadState, uploadAndTrack } = useUploadSSE();
 
   const steps = useMemo(
     () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, isManualAddress }),
@@ -84,27 +87,15 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   const handleSubmit = useCallback(async (data: any) => {
     const fd = buildPropertyFormData(data, user?.id ?? '');
 
-    const res = await fetch(`${API_URL}/properties/create-unified`, { 
-      method: 'POST', 
-      body: fd
+    // uploadAndTrack lida com 201 legado e 202+SSE de forma transparente.
+    // Só resolve quando o backend confirma a conclusão (legado ou SSE `completed`).
+    const result = await uploadAndTrack({
+      url: `${API_URL}/properties/create-unified`,
+      method: 'POST',
+      body: fd,
     });
-    const text = await res.text();
-
-    let result: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    try { result = JSON.parse(text); } catch { throw new Error('Resposta inválida do servidor'); }
-
-    if (!res.ok) {
-      if (res.status === 400 && result.errors) {
-        const msgs = Object.entries(result.errors)
-          .map(([f, m]) => `${f}: ${Array.isArray(m) ? m.join(', ') : m}`)
-          .join('; ');
-        throw new Error(`Erros de validação: ${msgs}`);
-      }
-      throw new Error(result.message || `Erro ${res.status}`);
-    }
-    if (!result.success) throw new Error(result.message || 'Erro desconhecido ao criar imóvel');
-    return result.data ?? result;
-  }, [user?.id]);
+    return result;
+  }, [user?.id, uploadAndTrack]);
 
   const onSubmitSuccess = useCallback(() => {
     showMessage('Imóvel criado com sucesso!', 'success');
@@ -124,19 +115,22 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   );
 
   return (
-    <DynamicForm
-      resource="properties"
-      title="Imóvel"
-      basePath="/dashboard/imoveis"
-      mode="create"
-      draftKey="form:properties:create"
-      steps={steps}
-      onSubmit={handleSubmit}
-      onSubmitSuccess={onSubmitSuccess}
-      onFieldChange={handleFieldChange}
-      completedSteps={completedSteps}
-      onStepComplete={handleStepComplete}
-      canNavigateToStep={canNavigateToStep}
-    />
+    <>
+      <DynamicForm
+        resource="properties"
+        title="Imóvel"
+        basePath="/dashboard/imoveis"
+        mode="create"
+        draftKey="form:properties:create"
+        steps={steps}
+        onSubmit={handleSubmit}
+        onSubmitSuccess={onSubmitSuccess}
+        onFieldChange={handleFieldChange}
+        completedSteps={completedSteps}
+        onStepComplete={handleStepComplete}
+        canNavigateToStep={canNavigateToStep}
+      />
+      <UploadProgressOverlay state={uploadState} label="Salvando imóvel..." />
+    </>
   );
 }

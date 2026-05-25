@@ -7,7 +7,6 @@ import { createPortal } from "react-dom";
 import { X, Check, Calendar } from "lucide-react";
 import CalendarPicker from "@/components/ui/CalendarPicker";
 import { parseCurrencyFromPTBR } from "@/utils/formatters";
-import { maskMoney } from "@/utils/masks";
 
 const formatCurrencyRealtime = (value: string): string => {
   const numbers = value.replace(/\D/g, '');
@@ -313,7 +312,7 @@ export default function DynamicFilterModal({
               } else if (isCurrency && value) {
                 const numericVal = parseCurrencyFromPTBR(value);
                 newFilters[filter.field] = { value: numericVal, showDropdown: false };
-                newSearchTerms[filter.field] = maskCurrencyInput((numericVal * 100).toFixed(0));
+                newSearchTerms[filter.field] = formatCurrencyRealtime((numericVal * 100).toFixed(0));
               } else {
                 newFilters[filter.field] = { value: value || '', value2: value2 || '', values: values || [], showDropdown: false };
                 if (value) {
@@ -327,7 +326,7 @@ export default function DynamicFilterModal({
               } else if (isCurrency) {
                 const numericVal = parseCurrencyFromPTBR(initialValue);
                 newFilters[filter.field] = { value: numericVal, showDropdown: false };
-                newSearchTerms[filter.field] = maskCurrencyInput((numericVal * 100).toFixed(0));
+                newSearchTerms[filter.field] = formatCurrencyRealtime((numericVal * 100).toFixed(0));
               } else {
                 newFilters[filter.field] = { value: initialValue, showDropdown: false };
                 newSearchTerms[filter.field] = getLabelForValue(filter, initialValue);
@@ -628,7 +627,7 @@ export default function DynamicFilterModal({
 
                     let formattedLabel = String(suggestion);
                     if (isCurrency && !isNaN(Number(suggestion))) {
-                      formattedLabel = maskCurrencyInput((Number(suggestion) * 100).toFixed(0));
+                      formattedLabel = formatCurrencyRealtime((Number(suggestion) * 100).toFixed(0));
                     }
 
                     return (
