@@ -1197,10 +1197,10 @@ export default function InlineEditableTable({
         </div>
       </div>
 
-      {/* Container da tabela com altura fixa e rodapé fixo */}
-      <div className="relative">
-        {/* Tabela com scroll */}
-        <div ref={tableContainerRef} className="overflow-x-auto rounded-lg shadow-sm max-h-[calc(100vh-280px)] overflow-y-auto">
+      {/* Container da tabela com altura flexível e rodapé fixo */}
+      <div className="relative flex-1 flex flex-col min-h-0">
+        {/* Tabela com scroll ocupando espaço disponível */}
+        <div ref={tableContainerRef} className="overflow-x-auto rounded-lg shadow-sm flex-1 overflow-y-auto">
         <TableInformations
           headers={headers}
           sort={state.sort}

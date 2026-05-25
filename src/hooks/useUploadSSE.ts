@@ -21,6 +21,12 @@ interface UploadOptions {
   body: FormData;
   /** Headers extras (ex: Authorization). Não defina Content-Type — o browser cuida. */
   headers?: Record<string, string>;
+  /** Timeout em milissegundos (padrão: 30 minutos para arquivos grandes) */
+  timeout?: number;
+  /** Comprimir imagens antes do upload (padrão: true) */
+  compressImages?: boolean;
+  /** Qualidade da compressão (0-1, padrão: 0.8) */
+  compressionQuality?: number;
 }
 
 interface SSEEnvelope {
@@ -39,6 +45,7 @@ export function useUploadSSE() {
   const [state, setState] = useState<UploadState>({ status: 'idle' });
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const esRef = useRef<EventSource | null>(null);
+  const uploadProgressRef = useRef({ loaded: 0, total: 0 });
 
   const reset = useCallback(() => {
     xhrRef.current?.abort();
@@ -53,7 +60,12 @@ export function useUploadSSE() {
    * Retorna o objeto final (data da property, etc.) ou rejeita com Error.
    */
   const uploadAndTrack = useCallback(<T = unknown>(opts: UploadOptions): Promise<T> => {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T>(async (resolve, reject) => {
+      // Comprimir imagens antes do upload se habilitado
+      const shouldCompress = opts.compressImages !== false;
+      const quality = opts.compressionQuality ?? 0.8;
+      const bodyToUpload = shouldCompress ? await compressFormDataImages(opts.body, quality) : opts.body;
+
       const xhr = new XMLHttpRequest();
       xhrRef.current = xhr;
 
@@ -63,9 +75,14 @@ export function useUploadSSE() {
       }
       // Importante: não setar Content-Type — o browser define com boundary correto.
 
+      // Timeout configurável (padrão: 30 minutos para arquivos grandes)
+      const timeoutMs = opts.timeout ?? 30 * 60 * 1000; // 30 minutos
+      xhr.timeout = timeoutMs;
+
       // Progresso de UPLOAD (bytes enviados ao servidor)
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
+          uploadProgressRef.current = { loaded: e.loaded, total: e.total };
           setState({ status: 'uploading', bytesSent: e.loaded, totalBytes: e.total });
         } else {
           setState({ status: 'uploading' });
@@ -74,9 +91,18 @@ export function useUploadSSE() {
 
       xhr.upload.onloadstart = () => setState({ status: 'uploading' });
 
+      xhr.ontimeout = () => {
+        const { loaded, total } = uploadProgressRef.current;
+        const reason = `Timeout após ${Math.round(timeoutMs / 1000)}s (${loaded}/${total} bytes enviados)`;
+        setState({ status: 'error', reason });
+        reject(new Error(reason));
+      };
+
       xhr.onerror = () => {
-        setState({ status: 'error', reason: 'Erro de rede durante o upload' });
-        reject(new Error('Erro de rede durante o upload'));
+        const { loaded, total } = uploadProgressRef.current;
+        const reason = `Erro de rede (readyState: ${xhr.readyState}, status: ${xhr.status}, ${loaded}/${total} bytes)`;
+        setState({ status: 'error', reason });
+        reject(new Error(reason));
       };
 
       xhr.onabort = () => {
@@ -121,7 +147,7 @@ export function useUploadSSE() {
         resolve(data as T);
       };
 
-      xhr.send(opts.body);
+      xhr.send(bodyToUpload);
     });
   }, []);
 
@@ -131,6 +157,79 @@ export function useUploadSSE() {
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Comprime imagem usando Canvas API antes do upload.
+ * Reduz significativamente o tamanho de arquivos grandes.
+ */
+async function compressImage(file: File, quality = 0.8): Promise<File> {
+  // Não comprime se não for imagem ou for muito pequeno
+  if (!file.type.startsWith('image/') || file.size < 100 * 1024) {
+    return file;
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    img.onload = () => {
+      // Mantém dimensões originais
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      if (!ctx) {
+        return reject(new Error('Canvas context não disponível'));
+      }
+
+      // Desenha imagem
+      ctx.drawImage(img, 0, 0);
+
+      // Converte para WebP com compressão
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            return resolve(file); // Fallback: retorna original se falhar
+          }
+
+          // Só usa comprimido se for menor que original
+          if (blob.size < file.size) {
+            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), {
+              type: 'image/webp',
+              lastModified: file.lastModified,
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        },
+        'image/webp',
+        quality
+      );
+    };
+
+    img.onerror = () => resolve(file); // Fallback: retorna original se falhar
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/**
+ * Processa FormData comprimindo imagens antes do upload.
+ */
+async function compressFormDataImages(formData: FormData, quality = 0.8): Promise<FormData> {
+  const compressed = new FormData();
+
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File && value.type.startsWith('image/')) {
+      const compressedFile = await compressImage(value, quality);
+      compressed.append(key, compressedFile);
+    } else {
+      compressed.append(key, value);
+    }
+  }
+
+  return compressed;
+}
 
 function isSSEEnvelope(body: unknown): body is SSEEnvelope {
   return (
