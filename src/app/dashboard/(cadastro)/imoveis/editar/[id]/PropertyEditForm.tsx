@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../../_lib/propertySteps';
 import { buildPropertyFormData, transformPropertyData } from '../../_lib/propertyTransform';
+import { useUploadSSE } from '@/hooks/useUploadSSE';
+import UploadProgressOverlay from '@/components/feedback/UploadProgress/UploadProgressOverlay';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API;
 
@@ -27,6 +29,7 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const lastFetchedCep = useRef('');
   const [isManualAddress, setIsManualAddress] = useState(false);
   const [completedSteps] = useState<number[]>([0, 1, 2, 3, 4]);
+  const { state: uploadState, uploadAndTrack } = useUploadSSE();
 
   const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED'); // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -105,25 +108,13 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const handleSubmit = useCallback(async (data: any) => {
     const fd = buildPropertyFormData(data, user?.id ?? '', propertyData?.documents ?? []);
 
-    const res = await fetch(`${API_URL}/properties/update-unified/${id}`, { method: 'PUT', body: fd });
-    const text = await res.text();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any;
-    try { result = JSON.parse(text); } catch { throw new Error('Resposta inválida do servidor'); }
-
-    if (!res.ok) {
-      if (res.status === 400 && result.errors) {
-        const msgs = Object.entries(result.errors)
-          .map(([f, m]) => `${f}: ${Array.isArray(m) ? m.join(', ') : m}`)
-          .join('; ');
-        throw new Error(`Erros de validação: ${msgs}`);
-      }
-      throw new Error(result.message || `Erro ${res.status}`);
-    }
-    if (!result.success) throw new Error(result.message || 'Erro desconhecido ao atualizar imóvel');
-    return result.data ?? result;
-  }, [id, user?.id, propertyData?.documents]);
+    const result = await uploadAndTrack({
+      url: `${API_URL}/properties/update-unified/${id}`,
+      method: 'PUT',
+      body: fd,
+    });
+    return result;
+  }, [id, user?.id, propertyData?.documents, uploadAndTrack]);
 
   const onSubmitSuccess = useCallback(() => {
     showMessage('Imóvel atualizado com sucesso!', 'success');
@@ -139,19 +130,22 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   );
 
   return (
-    <DynamicForm
-      resource="properties"
-      title="Imóvel"
-      basePath="/dashboard/imoveis"
-      mode="edit"
-      id={id}
-      steps={steps}
-      onSubmit={handleSubmit}
-      onSubmitSuccess={onSubmitSuccess}
-      onFieldChange={handleFieldChange}
-      transformData={transformData}
-      completedSteps={completedSteps}
-      canNavigateToStep={canNavigateToStep}
-    />
+    <>
+      <DynamicForm
+        resource="properties"
+        title="Imóvel"
+        basePath="/dashboard/imoveis"
+        mode="edit"
+        id={id}
+        steps={steps}
+        onSubmit={handleSubmit}
+        onSubmitSuccess={onSubmitSuccess}
+        onFieldChange={handleFieldChange}
+        transformData={transformData}
+        completedSteps={completedSteps}
+        canNavigateToStep={canNavigateToStep}
+      />
+      <UploadProgressOverlay state={uploadState} label="Atualizando imóvel..." />
+    </>
   );
 }
