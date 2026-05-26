@@ -54,34 +54,46 @@ export default function PropertyFilter() {
   const [propertyTypes, setPropertyTypes] = useState<PropertyTypeOption[]>([]);
   const [typeSearch, setTypeSearch] = useState("");
 
-  // Deriva tipos diretamente dos imóveis disponíveis na API —
-  // garante que os valores de filtro batem 100% com o campo property_type da API.
+  // Busca todos os tipos cadastrados no endpoint /property-types
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_URL_API;
     if (!API_URL) return;
-    fetch(`${API_URL}/properties?limit=100&status=AVAILABLE`)
+
+    fetch(`${API_URL}/property-types`)
       .then((r) => r.json())
       .then((res) => {
-        const list: any[] = res?.data ?? (Array.isArray(res) ? res : []);
-        const seen = new Set<string>();
-        const types: PropertyTypeOption[] = [];
-        list.forEach((p) => {
-          const raw = (p.property_type ?? "").toLowerCase().trim();
-          if (!raw || seen.has(raw)) return;
-          seen.add(raw);
-          types.push({
+        const list: any[] = Array.isArray(res) ? res : (res?.data ?? res?.items ?? []);
+        if (list.length === 0) throw new Error("empty");
+        const types: PropertyTypeOption[] = list.map((t) => {
+          const raw = (t.name ?? t.id ?? "").toLowerCase().trim();
+          return {
             value: raw,
-            label: getLabelFromRaw(raw, p),
+            label: t.description || getLabelFromRaw(raw, t),
             icon: typeIcon(raw),
-          });
+          };
         });
-        if (types.length > 0) setPropertyTypes(types);
+        setPropertyTypes(types);
       })
       .catch(() => {
-        setPropertyTypes([
-          { value: "house", label: "Casa", icon: "mingcute:home-2-line" },
-          { value: "apartment", label: "Apartamento", icon: "mingcute:building-2-line" },
-        ]);
+        // Fallback: deriva dos imóveis disponíveis
+        fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=100&status=AVAILABLE`)
+          .then((r) => r.json())
+          .then((res) => {
+            const list: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+            const seen = new Set<string>();
+            const types: PropertyTypeOption[] = [];
+            list.forEach((p) => {
+              const raw = (p.property_type ?? "").toLowerCase().trim();
+              if (!raw || seen.has(raw)) return;
+              seen.add(raw);
+              types.push({ value: raw, label: getLabelFromRaw(raw, p), icon: typeIcon(raw) });
+            });
+            if (types.length > 0) setPropertyTypes(types);
+          })
+          .catch(() => setPropertyTypes([
+            { value: "house",     label: "Casa",          icon: "mingcute:home-2-line"     },
+            { value: "apartment", label: "Apartamento",   icon: "mingcute:building-2-line" },
+          ]));
       });
   }, []);
 
@@ -100,19 +112,11 @@ export default function PropertyFilter() {
     return () => { document.body.style.overflow = ""; };
   }, [isFilterOpen]);
 
-  // ─── Tipos visíveis na barra (máx 3 + "Todos") ───────────────────────────
-
-  const BAR_LIMIT = 3;
-  const barTypes = propertyTypes.slice(0, BAR_LIMIT);
-  const hiddenCount = Math.max(0, propertyTypes.length - BAR_LIMIT);
-
-  // Se o tipo selecionado não está nos visíveis, adicioná-lo
-  const selectedNotVisible =
-    filters.propertyType !== "all" &&
-    !barTypes.some((t) => t.value === filters.propertyType);
-  const selectedType = selectedNotVisible
-    ? propertyTypes.find((t) => t.value === filters.propertyType)
-    : null;
+  // Tipo atualmente selecionado (para exibir na barra)
+  const selectedType =
+    filters.propertyType !== "all"
+      ? propertyTypes.find((t) => t.value === filters.propertyType)
+      : null;
 
   // ─── Tipos filtrados no modal ─────────────────────────────────────────────
 
@@ -156,45 +160,30 @@ export default function PropertyFilter() {
     "RS","RO","RR","SC","SP","SE","TO",
   ];
 
-  // ─── CounterInput ─────────────────────────────────────────────────────────
+  // ─── SelectInput ──────────────────────────────────────────────────────────
 
-  const CounterInput = ({
-    label, value, onChange, min = 0, max = 10,
+  const SelectInput = ({
+    label, value, onChange, options = [1, 2, 3, 4, 5, 6, 7, 8],
   }: {
     label: string;
     value: number | "";
     onChange: (v: number | "") => void;
-    min?: number;
-    max?: number;
-  }) => {
-    const cur = value === "" ? 0 : Number(value);
-    return (
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-content-secondary">{label}</span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onChange(cur - 1 <= min ? "" : cur - 1)}
-            disabled={cur <= min}
-            className="w-8 h-8 rounded-full border border-ui-border flex items-center justify-center text-content-secondary hover:border-purple-600 hover:text-purple-600 transition-colors disabled:opacity-30"
-          >
-            <Icon icon="mingcute:minus-line" className="w-3.5 h-3.5" />
-          </button>
-          <span className="w-8 text-center text-sm font-semibold text-content">
-            {cur === 0 ? "—" : `${cur}+`}
-          </span>
-          <button
-            type="button"
-            onClick={() => onChange(cur >= max ? max : cur + 1)}
-            disabled={cur >= max}
-            className="w-8 h-8 rounded-full border border-ui-border flex items-center justify-center text-content-secondary hover:border-purple-600 hover:text-purple-600 transition-colors disabled:opacity-30"
-          >
-            <Icon icon="mingcute:add-line" className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    );
-  };
+    options?: number[];
+  }) => (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-content-secondary">{label}</label>
+      <select
+        value={value === "" ? "" : String(value)}
+        onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))}
+        className="w-full px-3 py-2.5 text-sm border border-ui-border text-content rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-surface"
+      >
+        <option value="">Qualquer</option>
+        {options.map((n) => (
+          <option key={n} value={n}>{n}+</option>
+        ))}
+      </select>
+    </div>
+  );
 
   // ─── Pill de tipo ─────────────────────────────────────────────────────────
 
@@ -226,7 +215,7 @@ export default function PropertyFilter() {
             <div className="flex items-stretch border-b border-ui-border-soft">
               {/* Comprar / Alugar */}
               <div className="flex shrink-0">
-                {(["comprar", "alugar"] as const).map((t) => (
+                {(["alugar", "comprar"] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -248,30 +237,10 @@ export default function PropertyFilter() {
 
               <div className="w-px bg-ui-border-soft self-stretch" />
 
-              {/* Pills de tipo — dinâmico */}
+              {/* Pills de tipo — Todos + selecionado */}
               <div className="flex items-center gap-1 px-3 overflow-x-auto scrollbar-none flex-1 min-w-0">
-                {/* Todos */}
                 <TypePill opt={TYPE_ALL} />
-
-                {/* Tipos visíveis da API */}
-                {barTypes.map((opt) => (
-                  <TypePill key={opt.value} opt={opt} />
-                ))}
-
-                {/* Tipo selecionado fora dos visíveis */}
                 {selectedType && <TypePill opt={selectedType} />}
-
-                {/* Indicador de mais tipos → abre modal */}
-                {hiddenCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => { setIsFilterOpen(true); setTypeSearch(""); }}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap text-purple-700 bg-purple-50 hover:bg-purple-100 transition-all"
-                  >
-                    <Icon icon="mingcute:more-1-line" className="w-3.5 h-3.5" />
-                    +{hiddenCount} mais
-                  </button>
-                )}
               </div>
             </div>
 
@@ -512,13 +481,13 @@ export default function PropertyFilter() {
                   <Icon icon="mingcute:home-2-line" className="w-4 h-4 text-purple-600" />
                   Características
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
-                  <CounterInput label="Quartos"   value={filters.quartos}   onChange={(v) => handleFilterChange("quartos", v)} />
-                  <CounterInput label="Banheiros" value={filters.banheiros} onChange={(v) => handleFilterChange("banheiros", v)} />
-                  <CounterInput label="Vagas"     value={filters.vagas}     onChange={(v) => handleFilterChange("vagas", v)} />
-                  <CounterInput label="Garagem"   value={filters.garagem}   onChange={(v) => handleFilterChange("garagem", v)} />
-                  <CounterInput label="Lavabo"    value={filters.lavabo}    onChange={(v) => handleFilterChange("lavabo", v)} />
-                  <CounterInput label="Andares"   value={filters.andares}   onChange={(v) => handleFilterChange("andares", v)} />
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
+                  <SelectInput label="Quartos"   value={filters.quartos}   onChange={(v) => handleFilterChange("quartos", v)} />
+                  <SelectInput label="Banheiros" value={filters.banheiros} onChange={(v) => handleFilterChange("banheiros", v)} />
+                  <SelectInput label="Vagas"     value={filters.vagas}     onChange={(v) => handleFilterChange("vagas", v)} options={[1,2,3,4,5]} />
+                  <SelectInput label="Garagem"   value={filters.garagem}   onChange={(v) => handleFilterChange("garagem", v)} options={[1,2,3,4,5]} />
+                  <SelectInput label="Lavabo"    value={filters.lavabo}    onChange={(v) => handleFilterChange("lavabo", v)} options={[1,2,3]} />
+                  <SelectInput label="Andares"   value={filters.andares}   onChange={(v) => handleFilterChange("andares", v)} options={[1,2,3,4,5,10,15,20]} />
                 </div>
               </div>
 
@@ -566,12 +535,12 @@ export default function PropertyFilter() {
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <input
-                    id="bairro"
-                    name="bairro"
+                    id="endereco"
+                    name="endereco"
                     type="text"
-                    placeholder="Bairro"
-                    value={filters.bairro}
-                    onChange={(e) => handleFilterChange("bairro", e.target.value)}
+                    placeholder="Endereço, rua, cidade..."
+                    value={filters.endereco}
+                    onChange={(e) => handleFilterChange("endereco", e.target.value)}
                     className="w-full px-3 py-2.5 text-sm border border-ui-border text-content rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-surface"
                   />
                   <select

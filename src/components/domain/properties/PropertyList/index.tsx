@@ -231,13 +231,9 @@ function PropertyCard({
       {/* Conteúdo */}
       <div className="p-4 flex flex-col flex-1">
 
-        {/* Nome + localização */}
+        {/* Nome */}
         <div className="mb-3">
-          <h3 className="text-base font-bold text-content line-clamp-1 mb-1">{imovel.nome}</h3>
-          <div className="flex items-start gap-1.5 text-content-secondary">
-            <Icon icon="mingcute:map-pin-line" className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span className="text-xs line-clamp-1">{imovel.local}</span>
-          </div>
+          <h3 className="text-base font-bold text-content line-clamp-1">{imovel.nome}</h3>
         </div>
 
         {/* Preço */}
@@ -354,8 +350,8 @@ export default function ImoveisList() {
         if (filters.areaMax)   apiFilters.max_area       = Number(filters.areaMax);
         if (filters.valorMin)  apiFilters.min_price      = parseFloat(filters.valorMin.replace(/\./g, "").replace(",", ".")) || 0;
         if (filters.valorMax)  apiFilters.max_price      = parseFloat(filters.valorMax.replace(/\./g, "").replace(",", ".")) || 0;
-        if (filters.location)  apiFilters.search         = filters.location;
-        if (filters.bairro)    apiFilters.district       = filters.bairro;
+        const searchTerms = [filters.location, filters.endereco].filter(Boolean).join(" ");
+        if (searchTerms)       apiFilters.search         = searchTerms;
         if (filters.uf)        apiFilters.state          = filters.uf;
         if (filters.lavabo)    apiFilters.lavabo         = filters.lavabo;
         if (filters.andares)   apiFilters.floor          = filters.andares;
@@ -411,7 +407,7 @@ export default function ImoveisList() {
           if (property.values?.[0]) {
             const val = property.values[0];
             preco = parseFloat(
-              filters.transactionType === "alugar" ? val.rental_value : val.purchase_value
+              filters.transactionType === "alugar" ? val.rental_value : val.sale_value
             ) || 0;
             condoFee = parseFloat(val.condo_fee) || 0;
             propertyStatus = val.status ?? property.status;
@@ -470,6 +466,7 @@ export default function ImoveisList() {
 
         const available = mapped.filter((p) => {
           if (p.status !== "AVAILABLE") return false;
+          if (filters.transactionType === "comprar" && p.preco === 0) return false;
           if (!filters.propertyType || filters.propertyType === "all") return true;
           return matchesPropertyType(p.tipo, filters.propertyType);
         });
@@ -493,6 +490,7 @@ export default function ImoveisList() {
         ];
 
         let fd = [...exampleData];
+        if (filters.transactionType === "comprar") fd = fd.filter((i) => i.preco > 0);
         if (filters.propertyType && filters.propertyType !== "all")
           fd = fd.filter((i) => matchesPropertyType(i.tipo, filters.propertyType));
         if (filters.quartos)   fd = fd.filter((i) => i.quartos   >= Number(filters.quartos));

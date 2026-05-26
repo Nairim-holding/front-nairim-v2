@@ -92,9 +92,6 @@ export default function Header() {
                 <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
                   <button onClick={() => scrollToSection("rodape")}>Sobre</button>
                 </li>
-                <li className="text-sm lg:text-base font-medium hover:text-content transition-colors duration-300 font-roboto">
-                  <button onClick={() => scrollToSection("rodape")}>Contato</button>
-                </li>
               </ul>
               
               <Link 

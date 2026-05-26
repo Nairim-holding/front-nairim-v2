@@ -19,10 +19,18 @@ async function getImoveisDestaque() {
         imovel.documents?.find((doc: any) => doc.is_featured && doc.type === "IMAGE") ||
         imovel.documents?.find((doc: any) => doc.type === "IMAGE");
       if (!destaque) return null;
+
+      const rawType = (imovel.property_type ?? imovel.type?.name ?? "").toLowerCase();
+      let tipo = "imoveis";
+      if (rawType === "house" || rawType === "casa" || rawType === "residential_house") tipo = "casas";
+      else if (rawType === "apartment" || rawType === "apartamento" || rawType === "residential_apartment") tipo = "apartamentos";
+      else if (rawType.includes("commercial")) tipo = "comerciais";
+
       return {
         id: imovel.id,
         nome: imovel.title,
         imagem: destaque.file_path,
+        tipo,
         disponivel,
       };
     };

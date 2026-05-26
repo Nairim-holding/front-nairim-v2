@@ -39,7 +39,7 @@ export default function Footer() {
       <div className="relative max-w-[1800px] mx-auto px-6 md:px-20 pt-16 md:pt-32 pb-12 md:pb-16">
         
         {/* Grid Principal */}
-        <div className="grid gap-12 md:gap-16 md:grid-cols-4 xl:grid-cols-12 mb-16 md:mb-32 items-start">
+        <div className="grid gap-12 md:gap-16 sm:grid-cols-1 md:grid-cols-12 xl:grid-cols-12 mb-16 md:mb-32 items-start">
 
           {/* Logo e Descrição */}
           <div className="md:col-span-6 space-y-6 flex flex-col justify-center items-center lg:justify-start lg:items-start md:space-y-10">
@@ -60,8 +60,8 @@ export default function Footer() {
                     className="object-contain md:w-auto md:h-20"
                   />
                 </div>
-                <div className={`text-[10px] md:text-[15px] tracking-[0.4em] mt-2 text-center md:text-left ${isDark ? "text-purple-700/45" : "text-purple-400/70"}`}>
-                  HOLDING COMPANY
+                <div className={`text-[10px] md:text-[15px] tracking-[0.4em] mt-2 text-center md:text-end ${isDark ? "text-purple-700/45" : "text-purple-400/70"}`}>
+                  HOLDING
                 </div>
               </div>
             </motion.div>
@@ -82,9 +82,8 @@ export default function Footer() {
             <nav className="flex flex-col gap-4 md:gap-6">
               {[
                 { name: 'Ínicio', href: '/' },
-                { name: 'Imóveis', href: '/imoveis' },
-                { name: 'Sobre', href: '/sobre' },
-                { name: 'Contato', href: '/contato' }
+                { name: 'Imóveis', href: '#imoveis' },
+                { name: 'Sobre', href: '#rodape' }
               ].map((item) => (
                 <Link
                   key={item.name}
@@ -97,26 +96,6 @@ export default function Footer() {
               ))}
             </nav>
           </div>
-
-          {/* Localização e Contato */}
-          <div className="md:col-span-3 space-y-6 md:space-y-10">
-            <h4 className="text-[12px] md:text-[15px] tracking-[0.3em] text-purple-400 opacity-80 text-center md:text-left">
-              CONTATO
-            </h4>
-            <div className="space-y-6 md:space-y-8 text-center md:text-left">
-              <div className="flex flex-col gap-2">
-                <span className={`text-[10px] md:text-[11px] tracking-[0.2em] uppercase font-semibold ${isDark ? "text-white/40" : "text-gray-400"}`}>E-mail</span>
-                <a href="mailto:contato@nairimholding.com.br" className={`text-[13px] md:text-[15px] tracking-[0.05em] font-medium hover:text-purple-400 transition-colors break-all ${isDark ? "text-white" : "text-gray-800"}`}>
-                  contato@nairimholding.com.br
-                </a>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] md:text-[12px] tracking-[0.05em] text-purple-400/60 leading-relaxed font-light mt-2">
-                  Atuamos há mais de 20 anos na região
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Linha divisória decorativa */}
@@ -128,7 +107,7 @@ export default function Footer() {
         </div>
 
         {/* Redes Sociais */}
-        <div className="flex flex-col items-center gap-8 md:gap-12 mb-12 md:mb-16">
+        {/* <div className="flex flex-col items-center gap-8 md:gap-12 mb-12 md:mb-16">
           <div className="text-center space-y-2">
             <h5 className={`text-[11px] md:text-[13px] tracking-[0.3em] uppercase ${isDark ? "text-gray-500" : "text-gray-400"}`}>
               Conecte-se Conosco
@@ -158,7 +137,7 @@ export default function Footer() {
               <Icon icon="mingcute:facebook-line" className="w-5 h-5 md:w-6 md:h-6" />
             </a>
           </div>
-        </div>
+        </div> */}
 
         {/* Base Legal */}
         <div className={`pt-8 md:pt-12 border-t flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 relative ${isDark ? "border-white/[0.03]" : "border-gray-200/60"}`}>

@@ -74,6 +74,7 @@ export interface PropertyAddress {
 
 export interface PropertyValues {
   purchase_value: number;
+  sale_value: number;
   rental_value: number;
   condo_fee: number;
   property_tax: number;

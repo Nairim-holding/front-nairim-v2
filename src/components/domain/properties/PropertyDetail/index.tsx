@@ -7,6 +7,7 @@ import Image from "next/image";
 import { propertyService } from "@/services/property-service";
 import Header from "@/components/layout/AppHeader";
 import Footer from "@/components/layout/AppFooter";
+import { maskPhone } from "@/utils/masks";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -211,6 +212,30 @@ export default function PropertyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [leadForm, setLeadForm] = useState({ nome: "", telefone: "", email: "" });
+  const [leadStatus, setLeadStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  async function handleLeadSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLeadStatus("sending");
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...leadForm,
+          imovelId: id,
+          imovelTitulo: property?.title ?? property?.name ?? "",
+        }),
+      });
+      if (!res.ok) throw new Error("Erro ao enviar");
+      setLeadStatus("success");
+      setLeadForm({ nome: "", telefone: "", email: "" });
+    } catch {
+      setLeadStatus("error");
+    }
+  }
+
   useEffect(() => {
     propertyService
       .getById(id)
@@ -255,7 +280,7 @@ export default function PropertyDetailPage() {
 
   const preco = transactionType === "alugar"
     ? toNum(values?.rental_value)
-    : toNum(values?.purchase_value);
+    : toNum(values?.sale_value);
 
   const condoFee = toNum(values?.condo_fee);
   const propertyTax = toNum(values?.property_tax);
@@ -325,13 +350,13 @@ export default function PropertyDetailPage() {
             {/* Título e localização */}
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-400">
                   <Icon icon={typeIcon} className="w-3.5 h-3.5" />
                   {tipo}
                 </span>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                   isAvailable
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-300/30 dark:text-emerald-600"
                     : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                 }`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${isAvailable ? "bg-emerald-500" : "bg-gray-400"}`} />
@@ -383,7 +408,7 @@ export default function PropertyDetailPage() {
                   {extras.map((e) => (
                     <span
                       key={e.label}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-100 dark:border-purple-800/30"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-800/30"
                     >
                       <Icon icon={e.icon} className="w-4 h-4" />
                       {e.label}
@@ -442,7 +467,7 @@ export default function PropertyDetailPage() {
             <div className="sticky top-40">
 
               {/* Card de preço */}
-              <div className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-bg-surface)] shadow-lg overflow-hidden">
+              {!(transactionType === "comprar" && preco === 0) && <div className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-bg-surface)] shadow-lg overflow-hidden">
                 <div className="bg-purple-900 px-6 py-5 text-white">
                   <p className="text-xs font-medium text-purple-300 uppercase tracking-widest mb-1">
                     {transactionType === "alugar" ? "Aluguel mensal" : "Valor de venda"}
@@ -478,26 +503,73 @@ export default function PropertyDetailPage() {
                     ))}
                   </div>
 
-                  {/* Botões de contato */}
-                  <a
-                    href="https://wa.me/5514999999999"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
-                  >
-                    <Icon icon="mingcute:whatsapp-line" className="w-5 h-5" />
-                    Falar no WhatsApp
-                  </a>
+                  {/* Formulário de contato / captação de lead */}
+                  {leadStatus === "success" ? (
+                    <div className="flex flex-col items-center gap-2 py-4 text-center">
+                      <Icon icon="mingcute:check-circle-line" className="w-8 h-8 text-emerald-500" />
+                      <p className="text-sm font-semibold text-[var(--color-text-primary)]">Interesse enviado!</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">Em breve um corretor entrará em contato.</p>
+                      <button
+                        onClick={() => setLeadStatus("idle")}
+                        className="mt-1 text-xs text-purple-700 underline underline-offset-2"
+                      >
+                        Enviar novamente
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleLeadSubmit} className="space-y-3">
+                      <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
+                        Tenho interesse
+                      </p>
 
-                  <a
-                    href="mailto:contato@nairimholding.com.br"
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[var(--color-border-default)] hover:bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] text-sm font-semibold transition-colors"
-                  >
-                    <Icon icon="mingcute:mail-line" className="w-5 h-5" />
-                    Enviar e-mail
-                  </a>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nome completo"
+                        value={leadForm.nome}
+                        onChange={(e) => setLeadForm((f) => ({ ...f, nome: e.target.value }))}
+                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Telefone / WhatsApp"
+                        value={leadForm.telefone}
+                        onChange={(e) => setLeadForm((f) => ({ ...f, telefone: maskPhone(e.target.value) }))}
+                        maxLength={15}
+                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+
+                      <input
+                        type="email"
+                        required
+                        placeholder="E-mail"
+                        value={leadForm.email}
+                        onChange={(e) => setLeadForm((f) => ({ ...f, email: e.target.value }))}
+                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+
+                      {leadStatus === "error" && (
+                        <p className="text-xs text-red-500">Erro ao enviar. Tente novamente.</p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={leadStatus === "sending"}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {leadStatus === "sending" ? (
+                          <Icon icon="mingcute:loading-line" className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Icon icon="mingcute:send-line" className="w-4 h-4" />
+                        )}
+                        {leadStatus === "sending" ? "Enviando..." : "Enviar interesse"}
+                      </button>
+                    </form>
+                  )}
                 </div>
-              </div>
+              </div>}
 
               {/* Também disponível como... */}
               {values && (
@@ -505,7 +577,7 @@ export default function PropertyDetailPage() {
                   const altType = transactionType === "alugar" ? "comprar" : "alugar";
                   const altPrice = altType === "alugar"
                     ? parseFloat(values.rental_value) || 0
-                    : parseFloat(values.purchase_value) || 0;
+                    : parseFloat(values.sale_value) || 0;
                   if (!altPrice) return null;
                   return (
                     <div className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-bg-surface)] px-5 py-4">
