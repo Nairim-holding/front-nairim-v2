@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, ChevronDown, Check, Plus } from 'lucide-react';
+import { Building2, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useAuth } from '@/contexts';
 
 interface Company {
   id: string;
@@ -19,15 +20,18 @@ interface CompanySwitcherProps {
 
 export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   const { companyName } = useBranding();
+  const { login } = useAuth();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [currentSlug] = useState(() =>
-    typeof document !== 'undefined'
-      ? document.cookie.split('; ').find(r => r.startsWith('company_slug='))?.split('=')[1] ?? ''
-      : ''
-  );
+  const [switching, setSwitching] = useState<string | null>(null);
+  const [currentSlug, setCurrentSlug] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('company_slug='));
+    setCurrentSlug(cookie?.split('=')[1] ?? '');
+  }, []);
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -47,15 +51,38 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
     return () => document.removeEventListener('mousedown', onOutside);
   }, [dropdownOpen]);
 
-  function switchToCompany(slug: string) {
-    if (slug === currentSlug) { setDropdownOpen(false); return; }
+  async function switchToCompany(slug: string) {
+    if (slug === currentSlug || switching) return;
     setDropdownOpen(false);
-    // Limpa a sessão atual antes de navegar para o login da outra empresa.
-    // Sem isso o middleware detecta o token e redireciona de volta ao /dashboard.
-    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'company_slug=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    sessionStorage.removeItem('userData');
-    router.push(`/${slug}/login`);
+    setSwitching(slug);
+
+    try {
+      const API = process.env.NEXT_PUBLIC_URL_API ?? '';
+      const res = await fetch(`${API}/company/switch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message ?? 'Erro ao trocar empresa');
+
+      const { token, user } = json.data;
+
+      // Atualiza cookie de slug da empresa
+      document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+
+      // Atualiza sessão com o novo token (novo company_id no JWT)
+      login(token, user);
+
+      // Força navegação para o dashboard da nova empresa
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err) {
+      console.error('[CompanySwitcher] Erro ao trocar empresa:', err);
+    } finally {
+      setSwitching(null);
+    }
   }
 
   const displayName = companyName || currentSlug || 'Empresa';
@@ -99,19 +126,24 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
             {companies.map(c => {
               const label = c.branding?.company_name ?? c.name;
               const isActive = c.slug === currentSlug;
+              const isLoading = switching === c.slug;
               return (
                 <li key={c.id}>
                   <button
                     onClick={() => switchToCompany(c.slug)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 ${
+                    disabled={!!switching}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 disabled:opacity-60 ${
                       isActive
                         ? 'text-brand font-medium bg-brand/5'
                         : 'text-content-secondary hover:bg-surface-subtle'
                     }`}
                   >
-                    <Building2 size={14} className="shrink-0 text-content-muted" />
+                    {isLoading
+                      ? <Loader2 size={14} className="shrink-0 animate-spin text-brand" />
+                      : <Building2 size={14} className="shrink-0 text-content-muted" />
+                    }
                     <span className="flex-1 text-left truncate">{label}</span>
-                    {isActive && <Check size={13} className="text-brand shrink-0" />}
+                    {isActive && !isLoading && <Check size={13} className="text-brand shrink-0" />}
                   </button>
                 </li>
               );
