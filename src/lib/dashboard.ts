@@ -38,6 +38,7 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
     startDate?: string | null;
     endDate?: string | null;
     fetchOptions?: RequestInit;
+    token?: string;
   } = {}
 ): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_URL_API;
@@ -49,11 +50,17 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
 
   const url = `${baseUrl}${ENDPOINT_MAP[section]}?startDate=${start}&endDate=${end}`;
 
+  const authHeaders: Record<string, string> = {};
+  if (options.token) {
+    authHeaders["Authorization"] = `Bearer ${options.token}`;
+  }
+
   const res = await fetch(url, {
     cache: "no-store",
     headers: {
       "Cache-Control": "no-cache, no-store, must-revalidate",
       Pragma: "no-cache",
+      ...authHeaders,
     },
     ...options.fetchOptions,
   });
