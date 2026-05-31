@@ -48,7 +48,13 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   }, [dropdownOpen]);
 
   function switchToCompany(slug: string) {
+    if (slug === currentSlug) { setDropdownOpen(false); return; }
     setDropdownOpen(false);
+    // Limpa a sessão atual antes de navegar para o login da outra empresa.
+    // Sem isso o middleware detecta o token e redireciona de volta ao /dashboard.
+    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'company_slug=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    sessionStorage.removeItem('userData');
     router.push(`/${slug}/login`);
   }
 
