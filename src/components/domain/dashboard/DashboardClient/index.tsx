@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { fetchSection, FilterType, DashboardData } from "@/lib/dashboard";
+import { useAuth } from "@/contexts";
 
 interface DashboardContentProps {
   /** Pre-fetched data from the Server Component (financial is populated, rest are null) */
@@ -19,7 +20,8 @@ interface DashboardContentProps {
  * - Syncing date range from URL search params
  */
 export default function DashboardContent({ initialMetrics, initialFilter }: DashboardContentProps) {
-  const searchParams  = useSearchParams();
+  const searchParams = useSearchParams();
+  const { token } = useAuth();
 
   const [filter, setFilter]   = useState<FilterType>(initialFilter);
   const [metrics, setMetrics] = useState<DashboardData>(initialMetrics);
@@ -66,7 +68,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
 
       try {
         const { startDate, endDate } = getDateRange();
-        const data = await fetchSection(section, { startDate, endDate });
+        const data = await fetchSection(section, { startDate, endDate, token: token ?? undefined });
 
         setMetrics(prev => ({ ...prev, [section]: data as any }));
         fetchedRef.current.add(section);
