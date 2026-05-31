@@ -5,9 +5,30 @@ import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import type { FormStep } from '@/types/types';
-import { Building2, Globe } from 'lucide-react';
+import { Building2, Globe, Palette, Image, Type } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+
+function ColorInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-3">
+      <input
+        type="color"
+        value={value || '#8b5cf6'}
+        onChange={e => onChange(e.target.value)}
+        className="w-10 h-10 rounded-lg cursor-pointer border border-ui-border"
+      />
+      <input
+        type="text"
+        value={value || ''}
+        onChange={e => onChange(e.target.value)}
+        placeholder="#8b5cf6"
+        maxLength={7}
+        className="flex-1 h-[46px] text-content bg-surface border border-ui-border rounded-lg px-3 text-sm focus:outline-none focus:border-brand"
+      />
+    </div>
+  );
+}
 
 export default function CadastrarEmpresaPage() {
   const { showMessage } = useMessageContext();
@@ -15,24 +36,23 @@ export default function CadastrarEmpresaPage() {
 
   const steps: FormStep[] = useMemo(() => [
     {
-      title: 'Dados da Empresa',
+      title: 'Identificação',
       icon: <Building2 size={20} />,
       fields: [
         {
           field: 'name',
-          label: 'Nome da Empresa',
+          label: 'Nome interno (identificação no sistema)',
           type: 'text',
           required: true,
           placeholder: 'Ex: Nairim Holding',
           autoFocus: true,
           icon: <Building2 size={20} />,
           validation: { minLength: 2, maxLength: 100 },
-          maxLength: 100,
           className: 'col-span-full',
         },
         {
           field: 'slug',
-          label: 'Slug (identificador único na URL)',
+          label: 'Slug (URL de acesso: /slug/login)',
           type: 'text',
           required: true,
           placeholder: 'Ex: nairim-holding',
@@ -43,7 +63,54 @@ export default function CadastrarEmpresaPage() {
             pattern: /^[a-z0-9-]+$/,
             patternMessage: 'Apenas letras minúsculas, números e hífens',
           },
-          maxLength: 60,
+          className: 'col-span-full',
+        },
+        {
+          field: 'company_name',
+          label: 'Nome exibido na interface',
+          type: 'text',
+          placeholder: 'Ex: Nairim Holding (aparece no header e footer)',
+          icon: <Type size={20} />,
+          className: 'col-span-full',
+        },
+      ],
+    },
+    {
+      title: 'Identidade Visual',
+      icon: <Palette size={20} />,
+      fields: [
+        {
+          field: 'primary_color',
+          label: 'Cor primária',
+          type: 'custom',
+          render: (value, _fv, onChange) => (
+            <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} />
+          ),
+          className: 'col-span-1',
+        },
+        {
+          field: 'secondary_color',
+          label: 'Cor secundária',
+          type: 'custom',
+          render: (value, _fv, onChange) => (
+            <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} />
+          ),
+          className: 'col-span-1',
+        },
+        {
+          field: 'logo_url',
+          label: 'URL do logo',
+          type: 'text',
+          placeholder: 'https://exemplo.com/logo.svg',
+          icon: <Image size={20} />,
+          className: 'col-span-full',
+        },
+        {
+          field: 'favicon_url',
+          label: 'URL do favicon',
+          type: 'text',
+          placeholder: 'https://exemplo.com/favicon.svg',
+          icon: <Image size={20} />,
           className: 'col-span-full',
         },
       ],
@@ -54,7 +121,15 @@ export default function CadastrarEmpresaPage() {
     const res = await fetch(`${API_URL}/company`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: data.name, slug: data.slug.toLowerCase().trim() }),
+      body: JSON.stringify({
+        name: data.name,
+        slug: data.slug?.toLowerCase().trim(),
+        company_name: data.company_name || undefined,
+        primary_color: data.primary_color || undefined,
+        secondary_color: data.secondary_color || undefined,
+        logo_url: data.logo_url || undefined,
+        favicon_url: data.favicon_url || undefined,
+      }),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message ?? `Erro ${res.status}`);
