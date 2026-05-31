@@ -11,8 +11,8 @@ export interface SectionProps {
 
 export default function Section({ children, title, href, hrefText, action }: SectionProps) {
   return (
-    <section className="font-poppins bg-page flex flex-col p-2 h-screen overflow-hidden">
-      <div className="flex justify-between items-center mb-2 flex-shrink-0">
+    <section className="font-poppins bg-page flex flex-col p-2 min-h-screen">
+      <div className="flex justify-between items-center mb-2">
         <h1 className="text-2xl font-semibold text-content ml-12">{title}</h1>
         <div className="flex items-center gap-2">
           {action}
@@ -26,7 +26,7 @@ export default function Section({ children, title, href, hrefText, action }: Sec
           )}
         </div>
       </div>
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex flex-col flex-1">
         {children}
       </div>
     </section>

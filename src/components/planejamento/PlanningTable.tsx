@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, Fragment, forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Calendar } from 'lucide-react';
 import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
 import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from './types';
@@ -55,9 +56,11 @@ interface Props {
   onSaveInline?: (item: { id: string; parentCategoryId?: string; amount: number }) => Promise<void>;
   balanceMonths?: { month: number; year: number }[];
   balances?: DashboardResponse['balances'];
+  filterSlot?: ReactNode;
+  statsSlot?: ReactNode;
 }
 
-const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, onSaveInline, balanceMonths, balances }, ref) => {
+const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, onSaveInline, balanceMonths, balances, filterSlot, statsSlot }, ref) => {
   const tableRef = useRef<HTMLTableElement>(null);
   const [inlineEditing, setInlineEditing] = useState<{ id: string; parentId?: string; value: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -197,9 +200,9 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
         <td className={`px-3 py-2 text-xs text-right text-content-muted sticky z-[8] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'} ${category.percentage > 100 && !isSubcategory ? 'text-red-600 font-semibold' : ''}`} style={{ width: 70, minWidth: 70, left: 400 }}>
           {category.percentage > 0 ? `${category.percentage.toFixed(2)}%` : '---'}
         </td>
-        <td className={`px-3 py-2 text-xs text-right text-content-muted border-l border-ui-border-soft whitespace-nowrap sticky z-[7] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 470 }}>{formatCurrency(category.min)}</td>
-        <td className={`px-3 py-2 text-xs text-right text-content-muted whitespace-nowrap sticky z-[6] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 560 }}>{formatCurrency(category.med)}</td>
-        <td className={`px-3 py-2 text-xs text-right text-content-muted whitespace-nowrap sticky z-[5] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 650 }}>{formatCurrency(category.max)}</td>
+        <td className={`px-3 py-2 text-xs text-center text-content-muted border-l border-ui-border-soft whitespace-nowrap sticky z-[7] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 470 }}>{formatCurrency(category.min)}</td>
+        <td className={`px-3 py-2 text-xs text-center text-content-muted whitespace-nowrap sticky z-[6] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 560 }}>{formatCurrency(category.med)}</td>
+        <td className={`px-3 py-2 text-xs text-center text-content-muted whitespace-nowrap sticky z-[5] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`} style={{ width: 90, minWidth: 90, left: 650 }}>{formatCurrency(category.max)}</td>
         {months.map(({ month, year }) => {
           const plannedValue = getPlannedMonthlyValue(category.monthly_values, month);
           const realizedValue = getMonthlyValue(category.monthly_data, month, year);
@@ -224,10 +227,10 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
     <tr style={{ backgroundColor: bgColor }}>
       <td className="px-3 py-2 text-xs font-bold text-white sticky left-0 z-10 pl-6" style={{ backgroundColor: bgColor }}>{category.name}</td>
       <td className="px-3 py-2 text-xs font-bold text-white text-right sticky z-[9]" style={{ width: 160, minWidth: 160, left: 240, backgroundColor: bgColor }}>{formatCurrency(category.planned_amount)}</td>
-      <td className="px-3 py-2 text-xs font-bold text-white text-center sticky z-[8]" style={{ width: 70, minWidth: 70, left: 400, backgroundColor: bgColor }}>{category.percentage > 0 ? `${category.percentage.toFixed(2)}%` : '---'}</td>
-      <td className="px-3 py-2 text-xs font-bold text-white text-right border-l border-white/20 sticky z-[7]" style={{ width: 90, minWidth: 90, left: 470, backgroundColor: bgColor }}>{formatCurrency(category.min)}</td>
-      <td className="px-3 py-2 text-xs font-bold text-white text-right sticky z-[6]" style={{ width: 90, minWidth: 90, left: 560, backgroundColor: bgColor }}>{formatCurrency(category.med)}</td>
-      <td className="px-3 py-2 text-xs font-bold text-white text-right sticky z-[5]" style={{ width: 90, minWidth: 90, left: 650, backgroundColor: bgColor }}>{formatCurrency(category.max)}</td>
+      <td className="px-3 py-2 text-xs font-bold text-white text-right sticky z-[8]" style={{ width: 70, minWidth: 70, left: 400, backgroundColor: bgColor }}>{category.percentage > 0 ? `${category.percentage.toFixed(2)}%` : '---'}</td>
+      <td className="px-3 py-2 text-xs font-bold text-white text-center border-l border-white/20 sticky z-[7]" style={{ width: 90, minWidth: 90, left: 470, backgroundColor: bgColor }}>Min</td>
+      <td className="px-3 py-2 text-xs font-bold text-white text-center sticky z-[6]" style={{ width: 90, minWidth: 90, left: 560, backgroundColor: bgColor }}>Méd</td>
+      <td className="px-3 py-2 text-xs font-bold text-white text-center sticky z-[5]" style={{ width: 90, minWidth: 90, left: 650, backgroundColor: bgColor }}>Max</td>
       {months.map(({ month, year }) => {
         const monthVal = getMonthlyValue(category.monthly_data, month, year);
         const plannedVal = getPlannedMonthlyValue(category.monthly_values, month);
@@ -252,7 +255,7 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
     v === null ? 'text-content-muted' : v >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
-    <div className="rounded-xl border border-ui-border-soft">
+    <div className="rounded-xl">
       <table ref={tableRef} className="w-full border-collapse text-sm">
         <thead>
           {balanceMonths && balanceMonths.length > 0 && balances && (
@@ -268,14 +271,14 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
                   const inBal = balanceMonths.some(b => b.month === month && b.year === year);
                   const v = inBal ? (balances.accumulated.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
                   return (
-                    <th key={`acc-${month}-${year}`} className={`px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                    <th key={`acc-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
                       {balanceFmt(v)}
                     </th>
                   );
                 })}
               </tr>
-              <tr className="border-b-2 border-ui-border-soft">
-                <th className="bg-page sticky z-10" style={{ left: 0, minWidth: 240, width: 240 }} />
+              <tr>
+                <th className="bg-page sticky z-10 px-3 py-1" style={{ left: 0, minWidth: 240, width: 240 }}>{filterSlot}</th>
                 <th className="bg-page sticky z-[9]" style={{ left: 240, width: 160, minWidth: 160 }} />
                 <th className="bg-page sticky z-[8]" style={{ left: 400, width: 70, minWidth: 70 }} />
                 <th className="bg-page sticky z-[7]" style={{ left: 470, width: 90, minWidth: 90 }} />
@@ -285,12 +288,13 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
                   const inBal = balanceMonths.some(b => b.month === month && b.year === year);
                   const v = inBal ? (balances.monthly.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
                   return (
-                    <th key={`monthly-${month}-${year}`} className={`px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                    <th key={`monthly-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
                       {balanceFmt(v)}
                     </th>
                   );
                 })}
               </tr>
+              <tr className="h-[25px]"><th></th></tr>
             </>
           )}
           <tr className="bg-surface-subtle border-b border-ui-border-soft">
@@ -299,9 +303,11 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
             </th>
             <th className={`${thClass} sticky z-[9] bg-surface-subtle`} style={{ width: 160, minWidth: 160, left: 240 }}>Planejamento</th>
             <th className={`${thClass} text-center sticky z-[8] bg-surface-subtle`} style={{ width: 70, minWidth: 70, left: 400 }}>%</th>
-            <th className={`${thClass} border-l border-ui-border-soft sticky z-[7] bg-surface-subtle`} style={{ width: 90, minWidth: 90, left: 470 }}>Min</th>
-            <th className={`${thClass} sticky z-[6] bg-surface-subtle`} style={{ width: 90, minWidth: 90, left: 560 }}>Méd</th>
-            <th className={`${thClass} sticky z-[5] bg-surface-subtle`} style={{ width: 90, minWidth: 90, left: 650 }}>Max</th>
+            <th className="sticky z-[7] bg-surface-subtle border-l border-ui-border-soft text-center" style={{ width: 270, minWidth: 270, left: 470 }} colSpan={3}>
+              <div className="flex items-center justify-center py-1">
+                {statsSlot}
+              </div>
+            </th>
             {months.map(({ month, year }) => (
               <th key={`${month}-${year}`} className={`${thClass} border-l border-ui-border-soft relative z-0`}>
                 {formatMonthHeader(month, year)}

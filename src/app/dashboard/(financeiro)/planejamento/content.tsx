@@ -373,25 +373,24 @@ export default function PlanningPageContent() {
   return (
     <Section title="Planejamento e Controle">
       <div className="flex flex-col gap-4 relative">
-        <div className="flex gap-4 items-center flex-wrap absolute top-3 z-[100]">
+        {/* Mobile: todos os controles acima da tabela */}
+        <div className="flex md:hidden gap-3 items-center flex-wrap">
           <div className="relative" ref={popoverRef}>
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
               className="flex items-center gap-2 border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
             >
               <Calendar size={16} className="text-content-secondary" />
-              <span className="font-medium">
+              <span className="font-medium whitespace-nowrap">
                 {formatDateDisplay(dateRange.from)} — {formatDateDisplay(dateRange.to)}
               </span>
             </button>
-
             {isCalendarOpen && (
               <div className="absolute top-full left-0 mt-2 bg-surface border border-ui-border-soft rounded-lg shadow-lg z-50 p-4">
                 <CalendarPicker dateRange={dateRange} onChange={handleDateRangeChange} />
               </div>
             )}
           </div>
-
           <select
             value={getSelectedShortcut() ?? ''}
             onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
@@ -402,7 +401,32 @@ export default function PlanningPageContent() {
               <option key={s.days} value={s.days}>{s.label}</option>
             ))}
           </select>
+          <button
+            onClick={() => fetchDashboard()}
+            disabled={isLoading}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Recarregar"
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        </div>
 
+        {/* Desktop: calendário + refresh flutuam sobre o lado esquerdo da tabela */}
+        <div className="hidden md:flex gap-3 items-center absolute top-3 z-[100]" ref={popoverRef}>
+          <button
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+            className="flex items-center gap-2 border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
+          >
+            <Calendar size={16} className="text-content-secondary" />
+            <span className="font-medium whitespace-nowrap">
+              {formatDateDisplay(dateRange.from)} — {formatDateDisplay(dateRange.to)}
+            </span>
+          </button>
+          {isCalendarOpen && (
+            <div className="absolute top-full left-0 mt-2 bg-surface border border-ui-border-soft rounded-lg shadow-lg z-[200] p-4">
+              <CalendarPicker dateRange={dateRange} onChange={handleDateRangeChange} />
+            </div>
+          )}
           <button
             onClick={() => fetchDashboard()}
             disabled={isLoading}
@@ -436,6 +460,18 @@ export default function PlanningPageContent() {
                 onSaveInline={handleSaveInline}
                 balanceMonths={balanceMonths.length > 0 ? balanceMonths : undefined}
                 balances={data.balances}
+                statsSlot={
+                  <select
+                    value={getSelectedShortcut() ?? ''}
+                    onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
+                    className="hidden md:block border border-ui-border rounded-lg px-2 py-1 text-xs text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
+                  >
+                    <option value="">Personalizado</option>
+                    {SHORTCUTS.map(s => (
+                      <option key={s.days} value={s.days}>{s.label}</option>
+                    ))}
+                  </select>
+                }
               />
             </div>
           </div>
