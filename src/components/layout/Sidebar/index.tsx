@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { 
-  Menu, 
-  X, 
-  Home, 
-  Moon, 
-  Sun, 
+import {
+  Menu,
+  X,
+  Home,
+  Moon,
+  Sun,
   PlusCircle,
   Settings,
   LogOut,
@@ -25,9 +25,11 @@ import {
   HandCoins,
   Users,
   FolderInput,
-  BarChart2
+  BarChart2,
+  Briefcase
 } from "lucide-react";
 import Logo from "../Logo";
+import CompanySwitcher from "../CompanySwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -120,6 +122,7 @@ export default function Aside() {
 
       ]
     },
+    { href: "/dashboard/empresas", icon: Briefcase, label: "Empresas" },
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
   ];
 
@@ -162,6 +165,8 @@ export default function Aside() {
               <Logo className="text-brand-logo" />
             </Link>
           </div>
+
+          <CompanySwitcher isOpen={openAside} />
 
           <div className="flex-1 w-full overflow-hidden">
             <nav className="h-full" ref={submenuRef}>
