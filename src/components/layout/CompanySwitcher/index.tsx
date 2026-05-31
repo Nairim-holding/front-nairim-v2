@@ -3,23 +3,58 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
-import { useBranding } from '@/contexts/BrandingContext';
 import { useAuth } from '@/contexts';
+import Image from 'next/image';
 
 interface Company {
   id: string;
   name: string;
   slug: string;
   is_active: boolean;
-  branding?: { company_name: string | null; logo_url: string | null } | null;
+  branding?: { company_name: string | null; logo_url: string | null; primary_color: string | null } | null;
 }
 
 interface CompanySwitcherProps {
   isOpen: boolean;
 }
 
+function CompanyAvatar({
+  company,
+  size = 'md',
+}: {
+  company: Company | undefined;
+  size?: 'sm' | 'md';
+}) {
+  const px = size === 'sm' ? 'w-5 h-5' : 'w-7 h-7';
+  const text = size === 'sm' ? 'text-[10px]' : 'text-xs';
+  const label = company?.branding?.company_name ?? company?.name ?? '?';
+  const logo = company?.branding?.logo_url;
+  const color = company?.branding?.primary_color ?? '#8b5cf6';
+
+  if (logo) {
+    return (
+      <Image
+        src={logo}
+        alt={label}
+        width={size === 'sm' ? 20 : 28}
+        height={size === 'sm' ? 20 : 28}
+        className={`${px} rounded-md object-contain shrink-0`}
+        unoptimized
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${px} rounded-md flex items-center justify-center ${text} font-bold text-white shrink-0`}
+      style={{ background: color }}
+    >
+      {label.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
-  const { companyName } = useBranding();
   const { login } = useAuth();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -28,11 +63,13 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   const [currentSlug, setCurrentSlug] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Lê o slug atual do cookie
   useEffect(() => {
     const cookie = document.cookie.split('; ').find(r => r.startsWith('company_slug='));
     setCurrentSlug(cookie?.split('=')[1] ?? '');
   }, []);
 
+  // Busca a lista de empresas
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_URL_API ?? '';
     fetch(`${API}/company/list?limit=100`)
@@ -41,6 +78,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
       .catch(() => {});
   }, []);
 
+  // Fecha dropdown ao clicar fora
   useEffect(() => {
     function onOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -56,6 +94,10 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
     setDropdownOpen(false);
     setSwitching(slug);
 
+    // Atualiza o slug imediatamente para refletir na UI antes do refresh
+    setCurrentSlug(slug);
+    document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+
     try {
       const API = process.env.NEXT_PUBLIC_URL_API ?? '';
       const res = await fetch(`${API}/company/switch`, {
@@ -69,30 +111,29 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
 
       const { token, user } = json.data;
 
-      // Atualiza cookie de slug da empresa
-      document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
-
-      // Atualiza sessão com o novo token (novo company_id no JWT)
+      // Atualiza sessão com novo JWT (novo company_id)
       login(token, user);
 
-      // Força navegação para o dashboard da nova empresa
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
       console.error('[CompanySwitcher] Erro ao trocar empresa:', err);
+      // Reverte se falhar
+      const prev = document.cookie.split('; ').find(r => r.startsWith('company_slug='))?.split('=')[1] ?? '';
+      setCurrentSlug(prev);
     } finally {
       setSwitching(null);
     }
   }
 
-  const displayName = companyName || currentSlug || 'Empresa';
+  // Deriva nome e logo da lista de empresas — atualiza imediatamente após troca
+  const currentCompany = companies.find(c => c.slug === currentSlug);
+  const displayName = currentCompany?.branding?.company_name ?? currentCompany?.name ?? currentSlug ?? 'Empresa';
 
   if (!isOpen) {
     return (
       <div className="flex justify-center mb-3">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand to-brand-hover flex items-center justify-center text-white text-xs font-bold">
-          {displayName.charAt(0).toUpperCase()}
-        </div>
+        <CompanyAvatar company={currentCompany} />
       </div>
     );
   }
@@ -103,9 +144,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
         onClick={() => setDropdownOpen(v => !v)}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-ui-border-soft transition-colors duration-200"
       >
-        <div className="w-7 h-7 rounded-md bg-gradient-to-br from-brand to-brand-hover flex items-center justify-center text-white text-xs font-bold shrink-0">
-          {displayName.charAt(0).toUpperCase()}
-        </div>
+        <CompanyAvatar company={currentCompany} />
         <span className="flex-1 text-left text-sm font-medium text-content truncate">{displayName}</span>
         <ChevronDown
           size={14}
@@ -140,7 +179,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
                   >
                     {isLoading
                       ? <Loader2 size={14} className="shrink-0 animate-spin text-brand" />
-                      : <Building2 size={14} className="shrink-0 text-content-muted" />
+                      : <CompanyAvatar company={c} size="sm" />
                     }
                     <span className="flex-1 text-left truncate">{label}</span>
                     {isActive && !isLoading && <Check size={13} className="text-brand shrink-0" />}
