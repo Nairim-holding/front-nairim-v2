@@ -3,6 +3,7 @@ import './globals.css';
 import { Poppins } from 'next/font/google';
 import { AppProviders } from './providers';
 import GlobalNotifications from '@/components/feedback/Notifications';
+import { cookies } from 'next/headers';
 import { fetchBranding } from '@/lib/fetchBranding';
 import { buildBrandingCss } from '@/lib/brandingCss';
 
@@ -39,7 +40,9 @@ const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
 }catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const branding = await fetchBranding(COMPANY_SLUG);
+  const cookieStore = await cookies();
+  const slugFromCookie = cookieStore.get('company_slug')?.value;
+  const branding = await fetchBranding(slugFromCookie ?? COMPANY_SLUG);
   const brandingCss = buildBrandingCss(branding);
 
   return (

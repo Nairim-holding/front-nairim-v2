@@ -9,7 +9,11 @@ import { RateLimitWarning } from '@/components/auth/RateLimitWarning';
 import { RateLimitBlocked } from '@/components/auth/RateLimitBlocked';
 import { ApiResponse } from '@/types/types';
 
-export const LoginFormWrapper = () => {
+interface LoginFormWrapperProps {
+  companySlug?: string;
+}
+
+export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) => {
   const navigation = useRouter();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -64,9 +68,15 @@ export const LoginFormWrapper = () => {
       
       // Successful login - reset failed attempts
       resetAttempts();
-      
+
+      // Gravar slug da empresa no cookie para o layout.tsx SSR carregar o branding correto
+      const slug = companySlug ?? data.data.user.company_id;
+      if (slug) {
+        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+      }
+
       login(data.data.token, data.data.user);
-      
+
       navigation.push('/dashboard');
     } catch (err: unknown) {
       let errorMessage = 'Erro ao tentar fazer login. Verifique suas credenciais.';
