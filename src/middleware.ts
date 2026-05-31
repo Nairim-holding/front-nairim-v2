@@ -18,8 +18,17 @@ export function middleware(request: NextRequest) {
   if (slugLoginMatch) {
     const segment = slugLoginMatch[1];
     if (!RESERVED_SEGMENTS.has(segment)) {
-      // Se já autenticado, vai para o dashboard
       if (token) return NextResponse.redirect(new URL(DEFAULT_PRIVATE_ROUTE, request.url));
+      return NextResponse.next();
+    }
+  }
+
+  // /[slug]/dashboard(/*) → rota protegida (rewrite no next.config aponta para /dashboard)
+  const slugDashboardMatch = pathname.match(/^\/([^\/]+)\/dashboard(\/.*)?$/);
+  if (slugDashboardMatch) {
+    const segment = slugDashboardMatch[1];
+    if (!RESERVED_SEGMENTS.has(segment)) {
+      if (!token) return NextResponse.redirect(new URL('/login', request.url));
       return NextResponse.next();
     }
   }

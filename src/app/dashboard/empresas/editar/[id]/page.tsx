@@ -149,21 +149,6 @@ export default function EditarEmpresaPage({ params }: Props) {
     return json;
   }
 
-  // Normaliza a resposta para preencher o formulário com dados de company + branding
-  function transformResponse(d: any) {
-    const company = d?.data ?? d;
-    return {
-      name: company.name ?? '',
-      slug: company.slug ?? '',
-      is_active: company.is_active ?? true,
-      company_name: company.branding?.company_name ?? '',
-      primary_color: company.branding?.primary_color ?? '',
-      secondary_color: company.branding?.secondary_color ?? '',
-      logo_url: company.branding?.logo_url ?? '',
-      favicon_url: company.branding?.favicon_url ?? '',
-    };
-  }
-
   return (
     <DynamicFormManager
       resource="companies"
@@ -177,8 +162,16 @@ export default function EditarEmpresaPage({ params }: Props) {
         showMessage('Empresa atualizada com sucesso!', 'success');
         router.push('/dashboard/empresas');
       }}
-      transformData={(d) => d}
-      transformResponse={transformResponse}
+      transformData={(d) => ({
+        name: d?.name ?? '',
+        slug: d?.slug ?? '',
+        is_active: d?.is_active ?? true,
+        company_name: d?.branding?.company_name ?? '',
+        primary_color: d?.branding?.primary_color ?? '',
+        secondary_color: d?.branding?.secondary_color ?? '',
+        logo_url: d?.branding?.logo_url ?? '',
+        favicon_url: d?.branding?.favicon_url ?? '',
+      })}
     />
   );
 }

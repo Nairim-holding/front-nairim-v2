@@ -112,7 +112,8 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
       // Atualiza sessão com novo JWT (novo company_id)
       login(token, user);
 
-      router.push('/dashboard');
+      // Redireciona com slug na URL para identificar a empresa visualmente
+      router.push(`/${slug}/dashboard`);
       router.refresh();
     } catch (err) {
       console.error('[CompanySwitcher] Erro ao trocar empresa:', err);

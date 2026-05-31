@@ -69,16 +69,15 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
       // Successful login - reset failed attempts
       resetAttempts();
 
-      // Grava slug apenas quando o login é feito via /[slug]/login
-      // (o slug da URL é conhecido). Para login genérico /login o cookie
-      // não é necessário — o company_id do JWT identifica a empresa.
-      if (companySlug) {
-        document.cookie = `company_slug=${companySlug}; path=/; SameSite=Lax`;
+      // Slug da empresa: vem da URL /[slug]/login ou da resposta do login
+      const slug = companySlug ?? data.data.user.company_slug ?? '';
+      if (slug) {
+        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
       }
 
       login(data.data.token, data.data.user);
 
-      navigation.push('/dashboard');
+      navigation.push(slug ? `/${slug}/dashboard` : '/dashboard');
     } catch (err: unknown) {
       let errorMessage = 'Erro ao tentar fazer login. Verifique suas credenciais.';
       
