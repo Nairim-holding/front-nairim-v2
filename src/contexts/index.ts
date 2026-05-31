@@ -8,3 +8,4 @@ export { MessageProvider, useMessageContext } from './MessageContext';
 export { PopupProvider, usePopupContext } from './PopupContext';
 export { ThemeProvider, useTheme } from './ThemeContext';
 export type { Theme } from './ThemeContext';
+export { BrandingProvider, useBranding } from './BrandingContext';

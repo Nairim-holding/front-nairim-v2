@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Icon } from "@iconify/react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
   const { isDark } = useTheme();
+  const { companyName, logoUrl } = useBranding();
   const currentYear = new Date().getFullYear();
 
   // Garante que o componente só renderize as classes dinâmicas após a hidratação
@@ -52,16 +53,13 @@ export default function Footer() {
             >
               <div className="relative">
                 <div className="text-3xl md:text-4xl font-bold tracking-tight">
-                  <Image 
-                    src="/logo.svg" 
-                    alt="Logo da Nairim Holding" 
-                    width={150} 
-                    height={50} 
+                  <Image
+                    src={logoUrl ?? "/logo.svg"}
+                    alt={`Logo ${companyName}`}
+                    width={150}
+                    height={50}
                     className="object-contain md:w-auto md:h-20"
                   />
-                </div>
-                <div className={`text-[10px] md:text-[15px] tracking-[0.4em] mt-2 text-center md:text-end ${isDark ? "text-purple-700/45" : "text-purple-400/70"}`}>
-                  HOLDING
                 </div>
               </div>
             </motion.div>
@@ -145,7 +143,7 @@ export default function Footer() {
 
           <div className="order-2 md:order-1">
             <p className={`text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-medium text-center md:text-left ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-              © {currentYear} Nairim Holding • Garça/SP
+              © {currentYear} {companyName}
             </p>
           </div>
         </div>

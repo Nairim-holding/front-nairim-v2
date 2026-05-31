@@ -11,7 +11,7 @@ interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-const STORAGE_KEY = "nairim.theme";
+const STORAGE_KEY = `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? "app"}.theme`;
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 

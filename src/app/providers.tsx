@@ -15,17 +15,27 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { PopupProvider } from '@/contexts/PopupContext';
 import { MessageProvider } from '@/contexts/MessageContext';
 import { FilterProvider } from '@/contexts/filter-context';
+import { BrandingProvider } from '@/contexts/BrandingContext';
+import type { CompanyBranding } from '@/types/branding';
 
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({
+  children,
+  initialBranding,
+}: {
+  children: ReactNode;
+  initialBranding?: CompanyBranding | null;
+}) {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <PopupProvider>
-          <MessageProvider>
-            <FilterProvider>{children}</FilterProvider>
-          </MessageProvider>
-        </PopupProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <BrandingProvider initialBranding={initialBranding}>
+      <ThemeProvider>
+        <AuthProvider>
+          <PopupProvider>
+            <MessageProvider>
+              <FilterProvider>{children}</FilterProvider>
+            </MessageProvider>
+          </PopupProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrandingProvider>
   );
 }

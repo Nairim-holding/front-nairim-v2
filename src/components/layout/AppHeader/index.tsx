@@ -4,8 +4,10 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Header() {
+  const { companyName, logoUrl } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -70,11 +72,11 @@ export default function Header() {
           <div className="flex items-center justify-between h-12 md:h-16">
             {/* Logo */}
             <Link href="/" className="z-50">
-              <Image 
-                src="/logo.svg" 
-                alt="logo da nairim holding" 
-                width={91} 
-                height={45} 
+              <Image
+                src={logoUrl ?? "/logo.svg"}
+                alt={`logo ${companyName}`}
+                width={91}
+                height={45}
                 className="h-10 w-auto md:h-13"
                 priority
               />

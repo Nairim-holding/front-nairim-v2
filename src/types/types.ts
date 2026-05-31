@@ -9,6 +9,7 @@ export interface ApiResponse {
       name: string;
       email: string;
       role: string;
+      company_id: string;
       created_at: string;
     };
     token: string;

@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
 
+const name = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
+
 export const metadata: Metadata = {
-  title: 'Login | Nairim Holding',
-  description: 'Faça login na sua conta Nairim para acessar o dashboard',
+  title: `Login | ${name}`,
+  description: `Faça login na sua conta para acessar o dashboard`,
   robots: {
     index: false,
     follow: false,

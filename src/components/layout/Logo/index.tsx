@@ -1,6 +1,24 @@
-export default function Logo({
-  className = "",
-}: { className?: string }) {
+'use client';
+import Image from 'next/image';
+import { useBranding } from '@/contexts/BrandingContext';
+
+export default function Logo({ className = '' }: { className?: string }) {
+  const { logoUrl, companyName } = useBranding();
+  if (logoUrl) {
+    return (
+      <Image
+        src={logoUrl}
+        alt={companyName}
+        width={131}
+        height={46}
+        className={className}
+      />
+    );
+  }
+  return <LogoSvg className={className} />;
+}
+
+function LogoSvg({ className = '' }: { className?: string }) {
   return (
     <svg
       className={className}

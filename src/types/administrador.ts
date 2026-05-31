@@ -12,7 +12,8 @@ export interface UserData {
   email: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   birth_date: string;
-  role: 'ADMIN' | 'DEFAULT';
+  role: 'ADMIN' | 'DEFAULT' | 'SUPER_ADMIN';
+  company_id: string;
   created_at: string;
   updated_at: string;
 }

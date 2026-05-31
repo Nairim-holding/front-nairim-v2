@@ -71,7 +71,7 @@ export default async function Home() {
           <CarrosselDinamico imoveis={imoveis} />
         ) : (
           <div className="relative w-full h-[50vh] bg-slate-100 flex items-center justify-center font-medium text-slate-400 animate-pulse">
-            Buscando destaques da Nairim Holding...
+            Buscando destaques...
           </div>
         )}
       </div>

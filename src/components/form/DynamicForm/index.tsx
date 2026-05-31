@@ -42,7 +42,7 @@ interface DynamicFormManagerProps {
   enableDirtyDetection?: boolean;
 }
 
-const DRAFT_STORAGE_PREFIX = 'nairim:draft:';
+const DRAFT_STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'app'}:draft:`;
 
 const readDraft = (key: string): { values: Record<string, any>; step: number } | null => {
   if (typeof window === 'undefined') return null;
