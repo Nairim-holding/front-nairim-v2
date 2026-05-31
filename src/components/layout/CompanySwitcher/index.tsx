@@ -55,7 +55,7 @@ function CompanyAvatar({
 }
 
 export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -63,18 +63,16 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   const [currentSlug, setCurrentSlug] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Lê o slug atual do cookie
-  useEffect(() => {
-    const cookie = document.cookie.split('; ').find(r => r.startsWith('company_slug='));
-    setCurrentSlug(cookie?.split('=')[1] ?? '');
-  }, []);
-
-  // Busca a lista de empresas
+  // Busca a lista de empresas — endpoint /companies retorna formato flat { data: [...], count }
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_URL_API ?? '';
-    fetch(`${API}/company/list?limit=100`)
+    fetch(`${API}/companies?limit=100`)
       .then(r => r.json())
-      .then(j => { if (j.success) setCompanies(j.data?.data ?? []); })
+      .then(j => {
+        // Formato flat: { data: [...], count, totalPages, currentPage }
+        const list = Array.isArray(j.data) ? j.data : [];
+        setCompanies(list);
+      })
       .catch(() => {});
   }, []);
 
@@ -126,9 +124,11 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
     }
   }
 
-  // Deriva nome e logo da lista de empresas — atualiza imediatamente após troca
-  const currentCompany = companies.find(c => c.slug === currentSlug);
-  const displayName = currentCompany?.branding?.company_name ?? currentCompany?.name ?? currentSlug ?? 'Empresa';
+  // Identifica a empresa atual pelo company_id do JWT (confiável) ou slug do cookie (pós-troca)
+  const currentCompany = companies.find(c =>
+    currentSlug ? c.slug === currentSlug : c.id === user?.company_id
+  );
+  const displayName = currentCompany?.branding?.company_name || currentCompany?.name || 'Empresa';
 
   if (!isOpen) {
     return (

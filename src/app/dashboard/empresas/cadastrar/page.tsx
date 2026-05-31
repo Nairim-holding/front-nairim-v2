@@ -118,7 +118,7 @@ export default function CadastrarEmpresaPage() {
   ], []);
 
   async function handleSubmit(data: any) {
-    const res = await fetch(`${API_URL}/company`, {
+    const res = await fetch(`${API_URL}/companies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -138,7 +138,7 @@ export default function CadastrarEmpresaPage() {
 
   return (
     <DynamicFormManager
-      resource="company"
+      resource="companies"
       title="Empresa"
       basePath="/dashboard/empresas"
       mode="create"

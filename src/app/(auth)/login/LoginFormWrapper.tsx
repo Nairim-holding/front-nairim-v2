@@ -69,10 +69,11 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
       // Successful login - reset failed attempts
       resetAttempts();
 
-      // Gravar slug da empresa no cookie para o layout.tsx SSR carregar o branding correto
-      const slug = companySlug ?? data.data.user.company_id;
-      if (slug) {
-        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+      // Grava slug apenas quando o login é feito via /[slug]/login
+      // (o slug da URL é conhecido). Para login genérico /login o cookie
+      // não é necessário — o company_id do JWT identifica a empresa.
+      if (companySlug) {
+        document.cookie = `company_slug=${companySlug}; path=/; SameSite=Lax`;
       }
 
       login(data.data.token, data.data.user);

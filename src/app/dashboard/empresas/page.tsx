@@ -1,5 +1,3 @@
-'use client';
-
 import { Suspense } from 'react';
 import type { ColumnDef } from '@/types/types';
 import Section from '@/components/layout/PageSection';
@@ -18,7 +16,7 @@ export default function EmpresasPage() {
     <Section title="Empresas">
       <Suspense fallback={<SkeletonTable />}>
         <DynamicTableManager
-          resource="company/list"
+          resource="companies"
           title="Empresas"
           columns={COLUMNS}
           basePath="/dashboard/empresas"

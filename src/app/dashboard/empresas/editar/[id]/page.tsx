@@ -130,7 +130,7 @@ export default function EditarEmpresaPage({ params }: Props) {
   ], []);
 
   async function handleSubmit(data: any) {
-    const res = await fetch(`${API_URL}/company/${id}`, {
+    const res = await fetch(`${API_URL}/companies/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -166,7 +166,7 @@ export default function EditarEmpresaPage({ params }: Props) {
 
   return (
     <DynamicFormManager
-      resource="company"
+      resource="companies"
       title="Empresa"
       basePath="/dashboard/empresas"
       mode="edit"
