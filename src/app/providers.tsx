@@ -16,6 +16,7 @@ import { PopupProvider } from '@/contexts/PopupContext';
 import { MessageProvider } from '@/contexts/MessageContext';
 import { FilterProvider } from '@/contexts/filter-context';
 import { BrandingProvider } from '@/contexts/BrandingContext';
+import { FetchInterceptor } from '@/components/auth/FetchInterceptor';
 import type { CompanyBranding } from '@/types/branding';
 
 export function AppProviders({
@@ -27,6 +28,7 @@ export function AppProviders({
 }) {
   return (
     <BrandingProvider initialBranding={initialBranding}>
+      <FetchInterceptor />
       <ThemeProvider>
         <AuthProvider>
           <PopupProvider>
