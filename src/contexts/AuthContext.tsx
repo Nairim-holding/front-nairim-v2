@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: string;
   company_id: string;
+  company_slug?: string;
   created_at: string;
 }
 
