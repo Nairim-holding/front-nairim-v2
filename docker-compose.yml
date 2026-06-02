@@ -1,9 +1,97 @@
 services:
+  # ==========================================
+  # FRONTEND - PRODUÇÃO
+  # ==========================================
   front-nairim:
     container_name: front-nairim-app
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "80:3000"
+      args:
+        - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./.env:/app/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.front-nairim.rule=Host(`nairim.com.br`) || Host(`nairim.adm.br`)"
+      - "traefik.http.routers.front-nairim.entrypoints=websecure"
+      - "traefik.http.routers.front-nairim.tls.certresolver=myresolver"
+      - "traefik.http.services.front-nairim.loadbalancer.server.port=3000"
+      - "traefik.http.services.front-nairim.loadbalancer.server.scheme=http"
     restart: always
+    networks:
+      - default
+      - traefik-public
+
+  # ==========================================
+  # FRONTEND - TESTE
+  # ==========================================
+  front-nairim-test:
+    container_name: front-nairim-app-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-test-2
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    env_file:
+      - .env.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.front-nairim-test.rule=Host(`teste.nairim.com.br`) || Host(`teste.nairim.adm.br`)"
+      - "traefik.http.routers.front-nairim-test.entrypoints=websecure"
+      - "traefik.http.routers.front-nairim-test.tls.certresolver=myresolver"
+      - "traefik.http.services.front-nairim-test.loadbalancer.server.port=3000"
+      - "traefik.http.services.front-nairim-test.loadbalancer.server.scheme=http"
+    restart: always
+    volumes:
+      - ./.env.test:/app/.env
+    networks:
+      - default
+      - traefik-public
+
+  # ==========================================
+  # FRONTEND - HOMOLOGAÇÃO (TERCEIRO AMBIENTE)
+  # ==========================================
+  front-nairim-homolog:
+    container_name: front-nairim-app-homolog
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Injeta a URL da API específica para este terceiro ambiente
+        - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-homolog
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    env_file:
+      - .env.homolog
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      # Subdomínios exclusivos para este ambiente
+      - "traefik.http.routers.front-nairim-homolog.rule=Host(`homolog.nairim.com.br`) || Host(`homolog.nairim.adm.br`)"
+      - "traefik.http.routers.front-nairim-homolog.entrypoints=websecure"
+      - "traefik.http.routers.front-nairim-homolog.tls.certresolver=myresolver"
+      - "traefik.http.services.front-nairim-homolog.loadbalancer.server.port=3000"
+      - "traefik.http.services.front-nairim-homolog.loadbalancer.server.scheme=http"
+    restart: always
+    volumes:
+      - ./.env.homolog:/app/.env
+    networks:
+      - default
+      - traefik-public
+
+networks:
+  default: 
+  traefik-public:
+    external: true
