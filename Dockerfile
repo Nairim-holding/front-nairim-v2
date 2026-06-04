@@ -25,7 +25,7 @@ ENV NEXT_PUBLIC_COMPANY_NAME=${NEXT_PUBLIC_COMPANY_NAME}
 
 # Permite usar um arquivo .env específico para o build (ex: .env.test)
 ARG ENV_FILE
-RUN if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ]; then cp "$ENV_FILE" .env; fi
+RUN if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ] && [ "$ENV_FILE" != ".env" ] && [ "$ENV_FILE" != "./.env" ]; then cp "$ENV_FILE" .env; fi
 
 RUN npm run build
 
