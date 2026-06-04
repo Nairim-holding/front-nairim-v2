@@ -93,12 +93,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (token) {
           const userData = sessionStorage.getItem('userData');
-          
+
           if (!userData) {
-            // Cenário: O cookie existe (browser aberto) mas a aba é nova (sessionStorage vazio)
-            // Para forçar o login ao fechar a aba, deslogamos se os dados do usuário sumirem
-            console.log('[AuthContext] Token encontrado mas dados da sessão sumiram. Forçando logout...');
-            logout();
+            // Cookie existe mas sessionStorage vazio (nova aba, F5, browser reaberto).
+            // Decodifica o payload do JWT para restaurar os dados do usuário sem forçar logout.
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const restoredUser = {
+                id: payload.id,
+                name: payload.name,
+                email: payload.email,
+                role: payload.role,
+                company_id: payload.company_id,
+                company_slug: payload.company_slug ?? '',
+              };
+              sessionStorage.setItem('userData', JSON.stringify(restoredUser));
+              setAuthState({ user: restoredUser, token, isAuthenticated: true, isLoading: false });
+              console.log('[AuthContext] Sessão restaurada do token JWT.');
+            } catch {
+              logout();
+            }
             return;
           }
 
@@ -110,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isAuthenticated: !!token,
             isLoading: false,
           });
-          console.log('[AuthContext] Usuário já estava autenticado');
+          console.log('[AuthContext] Usuário já estava autenticado.');
         } else {
           sessionStorage.removeItem('userData');
 
