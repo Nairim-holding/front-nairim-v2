@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend
+        - ENV_FILE=.env
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000
@@ -39,6 +40,7 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-test-2
+        - ENV_FILE=.env.test
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000
@@ -70,6 +72,7 @@ services:
       args:
         # Injeta a URL da API específica para este terceiro ambiente
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-homolog
+        - ENV_FILE=.env.homolog
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000

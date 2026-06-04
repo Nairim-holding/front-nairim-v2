@@ -13,12 +13,15 @@ export function middleware(request: NextRequest) {
 
   const token = request.cookies.get('authToken')?.value;
 
+  const companySlug = request.cookies.get('company_slug')?.value;
+
   // /[slug]/login  →  rota pública (login de empresa específica)
   const slugLoginMatch = pathname.match(/^\/([^\/]+)\/login$/);
   if (slugLoginMatch) {
     const segment = slugLoginMatch[1];
     if (!RESERVED_SEGMENTS.has(segment)) {
-      if (token) return NextResponse.redirect(new URL(DEFAULT_PRIVATE_ROUTE, request.url));
+      // Já autenticado → vai para o dashboard daquela empresa (mantém slug)
+      if (token) return NextResponse.redirect(new URL(`/${segment}/dashboard`, request.url));
       return NextResponse.next();
     }
   }
@@ -33,12 +36,22 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // /dashboard(/*) sem slug → redireciona para /{slug}/dashboard(/*) mantendo o slug visível.
+  // O rewrite no next.config mapeia de volta para /dashboard internamente (sem duplicar paginas).
+  if (token && companySlug && (pathname === '/dashboard' || pathname.startsWith('/dashboard/'))) {
+    const target = request.nextUrl.clone();
+    target.pathname = `/${companySlug}${pathname}`;
+    return NextResponse.redirect(target);
+  }
+
   const isPublicRoute =
     PUBLIC_ROUTES.includes(pathname) ||
     PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (token && isPublicRoute) {
-    return NextResponse.redirect(new URL(DEFAULT_PRIVATE_ROUTE, request.url));
+    // Login feito → dashboard com slug se disponível
+    const dest = companySlug ? `/${companySlug}/dashboard` : DEFAULT_PRIVATE_ROUTE;
+    return NextResponse.redirect(new URL(dest, request.url));
   }
 
   if (!token && !isPublicRoute) {

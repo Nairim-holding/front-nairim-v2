@@ -10,7 +10,7 @@ interface User {
   role: string;
   company_id: string;
   company_slug?: string;
-  created_at: string;
+  created_at?: string;
 }
 
 interface AuthState {

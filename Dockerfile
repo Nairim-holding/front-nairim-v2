@@ -12,6 +12,21 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Declara argumentos de build para variáveis públicas
+ARG NEXT_PUBLIC_URL_API
+ARG NEXT_PUBLIC_COMPANY_SLUG
+ARG NEXT_PUBLIC_COMPANY_NAME
+
+# Expõe como variáveis de ambiente para o Next.js no momento do build
+ENV NEXT_PUBLIC_URL_API=${NEXT_PUBLIC_URL_API}
+ENV NEXT_PUBLIC_COMPANY_SLUG=${NEXT_PUBLIC_COMPANY_SLUG}
+ENV NEXT_PUBLIC_COMPANY_NAME=${NEXT_PUBLIC_COMPANY_NAME}
+
+# Permite usar um arquivo .env específico para o build (ex: .env.test)
+ARG ENV_FILE
+RUN if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ]; then cp "$ENV_FILE" .env; fi
+
 RUN npm run build
 
 # 3. Imagem de Produção (Roda o app)

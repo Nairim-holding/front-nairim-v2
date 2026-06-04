@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { fetchPropertySelectOptions, fetchProperty } from '../../_lib/propertyTransform';
 import PropertyViewForm from './PropertyViewForm';
 
@@ -7,9 +8,10 @@ interface Props {
 
 export default async function VisualizarImovelPage({ params }: Props) {
   const { id } = await params;
+  const token = (await cookies()).get('authToken')?.value;
   const [options, propertyData] = await Promise.all([
-    fetchPropertySelectOptions(),
-    fetchProperty(id),
+    fetchPropertySelectOptions(token),
+    fetchProperty(id, token),
   ]);
 
   return <PropertyViewForm id={id} propertyData={propertyData} {...options} />;
