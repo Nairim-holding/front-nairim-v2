@@ -72,7 +72,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
       // Slug da empresa: vem da URL /[slug]/login ou da resposta do login
       const slug = companySlug ?? data.data.user.company_slug ?? '';
       if (slug) {
-        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=7200`;
       }
 
       login(data.data.token, data.data.user);

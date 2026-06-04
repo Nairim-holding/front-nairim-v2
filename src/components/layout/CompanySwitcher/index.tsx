@@ -94,7 +94,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
 
     // Atualiza o slug imediatamente para refletir na UI antes do refresh
     setCurrentSlug(slug);
-    document.cookie = `company_slug=${slug}; path=/; SameSite=Lax`;
+    document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=7200`;
 
     try {
       const API = process.env.NEXT_PUBLIC_URL_API ?? '';

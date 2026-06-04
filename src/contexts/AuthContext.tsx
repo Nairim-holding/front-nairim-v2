@@ -65,8 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [navigation]);
 
   const login = (token: string, user: User) => {
-    // Ao remover max-age, o cookie torna-se de sessão (deletado ao fechar o navegador)
-    document.cookie = `authToken=${token}; path=/; SameSite=Lax`;
+    // max-age=7200 → persiste 2h (alinhado com a expiração do JWT)
+    document.cookie = `authToken=${token}; path=/; SameSite=Lax; max-age=7200`;
 
     sessionStorage.setItem('userData', JSON.stringify(user));
 
