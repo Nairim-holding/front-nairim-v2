@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions }: Props) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
 
@@ -93,9 +93,10 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
       url: `${API_URL}/properties/create-unified`,
       method: 'POST',
       body: fd,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     return result;
-  }, [user?.id, uploadAndTrack]);
+  }, [user?.id, token, uploadAndTrack]);
 
   const onSubmitSuccess = useCallback(() => {
     showMessage('Imóvel criado com sucesso!', 'success');

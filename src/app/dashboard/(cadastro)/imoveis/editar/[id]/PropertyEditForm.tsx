@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions }: Props) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
 
@@ -112,9 +112,10 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
       url: `${API_URL}/properties/update-unified/${id}`,
       method: 'PUT',
       body: fd,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     return result;
-  }, [id, user?.id, propertyData?.documents, uploadAndTrack]);
+  }, [id, user?.id, token, propertyData?.documents, uploadAndTrack]);
 
   const onSubmitSuccess = useCallback(() => {
     showMessage('Imóvel atualizado com sucesso!', 'success');
