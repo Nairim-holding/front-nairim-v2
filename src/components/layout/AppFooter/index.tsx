@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
-  const { isDark } = useTheme();
   const { companyName, logoUrl } = useBranding();
   const currentYear = new Date().getFullYear();
 
@@ -21,19 +19,19 @@ export default function Footer() {
   // Enquanto não estiver montado, renderizamos uma versão "neutra" ou retornamos nulo
   // para evitar que o HTML do servidor divirja do primeiro render do cliente.
   if (!mounted) {
-    return <footer className="bg-gray-50 border-t min-h-[400px]" />; 
+    return <footer className="bg-page border-t min-h-[400px]" />;
   }
 
   return (
-    <footer id="rodape" className={`relative border-t overflow-hidden transition-colors duration-300 ${isDark ? "bg-[#0A0A0A] border-purple-900/20" : "bg-gray-50 border-purple-200/40"}`}>
+    <footer id="rodape" className="relative border-t border-brand/20 bg-page overflow-hidden transition-colors duration-300">
 
-      {/* Glow roxo no canto */}
-      <div className="absolute bottom-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-purple-900/[0.03] blur-[80px] md:blur-[150px] rounded-full pointer-events-none" />
+      {/* Glow no canto, na cor de marca do tenant */}
+      <div className="absolute bottom-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-brand/[0.03] blur-[80px] md:blur-[150px] rounded-full pointer-events-none" />
 
       {/* Efeito de grid sutil */}
       <div className="absolute inset-0 opacity-[0.02]" style={{
-        backgroundImage: `linear-gradient(to right, #8B5CF6 1px, transparent 1px),
-                          linear-gradient(to bottom, #8B5CF6 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(to right, var(--color-brand-primary) 1px, transparent 1px),
+                          linear-gradient(to bottom, var(--color-brand-primary) 1px, transparent 1px)`,
         backgroundSize: '80px 80px'
       }} />
 
@@ -64,8 +62,8 @@ export default function Footer() {
               </div>
             </motion.div>
             
-            <div className={`flex flex-col gap-4 md:gap-6 border-l pl-6 md:pl-8 sm:items-center md:items-start ${isDark ? "border-purple-800/30" : "border-purple-400"}`}>
-              <p className={`text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center md:text-left ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            <div className="flex flex-col gap-4 md:gap-6 border-l border-brand/30 pl-6 md:pl-8 sm:items-center md:items-start">
+              <p className="text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center md:text-left text-content-muted">
                 Grupo familiar com tradição, investindo no futuro através de 
                 inovação, desenvolvimento e crescimento sustentável.
               </p>
@@ -74,7 +72,7 @@ export default function Footer() {
 
           {/* Navegação */}
           <div className="md:col-span-3 space-y-6 md:space-y-10">
-            <h4 className="text-[12px] md:text-[15px] text-purple-400 tracking-[0.3em] opacity-80 text-center md:text-left">
+            <h4 className="text-[12px] md:text-[15px] text-brand-accent tracking-[0.3em] opacity-80 text-center md:text-left">
               NAVEGAÇÃO
             </h4>
             <nav className="flex flex-col gap-4 md:gap-6">
@@ -86,9 +84,9 @@ export default function Footer() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center gap-4 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium justify-center md:justify-start ${isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}
+                  className="group flex items-center gap-4 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium justify-center md:justify-start text-content-muted hover:text-content"
                 >
-                  <span className="w-0 group-hover:w-6 md:group-hover:w-8 h-[1px] bg-purple-500 transition-all duration-500" />
+                  <span className="w-0 group-hover:w-6 md:group-hover:w-8 h-[1px] bg-brand transition-all duration-500" />
                   {item.name}
                 </Link>
               ))}
@@ -98,9 +96,9 @@ export default function Footer() {
 
         {/* Linha divisória decorativa */}
         <div className="relative py-8 md:py-12">
-          <div className={`absolute left-0 right-0 h-px bg-gradient-to-r from-transparent to-transparent ${isDark ? "via-purple-900/50" : "via-purple-400/50"}`} />
+          <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand/50 to-transparent" />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className={`w-8 h-8 border rotate-45 ${isDark ? "border-purple-800/30" : "border-purple-400"}`} />
+            <div className="w-8 h-8 border border-brand/40 rotate-45" />
           </div>
         </div>
 
@@ -138,22 +136,22 @@ export default function Footer() {
         </div> */}
 
         {/* Base Legal */}
-        <div className={`pt-8 md:pt-12 border-t flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 relative ${isDark ? "border-white/[0.03]" : "border-gray-200/60"}`}>
-          <div className={`hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-gradient-to-b to-transparent ${isDark ? "from-purple-800/40" : "from-purple-300/50"}`} />
+        <div className="pt-8 md:pt-12 border-t border-ui-border-soft flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 relative">
+          <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-gradient-to-b from-brand/40 to-transparent" />
 
           <div className="order-2 md:order-1">
-            <p className={`text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-medium text-center md:text-left ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+            <p className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-medium text-center md:text-left text-content-muted">
               © {currentYear} {companyName}
             </p>
           </div>
         </div>
 
         {/* Selo de qualidade */}
-        <div className="mt-10 pt-6 border-t border-white/[0.02] flex justify-center">
-          <div className="flex items-center gap-3 text-[10px] md:text-[11px] tracking-[0.1em] text-gray-600">
-            <div className="w-2 h-2 rounded-full bg-green-500/60 animate-pulse" />
+        <div className="mt-10 pt-6 border-t border-ui-border-soft flex justify-center">
+          <div className="flex items-center gap-3 text-[10px] md:text-[11px] tracking-[0.1em] text-content-muted">
+            <div className="w-2 h-2 rounded-full bg-state-success/60 animate-pulse" />
             <span>EMPRESA FAMILIAR COM TRADIÇÃO E INOVAÇÃO</span>
-            <div className="w-2 h-2 rounded-full bg-green-500/60 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-state-success/60 animate-pulse" />
           </div>
         </div>
       </div>

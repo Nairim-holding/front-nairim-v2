@@ -1,8 +1,11 @@
+'use client';
+
 import { Suspense } from 'react';
 import type { ColumnDef } from '@/types/types';
 import Section from '@/components/layout/PageSection';
 import DynamicTableManager from '@/components/table/DataTable';
 import SkeletonTable from '@/components/table/TableSkeleton';
+import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 
 const COLUMNS: ColumnDef[] = [
   { field: 'name',       label: 'Nome',       sortParam: 'name',       type: 'text' },
@@ -13,16 +16,18 @@ const COLUMNS: ColumnDef[] = [
 
 export default function EmpresasPage() {
   return (
-    <Section title="Empresas">
-      <Suspense fallback={<SkeletonTable />}>
-        <DynamicTableManager
-          resource="companies"
-          title="Empresas"
-          columns={COLUMNS}
-          basePath="/dashboard/empresas"
-          autoFocusSearch
-        />
-      </Suspense>
-    </Section>
+    <SuperAdminOnly>
+      <Section title="Empresas">
+        <Suspense fallback={<SkeletonTable />}>
+          <DynamicTableManager
+            resource="companies"
+            title="Empresas"
+            columns={COLUMNS}
+            basePath="/dashboard/empresas"
+            autoFocusSearch
+          />
+        </Suspense>
+      </Section>
+    </SuperAdminOnly>
   );
 }

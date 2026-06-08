@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts';
+import { useTheme } from '@/contexts/ThemeContext';
 import Image from 'next/image';
 
 interface Company {
@@ -11,7 +12,13 @@ interface Company {
   name: string;
   slug: string;
   is_active: boolean;
-  branding?: { company_name: string | null; logo_url: string | null; primary_color: string | null } | null;
+  branding?: {
+    company_name: string | null;
+    trade_name: string | null;
+    logo_url: string | null;
+    logo_dark_url: string | null;
+    primary_color: string | null;
+  } | null;
 }
 
 interface CompanySwitcherProps {
@@ -25,10 +32,11 @@ function CompanyAvatar({
   company: Company | undefined;
   size?: 'sm' | 'md';
 }) {
+  const { isDark } = useTheme();
   const px = size === 'sm' ? 'w-5 h-5' : 'w-7 h-7';
   const text = size === 'sm' ? 'text-[10px]' : 'text-xs';
-  const label = company?.branding?.company_name ?? company?.name ?? '?';
-  const logo = company?.branding?.logo_url;
+  const label = company?.branding?.trade_name ?? company?.branding?.company_name ?? company?.name ?? '?';
+  const logo = (isDark ? company?.branding?.logo_dark_url : null) ?? company?.branding?.logo_url;
   const color = company?.branding?.primary_color ?? '#8b5cf6';
 
   if (logo) {
@@ -129,7 +137,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   const currentCompany = companies.find(c =>
     currentSlug ? c.slug === currentSlug : c.id === user?.company_id
   );
-  const displayName = currentCompany?.branding?.company_name || currentCompany?.name || 'Empresa';
+  const displayName = currentCompany?.branding?.trade_name || currentCompany?.branding?.company_name || currentCompany?.name || 'Empresa';
 
   if (!isOpen) {
     return (
@@ -164,7 +172,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
               <li className="px-3 py-2 text-xs text-content-muted">Nenhuma empresa encontrada</li>
             )}
             {companies.map(c => {
-              const label = c.branding?.company_name ?? c.name;
+              const label = c.branding?.trade_name ?? c.branding?.company_name ?? c.name;
               const isActive = c.slug === currentSlug;
               const isLoading = switching === c.slug;
               return (

@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import TextArea from '@/components/ui/TextArea';
 import InputFile from '@/components/ui/InputFile';
+import Toggle from '@/components/ui/Toggle';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { FormFieldDef, FormStep } from '@/types/types';
 import NavigationButtons from '../FormNavigation';
@@ -813,7 +814,12 @@ export default function DynamicFormManager({
       placeholder: field.placeholder,
       disabled: shouldDisable,
       value: value,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => handleChange(field.field, e.target.value),
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleChange(field.field, e.target.value);
+      },
+      onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+        (field as any).onBlur?.(e.target.value);
+      },
       tabIndex: field.tabIndex,
       autoFocus: field.autoFocus,
       svg: field.icon,
@@ -971,24 +977,16 @@ export default function DynamicFormManager({
       case 'checkbox':
       case 'boolean':
         return (
-          <div 
-            key={`${field.field}-${index}`} 
+          <div
+            key={`${field.field}-${index}`}
             className="flex items-center min-w-0"
           >
-            <input
-              type="checkbox"
-              id={field.field}
+            <Toggle
               checked={!!value}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                handleChange(field.field, e.target.checked)
-              }
-              disabled={shouldDisable}
-              readOnly={isReadOnly}
-              className="h-4 w-4 text-brand border-ui-border rounded focus:ring-brand"
+              onChange={(checked) => handleChange(field.field, checked)}
+              label={field.label}
+              disabled={shouldDisable || isReadOnly}
             />
-            <label htmlFor={field.field} className="ml-2 block text-sm text-content-secondary">
-              {field.label}
-            </label>
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
           </div>
         );

@@ -1,38 +1,84 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
+import { useAuth } from '@/contexts/AuthContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
+import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
+import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
-import { Building2, Globe, Palette, Image, Type } from 'lucide-react';
+import { Building2, Globe, Type, Sun, Moon } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
-function ColorInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex items-center gap-3">
-      <input
-        type="color"
-        value={value || '#8b5cf6'}
-        onChange={e => onChange(e.target.value)}
-        className="w-10 h-10 rounded-lg cursor-pointer border border-ui-border"
-      />
-      <input
-        type="text"
-        value={value || ''}
-        onChange={e => onChange(e.target.value)}
-        placeholder="#8b5cf6"
-        maxLength={7}
-        className="flex-1 h-[46px] text-content bg-surface border border-ui-border rounded-lg px-3 text-sm focus:outline-none focus:border-brand"
-      />
-    </div>
-  );
+const COLOR_FIELDS: { key: string; label: string; defaultValue: string }[] = [
+  { key: 'primary_color', label: 'Cor primária', defaultValue: '#8b5cf6' },
+  { key: 'secondary_color', label: 'Cor secundária', defaultValue: '#6d28d9' },
+  { key: 'accent_color', label: 'Cor de destaque', defaultValue: '#ec4899' },
+  { key: 'success_color', label: 'Cor de sucesso', defaultValue: '#10b981' },
+  { key: 'warning_color', label: 'Cor de aviso', defaultValue: '#f59e0b' },
+  { key: 'error_color', label: 'Cor de erro', defaultValue: '#ef4444' },
+  { key: 'info_color', label: 'Cor de informação', defaultValue: '#3b82f6' },
+  { key: 'bg_color', label: 'Cor de fundo', defaultValue: '#ffffff' },
+  { key: 'card_color', label: 'Cor de cards', defaultValue: '#ffffff' },
+  { key: 'border_color', label: 'Cor de bordas', defaultValue: '#cccccc' },
+  { key: 'text_color', label: 'Cor de texto', defaultValue: '#171717' },
+];
+
+const BRANDING_FIELD_KEYS = [
+  'company_name', 'trade_name', 'app_title', 'app_description',
+  ...COLOR_FIELDS.map(c => c.key),
+  ...COLOR_FIELDS.map(c => `${c.key}_dark`),
+];
+
+function colorStep(title: string, icon: React.ReactNode, suffix: ''  | '_dark', helperText?: string): FormStep {
+  return {
+    title,
+    icon,
+    fields: [
+      ...(helperText ? [{
+        field: `__helper_${suffix || 'light'}`,
+        label: '',
+        type: 'custom' as const,
+        className: 'col-span-full',
+        render: () => <p className="text-xs text-content-muted -mt-2">{helperText}</p>,
+      }] : []),
+      ...COLOR_FIELDS.map(({ key, label, defaultValue }) => ({
+        field: `${key}${suffix}`,
+        label,
+        type: 'custom' as const,
+        className: 'col-span-1',
+        render: (value: any, _fv: any, onChange?: (v: any) => void) => (
+          <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} defaultValue={defaultValue} />
+        ),
+      })),
+    ],
+  };
 }
 
 export default function CadastrarEmpresaPage() {
   const { showMessage } = useMessageContext();
+  const { token } = useAuth();
   const router = useRouter();
+  const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
+
+  const checkSlugUnique = useCallback(async (slug: string) => {
+    if (!slug || slug.length < 2) return;
+    try {
+      const res = await fetch(`${API_URL}/companies/check-slug/${slug.toLowerCase().trim()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (!json.data?.available) {
+        setSlugCheckError('Esta slug já está em uso');
+      } else {
+        setSlugCheckError(null);
+      }
+    } catch (error) {
+      setSlugCheckError(null);
+    }
+  }, [token]);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -52,7 +98,7 @@ export default function CadastrarEmpresaPage() {
         },
         {
           field: 'slug',
-          label: 'Slug (URL de acesso: /slug/login)',
+          label: 'Slug (URL: /slug/login)',
           type: 'text',
           required: true,
           placeholder: 'Ex: nairim-holding',
@@ -62,74 +108,73 @@ export default function CadastrarEmpresaPage() {
             maxLength: 60,
             pattern: /^[a-z0-9-]+$/,
             patternMessage: 'Apenas letras minúsculas, números e hífens',
+            custom: () => slugCheckError,
           },
-          className: 'col-span-full',
-        },
-        {
-          field: 'company_name',
-          label: 'Nome exibido na interface',
-          type: 'text',
-          placeholder: 'Ex: Nairim Holding (aparece no header e footer)',
-          icon: <Type size={20} />,
+          onBlur: (value: string) => checkSlugUnique(value),
           className: 'col-span-full',
         },
       ],
     },
     {
-      title: 'Identidade Visual',
-      icon: <Palette size={20} />,
+      title: 'Geral',
+      icon: <Type size={20} />,
       fields: [
         {
-          field: 'primary_color',
-          label: 'Cor primária',
-          type: 'custom',
-          render: (value, _fv, onChange) => (
-            <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} />
-          ),
-          className: 'col-span-1',
-        },
-        {
-          field: 'secondary_color',
-          label: 'Cor secundária',
-          type: 'custom',
-          render: (value, _fv, onChange) => (
-            <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} />
-          ),
-          className: 'col-span-1',
-        },
-        {
-          field: 'logo_url',
-          label: 'URL do logo',
+          field: 'company_name',
+          label: 'Nome exibido na interface',
           type: 'text',
-          placeholder: 'https://exemplo.com/logo.svg',
-          icon: <Image size={20} />,
+          placeholder: 'Ex: Nairim Holding',
           className: 'col-span-full',
         },
         {
-          field: 'favicon_url',
-          label: 'URL do favicon',
+          field: 'trade_name',
+          label: 'Nome fantasia',
           type: 'text',
-          placeholder: 'https://exemplo.com/favicon.svg',
-          icon: <Image size={20} />,
+          placeholder: 'Ex: Nairim Imóveis',
+          className: 'col-span-full',
+        },
+        {
+          field: 'app_title',
+          label: 'Título da aplicação (aba do navegador)',
+          type: 'text',
+          placeholder: 'Ex: Nairim — Gestão Imobiliária',
+          className: 'col-span-full',
+        },
+        {
+          field: 'app_description',
+          label: 'Descrição (meta description / compartilhamento)',
+          type: 'textarea',
+          placeholder: 'Breve descrição da plataforma',
           className: 'col-span-full',
         },
       ],
     },
+    colorStep('Tema Light', <Sun size={20} />, ''),
+    colorStep(
+      'Tema Dark',
+      <Moon size={20} />,
+      '_dark',
+      'Cores não preenchidas aqui herdam automaticamente o valor definido no Tema Light.',
+    ),
   ], []);
 
+  // Uploads de logo/favicon/etc. exigem um company_id existente — por isso ficam
+  // disponíveis na tela de edição, aberta automaticamente após a criação. Todos
+  // os demais campos de identidade visual (textos e paletas) já são coletados aqui,
+  // pois o backend aceita esses dados diretamente na criação da empresa.
   async function handleSubmit(data: any) {
+    const payload: Record<string, any> = {
+      name: data.name,
+      slug: data.slug?.toLowerCase().trim(),
+    };
+    for (const key of BRANDING_FIELD_KEYS) {
+      if (data[key]) payload[key] = data[key];
+    }
+
     const res = await fetch(`${API_URL}/companies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: data.name,
-        slug: data.slug?.toLowerCase().trim(),
-        company_name: data.company_name || undefined,
-        primary_color: data.primary_color || undefined,
-        secondary_color: data.secondary_color || undefined,
-        logo_url: data.logo_url || undefined,
-        favicon_url: data.favicon_url || undefined,
-      }),
+      body: JSON.stringify(payload),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message ?? `Erro ${res.status}`);
@@ -137,18 +182,21 @@ export default function CadastrarEmpresaPage() {
   }
 
   return (
-    <DynamicFormManager
-      resource="companies"
-      title="Empresa"
-      basePath="/dashboard/empresas"
-      mode="create"
-      steps={steps}
-      onSubmit={handleSubmit}
-      onSubmitSuccess={() => {
-        showMessage('Empresa criada com sucesso!', 'success');
-        router.push('/dashboard/empresas');
-      }}
-      transformData={(d) => d}
-    />
+    <SuperAdminOnly>
+      <DynamicFormManager
+        resource="companies"
+        title="Empresa"
+        basePath="/dashboard/empresas"
+        mode="create"
+        steps={steps}
+        onSubmit={handleSubmit}
+        onSubmitSuccess={(result) => {
+          showMessage('Empresa criada! Agora você pode enviar os arquivos de marca (logo, favicon, etc.).', 'success');
+          const id = result?.id ?? result?.data?.id;
+          router.push(id ? `/dashboard/empresas/editar/${id}` : '/dashboard/empresas');
+        }}
+        transformData={(d) => d}
+      />
+    </SuperAdminOnly>
   );
 }

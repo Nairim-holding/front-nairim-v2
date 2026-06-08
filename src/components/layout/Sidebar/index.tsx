@@ -42,8 +42,9 @@ export default function Aside() {
   const submenuRef = useRef<HTMLDivElement>(null);
   const menuItemsRef = useRef<HTMLUListElement>(null);
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -93,9 +94,9 @@ export default function Aside() {
 
   const menuItems = [
     { href: "/dashboard", icon: Home, label: "Resumo" },
-    { 
+    {
       href: "#",
-      icon: PlusCircle, 
+      icon: PlusCircle,
       label: "Cadastrar",
       submenu: [
         { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador" },
@@ -107,22 +108,22 @@ export default function Aside() {
       ]
     },
     { href: "/dashboard/locacoes", icon: Key, label: "Locações" },
-    { 
+    {
       href: "#",
-      icon: PiggyBank, 
+      icon: PiggyBank,
       label: "Financeiro",
       submenu: [
         { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras" },
-        { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias" },   
-        { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },                                                                 
-        { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },                                  
-        { href: "/dashboard/fornecedores", icon: Users, label: "Contatos" },        
+        { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias" },
+        { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },
+        { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },
+        { href: "/dashboard/fornecedores", icon: Users, label: "Contatos" },
         { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },
         { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle" },
 
       ]
     },
-    { href: "/dashboard/empresas", icon: Briefcase, label: "Empresas" },
+    ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresas" }] : []),
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
   ];
 
@@ -162,11 +163,11 @@ export default function Aside() {
         <div className="flex flex-col h-full pt-5 px-5 pb-3 items-start">
           <div className="mb-4">
             <Link href="/dashboard">
-              <Logo className="text-brand-logo" />
+              <Logo className="text-brand-logo" variant="sidebar" />
             </Link>
           </div>
 
-          <CompanySwitcher isOpen={openAside} />
+          {isSuperAdmin && <CompanySwitcher isOpen={openAside} />}
 
           <div className="flex-1 w-full overflow-hidden">
             <nav className="h-full" ref={submenuRef}>

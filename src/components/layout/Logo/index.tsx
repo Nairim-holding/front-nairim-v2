@@ -1,20 +1,42 @@
 'use client';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
-export default function Logo({ className = '' }: { className?: string }) {
-  const { logoUrl, companyName } = useBranding();
-  if (logoUrl) {
+export type LogoVariant = 'default' | 'sidebar' | 'dark';
+
+interface LogoProps {
+  className?: string;
+  variant?: LogoVariant;
+}
+
+export default function Logo({ className = '', variant = 'default' }: LogoProps) {
+  const { logoUrl, logoSidebarUrl, logoDarkUrl, companyName } = useBranding();
+  const { isDark } = useTheme();
+  const [imageFailed, setImageFailed] = useState(false);
+
+  // Cascata de fallback: variante específica → dark (se tema escuro ativo) → logo padrão
+  const resolvedUrl =
+    variant === 'sidebar' ? (logoSidebarUrl ?? logoUrl) :
+    variant === 'dark' ? (logoDarkUrl ?? logoUrl) :
+    isDark ? (logoDarkUrl ?? logoUrl) : logoUrl;
+
+  // Se houver URL customizada, válida e a imagem não falhou, renderiza a imagem
+  if (resolvedUrl && !imageFailed) {
     return (
       <Image
-        src={logoUrl}
+        src={resolvedUrl}
         alt={companyName}
         width={131}
         height={46}
         className={className}
+        unoptimized
+        onError={() => setImageFailed(true)}
       />
     );
   }
+  // Sem branding ou imagem falhou? Sempre mostra o SVG padrão
   return <LogoSvg className={className} />;
 }
 

@@ -12,6 +12,7 @@ export interface InputProps {
   type?: string;
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   svg?: React.ReactNode;
   disabled?: boolean;
@@ -157,6 +158,7 @@ export default function Input({
   type,
   value,
   onChange,
+  onBlur,
   placeholder,
   svg,
   disabled,
@@ -284,6 +286,7 @@ export default function Input({
             }
           }}
           onPaste={handlePaste}
+          onBlur={onBlur}
           ref={inputRef}
           name={id}
           type={effectiveType}

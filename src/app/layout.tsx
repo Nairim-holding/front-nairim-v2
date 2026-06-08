@@ -18,16 +18,28 @@ const COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG;
 const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const branding = await fetchBranding(COMPANY_SLUG);
+  const cookieStore = await cookies();
+  const slugFromCookie = cookieStore.get('company_slug')?.value;
+  const branding = await fetchBranding(slugFromCookie ?? COMPANY_SLUG);
   const name = branding?.company_name ?? FALLBACK_NAME;
+  const title = branding?.app_title ?? branding?.trade_name ?? name;
+  const description = branding?.app_description ?? `Plataforma de gestão imobiliária — ${name}`;
+  const icon = branding?.favicon_url ?? '/favicon.svg';
+  const ogImage = branding?.og_image_url;
+
   return {
-    title: name,
-    description: `Plataforma de gestão imobiliária — ${name}`,
+    title,
+    description,
     icons: {
-      icon: branding?.favicon_url ?? '/favicon.svg',
-      apple: branding?.favicon_url ?? '/favicon.svg',
+      icon,
+      apple: icon,
     },
     manifest: '/manifest.json',
+    openGraph: {
+      title,
+      description,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
   };
 }
 
