@@ -150,12 +150,7 @@ export default function CadastrarEmpresaPage() {
       ],
     },
     colorStep('Tema Light', <Sun size={20} />, ''),
-    colorStep(
-      'Tema Dark',
-      <Moon size={20} />,
-      '_dark',
-      'Cores não preenchidas aqui herdam automaticamente o valor definido no Tema Light.',
-    ),
+    colorStep('Tema Dark', <Moon size={20} />, '_dark'),
   ], []);
 
   // Uploads de logo/favicon/etc. exigem um company_id existente — por isso ficam
