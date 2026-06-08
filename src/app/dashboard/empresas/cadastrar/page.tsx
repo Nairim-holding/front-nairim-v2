@@ -8,7 +8,9 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
-import { Building2, Globe, Type, Sun, Moon } from 'lucide-react';
+import { Building2, Globe, Type, Sun, Moon, Eye, ImageIcon } from 'lucide-react';
+import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
+import type { CompanyBranding } from '@/types/branding';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -149,6 +151,40 @@ export default function CadastrarEmpresaPage() {
         },
       ],
     },
+    {
+      title: 'Branding',
+      icon: <ImageIcon size={20} />,
+      fields: [
+        {
+          field: 'company_name',
+          label: 'Nome exibido na interface',
+          type: 'text',
+          placeholder: 'Ex: Nairim Holding',
+          className: 'col-span-full',
+        },
+        {
+          field: 'trade_name',
+          label: 'Nome fantasia',
+          type: 'text',
+          placeholder: 'Ex: Nairim Imóveis',
+          className: 'col-span-full',
+        },
+        {
+          field: 'app_title',
+          label: 'Título da aplicação (aba do navegador)',
+          type: 'text',
+          placeholder: 'Ex: Nairim — Gestão Imobiliária',
+          className: 'col-span-full',
+        },
+        {
+          field: 'app_description',
+          label: 'Descrição (meta description / compartilhamento)',
+          type: 'textarea',
+          placeholder: 'Breve descrição da plataforma',
+          className: 'col-span-full',
+        },
+      ],
+    },
     colorStep('Tema Light', <Sun size={20} />, ''),
     colorStep(
       'Tema Dark',
@@ -156,6 +192,50 @@ export default function CadastrarEmpresaPage() {
       '_dark',
       'Cores não preenchidas aqui herdam automaticamente o valor definido no Tema Light.',
     ),
+    {
+      title: 'Preview',
+      icon: <Eye size={20} />,
+      fields: [
+        {
+          field: '__preview',
+          label: '',
+          type: 'custom',
+          className: 'col-span-full',
+          render: (_value, formValues) => (
+            <BrandingPreview
+              branding={{
+                company_name: formValues?.company_name || '',
+                trade_name: formValues?.trade_name || '',
+                app_title: formValues?.app_title || '',
+                app_description: formValues?.app_description || '',
+                primary_color: formValues?.primary_color || '',
+                secondary_color: formValues?.secondary_color || '',
+                accent_color: formValues?.accent_color || '',
+                success_color: formValues?.success_color || '',
+                warning_color: formValues?.warning_color || '',
+                error_color: formValues?.error_color || '',
+                info_color: formValues?.info_color || '',
+                bg_color: formValues?.bg_color || '',
+                card_color: formValues?.card_color || '',
+                border_color: formValues?.border_color || '',
+                text_color: formValues?.text_color || '',
+                primary_color_dark: formValues?.primary_color_dark || '',
+                secondary_color_dark: formValues?.secondary_color_dark || '',
+                accent_color_dark: formValues?.accent_color_dark || '',
+                success_color_dark: formValues?.success_color_dark || '',
+                warning_color_dark: formValues?.warning_color_dark || '',
+                error_color_dark: formValues?.error_color_dark || '',
+                info_color_dark: formValues?.info_color_dark || '',
+                bg_color_dark: formValues?.bg_color_dark || '',
+                card_color_dark: formValues?.card_color_dark || '',
+                border_color_dark: formValues?.border_color_dark || '',
+                text_color_dark: formValues?.text_color_dark || '',
+              } as unknown as CompanyBranding}
+            />
+          ),
+        },
+      ],
+    },
   ], []);
 
   // Uploads de logo/favicon/etc. exigem um company_id existente — por isso ficam
