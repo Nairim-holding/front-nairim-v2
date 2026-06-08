@@ -4,11 +4,14 @@
 import DynamicForm from '@/components/form/DynamicForm';
 import { FormFieldDef } from '@/types/types';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Check, Circle } from 'lucide-react';
 
 export default function EditarAdministradorPage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const fields: FormFieldDef[] = [
     {
@@ -128,6 +131,17 @@ export default function EditarAdministradorPage() {
       },
       className: 'mt-6',
     },
+    ...(isSuperAdmin ? [{
+      field: 'role',
+      label: 'Papel (Role)',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'Administrador', value: 'ADMIN' },
+        { label: 'Super Administrador', value: 'SUPER_ADMIN' },
+      ],
+      className: 'mt-6',
+    }] : []),
   ];
 
   const transformData = (apiResponse: any) => {
@@ -138,7 +152,8 @@ export default function EditarAdministradorPage() {
       birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : '',
       gender: userData.gender || 'MALE',
       password: '', // Inicia sempre vazio
-      password_confirm: '', 
+      password_confirm: '',
+      ...(isSuperAdmin && { role: userData.role || 'ADMIN' }),
     };
   };
 
