@@ -41,6 +41,8 @@ interface DynamicFormManagerProps {
   draftKey?: string;
   /** Desabilita o banner de "alterações não salvas" no modo edit. Default: true. */
   enableDirtyDetection?: boolean;
+  /** Step inicial a abrir (útil para abrir em Branding após criar nova empresa) */
+  defaultStep?: number;
 }
 
 const DRAFT_STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'app'}:draft:`;
@@ -112,6 +114,7 @@ export default function DynamicFormManager({
   canNavigateToStep: externalCanNavigateToStep,
   draftKey,
   enableDirtyDetection = true,
+  defaultStep = 0,
 }: DynamicFormManagerProps) {
   const router = useRouter();
   const { showMessage } = useMessageContext();
@@ -120,7 +123,7 @@ export default function DynamicFormManager({
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(defaultStep);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [internalCompletedSteps, setInternalCompletedSteps] = useState<number[]>([]);

@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useMemo, useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
 import { useAuth } from '@/contexts/AuthContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
@@ -75,10 +76,19 @@ interface Props {
 
 export default function EditarEmpresaPage({ params }: Props) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
   const { showMessage } = useMessageContext();
   const { token } = useAuth();
   const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
   const [initialSlug, setInitialSlug] = useState<string | null>(null);
+  const [defaultStep, setDefaultStep] = useState(0);
+
+  useEffect(() => {
+    // Se é uma empresa nova, abre direto no step de Branding (índice 2)
+    if (searchParams?.get('new') === 'true') {
+      setDefaultStep(2);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function fetchCompany() {
@@ -290,6 +300,7 @@ export default function EditarEmpresaPage({ params }: Props) {
         onSubmit={handleSubmit}
         onSubmitSuccess={() => showMessage('Empresa atualizada com sucesso!', 'success')}
         transformData={transformData}
+        defaultStep={defaultStep}
       />
     </SuperAdminOnly>
   );

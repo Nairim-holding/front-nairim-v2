@@ -191,9 +191,9 @@ export default function CadastrarEmpresaPage() {
         steps={steps}
         onSubmit={handleSubmit}
         onSubmitSuccess={(result) => {
-          showMessage('Empresa criada! Agora você pode enviar os arquivos de marca (logo, favicon, etc.).', 'success');
+          showMessage('Empresa criada! Configurando marca...', 'success');
           const id = result?.id ?? result?.data?.id;
-          router.push(id ? `/dashboard/empresas/editar/${id}` : '/dashboard/empresas');
+          router.push(id ? `/dashboard/empresas/editar/${id}?new=true` : '/dashboard/empresas');
         }}
         transformData={(d) => d}
       />
