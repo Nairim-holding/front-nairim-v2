@@ -5,26 +5,34 @@ import ImoveisList from "@/components/domain/properties/PropertyList";
 import CarrosselDinamico from "@/components/layout/HeroImage"; 
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API;
+const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG;
 
 async function getImoveisDestaque() {
   try {
-    const res = await fetch(`${API_URL}/properties?limit=100`, { cache: 'no-store' });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(`${API_URL}/public/${SLUG}/properties?limit=20`, {
+      next: { revalidate: 300 }, // cache por 5 min (ISR)
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
     if (!res.ok) return [];
 
     const result = await res.json();
-    const rawList: any[] = result.data || [];
+    const rawList: any[] = result.data?.items ?? result.data ?? [];
 
     const toSlide = (imovel: any, disponivel: boolean) => {
       const destaque =
-        imovel.documents?.find((doc: any) => doc.is_featured && doc.type === "IMAGE") ||
-        imovel.documents?.find((doc: any) => doc.type === "IMAGE");
+        imovel.documents?.find((doc: any) => doc.is_featured && doc.file_path) ||
+        imovel.documents?.find((doc: any) => doc.file_path);
       if (!destaque) return null;
 
-      const rawType = (imovel.property_type ?? imovel.type?.name ?? "").toLowerCase();
+      const desc = (imovel.type?.description ?? "").toLowerCase();
       let tipo = "imoveis";
-      if (rawType === "house" || rawType === "casa" || rawType === "residential_house") tipo = "casas";
-      else if (rawType === "apartment" || rawType === "apartamento" || rawType === "residential_apartment") tipo = "apartamentos";
-      else if (rawType.includes("commercial")) tipo = "comerciais";
+      if (desc === "casa" || desc.includes("chác") || desc.includes("sítio")) tipo = "casas";
+      else if (desc.includes("apart") || desc.includes("cobertura") || desc.includes("flat") || desc.includes("kitnet")) tipo = "apartamentos";
+      else if (desc.includes("comercial") || desc.includes("loja") || desc.includes("barracão") || desc.includes("galpão")) tipo = "comerciais";
 
       return {
         id: imovel.id,

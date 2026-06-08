@@ -34,8 +34,8 @@ function resolveAddress(property: any) {
 function resolveImages(property: any): string[] {
   const docs: any[] = property.documents ?? [];
   const fromDocs = docs
-    .filter((d) => d.type === "IMAGE" && (d.file_path || d.url))
-    .map((d) => d.file_path ?? d.url);
+    .filter((d) => d.file_path)
+    .map((d) => d.file_path);
   if (fromDocs.length > 0) return fromDocs;
   if (property.images?.length) return property.images;
   if (property.photos?.length) return property.photos;
@@ -47,12 +47,7 @@ function resolveValues(property: any) {
 }
 
 function resolveType(property: any): string {
-  const raw = (property.property_type ?? property.type?.name ?? "").toLowerCase();
-  if (raw === "house" || raw === "casa" || raw === "residential_house") return "Casa";
-  if (raw === "apartment" || raw === "apartamento" || raw === "residential_apartment") return "Apartamento";
-  if (raw.includes("commercial")) return "Sala Comercial";
-  if (property.type?.description) return property.type.description;
-  return "Imóvel";
+  return property.type?.description ?? "Imóvel";
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -292,9 +287,12 @@ export default function PropertyDetailPage() {
     addr.city && addr.state ? `${addr.city} - ${addr.state}` : addr.city || addr.state,
   ].filter(Boolean);
 
+  const t = tipo.toLowerCase();
   const typeIcon =
-    tipo === "Casa" ? "mingcute:home-2-line" :
-    tipo === "Apartamento" ? "mingcute:building-2-line" :
+    (t.includes("casa") || t.includes("chác") || t.includes("sítio") || t.includes("sitio")) ? "mingcute:home-2-line" :
+    (t.includes("apart") || t.includes("cobert") || t.includes("flat") || t.includes("kitnet")) ? "mingcute:building-2-line" :
+    (t.includes("terreno") || t.includes("lote")) ? "mingcute:landscape-line" :
+    (t.includes("barracão") || t.includes("barracao") || t.includes("galpão") || t.includes("galpao")) ? "mingcute:warehouse-line" :
     "mingcute:store-line";
 
   const features = [

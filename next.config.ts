@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       // /:slug/dashboard e /:slug/dashboard/* mapeiam internamente para /dashboard/*
-      // preservando o slug na URL para identificar visualmente a empresa
       { source: '/:slug/dashboard', destination: '/dashboard' },
       { source: '/:slug/dashboard/:path*', destination: '/dashboard/:path*' },
     ];

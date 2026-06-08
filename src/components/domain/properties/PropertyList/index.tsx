@@ -21,6 +21,7 @@ interface ImovelProps {
   imagem?: string;
   cidade: string;
   tipo: string;
+  tipoId: string;
   precoCondominio?: number;
   areaTerreno?: number;
   suites?: number;
@@ -151,13 +152,16 @@ function PropertyCard({
   transactionType: string;
   onVerDetalhes: (id: string, tipo: string) => void;
 }) {
-  const isCasa = imovel.tipo === "Casa";
-  const isApto = imovel.tipo === "Apartamento";
+  const tl = imovel.tipo.toLowerCase();
+  const isCasa = tl === "casa" || tl.includes("chác") || tl.includes("sítio");
+  const isApto = tl.includes("apart") || tl.includes("cobertura") || tl.includes("flat") || tl.includes("kitnet");
 
   const typeIcon = isCasa
     ? "mingcute:home-2-line"
     : isApto
     ? "mingcute:building-2-line"
+    : tl.includes("terreno") || tl.includes("lote") ? "mingcute:landscape-line"
+    : tl.includes("barracão") || tl.includes("galpão") ? "mingcute:warehouse-line"
     : "mingcute:store-line";
 
   // Badges que aparecem sobre a imagem (limitado a 2 para não poluir)
@@ -341,7 +345,7 @@ export default function ImoveisList() {
         };
 
         if (filters.propertyType && filters.propertyType !== "all")
-          apiFilters.property_type = filters.propertyType;
+          apiFilters.type_id = filters.propertyType;
         if (filters.quartos)   apiFilters.bedrooms       = filters.quartos;
         if (filters.banheiros) apiFilters.bathrooms      = filters.banheiros;
         if (filters.vagas)     apiFilters.garage_spaces  = filters.vagas;
@@ -369,11 +373,17 @@ export default function ImoveisList() {
           propertiesArray = response;
           totalCount = response.length;
         } else if (response && typeof response === "object") {
+          // Suporte ao envelope { success, data: { items: [] }, meta: { total, page, totalPages } }
+          const dataField = response.data as any;
           propertiesArray =
-            response.data ?? response.properties ?? response.items ?? response.results ?? [];
-          totalCount = response.total ?? response.totalCount ?? response.count ?? propertiesArray.length;
-          totalPagesCount = response.totalPages ?? response.pages ?? Math.ceil(totalCount / itemsPerPage);
-          currentPageCount = response.page ?? response.currentPage ?? page;
+            dataField?.items ?? dataField?.properties ?? dataField?.results ??
+            (Array.isArray(dataField) ? dataField : null) ??
+            response.items ?? response.properties ?? response.results ?? [];
+
+          const meta = response.meta ?? {};
+          totalCount    = meta.total      ?? response.total      ?? response.totalCount ?? response.count ?? propertiesArray.length;
+          totalPagesCount = meta.totalPages ?? response.totalPages ?? response.pages     ?? Math.ceil(totalCount / itemsPerPage);
+          currentPageCount = meta.page      ?? response.page      ?? response.currentPage ?? page;
         }
 
         if (propertiesArray.length === 0) {
@@ -415,19 +425,12 @@ export default function ImoveisList() {
             propertyStatus = property.status;
           }
 
-          const rawType = (property.property_type ?? "").toLowerCase();
-          let tipo = "Imóvel";
-          if (rawType === "house" || rawType === "casa" || rawType === "residential_house")
-            tipo = "Casa";
-          else if (rawType === "apartment" || rawType === "apartamento" || rawType === "residential_apartment")
-            tipo = "Apartamento";
-          else if (rawType.includes("commercial"))
-            tipo = "Sala Comercial";
-          else if (property.type?.description) tipo = property.type.description;
-          else if (property.type?.name)        tipo = property.type.name;
+          const tipoId: string  = property.type?.id ?? "";
+          const tipo:   string  = property.type?.description ?? "Imóvel";
+          const tipoLc          = tipo.toLowerCase();
 
           let imagem = "/CasaLocacao.jpeg";
-          const imgDoc = property.documents?.find((d: any) => d.type === "IMAGE" && d.file_path);
+          const imgDoc = property.documents?.find((d: any) => d.is_featured && d.file_path) ?? property.documents?.find((d: any) => d.file_path);
           if (imgDoc) imagem = imgDoc.file_path;
 
           const base: ImovelProps = {
@@ -444,21 +447,22 @@ export default function ImoveisList() {
             imagem,
             cidade: city || "Não informada",
             tipo,
+            tipoId,
             precoCondominio: condoFee,
           };
 
-          if (rawType === "house") {
+          if (tipoLc === "casa" || tipoLc.includes("chácara") || tipoLc.includes("sítio")) {
             return {
               ...base,
-              areaTerreno:  property.area_total ?? 0,
-              suites:       property.suites     ?? 0,
-              anoConstrucao:property.year_built ?? 0,
-              jardim:       property.garden     ?? false,
-              piscina:      property.pool       ?? false,
-              churrasqueira:property.barbecue   ?? false,
+              areaTerreno:   property.area_total ?? 0,
+              suites:        property.suites     ?? 0,
+              anoConstrucao: property.year_built ?? 0,
+              jardim:        property.garden     ?? false,
+              piscina:       property.pool       ?? false,
+              churrasqueira: property.barbecue   ?? false,
             };
           }
-          if (rawType === "apartment") {
+          if (tipoLc.includes("apart") || tipoLc.includes("cobertura") || tipoLc.includes("flat") || tipoLc.includes("kitnet")) {
             return { ...base, andar: property.floor_number ?? 0 };
           }
           return base;
@@ -468,7 +472,7 @@ export default function ImoveisList() {
           if (p.status !== "AVAILABLE") return false;
           if (filters.transactionType === "comprar" && p.preco === 0) return false;
           if (!filters.propertyType || filters.propertyType === "all") return true;
-          return matchesPropertyType(p.tipo, filters.propertyType);
+          return p.tipoId === filters.propertyType;
         });
         const newTotal  = available.length;
         const newPages  = Math.max(1, Math.ceil(newTotal / itemsPerPage));
@@ -482,17 +486,17 @@ export default function ImoveisList() {
 
         // ── Fallback de exemplo ────────────────────────────────────────
         const exampleData: ImovelProps[] = [
-          { id:"c1", nome:"Casa Moderna Alphaville", local:"Alphaville, Barueri", preco:8500, quartos:4, banheiros:5, vagas:3, area:350, areaTerreno:500, suites:2, mobilia:true, status:"AVAILABLE", cidade:"Barueri", tipo:"Casa", jardim:true, piscina:true, churrasqueira:true, anoConstrucao:2020 },
-          { id:"c2", nome:"Sobrado Familiar Morumbi", local:"Morumbi, São Paulo", preco:12000, quartos:5, banheiros:6, vagas:4, area:450, areaTerreno:600, suites:3, mobilia:false, status:"AVAILABLE", cidade:"São Paulo", tipo:"Casa", jardim:true, churrasqueira:true, anoConstrucao:2018 },
-          { id:"a1", nome:"Apartamento Moderno", local:"Alphaville, Barueri", preco:4500, quartos:3, banheiros:2, vagas:2, area:120, mobilia:true, andar:12, precoCondominio:800, status:"AVAILABLE", cidade:"Barueri", tipo:"Apartamento" },
-          { id:"a2", nome:"Apartamento Alto Padrão", local:"Morumbi, São Paulo", preco:6800, quartos:4, banheiros:3, vagas:3, area:180, mobilia:false, andar:8, precoCondominio:1200, status:"AVAILABLE", cidade:"São Paulo", tipo:"Apartamento" },
-          { id:"com1", nome:"Sala Comercial Centro", local:"Centro, Barueri", preco:3200, quartos:0, banheiros:1, vagas:2, area:85, mobilia:false, status:"AVAILABLE", cidade:"Barueri", tipo:"Sala Comercial", precoCondominio:450 },
+          { id:"c1", nome:"Casa Moderna Alphaville", local:"Alphaville, Barueri", preco:8500, quartos:4, banheiros:5, vagas:3, area:350, areaTerreno:500, suites:2, mobilia:true, status:"AVAILABLE", cidade:"Barueri", tipo:"Casa", tipoId:"", jardim:true, piscina:true, churrasqueira:true, anoConstrucao:2020 },
+          { id:"c2", nome:"Sobrado Familiar Morumbi", local:"Morumbi, São Paulo", preco:12000, quartos:5, banheiros:6, vagas:4, area:450, areaTerreno:600, suites:3, mobilia:false, status:"AVAILABLE", cidade:"São Paulo", tipo:"Casa", tipoId:"", jardim:true, churrasqueira:true, anoConstrucao:2018 },
+          { id:"a1", nome:"Apartamento Moderno", local:"Alphaville, Barueri", preco:4500, quartos:3, banheiros:2, vagas:2, area:120, mobilia:true, andar:12, precoCondominio:800, status:"AVAILABLE", cidade:"Barueri", tipo:"Apartamento", tipoId:"" },
+          { id:"a2", nome:"Apartamento Alto Padrão", local:"Morumbi, São Paulo", preco:6800, quartos:4, banheiros:3, vagas:3, area:180, mobilia:false, andar:8, precoCondominio:1200, status:"AVAILABLE", cidade:"São Paulo", tipo:"Apartamento", tipoId:"" },
+          { id:"com1", nome:"Sala Comercial Centro", local:"Centro, Barueri", preco:3200, quartos:0, banheiros:1, vagas:2, area:85, mobilia:false, status:"AVAILABLE", cidade:"Barueri", tipo:"Sala Comercial", tipoId:"", precoCondominio:450 },
         ];
 
         let fd = [...exampleData];
         if (filters.transactionType === "comprar") fd = fd.filter((i) => i.preco > 0);
         if (filters.propertyType && filters.propertyType !== "all")
-          fd = fd.filter((i) => matchesPropertyType(i.tipo, filters.propertyType));
+          fd = fd.filter((i) => i.tipoId === filters.propertyType || i.tipo.toLowerCase().includes(filters.propertyType.toLowerCase()));
         if (filters.quartos)   fd = fd.filter((i) => i.quartos   >= Number(filters.quartos));
         if (filters.banheiros) fd = fd.filter((i) => i.banheiros >= Number(filters.banheiros));
         if (filters.vagas)     fd = fd.filter((i) => i.vagas     >= Number(filters.vagas));

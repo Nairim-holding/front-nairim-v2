@@ -7,8 +7,12 @@
 
 import type { Property, PropertyFilters, PaginatedResponse } from '@/types';
 
-const API_URL =
-  process.env.NEXT_PUBLIC_URL_API;
+// Em client components o browser usa o proxy local (/api/backend) para evitar CORS.
+// Em server components o Node.js chama o backend direto (sem CORS).
+const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
+
+const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
+const PUB = `/public/${SLUG}`;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -42,7 +46,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 export const propertyService = {
   getAll(filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> {
     const qs = buildQueryString(filters as Record<string, unknown>);
-    return apiFetch<PaginatedResponse<Property>>(`/properties?${qs}`);
+    return apiFetch<PaginatedResponse<Property>>(`${PUB}/properties?${qs}`);
   },
 
   /** @alias getAll — mantido para compatibilidade com imports existentes */
@@ -51,14 +55,14 @@ export const propertyService = {
   },
 
   getById(id: string): Promise<Property> {
-    return apiFetch<Property>(`/properties/${id}`);
+    return apiFetch<Property>(`${PUB}/properties/${id}`);
   },
 
   getDocuments(propertyId: string): Promise<Property['documents']> {
-    return apiFetch(`/properties/${propertyId}/documents`);
+    return apiFetch(`${PUB}/properties/${propertyId}/documents`);
   },
 
   getTypes(): Promise<Array<{ id: string; name: string; description: string }>> {
-    return apiFetch('/property-types');
+    return apiFetch(`${PUB}/property-types`);
   },
 };

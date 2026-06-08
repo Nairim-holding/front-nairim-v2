@@ -94,13 +94,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Linha divisória decorativa */}
-        <div className="relative py-8 md:py-12">
-          <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand/50 to-transparent" />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-8 h-8 border border-brand/40 rotate-45" />
-          </div>
-        </div>
+      
 
         {/* Redes Sociais */}
         {/* <div className="flex flex-col items-center gap-8 md:gap-12 mb-12 md:mb-16">

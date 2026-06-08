@@ -6,25 +6,14 @@ import { useFilters } from "@/contexts/filter-context";
 
 // ─── Type icon helper ─────────────────────────────────────────────────────────
 
-function getLabelFromRaw(raw: string, property: any): string {
-  if (raw === "house" || raw === "casa" || raw.includes("residential_house")) return "Casa";
-  if (raw.includes("apart") || raw === "flat") return "Apartamento";
-  if (raw.includes("commercial") || raw.includes("comercial") || raw.includes("sala")) return "Sala Comercial";
-  if (raw.includes("terreno") || raw.includes("land") || raw.includes("lote")) return "Terreno";
-  if (raw.includes("rural") || raw.includes("sitio") || raw.includes("chacara")) return "Rural";
-  // Fallback: usa o nome do tipo no objeto ou capitaliza o raw
-  return property.type?.description || property.type?.name ||
-    raw.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
-}
-
-function typeIcon(name: string = ""): string {
-  const n = name.toLowerCase();
-  if (n.includes("house") || n.includes("casa") || n.includes("residential")) return "mingcute:home-2-line";
-  if (n.includes("apart") || n.includes("flat")) return "mingcute:building-2-line";
-  if (n.includes("comercial") || n.includes("commercial") || n.includes("sala") || n.includes("office")) return "mingcute:store-line";
-  if (n.includes("terreno") || n.includes("land") || n.includes("lote")) return "mingcute:landscape-line";
-  if (n.includes("rural") || n.includes("farm") || n.includes("sitio") || n.includes("chacara")) return "mingcute:leaf-line";
-  if (n.includes("galpao") || n.includes("warehouse") || n.includes("industrial")) return "mingcute:warehouse-line";
+function typeIcon(description: string = ""): string {
+  const n = description.toLowerCase();
+  if (n.includes("casa") || n.includes("chácara") || n.includes("chacara") || n.includes("sítio") || n.includes("sitio")) return "mingcute:home-2-line";
+  if (n.includes("apart") || n.includes("cobertura") || n.includes("flat") || n.includes("kitnet") || n.includes("duplex") || n.includes("triplex")) return "mingcute:building-2-line";
+  if (n.includes("terreno") || n.includes("lote") || n.includes("land")) return "mingcute:landscape-line";
+  if (n.includes("barracão") || n.includes("barracao") || n.includes("galpão") || n.includes("galpao") || n.includes("industrial")) return "mingcute:warehouse-line";
+  if (n.includes("rural") || n.includes("fazenda") || n.includes("sítio")) return "mingcute:leaf-line";
+  if (n.includes("comercial") || n.includes("loja") || n.includes("sala") || n.includes("escritório") || n.includes("escritorio")) return "mingcute:store-line";
   return "mingcute:building-3-line";
 }
 
@@ -56,43 +45,44 @@ export default function PropertyFilter() {
 
   // Busca todos os tipos cadastrados no endpoint /property-types
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_URL_API;
-    if (!API_URL) return;
+    const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
+    const slug = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
 
-    fetch(`${API_URL}/property-types`)
+    fetch(`${API_URL}/public/${slug}/property-types`)
       .then((r) => r.json())
       .then((res) => {
-        const list: any[] = Array.isArray(res) ? res : (res?.data ?? res?.items ?? []);
-        if (list.length === 0) throw new Error("empty");
-        const types: PropertyTypeOption[] = list.map((t) => {
-          const raw = (t.name ?? t.id ?? "").toLowerCase().trim();
-          return {
-            value: raw,
-            label: t.description || getLabelFromRaw(raw, t),
-            icon: typeIcon(raw),
-          };
-        });
+        // Envelope: { data: { items: [] } } ou array direto
+        const raw = res?.data?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
+        if (!raw.length) throw new Error("empty");
+        const types: PropertyTypeOption[] = raw.map((t: any) => ({
+          value: t.id,
+          label: t.description ?? t.id,
+          icon: typeIcon(t.description ?? ""),
+        }));
         setPropertyTypes(types);
       })
       .catch(() => {
         // Fallback: deriva dos imóveis disponíveis
-        fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=100&status=AVAILABLE`)
+        const base = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
+        const s = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
+        fetch(`${base}/public/${s}/properties?limit=100`)
           .then((r) => r.json())
           .then((res) => {
-            const list: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+            const items: any[] = res?.data?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
             const seen = new Set<string>();
             const types: PropertyTypeOption[] = [];
-            list.forEach((p) => {
-              const raw = (p.property_type ?? "").toLowerCase().trim();
-              if (!raw || seen.has(raw)) return;
-              seen.add(raw);
-              types.push({ value: raw, label: getLabelFromRaw(raw, p), icon: typeIcon(raw) });
+            items.forEach((p) => {
+              const id = p.type?.id;
+              const desc = p.type?.description;
+              if (!id || seen.has(id)) return;
+              seen.add(id);
+              types.push({ value: id, label: desc ?? id, icon: typeIcon(desc ?? "") });
             });
             if (types.length > 0) setPropertyTypes(types);
           })
           .catch(() => setPropertyTypes([
-            { value: "house",     label: "Casa",          icon: "mingcute:home-2-line"     },
-            { value: "apartment", label: "Apartamento",   icon: "mingcute:building-2-line" },
+            { value: "casa",        label: "Casa",        icon: "mingcute:home-2-line"     },
+            { value: "apartamento", label: "Apartamento", icon: "mingcute:building-2-line" },
           ]));
       });
   }, []);
