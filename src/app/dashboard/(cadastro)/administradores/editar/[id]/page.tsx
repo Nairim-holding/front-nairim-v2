@@ -159,13 +159,18 @@ export default function EditarAdministradorPage() {
 
   const transformPayload = (data: any) => {
     const payload = { ...data };
-    
+
     delete payload.password_confirm;
-    
+
     if (!payload.password || payload.password.trim() === '') {
       delete payload.password;
     }
-    
+
+    // Remover role se o usuário não for SUPER_ADMIN ou se role não foi alterado
+    if (!isSuperAdmin) {
+      delete payload.role;
+    }
+
     return payload;
   };
 
