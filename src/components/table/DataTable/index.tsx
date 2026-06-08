@@ -101,6 +101,7 @@ export default function DynamicTableManager({
   const fetchColumnPreferences = useCallback(async () => {
     try {
       const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=${resource}`);
+      console.log(columns, response);
       if (response.ok) {
         const result = await response.json();
         if (result.data) {
@@ -131,6 +132,8 @@ export default function DynamicTableManager({
         }
       } else if (response.status === 401) {
         console.warn('[DataTable] Usuário não autenticado ao carregar preferências');
+        setDisplayColumns(columns);
+      } else {
         setDisplayColumns(columns);
       }
     } catch (error) {
