@@ -62,7 +62,7 @@ async function getImoveisDestaque() {
       .filter((i): i is NonNullable<typeof i> => i !== null);
 
   } catch (error) {
-    console.error("Erro ao processar dados da API:", error);
+    console.error("Erro ao processar os dados da API:", error);
     return [];
   }
 }
