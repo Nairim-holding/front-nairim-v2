@@ -254,62 +254,74 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
   const balanceColor = (v: number | null) =>
     v === null ? 'text-content-muted' : v >= 0 ? 'text-green-600' : 'text-red-600';
 
+  // Offsets verticais do cabeçalho fixo (sticky). As linhas de saldo têm altura
+  // forçada (h-[34px]) e o espaçador h-[25px] para que os tops sejam determinísticos.
+  const hasBalances = !!(balanceMonths && balanceMonths.length > 0 && balances);
+  const BALANCE_ROW_H = 34;
+  const SPACER_H = 25;
+  const row1Top = 0;
+  const row2Top = BALANCE_ROW_H;
+  const spacerTop = BALANCE_ROW_H * 2;
+  const headerTop = hasBalances ? BALANCE_ROW_H * 2 + SPACER_H : 0;
+
   return (
     <div className="rounded-xl">
       <table ref={tableRef} className="w-full border-collapse text-sm">
         <thead>
-          {balanceMonths && balanceMonths.length > 0 && balances && (
+          {hasBalances && balanceMonths && balances && (
             <>
-              <tr>
-                <th className="bg-page sticky z-10" style={{ left: 0, minWidth: 240, width: 240 }} />
-                <th className="bg-page sticky z-[9]" style={{ left: 240, width: 160, minWidth: 160 }} />
-                <th className="bg-page sticky z-[8]" style={{ left: 400, width: 70, minWidth: 70 }} />
-                <th className="bg-page sticky z-[7]" style={{ left: 470, width: 90, minWidth: 90 }} />
-                <th className="bg-page sticky z-[6]" style={{ left: 560, width: 90, minWidth: 90 }} />
-                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[5] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, width: 90, minWidth: 90, borderTopLeftRadius: '0.75rem' }}>Saldo Acumulado</th>
+              <tr className="h-[34px]">
+                <th className="bg-page sticky z-30" style={{ left: 0, top: row1Top, minWidth: 240, width: 240 }} />
+                <th className="bg-page sticky z-[29]" style={{ left: 240, top: row1Top, width: 160, minWidth: 160 }} />
+                <th className="bg-page sticky z-[28]" style={{ left: 400, top: row1Top, width: 70, minWidth: 70 }} />
+                <th className="bg-page sticky z-[27]" style={{ left: 470, top: row1Top, width: 90, minWidth: 90 }} />
+                <th className="bg-page sticky z-[26]" style={{ left: 560, top: row1Top, width: 90, minWidth: 90 }} />
+                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[25] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, top: row1Top, width: 90, minWidth: 90, borderTopLeftRadius: '0.75rem' }}>Saldo Acumulado</th>
                 {months.map(({ month, year }) => {
                   const inBal = balanceMonths.some(b => b.month === month && b.year === year);
                   const v = inBal ? (balances.accumulated.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
                   return (
-                    <th key={`acc-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                    <th key={`acc-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page sticky z-20 ${balanceColor(v)}`} style={{ top: row1Top }}>
                       {balanceFmt(v)}
                     </th>
                   );
                 })}
               </tr>
-              <tr>
-                <th className="bg-page sticky z-10 px-3 py-1" style={{ left: 0, minWidth: 240, width: 240 }}>{filterSlot}</th>
-                <th className="bg-page sticky z-[9]" style={{ left: 240, width: 160, minWidth: 160 }} />
-                <th className="bg-page sticky z-[8]" style={{ left: 400, width: 70, minWidth: 70 }} />
-                <th className="bg-page sticky z-[7]" style={{ left: 470, width: 90, minWidth: 90 }} />
-                <th className="bg-page sticky z-[6]" style={{ left: 560, width: 90, minWidth: 90 }} />
-                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[5] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, width: 90, minWidth: 90, borderBottomLeftRadius: '0.75rem' }}>Saldo Mensal</th>
+              <tr className="h-[34px]">
+                <th className="bg-page sticky z-30 px-3 py-1" style={{ left: 0, top: row2Top, minWidth: 240, width: 240 }}>{filterSlot}</th>
+                <th className="bg-page sticky z-[29]" style={{ left: 240, top: row2Top, width: 160, minWidth: 160 }} />
+                <th className="bg-page sticky z-[28]" style={{ left: 400, top: row2Top, width: 70, minWidth: 70 }} />
+                <th className="bg-page sticky z-[27]" style={{ left: 470, top: row2Top, width: 90, minWidth: 90 }} />
+                <th className="bg-page sticky z-[26]" style={{ left: 560, top: row2Top, width: 90, minWidth: 90 }} />
+                <th className="px-4 py-2 text-xs font-semibold text-content-secondary bg-page whitespace-nowrap text-right sticky z-[25] border-r border-ui-border-soft bg-surface-subtle " style={{ left: 650, top: row2Top, width: 90, minWidth: 90, borderBottomLeftRadius: '0.75rem' }}>Saldo Mensal</th>
                 {months.map(({ month, year }) => {
                   const inBal = balanceMonths.some(b => b.month === month && b.year === year);
                   const v = inBal ? (balances.monthly.find(b => b.month === month && b.year === year)?.realized_amount ?? null) : null;
                   return (
-                    <th key={`monthly-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page ${balanceColor(v)}`}>
+                    <th key={`monthly-${month}-${year}`} className={`border px-3 py-2 text-xs text-right font-semibold border-l border-ui-border-soft whitespace-nowrap bg-page sticky z-20 ${balanceColor(v)}`} style={{ top: row2Top }}>
                       {balanceFmt(v)}
                     </th>
                   );
                 })}
               </tr>
-              <tr className="h-[25px]"><th></th></tr>
+              <tr className="h-[25px]">
+                <th colSpan={FIXED_COL_COUNT + months.length} className="bg-page sticky z-20" style={{ top: spacerTop }} />
+              </tr>
             </>
           )}
           <tr className="bg-surface-subtle border-b border-ui-border-soft">
-            <th className="px-3 py-2 text-xs font-semibold text-content-secondary text-left whitespace-nowrap sticky left-0 z-10 bg-surface-subtle min-w-[240px]">
+            <th className="px-3 py-2 text-xs font-semibold text-content-secondary text-left whitespace-nowrap sticky left-0 z-30 bg-surface-subtle min-w-[240px]" style={{ top: headerTop }}>
               Categorias e Subcategorias
             </th>
-            <th className={`${thClass} sticky z-[9] bg-surface-subtle`} style={{ width: 160, minWidth: 160, left: 240 }}>Planejamento</th>
-            <th className={`${thClass} text-center sticky z-[8] bg-surface-subtle`} style={{ width: 70, minWidth: 70, left: 400 }}>%</th>
-            <th className="sticky z-[7] bg-surface-subtle border-l border-ui-border-soft text-center" style={{ width: 270, minWidth: 270, left: 470 }} colSpan={3}>
+            <th className={`${thClass} sticky z-[29] bg-surface-subtle`} style={{ width: 160, minWidth: 160, left: 240, top: headerTop }}>Planejamento</th>
+            <th className={`${thClass} text-center sticky z-[28] bg-surface-subtle`} style={{ width: 70, minWidth: 70, left: 400, top: headerTop }}>%</th>
+            <th className="sticky z-[27] bg-surface-subtle border-l border-ui-border-soft text-center" style={{ width: 270, minWidth: 270, left: 470, top: headerTop }} colSpan={3}>
               <div className="flex items-center justify-center py-1">
                 {statsSlot}
               </div>
             </th>
             {months.map(({ month, year }) => (
-              <th key={`${month}-${year}`} className={`${thClass} border-l border-ui-border-soft relative z-0`}>
+              <th key={`${month}-${year}`} className={`${thClass} border-l border-ui-border-soft sticky z-20 bg-surface-subtle`} style={{ top: headerTop }}>
                 {formatMonthHeader(month, year)}
               </th>
             ))}

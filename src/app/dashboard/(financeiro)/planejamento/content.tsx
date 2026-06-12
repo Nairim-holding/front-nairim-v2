@@ -450,7 +450,7 @@ export default function PlanningPageContent() {
         )}
 
         {!isLoading && data && (
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[calc(100vh-150px)] md:max-h-[calc(100vh-90px)]">
             <div className="inline-block align-top min-w-full">
               <PlanningTable
                 ref={planningTableRef}
