@@ -256,13 +256,15 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
 
   // Offsets verticais do cabeçalho fixo (sticky). As linhas de saldo têm altura
   // forçada (h-[34px]) e o espaçador h-[25px] para que os tops sejam determinísticos.
+  // Cada linha sobrepõe a anterior em 1px para não haver frestas (sub-pixel) por
+  // onde o conteúdo colorido rolado apareceria por trás do cabeçalho.
   const hasBalances = !!(balanceMonths && balanceMonths.length > 0 && balances);
   const BALANCE_ROW_H = 34;
   const SPACER_H = 25;
   const row1Top = 0;
-  const row2Top = BALANCE_ROW_H;
-  const spacerTop = BALANCE_ROW_H * 2;
-  const headerTop = hasBalances ? BALANCE_ROW_H * 2 + SPACER_H : 0;
+  const row2Top = BALANCE_ROW_H - 1;
+  const spacerTop = BALANCE_ROW_H * 2 - 2;
+  const headerTop = hasBalances ? BALANCE_ROW_H * 2 + SPACER_H - 3 : 0;
 
   return (
     <div className="rounded-xl">
@@ -270,7 +272,7 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
         <thead>
           {hasBalances && balanceMonths && balances && (
             <>
-              <tr className="h-[34px]">
+              <tr className="h-[34px] bg-page">
                 <th className="bg-page sticky z-30" style={{ left: 0, top: row1Top, minWidth: 240, width: 240 }} />
                 <th className="bg-page sticky z-[29]" style={{ left: 240, top: row1Top, width: 160, minWidth: 160 }} />
                 <th className="bg-page sticky z-[28]" style={{ left: 400, top: row1Top, width: 70, minWidth: 70 }} />
@@ -287,7 +289,7 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
                   );
                 })}
               </tr>
-              <tr className="h-[34px]">
+              <tr className="h-[34px] bg-page">
                 <th className="bg-page sticky z-30 px-3 py-1" style={{ left: 0, top: row2Top, minWidth: 240, width: 240 }}>{filterSlot}</th>
                 <th className="bg-page sticky z-[29]" style={{ left: 240, top: row2Top, width: 160, minWidth: 160 }} />
                 <th className="bg-page sticky z-[28]" style={{ left: 400, top: row2Top, width: 70, minWidth: 70 }} />
@@ -304,7 +306,7 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
                   );
                 })}
               </tr>
-              <tr className="h-[25px]">
+              <tr className="h-[25px] bg-page">
                 <th colSpan={FIXED_COL_COUNT + months.length} className="bg-page sticky z-20" style={{ top: spacerTop }} />
               </tr>
             </>
