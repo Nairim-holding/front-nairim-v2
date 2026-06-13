@@ -45,6 +45,8 @@ export default function EditarLocacaoPage() {
   
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
+  const [agencies, setAgencies] = useState<any[]>([]);
+  const [institutions, setInstitutions] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
   const [isCanceled, setIsCanceled] = useState(false);
@@ -52,18 +54,24 @@ export default function EditarLocacaoPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [propertiesRes, tenantsRes] = await Promise.all([
+        const [propertiesRes, tenantsRes, agenciesRes, institutionsRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=50`),
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/agencies?limit=1000`),
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000`),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
 
         const propertiesData = await propertiesRes.json();
         const tenantsData = await tenantsRes.json();
+        const agenciesData = agenciesRes.ok ? await agenciesRes.json() : { data: [] };
+        const institutionsData = institutionsRes.ok ? await institutionsRes.json() : { data: [] };
 
         setProperties(propertiesData.data || propertiesData || []);
         setTenants(tenantsData.data || tenantsData || []);
+        setAgencies(agenciesData.data || agenciesData || []);
+        setInstitutions(institutionsData.data || institutionsData || []);
       } catch (error) {
         showMessage('Erro ao carregar dados', 'error');
       } finally {
@@ -87,6 +95,7 @@ export default function EditarLocacaoPage() {
         const updates: any = {
           type_id: property.type_id,
           owner_id: property.owner_id,
+          agency_id: property.agency_id || '',
           type_display: property.type?.description || 'Tipo não encontrado',
           owner_display: property.owner?.name || 'Proprietário não encontrado',
           rent_amount: propertyValues.rental_value ? formatMoney(parseMoney(propertyValues.rental_value)) : '',
@@ -140,6 +149,8 @@ export default function EditarLocacaoPage() {
         type_id: data.type_id,
         owner_id: data.owner_id,
         tenant_id: data.tenant_id,
+        agency_id: data.agency_id || null,
+        financial_institution_id: data.financial_institution_id || null,
         contract_number: data.contract_number,
         start_date: data.start_date,
         end_date: data.end_date,
@@ -156,8 +167,11 @@ export default function EditarLocacaoPage() {
         iptu_year: data.iptu_year ? parseInt(data.iptu_year) : new Date().getFullYear(),
 
         property_tax_cash: data.property_tax_cash ? parseMoney(data.property_tax_cash) : null,
+        property_tax_cash_due_date: data.property_tax_cash_due_date || null,
         property_tax_first_installment: data.property_tax_first_installment ? parseMoney(data.property_tax_first_installment) : null,
+        property_tax_first_installment_due_date: data.property_tax_first_installment_due_date || null,
         property_tax_second_installment: data.property_tax_second_installment ? parseMoney(data.property_tax_second_installment) : null,
+        property_tax_second_installment_due_date: data.property_tax_second_installment_due_date || null,
         iptu_installments_count: data.iptu_installments_count ? parseInt(data.iptu_installments_count) : null,
         iptu_installments: data.iptu_installments 
           ? data.iptu_installments
@@ -232,6 +246,8 @@ export default function EditarLocacaoPage() {
       type_display: apiData.property?.type?.description || apiData.type?.description || '',
       owner_display: apiData.property?.owner?.name || apiData.owner?.name || '',
       tenant_id: apiData.tenant_id || '',
+      agency_id: apiData.agency_id || '',
+      financial_institution_id: apiData.financial_institution_id || '',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
@@ -250,8 +266,11 @@ export default function EditarLocacaoPage() {
       cancellation_justification: apiData.cancellation_justification || '',
       
       property_tax_cash: apiData.property_tax_cash ? formatMoney(apiData.property_tax_cash) : '',
+      property_tax_cash_due_date: apiData.property_tax_cash_due_date ? apiData.property_tax_cash_due_date.split('T')[0] : '',
       property_tax_first_installment: apiData.property_tax_first_installment ? formatMoney(apiData.property_tax_first_installment) : '',
+      property_tax_first_installment_due_date: apiData.property_tax_first_installment_due_date ? apiData.property_tax_first_installment_due_date.split('T')[0] : '',
       property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
+      property_tax_second_installment_due_date: apiData.property_tax_second_installment_due_date ? apiData.property_tax_second_installment_due_date.split('T')[0] : '',
       iptu_installments_count: apiData.iptu_installments_count ? String(apiData.iptu_installments_count) : '',
       iptu_installments: Array.isArray(apiData.iptu_installments)
         ? apiData.iptu_installments.map((val: number, idx: number) => ({
@@ -281,6 +300,8 @@ export default function EditarLocacaoPage() {
           { field: 'type_display', label: 'Tipo do Imóvel', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel primeiro' },
           { field: 'owner_display', label: 'Proprietário', type: 'text', required: true, icon: <User size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel primeiro' },
           { field: 'tenant_id', label: 'Inquilino', type: 'select', required: true, options: loadingData ? [{ label: 'Carregando inquilinos...', value: '' }] : tenants.map((tenant) => ({ label: tenant.name, value: tenant.id })), icon: <User size={20} />, className: 'col-span-full' },
+          { field: 'agency_id', label: 'Imobiliária', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...agencies.map((a) => ({ label: a.trade_name, value: a.id }))], icon: <Building size={20} /> },
+          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} /> },
           { field: 'notes', label: 'Observações Gerais', type: 'textarea', rows: 3, icon: <FileText size={20} />, className: 'col-span-full' },
         ],
       },
@@ -355,6 +376,14 @@ export default function EditarLocacaoPage() {
             hidden: (fv) => fv?.payment_condition !== 'IN_FULL_15_DISCOUNT',
           },
           {
+            field: 'property_tax_cash_due_date',
+            label: 'Data de Vencimento (À vista)',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
+            hidden: (fv) => fv?.payment_condition !== 'IN_FULL_15_DISCOUNT',
+          },
+          {
             field: 'property_tax_first_installment',
             label: 'Valor de Cobrança: 1ª Parcela',
             type: 'text',
@@ -364,12 +393,28 @@ export default function EditarLocacaoPage() {
             hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
           },
           {
+            field: 'property_tax_first_installment_due_date',
+            label: 'Data de Vencimento: 1ª Parcela',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
+            hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
+          },
+          {
             field: 'property_tax_second_installment',
             label: 'Valor de Cobrança: 2ª Parcela (com desconto)',
             type: 'text',
             required: true,
             icon: <DollarSign size={20} />,
             mask: 'money',
+            hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
+          },
+          {
+            field: 'property_tax_second_installment_due_date',
+            label: 'Data de Vencimento: 2ª Parcela',
+            type: 'date',
+            required: true,
+            icon: <Calendar size={20} />,
             hidden: (fv) => fv?.payment_condition !== 'SECOND_INSTALLMENT_10_DISCOUNT',
           },
           {
@@ -547,10 +592,12 @@ export default function EditarLocacaoPage() {
     }
 
     return baseSteps;
-  }, [properties, tenants, loadingData, isCanceled]);
+  }, [properties, tenants, agencies, institutions, loadingData, isCanceled]);
 
-  const onSubmitSuccess = () => {
+  const onSubmitSuccess = (result?: any) => {
     showMessage('Locação atualizada com sucesso!', 'success');
+    const warnings: string[] = result?.warnings || [];
+    warnings.forEach((w) => showMessage(w, 'info'));
     router.push('/dashboard/locacoes');
   };
 
