@@ -683,14 +683,11 @@ export default function DynamicTableManager({
 
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked && items.length > 0) {
-      const selectableItems = resource === 'leases' 
-        ? items.filter((item: any) => item.status !== 'CANCELED' && item.status !== 'Cancelado')
-        : items;
-      setSelectedCheckboxes(selectableItems.map((item: any) => item.id));
+      setSelectedCheckboxes(items.map((item: any) => item.id));
     } else {
       setSelectedCheckboxes([]);
     }
-  }, [items, resource]);
+  }, [items]);
 
   const handleCheckboxChange = useCallback((id: string) => {
     setSelectedCheckboxes(prev => {
@@ -704,18 +701,17 @@ export default function DynamicTableManager({
 
   const handleDeleteClick = useCallback(() => {
     if (!selectedCheckboxes.length) {
-      showMessage(`Selecione os registros que deseja ${resource === 'leases' ? 'cancelar' : 'excluir'}.`, "error");
+      showMessage(`Selecione os registros que deseja ${resource === 'leases' ? 'cancelar ou excluir' : 'excluir'}.`, "error");
       return;
     }
 
     if (resource === 'leases') {
-      const hasCanceled = items.some((item: any) => 
-        selectedCheckboxes.includes(item.id) && 
-        (item.status === 'CANCELED' || item.status === 'Cancelado')
-      );
+      const selectedItems = items.filter((item: any) => selectedCheckboxes.includes(item.id));
+      const canceledCount = selectedItems.filter((item: any) => item.status === 'CANCELED' || item.status === 'Cancelado').length;
+      const hasMixed = canceledCount > 0 && canceledCount < selectedItems.length;
 
-      if (hasCanceled) {
-        showMessage("Não é possível cancelar uma locação que já está cancelada.", "error");
+      if (hasMixed) {
+        showMessage("Selecione apenas locações ativas ou apenas locações já canceladas.", "error");
         return;
       }
 
@@ -837,6 +833,43 @@ export default function DynamicTableManager({
     }
   }, [cancelLeaseData, selectedCheckboxes, showMessage, refreshData]);
 
+  // Exclusão DEFINITIVA (hard delete + cascata dos lançamentos financeiros).
+  // Diferente do "Confirmar" acima, que apenas cancela (soft).
+  const handleConfirmDeleteLeases = useCallback(() => {
+    showPopup(
+      selectedCheckboxes.length > 1 ? `Excluir ${selectedCheckboxes.length} locações` : 'Excluir locação',
+      'Esta ação remove a locação E todos os lançamentos financeiros vinculados a ela. Não pode ser desfeita. Deseja continuar?',
+      async () => {
+        let successCount = 0;
+        let errorCount = 0;
+        let lastError = '';
+        for (const id of selectedCheckboxes) {
+          try {
+            const response = await fetch(`${API_URL}/leases/${id}/permanent`, { method: 'DELETE' });
+            if (response.ok) {
+              successCount++;
+            } else {
+              errorCount++;
+              const data = await response.json().catch(() => null);
+              if (data?.message) lastError = data.message;
+            }
+          } catch {
+            errorCount++;
+          }
+        }
+        if (errorCount === 0) {
+          showMessage(selectedCheckboxes.length > 1 ? `${successCount} locações excluídas com sucesso!` : 'Locação excluída com sucesso!', 'success');
+        } else {
+          showMessage(lastError || `${successCount} excluídas. ${errorCount} erros.`, 'error');
+        }
+        refreshData();
+        setSelectedCheckboxes([]);
+        setIsCancelLeaseModalOpen(false);
+      },
+      () => {}
+    );
+  }, [selectedCheckboxes, showMessage, showPopup, refreshData, API_URL]);
+
   const handleApplyFilter = useCallback((filters: Record<string, any>) => {
     setAppliedFilters(filters);
     updateState({ filters, page: 1 });
@@ -864,11 +897,7 @@ export default function DynamicTableManager({
     const start = (meta.page - 1) * meta.limit + 1;
     const end = Math.min(meta.page * meta.limit, meta.total);
     
-    const selectableItems = resource === 'leases'
-      ? items.filter((item: any) => item.status !== 'CANCELED' && item.status !== 'Cancelado')
-      : items;
-      
-    const allSelected = selectedCheckboxes.length > 0 && selectedCheckboxes.length === selectableItems.length;
+    const allSelected = selectedCheckboxes.length > 0 && selectedCheckboxes.length === items.length;
     
     return { start, end, allSelected };
   }, [meta, selectedCheckboxes.length, items, resource]);
@@ -1056,21 +1085,17 @@ export default function DynamicTableManager({
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${isFirst ? 'justify-start' : 'justify-center'}`}>
                       {isFirst && enableDelete && (
                         <div className="mr-2 flex shrink-0 items-center justify-center w-4 h-4">
-                          {!(resource === 'leases' && (item.status === 'CANCELED' || item.status === 'Cancelado')) ? (
-                            <input 
-                              type="checkbox" 
-                              className="inp-checkbox-select rounded border-ui-border w-full h-full cursor-pointer" 
-                              value={item.id} 
-                              checked={selectedCheckboxes.includes(item.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleCheckboxChange(item.id);
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full" />
-                          )}
+                          <input
+                            type="checkbox"
+                            className="inp-checkbox-select rounded border-ui-border w-full h-full cursor-pointer"
+                            value={item.id}
+                            checked={selectedCheckboxes.includes(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleCheckboxChange(item.id);
+                            }}
+                          />
                         </div>
                       )}
                       
@@ -1144,84 +1169,111 @@ export default function DynamicTableManager({
         onReset={handleResetColumns}
       />
 
-      {isCancelLeaseModalOpen && (
-        <div className="fixed inset-0 bg-layer-overlay z-[1000001] flex items-center justify-center p-4">
-          <div className="bg-surface rounded-xl max-w-xl w-full shadow-2xl animate-fade-in p-6 overflow-y-auto max-h-[95vh]">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-content">Cancelar Locação</h3>
-              <button 
-                onClick={() => setIsCancelLeaseModalOpen(false)}
-                className="p-1 hover:bg-surface-subtle rounded-lg transition-colors"
-                title="Fechar"
-              >
-                <X size={20} className="text-content-secondary" />
-              </button>
-            </div>
-            
-            <div className="space-y-4 mb-6 text-content-secondary">
-              <p className="text-sm">Preencha os dados abaixo para cancelar {selectedCheckboxes.length > 1 ? 'as locações selecionadas' : 'a locação selecionada'}.</p>
-              
-              <div className="flex flex-col gap-1 w-full">
-                <label className="text-sm font-medium text-content">Data de Cancelamento *</label>
-                <input 
-                  type="date" 
-                  className="border border-ui-border rounded-lg px-4 h-[40px] text-[14px] bg-surface outline-none focus:border-brand w-full"
-                  value={cancelLeaseData.canceled_at}
-                  onChange={(e) => setCancelLeaseData({...cancelLeaseData, canceled_at: e.target.value})}
-                />
+      {isCancelLeaseModalOpen && (() => {
+        const allSelectedCanceled = selectedCheckboxes.length > 0 && items
+          .filter((item: any) => selectedCheckboxes.includes(item.id))
+          .every((item: any) => item.status === 'CANCELED' || item.status === 'Cancelado');
+        return (
+          <div className="fixed inset-0 bg-layer-overlay z-[1000001] flex items-center justify-center p-4">
+            <div className="bg-surface rounded-xl max-w-xl w-full shadow-2xl animate-fade-in p-6 overflow-y-auto max-h-[95vh]">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-content">
+                  {allSelectedCanceled ? 'Excluir Locação' : 'Cancelar ou Excluir Locação'}
+                </h3>
+                <button
+                  onClick={() => setIsCancelLeaseModalOpen(false)}
+                  className="p-1 hover:bg-surface-subtle rounded-lg transition-colors"
+                  title="Fechar"
+                >
+                  <X size={20} className="text-content-secondary" />
+                </button>
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 w-full">
-                <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
-                  <Input
-                    id="cancellation_penalty"
-                    label="Valor da Multa"
-                    mask="money"
-                    value={cancelLeaseData.cancellation_penalty}
-                    onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_penalty: e.target.value})}
-                    placeholder="R$ 0,00"
-                  />
+
+              <div className="space-y-4 mb-6 text-content-secondary">
+                {allSelectedCanceled ? (
+                  <p className="text-sm">
+                    {selectedCheckboxes.length > 1 ? 'As locações selecionadas já estão canceladas.' : 'Esta locação já está cancelada.'}{' '}
+                    Clique em <strong>Excluir definitivamente</strong> para remover por completo, junto com os lançamentos financeiros vinculados.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm">Preencha os dados abaixo e clique em <strong>Confirmar cancelamento</strong> para apenas cancelar {selectedCheckboxes.length > 1 ? 'as locações' : 'a locação'} (pode ser restaurada depois), ou use <strong>Excluir definitivamente</strong> para remover por completo, junto com os lançamentos financeiros vinculados.</p>
+
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-sm font-medium text-content">Data de Cancelamento *</label>
+                      <input
+                        type="date"
+                        className="border border-ui-border rounded-lg px-4 h-[40px] text-[14px] bg-surface outline-none focus:border-brand w-full"
+                        value={cancelLeaseData.canceled_at}
+                        onChange={(e) => setCancelLeaseData({...cancelLeaseData, canceled_at: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                      <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
+                        <Input
+                          id="cancellation_penalty"
+                          label="Valor da Multa"
+                          mask="money"
+                          value={cancelLeaseData.cancellation_penalty}
+                          onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_penalty: e.target.value})}
+                          placeholder="R$ 0,00"
+                        />
+                      </div>
+                      <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
+                        <Input
+                          id="other_cancellation_amounts"
+                          label="Outros Valores"
+                          mask="money"
+                          value={cancelLeaseData.other_cancellation_amounts}
+                          onChange={(e) => setCancelLeaseData({...cancelLeaseData, other_cancellation_amounts: e.target.value})}
+                          placeholder="R$ 0,00"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-sm font-medium text-content">Justificativa</label>
+                      <textarea
+                        className="border border-ui-border rounded-lg p-4 text-[14px] bg-surface outline-none focus:border-brand min-h-[100px] resize-none w-full"
+                        placeholder="Motivo do cancelamento..."
+                        value={cancelLeaseData.cancellation_justification}
+                        onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_justification: e.target.value})}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-8">
+                <button
+                  onClick={handleConfirmDeleteLeases}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors order-last sm:order-first"
+                >
+                  <Trash2 size={16} />
+                  Excluir definitivamente
+                </button>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsCancelLeaseModalOpen(false)}
+                    className="px-5 py-2.5 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
+                  >
+                    Fechar
+                  </button>
+                  {!allSelectedCanceled && (
+                    <button
+                      onClick={handleConfirmCancelLeases}
+                      className="px-5 py-2.5 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Confirmar cancelamento
+                    </button>
+                  )}
                 </div>
-                <div className="flex-1 w-full [&>div]:min-w-0 [&>div]:max-w-none">
-                  <Input
-                    id="other_cancellation_amounts"
-                    label="Outros Valores"
-                    mask="money"
-                    value={cancelLeaseData.other_cancellation_amounts}
-                    onChange={(e) => setCancelLeaseData({...cancelLeaseData, other_cancellation_amounts: e.target.value})}
-                    placeholder="R$ 0,00"
-                  />
-                </div>
               </div>
-              
-              <div className="flex flex-col gap-1 w-full">
-                <label className="text-sm font-medium text-content">Justificativa</label>
-                <textarea 
-                  className="border border-ui-border rounded-lg p-4 text-[14px] bg-surface outline-none focus:border-brand min-h-[100px] resize-none w-full"
-                  placeholder="Motivo do cancelamento..."
-                  value={cancelLeaseData.cancellation_justification}
-                  onChange={(e) => setCancelLeaseData({...cancelLeaseData, cancellation_justification: e.target.value})}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-3 mt-8">
-              <button 
-                onClick={() => setIsCancelLeaseModalOpen(false)}
-                className="px-5 py-2.5 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleConfirmCancelLeases}
-                className="px-5 py-2.5 bg-gradient-to-r from-brand to-brand-hover text-content-inverse rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-              >
-                Confirmar
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   );
 }
