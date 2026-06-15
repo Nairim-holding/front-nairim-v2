@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,7 @@ import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
 import { Building2, Globe, Type, Sun, Moon } from 'lucide-react';
+import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -32,7 +33,19 @@ const BRANDING_FIELD_KEYS = [
   ...COLOR_FIELDS.map(c => `${c.key}_dark`),
 ];
 
-function colorStep(title: string, icon: React.ReactNode, suffix: ''  | '_dark', helperText?: string): FormStep {
+const isEmptyColorValue = (value: unknown): boolean => (
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (Array.isArray(value) && value.length === 0)
+);
+
+function colorStep(
+  title: string,
+  icon: React.ReactNode,
+  suffix: '' | '_dark',
+  helperText?: string
+): FormStep {
   return {
     title,
     icon,
@@ -49,8 +62,18 @@ function colorStep(title: string, icon: React.ReactNode, suffix: ''  | '_dark', 
         label,
         type: 'custom' as const,
         className: 'col-span-1',
-        render: (value: any, _fv: any, onChange?: (v: any) => void) => (
-          <ColorInput value={value ?? ''} onChange={v => onChange?.(v)} defaultValue={defaultValue} />
+        // Step dark não tem defaultValue pois será preenchido automaticamente
+        defaultValue: suffix === '_dark' ? undefined : defaultValue,
+        render: (
+          value: unknown,
+          _fv: unknown,
+          onChange?: (value: unknown) => void,
+        ) => (
+          <ColorInput
+            value={typeof value === 'string' ? value : ''}
+            onChange={v => onChange?.(v)}
+            defaultValue={suffix === '_dark' ? undefined : defaultValue}
+          />
         ),
       })),
     ],
@@ -62,6 +85,7 @@ export default function CadastrarEmpresaPage() {
   const { token } = useAuth();
   const router = useRouter();
   const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
+  const lastSuggestedDarkColors = useRef<Record<string, string>>({});
 
   const checkSlugUnique = useCallback(async (slug: string) => {
     if (!slug || slug.length < 2) return;
@@ -75,7 +99,7 @@ export default function CadastrarEmpresaPage() {
       } else {
         setSlugCheckError(null);
       }
-    } catch (error) {
+    } catch {
       setSlugCheckError(null);
     }
   }, [token]);
@@ -91,16 +115,49 @@ export default function CadastrarEmpresaPage() {
       .replace(/-+/g, '-');
   }, []);
 
-  const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
+  const handleFieldChange = useCallback(async (fieldName: string, value: unknown) => {
     if (fieldName === 'name') {
-      if (value) {
+      if (typeof value === 'string' && value) {
         return { slug: generateSlug(value) };
       } else {
         return { slug: '' };
       }
     }
+
     return null;
   }, [generateSlug]);
+
+  const handleStepComplete = useCallback((stepIndex: number, formValues: Record<string, unknown>) => {
+    // Step 2 é o "Tema Light" (índice 2: Identificação, Geral, Tema Light, Tema Dark)
+    if (stepIndex !== 2) return;
+
+    const lightColors: Record<string, string> = {};
+    COLOR_FIELDS.forEach(({ key }) => {
+      const value = formValues[key];
+      if (typeof value === 'string' && value) {
+        lightColors[key] = value;
+      }
+    });
+
+    const generatedDarkColors = generateDarkColorsFromLight(lightColors);
+    const suggestedPatch: Record<string, string> = {};
+
+    for (const [field, suggestedColor] of Object.entries(generatedDarkColors)) {
+      const currentValue = formValues[field];
+      const previousSuggestion = lastSuggestedDarkColors.current[field];
+
+      if (isEmptyColorValue(currentValue) || currentValue === previousSuggestion) {
+        suggestedPatch[field] = suggestedColor;
+      }
+    }
+
+    lastSuggestedDarkColors.current = generatedDarkColors;
+
+    if (Object.keys(suggestedPatch).length > 0) {
+      showMessage('Cores do tema dark sugeridas com base nas cores light!', 'info');
+      return suggestedPatch;
+    }
+  }, [showMessage]);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -173,16 +230,16 @@ export default function CadastrarEmpresaPage() {
     },
     colorStep('Tema Light', <Sun size={20} />, ''),
     colorStep('Tema Dark', <Moon size={20} />, '_dark'),
-  ], []);
+  ], [checkSlugUnique, slugCheckError]);
 
   // Uploads de logo/favicon/etc. exigem um company_id existente — por isso ficam
   // disponíveis na tela de edição, aberta automaticamente após a criação. Todos
   // os demais campos de identidade visual (textos e paletas) já são coletados aqui,
   // pois o backend aceita esses dados diretamente na criação da empresa.
-  async function handleSubmit(data: any) {
-    const payload: Record<string, any> = {
+  async function handleSubmit(data: Record<string, unknown>) {
+    const payload: Record<string, unknown> = {
       name: data.name,
-      slug: data.slug?.toLowerCase().trim(),
+      slug: typeof data.slug === 'string' ? data.slug.toLowerCase().trim() : data.slug,
     };
     for (const key of BRANDING_FIELD_KEYS) {
       if (data[key]) payload[key] = data[key];
@@ -208,6 +265,7 @@ export default function CadastrarEmpresaPage() {
         steps={steps}
         onSubmit={handleSubmit}
         onFieldChange={handleFieldChange}
+        onStepComplete={handleStepComplete}
         onSubmitSuccess={(result) => {
           showMessage('Empresa criada! Configurando marca...', 'success');
           const id = result?.id ?? result?.data?.id;

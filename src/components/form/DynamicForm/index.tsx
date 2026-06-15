@@ -31,7 +31,7 @@ interface DynamicFormManagerProps {
   onFieldChange?: (fieldName: string, value: any) => Promise<any>;
   onFormValuesChange?: (values: any) => void;
   completedSteps?: number[];
-  onStepComplete?: (stepIndex: number) => void;
+  onStepComplete?: (stepIndex: number, values: Record<string, any>) => void | Record<string, any>;
   canNavigateToStep?: (targetStep: number, currentStep: number, data: any) => boolean;
   /**
    * Quando informado, persiste `formValues` + `currentStep` em sessionStorage
@@ -596,7 +596,15 @@ export default function DynamicFormManager({
     
     if (validateCurrentStep()) {
       if (onStepComplete) {
-        onStepComplete(currentStep);
+        const nextValues = onStepComplete(currentStep, formValues);
+
+        if (nextValues && typeof nextValues === 'object') {
+          setFormValues(current => {
+            const merged = { ...current, ...nextValues };
+            if (onFormValuesChange) onFormValuesChange(merged);
+            return merged;
+          });
+        }
       }
       
       if (!externalCompletedSteps && !internalCompletedSteps.includes(currentStep)) {

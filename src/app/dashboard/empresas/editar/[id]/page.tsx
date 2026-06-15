@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo, useState, useCallback, useEffect } from 'react';
+import { use, useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,7 @@ import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
 import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye } from 'lucide-react';
+import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -41,6 +42,13 @@ const BRANDING_COLOR_FIELDS = [
 ];
 const ALL_BRANDING_FIELDS = [...BRANDING_TEXT_FIELDS, ...BRANDING_ASSET_FIELDS, ...BRANDING_COLOR_FIELDS];
 
+const isEmptyColorValue = (value: unknown): boolean => (
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (Array.isArray(value) && value.length === 0)
+);
+
 function colorStep(title: string, icon: React.ReactNode, suffix: '' | '_dark', helperText?: string): FormStep {
   return {
     title,
@@ -58,11 +66,20 @@ function colorStep(title: string, icon: React.ReactNode, suffix: '' | '_dark', h
         label,
         type: 'custom' as const,
         className: 'col-span-1',
-        render: (value: any, formValues: any, onChange?: (v: any) => void) => (
+        defaultValue: suffix === '_dark' ? undefined : defaultValue,
+        render: (
+          value: unknown,
+          formValues: Record<string, unknown> | undefined,
+          onChange?: (value: unknown) => void,
+        ) => (
           <ColorInput
-            value={value ?? ''}
+            value={typeof value === 'string' ? value : ''}
             onChange={v => onChange?.(v)}
-            defaultValue={suffix === '_dark' ? (formValues?.[key] || defaultValue) : defaultValue}
+            defaultValue={
+              suffix === '_dark' && typeof formValues?.[key] === 'string'
+                ? formValues[key]
+                : defaultValue
+            }
           />
         ),
       })),
@@ -81,14 +98,8 @@ export default function EditarEmpresaPage({ params }: Props) {
   const { token } = useAuth();
   const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
   const [initialSlug, setInitialSlug] = useState<string | null>(null);
-  const [defaultStep, setDefaultStep] = useState(0);
-
-  useEffect(() => {
-    // Se é uma empresa nova, abre direto no step de Branding (índice 2)
-    if (searchParams?.get('new') === 'true') {
-      setDefaultStep(2);
-    }
-  }, [searchParams]);
+  const defaultStep = searchParams?.get('new') === 'true' ? 2 : 0;
+  const lastSuggestedDarkColors = useRef<Record<string, string>>({});
 
   useEffect(() => {
     async function fetchCompany() {
@@ -139,9 +150,9 @@ export default function EditarEmpresaPage({ params }: Props) {
       .replace(/-+/g, '-');
   }, []);
 
-  const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
+  const handleFieldChange = useCallback(async (fieldName: string, value: unknown) => {
     if (fieldName === 'name') {
-      if (value) {
+      if (typeof value === 'string' && value) {
         return { slug: generateSlug(value) };
       } else {
         return { slug: '' };
@@ -149,6 +160,38 @@ export default function EditarEmpresaPage({ params }: Props) {
     }
     return null;
   }, [generateSlug]);
+
+  const handleStepComplete = useCallback((stepIndex: number, formValues: Record<string, unknown>) => {
+    // Step 3 é o "Tema Light" na edição: Identificação, Geral, Branding, Tema Light, Tema Dark, Preview.
+    if (stepIndex !== 3) return;
+
+    const lightColors: Record<string, string> = {};
+    COLOR_FIELDS.forEach(({ key }) => {
+      const value = formValues[key];
+      if (typeof value === 'string' && value) {
+        lightColors[key] = value;
+      }
+    });
+
+    const generatedDarkColors = generateDarkColorsFromLight(lightColors);
+    const suggestedPatch: Record<string, string> = {};
+
+    for (const [field, suggestedColor] of Object.entries(generatedDarkColors)) {
+      const currentValue = formValues[field];
+      const previousSuggestion = lastSuggestedDarkColors.current[field];
+
+      if (isEmptyColorValue(currentValue) || currentValue === previousSuggestion) {
+        suggestedPatch[field] = suggestedColor;
+      }
+    }
+
+    lastSuggestedDarkColors.current = generatedDarkColors;
+
+    if (Object.keys(suggestedPatch).length > 0) {
+      showMessage('Cores do tema dark sugeridas com base nas cores light!', 'info');
+      return suggestedPatch;
+    }
+  }, [showMessage]);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -275,11 +318,13 @@ export default function EditarEmpresaPage({ params }: Props) {
         },
       ],
     },
-  ], [id]);
+  ], [checkSlugUnique, slugCheckError]);
 
-  function transformData(d: any) {
-    const branding = d?.branding ?? {};
-    const result: Record<string, any> = {
+  function transformData(d: Record<string, unknown>) {
+    const branding = d?.branding && typeof d.branding === 'object'
+      ? d.branding as Record<string, unknown>
+      : {};
+    const result: Record<string, unknown> = {
       name: d?.name ?? '',
       slug: d?.slug ?? '',
       is_active: d?.is_active ?? true,
@@ -290,10 +335,10 @@ export default function EditarEmpresaPage({ params }: Props) {
     return result;
   }
 
-  async function handleSubmit(data: any) {
-    const payload: Record<string, any> = {
+  async function handleSubmit(data: Record<string, unknown>) {
+    const payload: Record<string, unknown> = {
       name: data.name,
-      slug: data.slug?.toLowerCase().trim(),
+      slug: typeof data.slug === 'string' ? data.slug.toLowerCase().trim() : data.slug,
       is_active: data.is_active,
     };
     for (const key of ALL_BRANDING_FIELDS) {
@@ -321,6 +366,7 @@ export default function EditarEmpresaPage({ params }: Props) {
         steps={steps}
         onSubmit={handleSubmit}
         onFieldChange={handleFieldChange}
+        onStepComplete={handleStepComplete}
         onSubmitSuccess={() => showMessage('Empresa atualizada com sucesso!', 'success')}
         transformData={transformData}
         defaultStep={defaultStep}
