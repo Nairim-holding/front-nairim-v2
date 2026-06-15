@@ -128,6 +128,28 @@ export default function EditarEmpresaPage({ params }: Props) {
     }
   }, [token, initialSlug]);
 
+  const generateSlug = useCallback((name: string): string => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }, []);
+
+  const handleFieldChange = useCallback(async (fieldName: string, value: any) => {
+    if (fieldName === 'name') {
+      if (value) {
+        return { slug: generateSlug(value) };
+      } else {
+        return { slug: '' };
+      }
+    }
+    return null;
+  }, [generateSlug]);
+
   const steps: FormStep[] = useMemo(() => [
     {
       title: 'Identificação',
@@ -298,6 +320,7 @@ export default function EditarEmpresaPage({ params }: Props) {
         id={id}
         steps={steps}
         onSubmit={handleSubmit}
+        onFieldChange={handleFieldChange}
         onSubmitSuccess={() => showMessage('Empresa atualizada com sucesso!', 'success')}
         transformData={transformData}
         defaultStep={defaultStep}
