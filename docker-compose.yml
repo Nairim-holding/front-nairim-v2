@@ -9,6 +9,8 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend
+        - NEXT_PUBLIC_COMPANY_SLUG=nairim
+        - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
         - ENV_FILE=.env
     environment:
       - HOSTNAME=0.0.0.0
@@ -40,6 +42,8 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-test-2
+        - NEXT_PUBLIC_COMPANY_SLUG=nairim
+        - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
         - ENV_FILE=.env.test
     environment:
       - HOSTNAME=0.0.0.0
@@ -70,8 +74,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Injeta a URL da API específica para este terceiro ambiente
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-homolog
+        - NEXT_PUBLIC_COMPANY_SLUG=nairim
+        - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
         - ENV_FILE=.env.homolog
     environment:
       - HOSTNAME=0.0.0.0
