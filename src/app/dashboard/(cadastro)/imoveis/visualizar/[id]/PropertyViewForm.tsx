@@ -12,17 +12,18 @@ interface Props {
   ownerOptions: SelectOption[];
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
+  centerOptions: SelectOption[];
 }
 
 const COMPLETED_STEPS = [0, 1, 2, 3, 4];
 const noop = async () => null;
 
-export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions }: Props) {
+export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
   const activeLease = propertyData?.leases?.[0];
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, readOnly: true, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, readOnly: true, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, activeLease],
   );
 
   const transformData = useCallback(

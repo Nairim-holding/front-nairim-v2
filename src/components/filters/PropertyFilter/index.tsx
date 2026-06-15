@@ -46,7 +46,7 @@ export default function PropertyFilter() {
   // Busca todos os tipos cadastrados no endpoint /property-types
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
-    const slug = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
+    const slug = 'nairim';
 
     fetch(`${API_URL}/public/${slug}/property-types`)
       .then((r) => r.json())
@@ -64,7 +64,7 @@ export default function PropertyFilter() {
       .catch(() => {
         // Fallback: deriva dos imóveis disponíveis
         const base = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
-        const s = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
+        const s = 'nairim';
         fetch(`${base}/public/${s}/properties?limit=100`)
           .then((r) => r.json())
           .then((res) => {

@@ -70,7 +70,7 @@ async function buscarCoordenadas(endereco: string, cidadeEstado: string): Promis
     let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}&limit=1`;
     let res = await fetch(url, {
       headers: {
-        "User-Agent": `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'ImobilApp'}/1.0`,
+        "User-Agent": `${'nairim'}/1.0`,
         "Accept-Language": "pt-BR",
         Accept: "application/json",
       },
@@ -90,7 +90,7 @@ async function buscarCoordenadas(endereco: string, cidadeEstado: string): Promis
     url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeEstado)}&limit=1`;
     res = await fetch(url, {
       headers: {
-        "User-Agent": `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'ImobilApp'}/1.0`,
+        "User-Agent": `${'nairim'}/1.0`,
         "Accept-Language": "pt-BR",
         Accept: "application/json",
       },

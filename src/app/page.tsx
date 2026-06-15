@@ -5,7 +5,7 @@ import ImoveisList from "@/components/domain/properties/PropertyList";
 import CarrosselDinamico from "@/components/layout/HeroImage"; 
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API;
-const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG;
+const SLUG = 'nairim';
 
 async function getImoveisDestaque() {
   try {

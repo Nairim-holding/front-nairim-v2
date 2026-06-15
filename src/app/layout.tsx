@@ -14,7 +14,7 @@ const poppins = Poppins({
   display: 'swap',
 });
 
-const COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG;
+const COMPANY_SLUG = 'nairim';
 const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const THEME_KEY = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'app';
+const THEME_KEY = 'nairim' ?? 'app';
 const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
   var saved=localStorage.getItem('${THEME_KEY}.theme');
   var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;

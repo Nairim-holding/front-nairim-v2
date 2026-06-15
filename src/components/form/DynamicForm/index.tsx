@@ -45,7 +45,7 @@ interface DynamicFormManagerProps {
   defaultStep?: number;
 }
 
-const DRAFT_STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'app'}:draft:`;
+const DRAFT_STORAGE_PREFIX = `nairim`;
 
 const readDraft = (key: string): { values: Record<string, any>; step: number } | null => {
   if (typeof window === 'undefined') return null;

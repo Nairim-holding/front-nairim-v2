@@ -11,7 +11,7 @@ import type { Property, PropertyFilters, PaginatedResponse } from '@/types';
 // Em server components o Node.js chama o backend direto (sem CORS).
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
 
-const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
+const SLUG = 'nairim';
 const PUB = `/public/${SLUG}`;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

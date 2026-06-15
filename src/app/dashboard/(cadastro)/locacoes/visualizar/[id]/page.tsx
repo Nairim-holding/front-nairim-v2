@@ -4,12 +4,14 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
+import { usePopupContext } from '@/contexts/PopupContext';
+import { authFetch } from '@/utils/authFetch';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
 import {
-  FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Shield, Users
+  FileText, Calendar, DollarSign, User, Building,
+  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Shield, Users, Trash2
 } from 'lucide-react';
 
 const formatMoney = (value: number) => {
@@ -27,12 +29,36 @@ export default function VisualizarLocacaoPage() {
   const id = params.id as string;
   
   const { showMessage } = useMessageContext();
+  const { showPopup } = usePopupContext();
   const router = useRouter();
-  
+
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [isCanceled, setIsCanceled] = useState(false);
+
+  const handlePermanentDelete = useCallback(() => {
+    showPopup(
+      'Excluir locação definitivamente',
+      'Esta ação remove a locação E todos os lançamentos financeiros vinculados a ela. Não pode ser desfeita. Deseja continuar?',
+      async () => {
+        try {
+          const res = await authFetch(`${process.env.NEXT_PUBLIC_URL_API}/leases/${id}/permanent`, {
+            method: 'DELETE',
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            throw new Error(data?.message || 'Erro ao excluir locação');
+          }
+          showMessage('Locação excluída definitivamente com sucesso!', 'success');
+          router.push('/dashboard/locacoes');
+        } catch (e: any) {
+          showMessage(e.message || 'Erro ao excluir locação', 'error');
+        }
+      },
+      () => {}
+    );
+  }, [id, showPopup, showMessage, router]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +127,8 @@ export default function VisualizarLocacaoPage() {
       type_display: apiData.property?.type?.description || apiData.type?.description || '',
       owner_display: apiData.property?.owner?.name || apiData.owner?.name || '',
       tenant_id: apiData.tenant_id || '',
+      agency_display: apiData.agency?.trade_name || 'Nenhuma',
+      financial_institution_display: apiData.financial_institution?.name || 'Nenhuma',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
@@ -239,6 +267,22 @@ export default function VisualizarLocacaoPage() {
                 })),
             icon: <User size={20} />,
             className: 'col-span-full',
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'agency_display',
+            label: 'Imobiliária',
+            type: 'text',
+            icon: <Building size={20} />,
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'financial_institution_display',
+            label: 'Instituição Financeira',
+            type: 'text',
+            icon: <CreditCard size={20} />,
             readOnly: true,
             disabled: true,
           },
@@ -575,16 +619,18 @@ export default function VisualizarLocacaoPage() {
   }
 
   return (
-    <DynamicFormManager
-      resource="leases"
-      title="Locação"
-      basePath="/dashboard/locacoes"
-      mode="view"
-      id={id}
-      steps={steps}
-      onSubmit={handleSubmit}
-      onFieldChange={handleFieldChange}
-      transformData={transformData}
-    />
+    <div className="flex flex-col gap-4">
+      <DynamicFormManager
+        resource="leases"
+        title="Locação"
+        basePath="/dashboard/locacoes"
+        mode="view"
+        id={id}
+        steps={steps}
+        onSubmit={handleSubmit}
+        onFieldChange={handleFieldChange}
+        transformData={transformData}
+      />
+    </div>
   );
 }

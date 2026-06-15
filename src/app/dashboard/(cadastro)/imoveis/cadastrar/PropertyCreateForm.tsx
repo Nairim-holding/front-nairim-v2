@@ -16,9 +16,10 @@ interface Props {
   ownerOptions: SelectOption[];
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
+  centerOptions: SelectOption[];
 }
 
-export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions }: Props) {
+export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
   const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
@@ -28,8 +29,8 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   const { state: uploadState, uploadAndTrack } = useUploadSSE();
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, isManualAddress }),
-    [ownerOptions, typeOptions, agencyOptions, isManualAddress],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress],
   );
 
   const handleFieldChange = useCallback(

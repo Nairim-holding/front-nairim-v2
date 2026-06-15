@@ -85,12 +85,21 @@ export function buildAgencyOptions(agencies: any[]) {
   return [{ label: 'Nenhuma', value: '' }, ...options];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildCenterOptions(centers: any[]) {
+  return centers.map((c) => ({
+    label: c.name || 'Sem nome',
+    value: c.id as string,
+  }));
+}
+
 // ─── API fetchers (server-side) ───────────────────────────────────────────────
 
 export interface PropertySelectOptions {
   ownerOptions: { label: string; value: string }[];
   typeOptions: { label: string; value: string }[];
   agencyOptions: { label: string; value: string }[];
+  centerOptions: { label: string; value: string }[];
 }
 
 function authHeaders(token?: string): HeadersInit | undefined {
@@ -100,22 +109,25 @@ function authHeaders(token?: string): HeadersInit | undefined {
 export async function fetchPropertySelectOptions(token?: string): Promise<PropertySelectOptions> {
   const API_URL = getApiUrl();
   const headers = authHeaders(token);
-  const [ownersRes, typesRes, agenciesRes] = await Promise.all([
+  const [ownersRes, typesRes, agenciesRes, centersRes] = await Promise.all([
     fetch(`${API_URL}/owners`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/property-types`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/agencies`, { cache: 'no-store', headers }),
+    fetch(`${API_URL}/financial-center?limit=1000`, { cache: 'no-store', headers }),
   ]);
 
-  const [owners, types, agencies] = await Promise.all([
+  const [owners, types, agencies, centers] = await Promise.all([
     ownersRes.json(),
     typesRes.json(),
     agenciesRes.json(),
+    centersRes.ok ? centersRes.json() : Promise.resolve({ data: [] }),
   ]);
 
   return {
     ownerOptions: buildOwnerOptions(owners.data || []),
     typeOptions: buildTypeOptions(types.data || []),
     agencyOptions: buildAgencyOptions(agencies.data || []),
+    centerOptions: buildCenterOptions(centers.data || []),
   };
 }
 
@@ -165,6 +177,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     owner_id:         data.owner_id ?? '',
     type_id:          data.type_id ?? '',
     agency_id:        data.agency_id ?? '',
+    center_id:        data.center_id ?? '',
     furnished:        data.furnished?.toString() ?? 'false',
     registration_number: data.registration_number ?? '',
     notes:            data.notes ?? '',
@@ -244,6 +257,7 @@ export function buildPropertyFormData(
     owner_id:         data.owner_id,
     type_id:          data.type_id,
     agency_id:        data.agency_id || null,
+    center_id:        data.center_id || null,
     registration_number: data.registration_number || null,
   }));
 

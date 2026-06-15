@@ -22,6 +22,7 @@ export interface PropertyStepsConfig {
   ownerOptions: SelectOption[];
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
+  centerOptions?: SelectOption[];
   readOnly?: boolean;
   /** Controls whether auto-filled address fields are editable (create/edit mode) */
   isManualAddress?: boolean;
@@ -33,6 +34,7 @@ export function buildPropertySteps({
   ownerOptions,
   typeOptions,
   agencyOptions,
+  centerOptions = [],
   readOnly = false,
   isManualAddress = false,
   activeLease,
@@ -66,6 +68,7 @@ export function buildPropertySteps({
         { field: 'owner_id', label: 'Proprietário', type: 'select', required: true, options: ownerOptions, icon: <User size={20} />, className: 'col-span-full', ...ro },
         { field: 'type_id', label: 'Tipo do imóvel', type: 'select', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro },
         { field: 'agency_id', label: 'Imobiliária', type: 'select', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
+        { field: 'center_id', label: 'Centro de Custo', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...centerOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'furnished', label: 'Mobiliado', type: 'select', required: true, options: [{ label: 'Sim', value: 'true' }, { label: 'Não', value: 'false' }], icon: <Sofa size={20} />, className: 'col-span-full', ...ro },
         { field: 'registration_number', label: 'Nº Cadastro', type: 'text', required: false, placeholder: 'Número de cadastro do imóvel', icon: <Hash size={20} />, className: 'col-span-full', ...ro },
         { field: 'notes', label: 'Observações', type: 'textarea', placeholder: 'Escreva detalhes não especificados anteriormente', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },

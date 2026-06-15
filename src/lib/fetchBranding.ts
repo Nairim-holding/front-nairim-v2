@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import type { CompanyBranding } from '@/types/branding';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-const COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG;
+const COMPANY_SLUG = 'nairim';
 const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
 
 export async function fetchBranding(slug: string | undefined): Promise<CompanyBranding | null> {

@@ -19,9 +19,10 @@ interface Props {
   ownerOptions: SelectOption[];
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
+  centerOptions: SelectOption[];
 }
 
-export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions }: Props) {
+export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
   const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
@@ -34,8 +35,8 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED'); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, isManualAddress, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, isManualAddress, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress, activeLease],
   );
 
   const transformData = useCallback(
