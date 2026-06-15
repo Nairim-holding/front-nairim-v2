@@ -43,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const THEME_KEY = 'nairim' ?? 'app';
+const THEME_KEY = 'nairim';
 const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
   var saved=localStorage.getItem('${THEME_KEY}.theme');
   var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
