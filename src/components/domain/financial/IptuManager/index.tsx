@@ -136,6 +136,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       setTempIptu({
         year: new Date().getFullYear().toString(),
         payment_condition: 'IN_FULL_15_DISCOUNT',
+        property_tax: baseIptu || undefined,
         property_tax_cash: '',
         property_tax_cash_due_date: '',
         property_tax_first_installment: '',
@@ -157,7 +158,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
   const handleSave = () => {
     setErrorMsg('');
-    if (baseIptu <= 0) return setErrorMsg('Preencha o Valor Base do IPTU primeiro.');
+    const effectiveBase = Number(tempIptu.property_tax ?? baseIptu);
+    if (effectiveBase <= 0) return setErrorMsg('Preencha o Valor Base do IPTU primeiro.');
 
     const yearValue = Number(tempIptu.year);
     const currentYear = new Date().getFullYear();
@@ -240,8 +242,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     console.log('generateInstallments - count:', count, 'num:', num);
     if (isNaN(num) || num <= 0) return setTempIptu(prev => ({ ...prev, iptu_installments_count: count, iptu_installments: [] }));
     
-    const baseIptuNum = Number(baseIptu);
-    console.log('generateInstallments - baseIptu:', baseIptu, 'baseIptuNum:', baseIptuNum);
+    const baseIptuNum = Number(tempIptu.property_tax ?? baseIptu);
+    console.log('generateInstallments - baseIptu:', tempIptu.property_tax ?? baseIptu, 'baseIptuNum:', baseIptuNum);
     
     // Corrigido: Remoção da multiplicação indevida por 100
     const val = baseIptuNum > 0 ? Number((baseIptuNum / num).toFixed(2)) : 0;
@@ -521,7 +523,13 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
                 <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
                 <div className="flex-1">
                   <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base do IPTU - Ano: {tempIptu.year}</p>
-                  <p className="text-lg font-black text-content">{maskMoney(baseIptu)}</p>
+                  <input
+                    type="text"
+                    value={maskMoney(tempIptu.property_tax ?? 0)}
+                    onChange={e => setTempIptu({ ...tempIptu, property_tax: parseMoney(e.target.value) })}
+                    className="text-lg font-black text-content bg-transparent outline-none border-b border-dashed border-ui-border focus:border-brand w-full"
+                    placeholder="R$ 0,00"
+                  />
                 </div>
               </div>
 
