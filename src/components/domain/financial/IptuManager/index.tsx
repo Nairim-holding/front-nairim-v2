@@ -130,7 +130,11 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
     if (mode === 'edit' && index !== undefined) {
       setEditingIndex(index);
-      setTempIptu({ ...iptus[index] });
+      const entry = iptus[index];
+      setTempIptu({
+        ...entry,
+        property_tax: entry.property_tax != null ? Number(entry.property_tax) : (baseIptu || undefined),
+      });
     } else {
       setEditingIndex(null);
       setTempIptu({
