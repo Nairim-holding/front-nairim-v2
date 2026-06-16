@@ -190,8 +190,10 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
     const entryToSave: IptuEntry = {
       ...tempIptu,
-      // Freeze base value at save time for new entries; preserve existing base for edits
-      property_tax: tempIptu.property_tax != null ? tempIptu.property_tax : baseIptu,
+      // Use the value shown/edited in the modal field; fall back to baseIptu only if absent
+      property_tax: (tempIptu.property_tax != null && tempIptu.property_tax !== undefined)
+        ? Number(tempIptu.property_tax)
+        : baseIptu,
     };
     const newIptus = [...iptus];
     if (editingIndex !== null) {
@@ -400,7 +402,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         ...item,
         id: item.id || index.toString(),
         year: item.year,
-        baseIptu: item.property_tax != null ? Number(item.property_tax) : 0,
+        baseIptu: item.property_tax != null ? Number(item.property_tax) : baseIptu,
       };
 
       if (item.payment_condition === 'IN_FULL_15_DISCOUNT') {
@@ -445,7 +447,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     });
 
     return data;
-  }, [iptus]);
+  }, [iptus, baseIptu]);
 
   // Aplicar ordenação aos dados
   const sortedTableData = useMemo(() => {
