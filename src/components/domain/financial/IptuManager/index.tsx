@@ -133,7 +133,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const entry = iptus[index];
       setTempIptu({
         ...entry,
-        property_tax: entry.property_tax != null ? Number(entry.property_tax) : (baseIptu || undefined),
+        property_tax: entry.property_tax != null ? Number(entry.property_tax) : undefined,
       });
     } else {
       setEditingIndex(null);
@@ -162,8 +162,8 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
 
   const handleSave = () => {
     setErrorMsg('');
-    const effectiveBase = Number(tempIptu.property_tax ?? baseIptu);
-    if (effectiveBase <= 0) return setErrorMsg('Preencha o Valor Base do IPTU primeiro.');
+    const effectiveBase = Number(tempIptu.property_tax ?? 0);
+    if (effectiveBase <= 0) return setErrorMsg('Informe o Valor Base do IPTU para este ano.');
 
     const yearValue = Number(tempIptu.year);
     const currentYear = new Date().getFullYear();
@@ -402,7 +402,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         ...item,
         id: item.id || index.toString(),
         year: item.year,
-        baseIptu: item.property_tax != null ? Number(item.property_tax) : baseIptu,
+        baseIptu: item.property_tax != null ? Number(item.property_tax) : null,
       };
 
       if (item.payment_condition === 'IN_FULL_15_DISCOUNT') {
@@ -447,7 +447,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     });
 
     return data;
-  }, [iptus, baseIptu]);
+  }, [iptus]);
 
   // Aplicar ordenação aos dados
   const sortedTableData = useMemo(() => {
@@ -525,18 +525,17 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
             </div>
             <div className="p-6 overflow-y-auto space-y-5">
 
-              <div className="p-4 bg-surface border border-ui-border rounded-lg flex items-center gap-4">
-                <div className="p-2 bg-brand/10 text-brand rounded-full"><DollarSign size={20} /></div>
-                <div className="flex-1">
-                  <p className="text-[10px] text-content-muted uppercase font-bold tracking-tight">Valor Base do IPTU - Ano: {tempIptu.year}</p>
-                  <input
-                    type="text"
-                    value={maskMoney(tempIptu.property_tax ?? 0)}
-                    onChange={e => setTempIptu({ ...tempIptu, property_tax: parseMoney(e.target.value) })}
-                    className="text-lg font-black text-content bg-transparent outline-none border-b border-dashed border-ui-border focus:border-brand w-full"
-                    placeholder="R$ 0,00"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-bold mb-1.5 block text-content-secondary">
+                  Valor Base do IPTU — Ano {tempIptu.year}
+                </label>
+                <input
+                  type="text"
+                  value={maskMoney(tempIptu.property_tax ?? 0)}
+                  onChange={e => setTempIptu({ ...tempIptu, property_tax: parseMoney(e.target.value) })}
+                  className="w-full p-2.5 border rounded-lg outline-none focus:border-brand text-sm"
+                  placeholder="R$ 0,00"
+                />
               </div>
 
               {shouldShowAlert() && (
