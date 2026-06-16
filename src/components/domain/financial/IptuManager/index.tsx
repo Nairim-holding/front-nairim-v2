@@ -25,6 +25,7 @@ interface IptuEntry {
   id?: string;
   year: string | number;
   payment_condition: string;
+  property_tax?: number | null;
   property_tax_cash?: string | number | null;
   property_tax_cash_due_date?: string | null;
   property_tax_first_installment?: string | number | null;
@@ -181,11 +182,16 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       if (sum <= 0) return setErrorMsg('Informe os valores das parcelas.');
     }
 
+    const entryToSave: IptuEntry = {
+      ...tempIptu,
+      // Freeze base value at save time for new entries; preserve existing base for edits
+      property_tax: tempIptu.property_tax != null ? tempIptu.property_tax : baseIptu,
+    };
     const newIptus = [...iptus];
     if (editingIndex !== null) {
-      newIptus[editingIndex] = { ...tempIptu };
+      newIptus[editingIndex] = entryToSave;
     } else {
-      newIptus.push({ ...tempIptu });
+      newIptus.push(entryToSave);
     }
 
     newIptus.sort((a, b) => Number(b.year) - Number(a.year));
@@ -388,7 +394,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
         ...item,
         id: item.id || index.toString(),
         year: item.year,
-        baseIptu: baseIptu,
+        baseIptu: item.property_tax != null ? Number(item.property_tax) : 0,
       };
 
       if (item.payment_condition === 'IN_FULL_15_DISCOUNT') {
@@ -433,7 +439,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     });
 
     return data;
-  }, [iptus, baseIptu]);
+  }, [iptus]);
 
   // Aplicar ordenação aos dados
   const sortedTableData = useMemo(() => {
