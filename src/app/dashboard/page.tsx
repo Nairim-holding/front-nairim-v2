@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { Suspense } from "react";
 import { cookies } from "next/headers";
+
+export const metadata: Metadata = { title: 'Dashboard' };
 import { fetchSection, FilterType, DashboardData } from "@/lib/dashboard";
 import DashboardContent from "@/components/domain/dashboard/DashboardClient";
 

@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import type { ColumnDef } from '@/types/types';
+
+export const metadata: Metadata = { title: 'Locações' };
 import Section from '@/components/layout/PageSection';
 import DynamicTableManager from '@/components/table/DataTable';
 import SkeletonTable from '@/components/table/TableSkeleton';

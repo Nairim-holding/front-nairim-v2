@@ -1,8 +1,11 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import type { ColumnDef } from '@/types/types';
 import Section from '@/components/layout/PageSection';
 import DynamicTableManager from '@/components/table/DataTable';
 import SkeletonTable from '@/components/table/TableSkeleton';
+
+export const metadata: Metadata = { title: 'Imóveis' };
 
 const COLUMNS: ColumnDef[] = [
   { field: 'title',           label: 'Nome',              sortParam: 'title',               type: 'text' },

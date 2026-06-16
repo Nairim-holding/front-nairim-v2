@@ -6,7 +6,10 @@ import { getActiveBranding } from '@/lib/fetchBranding';
 export async function generateMetadata(): Promise<Metadata> {
   const { name } = await getActiveBranding();
   return {
-    title: `Dashboard | ${name}`,
+    title: {
+      template: `%s | ${name}`,
+      default: `Dashboard | ${name}`,
+    },
     description: `Dashboard de gestão — ${name}`,
     robots: {
       index: false,
