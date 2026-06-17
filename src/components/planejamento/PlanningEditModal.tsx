@@ -33,12 +33,11 @@ const formatCurrencyRealtime = (value: string): string => {
 
 interface Props {
   item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string; initialPlanType?: 'FIXED' | 'VARIABLE' };
-  year: number;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function PlanningEditModal({ item, year, onClose, onSaved }: Props) {
+export default function PlanningEditModal({ item, onClose, onSaved }: Props) {
   const { showMessage } = useMessageContext();
 
   const isSubcategory = !!item.parentCategoryId;
@@ -53,21 +52,27 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
 
   const [planType, setPlanType] = useState<'FIXED' | 'VARIABLE'>(() => {
     const itemAny = item as any;
+    if (itemAny.planning_type) return itemAny.planning_type;
     if (itemAny.initialPlanType) return itemAny.initialPlanType;
-    return (itemAny.monthly_values && Array.isArray(itemAny.monthly_values) && itemAny.monthly_values.length > 0) ? 'VARIABLE' : 'FIXED';
+    return 'VARIABLE';
   });
   const [defaultAmount, setDefaultAmount] = useState<number>(() => {
     const itemAny = item as any;
-    return itemAny.planned_amount ?? 0;
+    // Só herda valor para o campo FIXO se o planejamento já for FIXO.
+    // Para VARIÁVEL o campo fixo começa zerado (não replica o valor do mês).
+    return itemAny.planning_type === 'FIXED' ? (itemAny.planned_amount ?? 0) : 0;
   });
   const [defaultAmountInput, setDefaultAmountInput] = useState<string>(() => {
     const itemAny = item as any;
-    const val = itemAny.planned_amount ?? 0;
-    return val > 0 ? maskMoney(val) : '';
+    if (itemAny.planning_type === 'FIXED') {
+      const val = itemAny.planned_amount ?? 0;
+      return val > 0 ? maskMoney(val) : '';
+    }
+    return '';
   });
   const [monthlyValues, setMonthlyValues] = useState<Record<number, number>>(() => {
     const itemAny = item as any;
-    if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
+    if (itemAny.planning_type === 'VARIABLE' && itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
       return itemAny.monthly_values.reduce((acc: Record<number, number>, mv: any) => {
         acc[mv.month] = mv.amount ?? 0;
         return acc;
@@ -78,7 +83,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
   const [monthlyValuesInput, setMonthlyValuesInput] = useState<Record<number, string>>(() => {
     const itemAny = item as any;
     const result: Record<number, string> = {};
-    if (itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
+    if (itemAny.planning_type === 'VARIABLE' && itemAny.monthly_values && Array.isArray(itemAny.monthly_values)) {
       itemAny.monthly_values.forEach((mv: any) => {
         result[mv.month] = mv.amount > 0 ? maskMoney(mv.amount) : '';
       });
@@ -125,26 +130,10 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (planType === 'FIXED') {
-      if (!defaultAmount || defaultAmount <= 0) {
-        showMessage('Informe um valor maior que zero para o planejamento fixo', 'error');
-        return;
-      }
-    }
-
-    if (planType === 'VARIABLE') {
-      const hasValue = Object.values(monthlyValues).some(v => v > 0);
-      if (!hasValue) {
-        showMessage('Informe pelo menos um valor mensal', 'error');
-        return;
-      }
-    }
-
     setIsSaving(true);
     try {
       const payload: Record<string, unknown> = {
         category_id: categoryId,
-        year,
         type: planType,
       };
 
@@ -153,13 +142,13 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
       }
 
       if (planType === 'FIXED') {
-        payload.default_amount = defaultAmount;
+        payload.default_amount = parseCurrencyFromPTBR(defaultAmountInput);
       } else {
         payload.monthly_values = MONTH_NAMES.map((_, i) => {
           const monthNum = i + 1;
-          const amount = monthlyValues[monthNum] ?? 0;
-          return { month: monthNum, amount };
-        }).filter(mv => mv.amount > 0);
+          const inputStr = monthlyValuesInput[monthNum] ?? '';
+          return { month: monthNum, amount: parseCurrencyFromPTBR(inputStr) };
+        });
       }
 
       const res = await authFetch(`${API_URL}/planning`, {
@@ -179,7 +168,7 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
     } finally {
       setIsSaving(false);
     }
-  }, [categoryId, subcategoryId, year, planType, defaultAmount, monthlyValues, showMessage, onSaved]);
+  }, [categoryId, subcategoryId, planType, defaultAmountInput, monthlyValuesInput, showMessage, onSaved]);
 
   const handleDelete = useCallback(async () => {
     if (!hasExistingPlanning || !planningId) return;
@@ -214,7 +203,10 @@ export default function PlanningEditModal({ item, year, onClose, onSaved }: Prop
       style={{ backgroundColor: 'var(--color-overlay)' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <div
+        className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex justify-between items-start mb-4">
           <button
             onClick={onClose}
