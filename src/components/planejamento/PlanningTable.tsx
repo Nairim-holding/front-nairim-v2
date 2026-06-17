@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, Fragment, forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { useMemo, Fragment, forwardRef, useImperativeHandle, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Calendar } from 'lucide-react';
-import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
+import { Repeat } from 'lucide-react';
 import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from './types';
 
 const formatCurrency = (value: number | null | undefined): string => {
@@ -17,20 +16,6 @@ const formatMonthHeader = (month: number, year: number): string => {
   return monthName.charAt(0).toUpperCase() + monthName.slice(1).replace('.', '');
 };
 
-const formatCurrencyRealtime = (value: string): string => {
-  const numbers = value.replace(/\D/g, '');
-  if (numbers.length === 0) return '';
-
-  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
-  const amount = parseInt(trimmedNumbers) / 100;
-
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
 
 const getMonthlyValue = (monthlyData: MonthlyData[], month: number, year: number): number | null => {
   const found = monthlyData.find(m => m.month === month && m.year === year);
@@ -60,10 +45,8 @@ interface Props {
   statsSlot?: ReactNode;
 }
 
-const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, onSaveInline, balanceMonths, balances, filterSlot, statsSlot }, ref) => {
+const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, onEditItem, balanceMonths, balances, filterSlot, statsSlot }, ref) => {
   const tableRef = useRef<HTMLTableElement>(null);
-  const [inlineEditing, setInlineEditing] = useState<{ id: string; parentId?: string; value: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     getTableElement: () => tableRef.current,
@@ -84,51 +67,16 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
       .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year));
   }, [data, dateRangeFrom]);
 
-  const handleInlineSave = async (categoryId: string, parentId: string | undefined) => {
-    if (!inlineEditing || !onSaveInline) return;
-    if (inlineEditing.id !== categoryId || inlineEditing.parentId !== parentId) return;
-    const numValue = parseCurrencyFromPTBR(inlineEditing.value);
-    console.log('[PlanningTable] Inline save:', { raw: inlineEditing.value, parsed: numValue });
-    if (numValue <= 0) {
-      console.warn('[PlanningTable] Value <= 0, aborting');
-      return;
-    }
-    await onSaveInline({ id: categoryId, parentCategoryId: parentId, amount: numValue });
-    setInlineEditing(null);
-  };
-
-  const handleInlineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, categoryId: string, parentId: string | undefined) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleInlineSave(categoryId, parentId);
-    } else if (e.key === 'Escape') {
-      setInlineEditing(null);
-    }
-  };
-
   const startInlineEdit = (category: DashboardItem | CategoryDashboard, isEditable: boolean, parentId?: string) => {
     if (!isEditable) return;
-    setInlineEditing({
-      id: category.id,
-      parentId,
-      value: category.planned_amount > 0
-        ? category.planned_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        : '',
-    });
+    const itemToEdit: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string } = { ...category };
+    if (parentId) itemToEdit.parentCategoryId = parentId;
+    onEditItem?.(itemToEdit);
   };
 
   const renderCategoryRow = (category: CategoryDashboard | DashboardItem, isSubcategory = false, parentId?: string) => {
     const hasSubcategories = !isSubcategory && 'subcategories' in category && category.subcategories.length > 0;
     const isEditable = !hasSubcategories;
-
-    const handleEdit = (initialPlanType?: 'FIXED' | 'VARIABLE') => {
-      const itemToEdit: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string; initialPlanType?: 'FIXED' | 'VARIABLE' } = { ...category };
-      if (parentId) itemToEdit.parentCategoryId = parentId;
-      if (initialPlanType) itemToEdit.initialPlanType = initialPlanType;
-      onEditItem?.(itemToEdit);
-    };
-
-    const isEditingInline = inlineEditing?.id === category.id && inlineEditing?.parentId === parentId;
 
     return (
       <tr
@@ -143,59 +91,28 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
           className={`px-3 py-2 text-xs text-right font-medium sticky overflow-hidden ${isEditable ? 'cursor-pointer hover:opacity-80' : 'text-content-muted'} ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'}`}
           style={{ width: 160, maxWidth: 160, minWidth: 160, left: 240, zIndex: 9 }}
         >
-          {isEditingInline ? (
-            <div className="flex items-center gap-0.5 h-full w-full">
+          <div className="relative flex items-center justify-end gap-1">
+            {category.planning_type === 'VARIABLE' && category.planned_amount > 0 && (
+              <Repeat size={11} className="shrink-0 text-brand" aria-label="Planejamento variável">
+                <title>Planejamento variável (valor do mês atual)</title>
+              </Repeat>
+            )}
+            <span
+              onClick={() => isEditable && startInlineEdit(category, isEditable, parentId)}
+              className={`block text-right ${isEditable ? 'text-content hover:opacity-80' : ''}`}
+            >
+              {formatCurrency(category.planned_amount)}
+            </span>
+            {isEditable && (
               <button
-                onClick={(e) => { e.stopPropagation(); handleEdit('VARIABLE'); }}
-                className="shrink-0 p-1 rounded hover:bg-surface-muted text-content-muted hover:text-brand"
-                title="Editar por mês (renda variável)"
+                onClick={(e) => { e.stopPropagation(); startInlineEdit(category, isEditable, parentId); }}
+                className="absolute inset-y-0 right-0 flex items-center px-1.5 rounded text-[10px] font-medium bg-surface-subtle/70 text-content-secondary hover:bg-brand hover:text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                title="Editar planejamento"
               >
-                <Calendar size={12} />
+                Editar
               </button>
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="numeric"
-                value={inlineEditing.value}
-                onChange={(e) => setInlineEditing(prev => prev ? { ...prev, value: formatCurrencyRealtime(e.target.value) } : null)}
-                onKeyDown={(e) => handleInlineKeyDown(e, category.id, parentId)}
-                className="flex-1 min-w-0 px-1 text-xs text-right border border-brand rounded bg-surface focus:outline-none text-content h-full"
-                autoFocus
-              />
-              <button
-                onClick={() => handleInlineSave(category.id, parentId)}
-                className="shrink-0 p-1 rounded hover:bg-green-100 text-green-600"
-                title="Salvar"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </button>
-              <button
-                onClick={() => setInlineEditing(null)}
-                className="shrink-0 p-1 rounded hover:bg-red-100 text-red-500"
-                title="Cancelar"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-          ) : (
-            <div className="relative flex items-center">
-              <span
-                onClick={() => isEditable && startInlineEdit(category, isEditable, parentId)}
-                className={`block w-full text-right ${isEditable ? 'text-content hover:opacity-80' : ''}`}
-              >
-                {formatCurrency(category.planned_amount)}
-              </span>
-              {isEditable && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); startInlineEdit(category, isEditable, parentId); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-1.5 rounded text-[10px] font-medium bg-surface-subtle/70 text-content-secondary hover:bg-brand hover:text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
-                  title="Editar planejamento"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </td>
         <td className={`px-3 py-2 text-xs text-right text-content-muted sticky z-[8] ${isSubcategory ? 'bg-surface' : 'bg-surface-subtle'} ${category.percentage > 100 && !isSubcategory ? 'text-red-600 font-semibold' : ''}`} style={{ width: 70, minWidth: 70, left: 400 }}>
           {category.percentage > 0 ? `${category.percentage.toFixed(2)}%` : '---'}
@@ -209,13 +126,29 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
           const isExpense = 'type' in category && category.type === 'EXPENSE';
           const isOverBudget = isExpense && plannedValue !== null && realizedValue !== null && realizedValue > plannedValue;
 
+          const hasRealized = realizedValue !== null && realizedValue !== 0;
+          const hasPlanned = plannedValue !== null && plannedValue !== 0;
+          const isVariable = category.planning_type === 'VARIABLE';
+
           return (
             <td
               key={`${month}-${year}`}
               className={`px-3 py-2 text-xs text-right whitespace-nowrap border-l border-ui-border-soft relative z-0 ${isExpense ? 'text-red-600' : 'text-green-600'} ${isOverBudget ? 'font-semibold text-red-700' : ''}`}
               title={`Planejado: ${plannedValue !== null ? formatCurrency(plannedValue) : '---'} | Realizado: ${realizedValue !== null ? formatCurrency(realizedValue) : '---'}`}
             >
-              {realizedValue === null ? '---' : (isOverBudget ? '▲ ' : '') + formatCurrency(realizedValue)}
+              {hasRealized ? (
+                <span className="inline-flex items-center justify-end gap-1">
+                  {isVariable && <Repeat size={10} className="shrink-0 opacity-70" />}
+                  {(isOverBudget ? '▲ ' : '') + formatCurrency(realizedValue)}
+                </span>
+              ) : hasPlanned ? (
+                <span className="inline-flex items-center justify-end gap-1 text-content-muted/60 italic" title="Valor planejado (sem realizado)">
+                  {isVariable && <Repeat size={10} className="shrink-0" />}
+                  {formatCurrency(plannedValue)}
+                </span>
+              ) : (
+                '---'
+              )}
             </td>
           );
         })}
