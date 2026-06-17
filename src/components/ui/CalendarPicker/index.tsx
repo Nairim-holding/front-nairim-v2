@@ -26,6 +26,12 @@ const YEARS_PER_PAGE = 12;
 
 export default function CalendarPicker({ dateRange, onChange }: CalendarPickerProps) {
   const [currentMonth, setCurrentMonth] = useState(() => {
+    // Abre no mês da data final do filtro atual (não no mês de hoje).
+    const ref = dateRange.to || dateRange.from;
+    if (ref) {
+      const d = parseDateString(ref);
+      if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
@@ -33,7 +39,10 @@ export default function CalendarPicker({ dateRange, onChange }: CalendarPickerPr
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("days");
   const [yearPageStart, setYearPageStart] = useState(() => {
-    const y = new Date().getFullYear();
+    const ref = dateRange.to || dateRange.from;
+    const y = ref && !isNaN(parseDateString(ref).getTime())
+      ? parseDateString(ref).getFullYear()
+      : new Date().getFullYear();
     return Math.floor(y / YEARS_PER_PAGE) * YEARS_PER_PAGE;
   });
 

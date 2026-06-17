@@ -184,19 +184,11 @@ export default function PlanningPageContent() {
     console.log(`Horário: ${startTime}`);
     console.log(`Item recebido:`, JSON.stringify(item, null, 2));
 
-    if (!item.amount || item.amount <= 0) {
-      console.warn('[INLINE SAVE] ❌ Valor inválido:', item.amount);
-      showMessage('Informe um valor maior que zero', 'error');
-      return;
-    }
-
     try {
       const categoryId = item.parentCategoryId || item.id;
-      const year = new Date(dateRange.from).getFullYear();
 
       const payload: Record<string, unknown> = {
         category_id: categoryId,
-        year: year,
         type: 'FIXED',
         default_amount: item.amount,
       };
@@ -341,11 +333,13 @@ export default function PlanningPageContent() {
   }, []);
 
   const handleShortcutChange = useCallback((days: number) => {
-    const to = new Date();
-    const from = new Date();
+    // Os atalhos partem da data final do filtro atual (não de hoje).
+    const [y, m, d] = dateRange.to.split('-').map(Number);
+    const to = new Date(y, m - 1, d);
+    const from = new Date(y, m - 1, d);
     from.setDate(from.getDate() - days);
     setDateRange({ from: formatDateISO(from), to: formatDateISO(to) });
-  }, []);
+  }, [dateRange.to]);
 
   const getSelectedShortcut = useCallback(() => {
     const from = new Date(dateRange.from);
@@ -396,7 +390,7 @@ export default function PlanningPageContent() {
             onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
             className="border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
           >
-            <option value="">Personalizado</option>
+            {getSelectedShortcut() === null && <option value="" disabled hidden>Selecione</option>}
             {SHORTCUTS.map(s => (
               <option key={s.days} value={s.days}>{s.label}</option>
             ))}
@@ -466,7 +460,7 @@ export default function PlanningPageContent() {
                     onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
                     className="hidden md:block border border-ui-border rounded-lg px-2 py-1 text-xs text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
                   >
-                    <option value="">Personalizado</option>
+                    {getSelectedShortcut() === null && <option value="" disabled hidden>Selecione</option>}
                     {SHORTCUTS.map(s => (
                       <option key={s.days} value={s.days}>{s.label}</option>
                     ))}
@@ -481,7 +475,6 @@ export default function PlanningPageContent() {
       {editingItem && (
         <PlanningEditModal
           item={editingItem}
-          year={new Date(dateRange.from).getFullYear()}
           onClose={() => setEditingItem(null)}
           onSaved={() => {
             setEditingItem(null);

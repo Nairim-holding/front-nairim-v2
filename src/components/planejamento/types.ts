@@ -20,6 +20,7 @@ export interface MonthlyPlanned {
 export interface DashboardItem {
   id: string;
   name: string;
+  planning_type?: 'FIXED' | 'VARIABLE';
   planned_amount: number;
   realized_amount: number;
   percentage: number;

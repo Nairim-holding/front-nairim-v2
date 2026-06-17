@@ -201,7 +201,9 @@ export default function PlanningEditModal({ item, onClose, onSaved }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: 'var(--color-overlay)' }}
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
