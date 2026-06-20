@@ -2,7 +2,7 @@
 
 import { useMemo, Fragment, forwardRef, useImperativeHandle, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Repeat } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from './types';
 
 const formatCurrency = (value: number | null | undefined): string => {
@@ -174,12 +174,12 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
             >
               {hasRealized ? (
                 <span className="inline-flex items-center justify-end gap-1">
-                  {isVariable && <Repeat size={10} className="shrink-0 opacity-70" />}
+                  {isVariable && <TrendingUp size={10} className="shrink-0 opacity-70" />}
                   {(isOverBudget ? '▲ ' : '') + formatCurrency(realizedValue)}
                 </span>
               ) : hasPlanned ? (
                 <span className="inline-flex items-center justify-end gap-1 text-content-muted/60 italic" title="Valor planejado (sem realizado)">
-                  {isVariable && <Repeat size={10} className="shrink-0" />}
+                  {isVariable && <TrendingUp size={10} className="shrink-0" />}
                   {formatCurrency(plannedValue)}
                 </span>
               ) : (
