@@ -23,6 +23,9 @@ export interface PropertyStepsConfig {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions?: SelectOption[];
+  categoryOptions?: SelectOption[];
+  subcategoryOptions?: SelectOption[];
+  subcategoriesRaw?: { id: string; name: string; category_id: string }[];
   readOnly?: boolean;
   /** Controls whether auto-filled address fields are editable (create/edit mode) */
   isManualAddress?: boolean;
@@ -35,6 +38,9 @@ export function buildPropertySteps({
   typeOptions,
   agencyOptions,
   centerOptions = [],
+  categoryOptions = [],
+  subcategoryOptions = [],
+  subcategoriesRaw = [],
   readOnly = false,
   isManualAddress = false,
   activeLease,
@@ -68,7 +74,6 @@ export function buildPropertySteps({
         { field: 'owner_id', label: 'Proprietário', type: 'select', required: true, options: ownerOptions, icon: <User size={20} />, className: 'col-span-full', ...ro },
         { field: 'type_id', label: 'Tipo do imóvel', type: 'select', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro },
         { field: 'agency_id', label: 'Imobiliária', type: 'select', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
-        { field: 'center_id', label: 'Centro de Custo', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...centerOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'furnished', label: 'Mobiliado', type: 'select', required: true, options: [{ label: 'Sim', value: 'true' }, { label: 'Não', value: 'false' }], icon: <Sofa size={20} />, className: 'col-span-full', ...ro },
         { field: 'registration_number', label: 'Nº Cadastro', type: 'text', required: false, placeholder: 'Número de cadastro do imóvel', icon: <Hash size={20} />, className: 'col-span-full', ...ro },
         { field: 'notes', label: 'Observações', type: 'textarea', placeholder: 'Escreva detalhes não especificados anteriormente', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
@@ -96,10 +101,32 @@ export function buildPropertySteps({
       title: 'Valores e Condições',
       icon: <DollarSign size={20} />,
       fields: [
+        { field: 'category_id', label: 'Categoria (Financeiro)', type: 'select', required: false, searchable: true, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
+        {
+          field: 'subcategory_id',
+          label: 'Subcategoria (Financeiro)',
+          type: 'select',
+          required: false,
+          searchable: true,
+          options: (formValues: any) => {
+            const categoryId = formValues?.category_id;
+            if (!categoryId) return [{ label: 'Nenhuma', value: '' }];
+            return [
+              { label: 'Nenhuma', value: '' },
+              ...subcategoriesRaw
+                .filter((s) => s.category_id === categoryId)
+                .map((s) => ({ label: s.name || 'Sem nome', value: s.id })),
+            ];
+          },
+          icon: <Landmark size={20} />,
+          ...ro,
+        } as any,
+        { field: 'center_id', label: 'Centro de Custo', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...centerOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: false, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },
         { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },
+        { field: 'property_tax', label: 'Valor IPTU (Base de Referência)', type: 'text', placeholder: 'R$ 1.200,00', mask: 'money', icon: <FileText size={20} />, ...ro },
         { field: 'market_value', label: 'Valor Venal', type: 'text', placeholder: 'R$ 0,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         {
           field: 'status',
@@ -128,7 +155,6 @@ export function buildPropertySteps({
       title: 'IPTU',
       icon: <Landmark size={20} />,
       fields: [
-        { field: 'property_tax', label: 'Valor IPTU (Base de Referência)', type: 'text', required: true, placeholder: 'R$ 1.200,00', mask: 'money', icon: <FileText size={20} />, className: 'col-span-full md:col-span-1', ...ro },
         {
           field: 'iptus',
           label: '',

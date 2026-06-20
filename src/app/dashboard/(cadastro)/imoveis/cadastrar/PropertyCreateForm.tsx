@@ -17,9 +17,12 @@ interface Props {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions: SelectOption[];
+  categoryOptions: SelectOption[];
+  subcategoryOptions: SelectOption[];
+  subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
-export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
+export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
   const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
@@ -29,13 +32,15 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   const { state: uploadState, uploadAndTrack } = useUploadSSE();
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress }),
-    [ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress],
   );
 
   const handleFieldChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (fieldName: string, value: any) => {
+      if (fieldName === 'category_id') return { subcategory_id: '' };
+
       if (fieldName !== 'zip_code' || !value) return null;
 
       const cleanCEP = value.replace(/\D/g, '');

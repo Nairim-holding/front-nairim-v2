@@ -92,12 +92,20 @@ export default function EditarLocacaoPage() {
         const property = result.data || result;
         const propertyValues = property.values?.[0] || {};
         
+        const propertyAgency = property.agency_id ? agencies.find((a) => a.id === property.agency_id) : null;
+
         const updates: any = {
           type_id: property.type_id,
           owner_id: property.owner_id,
           agency_id: property.agency_id || '',
           type_display: property.type?.description || 'Tipo não encontrado',
           owner_display: property.owner?.name || 'Proprietário não encontrado',
+          category_display: property.category?.name || 'Sem categoria',
+          subcategory_display: property.subcategory?.name || 'Sem subcategoria',
+          center_display: property.center?.name || 'Sem centro de custo',
+          commission_category_display: propertyAgency?.commission_category
+            ? `${propertyAgency.commission_category.name}${propertyAgency.commission_subcategory ? ' › ' + propertyAgency.commission_subcategory.name : ''}`
+            : (property.agency_id ? 'Sem categoria de comissão' : ''),
           rent_amount: propertyValues.rental_value ? formatMoney(parseMoney(propertyValues.rental_value)) : '',
           condo_fee: propertyValues.condo_fee ? formatMoney(parseMoney(propertyValues.condo_fee)) : '',
           property_tax: propertyValues.property_tax ? formatMoney(parseMoney(propertyValues.property_tax)) : '',
@@ -114,6 +122,16 @@ export default function EditarLocacaoPage() {
         showMessage(error.message || 'Erro ao buscar dados do imóvel', 'error');
         return null;
       }
+    }
+
+    if (fieldName === 'agency_id' && value) {
+      const agency = agencies.find(a => a.id === value);
+      if (agency?.commission_category) {
+        return {
+          commission_category_display: `${agency.commission_category.name}${agency.commission_subcategory ? ' › ' + agency.commission_subcategory.name : ''}`,
+        };
+      }
+      return { commission_category_display: 'Sem categoria de comissão' };
     }
 
     if (fieldName === 'agency_commission' || fieldName === 'rent_amount') {
@@ -138,11 +156,15 @@ export default function EditarLocacaoPage() {
     }
 
     return null;
-  }, [formValues, showMessage]);
+  }, [formValues, showMessage, agencies]);
 
   const handleSubmit = async (data: any) => {
     try {
       if (!data.property_id) throw new Error('Selecione um imóvel para continuar');
+      if (!data.category_display || data.category_display === 'Sem categoria') throw new Error('O imóvel deve ter uma categoria selecionada');
+      if (!data.center_display || data.center_display === 'Sem centro de custo') throw new Error('O imóvel deve ter um centro de custo selecionado');
+      if (!data.agency_id) throw new Error('Selecione uma imobiliária para continuar');
+      if (!data.commission_category_display || data.commission_category_display === 'Sem categoria de comissão') throw new Error('A imobiliária selecionada deve ter uma categoria de comissão');
 
       const formattedData: any = {
         property_id: data.property_id,
@@ -245,8 +267,14 @@ export default function EditarLocacaoPage() {
       owner_id: apiData.owner_id || '',
       type_display: apiData.property?.type?.description || apiData.type?.description || '',
       owner_display: apiData.property?.owner?.name || apiData.owner?.name || '',
+      category_display: apiData.property?.category?.name || 'Sem categoria',
+      subcategory_display: apiData.property?.subcategory?.name || 'Sem subcategoria',
+      center_display: apiData.property?.center?.name || 'Sem centro de custo',
       tenant_id: apiData.tenant_id || '',
       agency_id: apiData.agency_id || '',
+      commission_category_display: apiData.agency?.commission_category
+        ? `${apiData.agency.commission_category.name}${apiData.agency.commission_subcategory ? ' › ' + apiData.agency.commission_subcategory.name : ''}`
+        : 'Sem categoria de comissão',
       financial_institution_id: apiData.financial_institution_id || '',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
@@ -301,7 +329,6 @@ export default function EditarLocacaoPage() {
           { field: 'owner_display', label: 'Proprietário', type: 'text', required: true, icon: <User size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel primeiro' },
           { field: 'tenant_id', label: 'Inquilino', type: 'select', required: true, options: loadingData ? [{ label: 'Carregando inquilinos...', value: '' }] : tenants.map((tenant) => ({ label: tenant.name, value: tenant.id })), icon: <User size={20} />, className: 'col-span-full' },
           { field: 'agency_id', label: 'Imobiliária', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...agencies.map((a) => ({ label: a.trade_name, value: a.id }))], icon: <Building size={20} /> },
-          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} /> },
           { field: 'notes', label: 'Observações Gerais', type: 'textarea', rows: 3, icon: <FileText size={20} />, className: 'col-span-full' },
         ],
       },
@@ -309,9 +336,14 @@ export default function EditarLocacaoPage() {
         title: 'Valores da Locação',
         icon: <DollarSign size={20} />,
         fields: [
+          { field: 'category_display', label: 'Categoria do Imóvel', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel' },
+          { field: 'subcategory_display', label: 'Subcategoria do Imóvel', type: 'text', icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel' },
+          { field: 'center_display', label: 'Centro de Custo', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel', className: 'col-span-full' },
+          { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
+          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, icon: <DollarSign size={20} />, mask: 'money' },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
-          { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: true, icon: <File size={20} />, mask: 'money' },
+          { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <File size={20} />, mask: 'money' },
           { field: 'extra_charges', label: 'Taxas Extras', type: 'text', icon: <Calculator size={20} />, mask: 'money' },
           { field: 'agency_commission', label: 'Comissão Imobiliária (%)', type: 'number', maxLength: 3, icon: <Percent size={20} /> },
           { field: 'commission_amount', label: 'Valor Comissão', type: 'text', icon: <DollarSign size={20} />, readOnly: true, disabled: true, className: 'bg-gray-50', mask: 'money' },
@@ -345,7 +377,7 @@ export default function EditarLocacaoPage() {
             field: 'iptu_year',
             label: 'Ano do Exercício (IPTU)',
             type: 'number',
-            required: true,
+            required: false,
             icon: <Calendar size={20} />,
             placeholder: new Date().getFullYear().toString(),
             defaultValue: new Date().getFullYear().toString(),
@@ -357,7 +389,7 @@ export default function EditarLocacaoPage() {
             field: 'payment_condition',
             label: 'Selecione o Método de Pagamento Desta Locação',
             type: 'select',
-            required: true,
+            required: false,
             options: [
               { label: 'À vista (com 15% de desconto)', value: 'IN_FULL_15_DISCOUNT' },
               { label: 'Parcelado na 2ª (com 10% de desconto)', value: 'SECOND_INSTALLMENT_10_DISCOUNT' },

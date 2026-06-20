@@ -580,11 +580,8 @@ export default function DynamicFormManager({
       Promise.resolve(onFieldChange(fieldName, parsedValue))
         .then(result => {
           if (result && typeof result === 'object') {
-            setFormValues(current => {
-              const newVals = { ...current, ...result };
-              if (onFormValuesChange) onFormValuesChange(newVals);
-              return newVals;
-            });
+            setFormValues(current => ({ ...current, ...result }));
+            if (onFormValuesChange) onFormValuesChange({ ...updatedValues, ...result });
           }
         })
         .catch(error => console.error(error));
@@ -599,11 +596,8 @@ export default function DynamicFormManager({
         const nextValues = onStepComplete(currentStep, formValues);
 
         if (nextValues && typeof nextValues === 'object') {
-          setFormValues(current => {
-            const merged = { ...current, ...nextValues };
-            if (onFormValuesChange) onFormValuesChange(merged);
-            return merged;
-          });
+          setFormValues(current => ({ ...current, ...nextValues }));
+          if (onFormValuesChange) onFormValuesChange({ ...formValues, ...nextValues });
         }
       }
       
@@ -945,7 +939,7 @@ export default function DynamicFormManager({
               label={field.label}
               required={field.required}
               disabled={shouldDisable}
-              options={field.options || []}
+              options={typeof field.options === 'function' ? field.options(formValues) : (field.options || [])}
               value={value}
               onChange={(selectedValue: string | number) => handleChange(field.field, selectedValue)}
               placeholder={field.placeholder || "Selecione..."}

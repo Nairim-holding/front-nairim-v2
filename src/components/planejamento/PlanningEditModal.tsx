@@ -268,6 +268,7 @@ export default function PlanningEditModal({ item, onClose, onSaved }: Props) {
                       placeholder="0,00"
                       className={inputClass}
                       pattern="[0-9,.]*"
+                      autoFocus={monthNum === new Date().getMonth() + 1}
                     />
                   </div>
                 );

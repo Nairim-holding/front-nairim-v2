@@ -93,6 +93,26 @@ export function buildCenterOptions(centers: any[]) {
   }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildCategoryOptions(categories: any[]) {
+  return categories.map((c) => ({
+    label: c.name || 'Sem nome',
+    value: c.id as string,
+  }));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildSubcategoryOptions(subcategories: any[], categories: any[] = []) {
+  const catName = new Map<string, string>(categories.map((c) => [c.id, c.name]));
+  return subcategories.map((s) => {
+    const parent = catName.get(s.category_id);
+    return {
+      label: parent ? `${parent} › ${s.name}` : (s.name || 'Sem nome'),
+      value: s.id as string,
+    };
+  });
+}
+
 // ─── API fetchers (server-side) ───────────────────────────────────────────────
 
 export interface PropertySelectOptions {
@@ -100,6 +120,9 @@ export interface PropertySelectOptions {
   typeOptions: { label: string; value: string }[];
   agencyOptions: { label: string; value: string }[];
   centerOptions: { label: string; value: string }[];
+  categoryOptions: { label: string; value: string }[];
+  subcategoryOptions: { label: string; value: string }[];
+  subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
 function authHeaders(token?: string): HeadersInit | undefined {
@@ -109,25 +132,37 @@ function authHeaders(token?: string): HeadersInit | undefined {
 export async function fetchPropertySelectOptions(token?: string): Promise<PropertySelectOptions> {
   const API_URL = getApiUrl();
   const headers = authHeaders(token);
-  const [ownersRes, typesRes, agenciesRes, centersRes] = await Promise.all([
+  const [ownersRes, typesRes, agenciesRes, centersRes, categoriesRes, subcategoriesRes] = await Promise.all([
     fetch(`${API_URL}/owners`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/property-types`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/agencies`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/financial-center?limit=1000`, { cache: 'no-store', headers }),
+    fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
+    fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
   ]);
 
-  const [owners, types, agencies, centers] = await Promise.all([
+  const [owners, types, agencies, centers, categories, subcategories] = await Promise.all([
     ownersRes.json(),
     typesRes.json(),
     agenciesRes.json(),
     centersRes.ok ? centersRes.json() : Promise.resolve({ data: [] }),
+    categoriesRes.ok ? categoriesRes.json() : Promise.resolve({ data: [] }),
+    subcategoriesRes.ok ? subcategoriesRes.json() : Promise.resolve({ data: [] }),
   ]);
+
+  // Mantém apenas categorias do USUÁRIO — remove as criadas pelo sistema (is_system).
+  const categoryList = (categories.data || []).filter((c: any) => !c.is_system);
+  const userCategoryIds = new Set(categoryList.map((c: any) => c.id));
+  const subcategoryList = (subcategories.data || []).filter((s: any) => userCategoryIds.has(s.category_id));
 
   return {
     ownerOptions: buildOwnerOptions(owners.data || []),
     typeOptions: buildTypeOptions(types.data || []),
     agencyOptions: buildAgencyOptions(agencies.data || []),
     centerOptions: buildCenterOptions(centers.data || []),
+    categoryOptions: buildCategoryOptions(categoryList),
+    subcategoryOptions: buildSubcategoryOptions(subcategoryList, categoryList),
+    subcategoriesRaw: subcategoryList.map((s: any) => ({ id: s.id, name: s.name, category_id: s.category_id })),
   };
 }
 
@@ -178,6 +213,8 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     type_id:          data.type_id ?? '',
     agency_id:        data.agency_id ?? '',
     center_id:        data.center_id ?? '',
+    category_id:      data.category_id ?? '',
+    subcategory_id:   data.subcategory_id ?? '',
     furnished:        data.furnished?.toString() ?? 'false',
     registration_number: data.registration_number ?? '',
     notes:            data.notes ?? '',
@@ -258,6 +295,8 @@ export function buildPropertyFormData(
     type_id:          data.type_id,
     agency_id:        data.agency_id || null,
     center_id:        data.center_id || null,
+    category_id:      data.category_id || null,
+    subcategory_id:   data.subcategory_id || null,
     registration_number: data.registration_number || null,
   }));
 

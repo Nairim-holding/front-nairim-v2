@@ -13,17 +13,20 @@ interface Props {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions: SelectOption[];
+  categoryOptions: SelectOption[];
+  subcategoryOptions: SelectOption[];
+  subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
 const COMPLETED_STEPS = [0, 1, 2, 3, 4];
 const noop = async () => null;
 
-export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
+export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
   const activeLease = propertyData?.leases?.[0];
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, readOnly: true, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, centerOptions, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, readOnly: true, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, activeLease],
   );
 
   const transformData = useCallback(

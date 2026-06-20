@@ -129,6 +129,9 @@ export default function VisualizarLocacaoPage() {
       tenant_id: apiData.tenant_id || '',
       agency_display: apiData.agency?.trade_name || 'Nenhuma',
       financial_institution_display: apiData.financial_institution?.name || 'Nenhuma',
+      category_display: apiData.property?.category?.name || 'Sem categoria',
+      subcategory_display: apiData.property?.subcategory?.name || 'Sem subcategoria',
+      center_display: apiData.property?.center?.name || 'Sem centro de custo',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
@@ -259,11 +262,11 @@ export default function VisualizarLocacaoPage() {
             label: 'Inquilino',
             type: 'select',
             required: true,
-            options: loadingData 
+            options: loadingData
               ? [{ label: 'Carregando inquilinos...', value: '' }]
-              : tenants.map((tenant) => ({ 
-                  label: tenant.name, 
-                  value: tenant.id 
+              : tenants.map((tenant) => ({
+                  label: tenant.name,
+                  value: tenant.id
                 })),
             icon: <User size={20} />,
             className: 'col-span-full',
@@ -275,14 +278,6 @@ export default function VisualizarLocacaoPage() {
             label: 'Imobiliária',
             type: 'text',
             icon: <Building size={20} />,
-            readOnly: true,
-            disabled: true,
-          },
-          {
-            field: 'financial_institution_display',
-            label: 'Instituição Financeira',
-            type: 'text',
-            icon: <CreditCard size={20} />,
             readOnly: true,
             disabled: true,
           },
@@ -302,6 +297,49 @@ export default function VisualizarLocacaoPage() {
         title: 'Valores da Locação',
         icon: <DollarSign size={20} />,
         fields: [
+          {
+            field: 'category_display',
+            label: 'Categoria do Imóvel',
+            type: 'text',
+            icon: <Building size={20} />,
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'subcategory_display',
+            label: 'Subcategoria do Imóvel',
+            type: 'text',
+            icon: <Building size={20} />,
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'center_display',
+            label: 'Centro de Custo',
+            type: 'text',
+            icon: <Building size={20} />,
+            className: 'col-span-full',
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'commission_category_display',
+            label: 'Categoria de Comissão',
+            type: 'text',
+            icon: <Building size={20} />,
+            className: 'col-span-full',
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'financial_institution_display',
+            label: 'Instituição Financeira',
+            type: 'text',
+            icon: <CreditCard size={20} />,
+            className: 'col-span-full',
+            readOnly: true,
+            disabled: true,
+          },
           {
             field: 'rent_amount',
             label: 'Valor do Aluguel',

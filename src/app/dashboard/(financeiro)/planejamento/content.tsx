@@ -14,9 +14,9 @@ import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData }
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 const SHORTCUTS = [
-  { label: 'Últimos 3 meses', days: 90 },
-  { label: 'Últimos 6 meses', days: 180 },
-  { label: 'Últimos 12 meses', days: 365 },
+  { label: 'Últimos 3 meses', months: 3 },
+  { label: 'Últimos 6 meses', months: 6 },
+  { label: 'Últimos 12 meses', months: 12 },
 ];
 
 function formatDateISO(date: Date): string {
@@ -47,6 +47,9 @@ export default function PlanningPageContent() {
     to: searchParams.get('to') || defaults.to,
   }));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  // Limita a exibição aos últimos N meses DENTRO do período do calendário.
+  // null = mostra todos os meses do período filtrado.
+  const [viewMonths, setViewMonths] = useState<number | null>(null);
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<(DashboardItem | CategoryDashboard) & { parentCategoryId?: string } | null>(null);
@@ -332,21 +335,13 @@ export default function PlanningPageContent() {
     }
   }, []);
 
-  const handleShortcutChange = useCallback((days: number) => {
-    // Os atalhos partem da data final do filtro atual (não de hoje).
-    const [y, m, d] = dateRange.to.split('-').map(Number);
-    const to = new Date(y, m - 1, d);
-    const from = new Date(y, m - 1, d);
-    from.setDate(from.getDate() - days);
-    setDateRange({ from: formatDateISO(from), to: formatDateISO(to) });
-  }, [dateRange.to]);
+  // O dropdown só limita a quantidade de meses exibidos dentro do período
+  // do calendário — NÃO altera as datas De–Até do filtro selecionado.
+  const handleShortcutChange = useCallback((months: number | null) => {
+    setViewMonths(months);
+  }, []);
 
-  const getSelectedShortcut = useCallback(() => {
-    const from = new Date(dateRange.from);
-    const to = new Date(dateRange.to);
-    const daysDiff = Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-    return SHORTCUTS.find(s => s.days === daysDiff)?.days ?? null;
-  }, [dateRange]);
+  const getSelectedShortcut = useCallback(() => viewMonths, [viewMonths]);
 
   const balanceMonths = useMemo(() => {
     if (!data) return [];
@@ -387,12 +382,12 @@ export default function PlanningPageContent() {
           </div>
           <select
             value={getSelectedShortcut() ?? ''}
-            onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
+            onChange={(e) => handleShortcutChange(e.target.value ? Number(e.target.value) : null)}
             className="border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
           >
-            {getSelectedShortcut() === null && <option value="" disabled hidden>Selecione</option>}
+            <option value="">Todos os meses</option>
             {SHORTCUTS.map(s => (
-              <option key={s.days} value={s.days}>{s.label}</option>
+              <option key={s.months} value={s.months}>{s.label}</option>
             ))}
           </select>
           <button
@@ -450,6 +445,7 @@ export default function PlanningPageContent() {
                 ref={planningTableRef}
                 data={data}
                 dateRangeFrom={dateRange.from}
+                viewMonths={viewMonths}
                 onEditItem={setEditingItem}
                 onSaveInline={handleSaveInline}
                 balanceMonths={balanceMonths.length > 0 ? balanceMonths : undefined}
@@ -457,12 +453,12 @@ export default function PlanningPageContent() {
                 statsSlot={
                   <select
                     value={getSelectedShortcut() ?? ''}
-                    onChange={(e) => { if (e.target.value) handleShortcutChange(Number(e.target.value)); }}
+                    onChange={(e) => handleShortcutChange(e.target.value ? Number(e.target.value) : null)}
                     className="hidden md:block border border-ui-border rounded-lg px-2 py-1 text-xs text-content bg-surface focus:outline-none focus:border-brand cursor-pointer"
                   >
-                    {getSelectedShortcut() === null && <option value="" disabled hidden>Selecione</option>}
+                    <option value="">Todos os meses</option>
                     {SHORTCUTS.map(s => (
-                      <option key={s.days} value={s.days}>{s.label}</option>
+                      <option key={s.months} value={s.months}>{s.label}</option>
                     ))}
                   </select>
                 }

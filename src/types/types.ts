@@ -45,7 +45,7 @@ export interface FormFieldDef {
   required?: boolean;
   placeholder?: string;
   defaultValue?: any;
-  options?: Option[];
+  options?: Option[] | ((formValues: any) => Option[]);
   validation?: {
     pattern?: RegExp;
     patternMessage?: string;

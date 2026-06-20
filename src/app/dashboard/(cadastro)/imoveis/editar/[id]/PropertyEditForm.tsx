@@ -20,9 +20,12 @@ interface Props {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions: SelectOption[];
+  categoryOptions: SelectOption[];
+  subcategoryOptions: SelectOption[];
+  subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
-export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions }: Props) {
+export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
   const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
@@ -35,8 +38,8 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED'); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, centerOptions, isManualAddress, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease],
   );
 
   const transformData = useCallback(
@@ -53,6 +56,8 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const handleFieldChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (fieldName: string, value: any) => {
+      if (fieldName === 'category_id') return { subcategory_id: '' };
+
       if (fieldName !== 'zip_code' || !value) return null;
 
       const cleanCEP = value.replace(/\D/g, '');
