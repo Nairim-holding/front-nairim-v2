@@ -3,7 +3,8 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2 } from "lucide-react";
+import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import Toggle from "@/components/ui/Toggle";
@@ -227,12 +228,17 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
       
       // Se não cabe embaixo, abre em cima
       const openAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-      
+
+      // Auto-largura: o painel cresce além da célula até caber o texto mais longo,
+      // limitado para não estourar a viewport à direita (e teto absoluto de 480px).
+      const maxWidth = Math.min(480, window.innerWidth - rect.left - 12);
+
       setDropdownStyle({
         position: 'fixed',
         left: rect.left,
         top: openAbove ? rect.top - dropdownHeight : rect.bottom,
-        width: rect.width,
+        minWidth: rect.width,
+        maxWidth: Math.max(rect.width, maxWidth),
         maxHeight: openAbove ? Math.min(dropdownHeight, spaceAbove - 10) : Math.min(dropdownHeight, spaceBelow - 10),
         zIndex: 9999,
       });
@@ -328,7 +334,7 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
                           isHighlighted ? 'bg-brand/10 text-brand' : 'hover:bg-surface-subtle'
                         } ${isSelected ? 'bg-brand/5 font-medium text-brand' : 'text-content'}`}
                       >
-                        <span className="truncate">{opt.label}</span>
+                        <span className="whitespace-normal break-words">{opt.label}</span>
                         {isSelected && <Check size={12} className="text-brand flex-shrink-0 ml-1" />}
                       </button>
                     );
@@ -417,6 +423,7 @@ export default function InlineEditableTable({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [hasDateFilter, setHasDateFilter] = useState(true);
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
@@ -748,6 +755,30 @@ export default function InlineEditableTable({
     return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
   }, [formatCellValue, getNestedValue, formOptions]);
 
+  // Versão "texto puro" de getCellValue, usada na exportação para Excel
+  // (getCellValue retorna JSX para status/valor/descrição, que não serve para uma célula).
+  const getExportCellValue = useCallback((item: any, column: ColumnDef): string => {
+    const field = column.field;
+    if (field === "status" && ['PENDING', 'COMPLETED'].includes(item[field])) {
+      return item[field] === 'COMPLETED' ? 'Concluído' : 'Pendente';
+    }
+    if (field === "amount") {
+      return formatCellValue(item[field], column);
+    }
+
+    const specialFields: Record<string, any> = {
+      category_id: item.category?.name, card_id: item.card?.name, subcategory_id: item.subcategory?.name,
+      financial_institution_id: item.financial_institution?.name || formOptions.institutions.find(i => i.value === item.financial_institution_id)?.label, center_id: item.center?.name,
+      supplier_id: item.supplier?.name || formOptions.suppliers.find(s => s.value === item.supplier_id)?.label
+    };
+    if (field in specialFields) return formatCellValue(specialFields[field] || '', column);
+
+    if (field === 'description') return item[field] || '';
+
+    const val = item[field] || getNestedValue(item, field);
+    return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
+  }, [formatCellValue, getNestedValue, formOptions]);
+
   const headers = useMemo(() => dataColumns.map(col => ({ label: col.label, field: col.field, sortParam: col.sortParam || col.field })), [dataColumns]);
 
   const updateEditingRow = useCallback((id: string, field: string, value: any) => {
@@ -878,6 +909,79 @@ export default function InlineEditableTable({
       () => {}
     );
   }, [selectedCheckboxes, onRowDelete, showPopup, showMessage, refreshData]);
+
+  // Exporta para .xlsx todos os registros que casam com o período/filtros/busca
+  // atualmente aplicados (não apenas a página em exibição) — pagina internamente
+  // respeitando o limite de 100 registros por requisição do backend.
+  const handleExportExcel = useCallback(async () => {
+    if (!meta || meta.total === 0) {
+      showMessage('Não há dados para exportar', 'error');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const exportLimit = 100;
+      const totalPages = Math.max(1, Math.ceil(meta.total / exportLimit));
+      const allItems: any[] = [];
+
+      for (let p = 1; p <= totalPages; p++) {
+        const params = new URLSearchParams();
+        params.append('page', String(p));
+        params.append('limit', String(exportLimit));
+        if (state.search) params.append('search', state.search);
+
+        Object.entries(state.sort || {}).forEach(([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            params.append(`sort[${key.replace(/^sort_/, '')}]`, value as string);
+          }
+        });
+
+        Object.entries(state.filters || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === '') return;
+          params.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+        });
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resource}?${params.toString()}`);
+        if (!res.ok) throw new Error(`Erro ${res.status} ao buscar dados para exportação`);
+        const json = await res.json();
+        const pageItems = Array.isArray(json.data) ? json.data : Array.isArray(json.items) ? json.items : [];
+        allItems.push(...pageItems);
+      }
+
+      const exportItems = activeTab === 'ALL' ? allItems : allItems.filter((item: any) => {
+        const isIncome = item.category?.type === 'INCOME';
+        return activeTab === 'INCOME' ? isIncome : !isIncome;
+      });
+
+      const rows = exportItems.map((item: any) => {
+        const row: Record<string, string> = {};
+        dataColumns.forEach((col) => {
+          row[col.label] = getExportCellValue(item, col);
+        });
+        return row;
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows, { header: dataColumns.map(c => c.label) });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
+
+      const dateField = isEventDate ? 'event_date' : 'effective_date';
+      const periodFilter = state.filters[dateField] as { from?: string; to?: string } | undefined;
+      const fromStr = periodFilter?.from || dateRange.from;
+      const toStr = periodFilter?.to || dateRange.to;
+      const fileName = fromStr && toStr
+        ? `lancamentos_${fromStr}_${toStr}.xlsx`
+        : `lancamentos_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
+      showMessage('Exportação concluída com sucesso', 'success');
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [meta, state, resource, activeTab, dataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage]);
 
   const renderEditableCell = useCallback((item: any, column: ColumnDef, row?: EditingRow) => {
     if (!row?.isEditing) return getCellValue(item, column);
@@ -1144,7 +1248,7 @@ export default function InlineEditableTable({
               </div>
             )}
           </div>
-          
+
           <button
             onClick={() => {
               setHasDateFilter(false);
@@ -1157,6 +1261,26 @@ export default function InlineEditableTable({
             <span>Limpar</span>
             <X size={12} />
           </button>
+
+          <button
+            onClick={() => refreshData()}
+            disabled={isLoadingData}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Recarregar"
+          >
+            <RefreshCw size={16} className={isLoadingData ? 'animate-spin' : ''} />
+          </button>
+
+          {hasDateFilter && dateRange.from && dateRange.to && (
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting || isLoadingData}
+              className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+              title="Exportar para Excel"
+            >
+              <FileSpreadsheet size={16} className={isExporting ? 'animate-pulse' : ''} />
+            </button>
+          )}
           {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={4} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
           
           {/* Pesquisa logo após Limpar */}
@@ -1204,7 +1328,7 @@ export default function InlineEditableTable({
         <TableInformations
           headers={headers}
           sort={state.sort}
-          onSort={s => updateState({ sort: { [s]: state.sort[s] === "desc" ? "asc" : "desc" }, page: 1 })}
+          onSort={s => updateState({ sort: { [s]: state.sort[s] === "asc" ? "desc" : "asc" }, page: 1 })}
           onSelectAll={e => setSelectedCheckboxes(e.target.checked ? displayItems.map((i: any) => i.id) : [])}
           allSelected={selectedCheckboxes.length === displayItems.length && displayItems.length > 0}
           hasActions={true}

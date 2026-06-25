@@ -217,9 +217,9 @@ export default function Select({
       </div>
 
       {isOpen && !disabled && (
-        <div 
+        <div
           ref={optionsListRef as React.RefObject<HTMLDivElement>}
-          className="absolute z-50 w-full bg-surface border border-ui-border rounded-lg mt-1 shadow-lg max-h-60 flex flex-col"
+          className="absolute z-50 min-w-full w-max max-w-[min(32rem,90vw)] bg-surface border border-ui-border rounded-lg mt-1 shadow-lg max-h-60 flex flex-col"
         >
           {searchable && (
             <div className="p-2 border-b border-ui-border-soft sticky top-0 bg-surface z-10 flex items-center gap-2">
@@ -252,7 +252,7 @@ export default function Select({
                   key={`${option.value}-${index}`}
                   ref={(el) => { optionRefs.current[index] = el; }}
                   className={`
-                    py-2 px-4 cursor-pointer outline-none text-[14px]
+                    py-2 px-4 cursor-pointer outline-none text-[14px] whitespace-normal break-words
                     ${String(selectedValue) === String(option.value) ? 'bg-surface-subtle text-brand-hover font-semibold' : ''}
                     hover:bg-surface-subtle focus:bg-surface-subtle focus:text-brand-hover
                   `}

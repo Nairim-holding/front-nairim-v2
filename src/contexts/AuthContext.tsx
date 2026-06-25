@@ -2,6 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getTokenExpiryMs, getTokenMaxAgeSeconds } from '@/utils/jwt';
+
+const DEFAULT_TOKEN_MAX_AGE_SECONDS = 12 * 60 * 60;
+// Renova o token em background bem antes de expirar, para que uso ativo nunca seja interrompido.
+const REFRESH_BEFORE_EXPIRY_MS = 30 * 60 * 1000;
 
 interface User {
   id: string;
@@ -61,12 +66,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: false,
       isLoading: false,
     });
-    navigation.refresh();
+    navigation.push('/login');
   }, [navigation]);
 
   const login = (token: string, user: User) => {
-    // max-age=7200 → persiste 2h (alinhado com a expiração do JWT)
-    document.cookie = `authToken=${token}; path=/; SameSite=Lax; max-age=7200`;
+    // max-age acompanha o exp real do token (configurado via JWT_EXPIRES_IN no backend)
+    const maxAge = getTokenMaxAgeSeconds(token, DEFAULT_TOKEN_MAX_AGE_SECONDS);
+    document.cookie = `authToken=${token}; path=/; SameSite=Lax; max-age=${maxAge}`;
 
     sessionStorage.setItem('userData', JSON.stringify(user));
 
@@ -161,6 +167,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       window.removeEventListener('auth:logout', handleLogoutEvent);
     };
   }, [logout]);
+
+  // Renova o token em background antes de expirar e reage quando a aba volta a
+  // ficar visível (notebook suspenso, aba inativa) para nunca interromper uso ativo.
+  useEffect(() => {
+    const token = authState.token;
+    if (!token) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const performRefresh = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+        const response = await fetch(`${API_URL}/auth/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result?.data?.token) {
+          throw new Error(result?.message || 'Falha ao renovar token');
+        }
+
+        if (cancelled) return;
+
+        const newToken = result.data.token as string;
+        const maxAge = getTokenMaxAgeSeconds(newToken, DEFAULT_TOKEN_MAX_AGE_SECONDS);
+        document.cookie = `authToken=${newToken}; path=/; SameSite=Lax; max-age=${maxAge}`;
+        setAuthState(prev => ({ ...prev, token: newToken }));
+        console.log('[AuthContext] Token renovado em background.');
+      } catch (error) {
+        console.warn('[AuthContext] Não foi possível renovar o token em background:', error);
+        if (!cancelled) window.dispatchEvent(new CustomEvent('auth:logout'));
+      }
+    };
+
+    const expiryMs = getTokenExpiryMs(token);
+    if (expiryMs !== null) {
+      const msUntilRefresh = Math.max(0, expiryMs - Date.now() - REFRESH_BEFORE_EXPIRY_MS);
+      timer = setTimeout(performRefresh, msUntilRefresh);
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      const remainingMs = getTokenExpiryMs(token);
+      if (remainingMs !== null && remainingMs - Date.now() <= REFRESH_BEFORE_EXPIRY_MS) {
+        performRefresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [authState.token]);
 
   const setLoading = (loading: boolean) => {
     setAuthState(prev => ({

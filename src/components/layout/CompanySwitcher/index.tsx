@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Building2, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getTokenMaxAgeSeconds } from '@/utils/jwt';
 import Image from 'next/image';
 
 interface Company {
@@ -116,6 +117,11 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
       if (!res.ok || !json.success) throw new Error(json.message ?? 'Erro ao trocar empresa');
 
       const { token, user } = json.data;
+
+      // Re-grava o cookie de slug com o max-age real do novo token (o cookie
+      // otimista acima foi setado com um valor provisório antes do token existir)
+      const maxAge = getTokenMaxAgeSeconds(token, 12 * 60 * 60);
+      document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=${maxAge}`;
 
       // Atualiza sessão com novo JWT (novo company_id)
       login(token, user);

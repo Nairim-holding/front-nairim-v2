@@ -14,6 +14,8 @@ export interface DynamicFilter {
   min?: string;
   max?: string;
   dateRange?: boolean;
+  multiple?: boolean;
+  dependsOn?: { field: string; matchKey: string };
 }
 
 export interface FilterOperators {
@@ -51,16 +53,20 @@ export const useDynamicFilters = (endpoint: string, appliedFilters?: Record<stri
         console.log('📤 Sending applied filters to backend:', appliedFilters);
         
         Object.entries(appliedFilters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
-            // Para objetos como date ranges
-            if (typeof value === 'object' && value.from && value.to) {
-              // Enviar como JSON string para o backend parsear
-              params.append(key, JSON.stringify(value));
-            } 
-            // Para valores simples
-            else if (typeof value === 'string') {
-              params.append(key, value);
-            }
+          if (value === undefined || value === null || value === '') return;
+
+          // Filtros multi-seleção: chave repetida, igual ao formato aceito pelo endpoint de listagem
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, String(v)));
+          }
+          // Para objetos como date ranges
+          else if (typeof value === 'object' && value.from && value.to) {
+            // Enviar como JSON string para o backend parsear
+            params.append(key, JSON.stringify(value));
+          }
+          // Para valores simples
+          else if (typeof value === 'string') {
+            params.append(key, value);
           }
         });
       }

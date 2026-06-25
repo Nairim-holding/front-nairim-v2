@@ -833,6 +833,7 @@ export default function DynamicFormManager({
       showIncrementButtons: field.type === 'number' && field.showIncrementButtons,
       min: field.min,
       max: field.max,
+      full: (field as any).full,
     };
 
     switch (field.type) {

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getTokenMaxAgeSeconds } from '@/utils/jwt';
 import { useRateLimit } from '@/hooks/useRateLimit';
 import { LoginForm } from '@/components/auth/Form';
 import { RateLimitWarning } from '@/components/auth/RateLimitWarning';
@@ -72,7 +73,8 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
       // Slug da empresa: vem da URL /[slug]/login ou da resposta do login
       const slug = companySlug ?? data.data.user.company_slug ?? '';
       if (slug) {
-        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=7200`;
+        const maxAge = getTokenMaxAgeSeconds(data.data.token, 12 * 60 * 60);
+        document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=${maxAge}`;
       }
 
       login(data.data.token, data.data.user);

@@ -77,11 +77,15 @@ export default function SupplierAutocomplete({
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
     const openAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+    // Auto-largura: cresce além do campo até caber o texto mais longo, sem
+    // estourar a viewport à direita (teto absoluto de 480px).
+    const maxWidth = Math.min(480, window.innerWidth - rect.left - 12);
     setDropdownStyle({
       position: 'fixed',
       left: rect.left,
       top: openAbove ? rect.top - dropdownHeight : rect.bottom,
-      width: rect.width,
+      minWidth: rect.width,
+      maxWidth: Math.max(rect.width, maxWidth),
       maxHeight: openAbove ? Math.min(dropdownHeight, spaceAbove - 10) : Math.min(dropdownHeight, spaceBelow - 10),
       zIndex: 9999,
     });
@@ -213,7 +217,7 @@ export default function SupplierAutocomplete({
                   isHighlighted ? 'bg-brand/10 text-brand' : 'hover:bg-surface-subtle'
                 } ${isSelected ? 'bg-brand/5 font-medium text-brand' : 'text-content'}`}
               >
-                <span className="truncate">{opt.label}</span>
+                <span className="whitespace-normal break-words">{opt.label}</span>
                 {isSelected && <Check size={12} className="text-brand flex-shrink-0 ml-1" />}
               </button>
             );
@@ -231,7 +235,7 @@ export default function SupplierAutocomplete({
               }`}
             >
               <Plus size={12} className="flex-shrink-0" />
-              <span className="truncate">Adicionar novo contato: <strong>&ldquo;{query.trim()}&rdquo;</strong></span>
+              <span className="whitespace-normal break-words">Adicionar novo contato: <strong>&ldquo;{query.trim()}&rdquo;</strong></span>
             </button>
           )}
         </div>

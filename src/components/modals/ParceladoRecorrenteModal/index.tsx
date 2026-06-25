@@ -164,7 +164,7 @@ export default function ParceladoRecorrenteModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto m-4 border border-ui-border-soft">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4 border border-ui-border-soft">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-ui-border-soft">
           <div className="flex items-center gap-2">
@@ -182,116 +182,206 @@ export default function ParceladoRecorrenteModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Transaction Type Toggle */}
-          <div className="flex gap-2 p-1 bg-surface-subtle rounded-lg">
-            <button
-              type="button"
-              onClick={() => setTransactionType("EXPENSE")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                transactionType === "EXPENSE"
-                  ? "bg-state-error text-white shadow-sm"
-                  : "text-content-secondary hover:bg-surface-muted"
-              }`}
-            >
-              Despesa
-            </button>
-            <button
-              type="button"
-              onClick={() => setTransactionType("INCOME")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                transactionType === "INCOME"
-                  ? "bg-state-success text-white shadow-sm"
-                  : "text-content-secondary hover:bg-surface-muted"
-              }`}
-            >
-              Receita
-            </button>
-          </div>
-
-          {/* Only show payment mode options for EXPENSE */}
-          {transactionType === "EXPENSE" && (
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="p-3 space-y-2">
+          {/* Tipo de Lançamento + Modo de Pagamento (Modo só para Despesa) */}
+          <div className={isExpense ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
+            <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                Modo de Pagamento
+                Tipo de Lançamento
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 p-1 bg-surface-subtle rounded-lg">
                 <button
                   type="button"
-                  onClick={() => setPaymentMode("PARCELADO")}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                    paymentMode === "PARCELADO"
-                      ? "border-brand bg-brand/5 text-brand"
-                      : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                  onClick={() => setTransactionType("EXPENSE")}
+                  className={`flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all ${
+                    transactionType === "EXPENSE"
+                      ? "bg-state-error text-white shadow-sm"
+                      : "text-content-secondary hover:bg-surface-muted"
                   }`}
                 >
-                  <Layers className="w-4 h-4 inline mr-1" />
-                  Parcelado
+                  Despesa
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPaymentMode("RECORRENTE")}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                    paymentMode === "RECORRENTE"
-                      ? "border-brand bg-brand/5 text-brand"
-                      : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                  onClick={() => setTransactionType("INCOME")}
+                  className={`flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all ${
+                    transactionType === "INCOME"
+                      ? "bg-state-success text-white shadow-sm"
+                      : "text-content-secondary hover:bg-surface-muted"
                   }`}
                 >
-                  <RefreshCw className="w-4 h-4 inline mr-1" />
-                  Recorrente
+                  Receita
                 </button>
               </div>
             </div>
-          )}
 
-          {/* Institution */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-content-secondary">
-              Inst. Financeira
-            </label>
-            <select
-              value={formData.institution}
-              onChange={(e) => handleInputChange("institution", e.target.value)}
-              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-            >
-              <option value="">Selecione</option>
-              {formOptions.institutions?.map((inst) => (
-                <option key={inst.value} value={inst.value}>
-                  {inst.label}
-                </option>
-              ))}
-            </select>
+            {isExpense && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-content-secondary">
+                  Modo de Pagamento
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode("PARCELADO")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg border text-sm font-medium transition-all ${
+                      paymentMode === "PARCELADO"
+                        ? "border-brand bg-brand/5 text-brand"
+                        : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                    }`}
+                  >
+                    <Layers className="w-4 h-4 inline mr-1" />
+                    Parcelado
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode("RECORRENTE")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg border text-sm font-medium transition-all ${
+                      paymentMode === "RECORRENTE"
+                        ? "border-brand bg-brand/5 text-brand"
+                        : "border-ui-border-soft text-content-secondary hover:border-ui-border"
+                    }`}
+                  >
+                    <RefreshCw className="w-4 h-4 inline mr-1" />
+                    Recorrente
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Credit Card - apenas para Despesa */}
-          {transactionType === "EXPENSE" && (
+          {/* Instituição + Cartão (Despesa) + Categoria */}
+          <div className={isExpense ? "grid grid-cols-1 lg:grid-cols-3 gap-3" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                Cartão de Crédito
+                Inst. Financeira
               </label>
               <select
-                value={formData.card}
-                onChange={(e) => handleInputChange("card", e.target.value)}
+                value={formData.institution}
+                onChange={(e) => handleInputChange("institution", e.target.value)}
                 className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
               >
-                <option value="">Selecione (opcional)</option>
-                {formOptions.cards?.map((card) => (
-                  <option key={card.value} value={card.value}>
-                    {card.label}
+                <option value="">Selecione</option>
+                {formOptions.institutions?.map((inst) => (
+                  <option key={inst.value} value={inst.value}>
+                    {inst.label}
                   </option>
                 ))}
               </select>
             </div>
-          )}
 
-          {/* Two columns for installments and amount */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Number - for PARCELADO, RECORRENTE or INCOME */}
+            {isExpense && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-content-secondary">
+                  Cartão de Crédito
+                </label>
+                <select
+                  value={formData.card}
+                  onChange={(e) => handleInputChange("card", e.target.value)}
+                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+                >
+                  <option value="">Selecione (opcional)</option>
+                  {formOptions.cards?.map((card) => (
+                    <option key={card.value} value={card.value}>
+                      {card.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">
-                {isExpense 
-                  ? (showInstallments ? "Número de parcelas *" : "Número de lançamentos *")
-                  : "Número de parcelas *"}
+              <label className="text-sm font-medium text-content-secondary">
+                Categoria *
+              </label>
+              <select
+                required
+                value={formData.category}
+                onChange={(e) => {
+                  handleInputChange("category", e.target.value);
+                  handleInputChange("subcategory", ""); // Reset subcategory
+                }}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              >
+                <option value="">Selecione</option>
+                {filteredCategories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Subcategoria + Centro + Contato (Despesa) */}
+          <div className={isExpense ? "grid grid-cols-1 lg:grid-cols-3 gap-3" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                Subcategoria
+              </label>
+              <select
+                value={formData.subcategory}
+                onChange={(e) => handleInputChange("subcategory", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content disabled:opacity-50"
+                disabled={availableSubcategories.length === 0}
+              >
+                <option value="">
+                  {availableSubcategories.length === 0 ? "---" : "Selecione"}
+                </option>
+                {availableSubcategories.map((sub) => (
+                  <option key={sub.value} value={sub.value}>
+                    {sub.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                Centro
+              </label>
+              <select
+                value={formData.center}
+                onChange={(e) => handleInputChange("center", e.target.value)}
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+              >
+                <option value="">Selecione</option>
+                {filteredCenters.map((center) => (
+                  <option key={center.value} value={center.value}>
+                    {center.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {isExpense && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-content-secondary">
+                  Contato
+                </label>
+                <select
+                  value={formData.supplier}
+                  onChange={(e) => handleInputChange("supplier", e.target.value)}
+                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+                >
+                  <option value="">Selecione</option>
+                  {formOptions.suppliers?.map((sup) => (
+                    <option key={sup.value} value={sup.value}>
+                      {sup.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Número + Valor + Datas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                {isExpense
+                  ? (showInstallments ? "Nº parcelas *" : "Nº lançamentos *")
+                  : "Nº parcelas *"}
               </label>
               <input
                 type="number"
@@ -305,10 +395,9 @@ export default function ParceladoRecorrenteModal({
               />
             </div>
 
-            {/* Amount */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                {isExpense 
+                {isExpense
                   ? (showInstallments ? "Valor da parcela *" : "Valor do lançamento *")
                   : "Valor da parcela *"}
               </label>
@@ -324,14 +413,11 @@ export default function ParceladoRecorrenteModal({
                 className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
               />
             </div>
-          </div>
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                {isExpense 
-                  ? (showInstallments ? "Data da Compra *" : "Data inicial *") 
+                {isExpense
+                  ? (showInstallments ? "Data da Compra *" : "Data inicial *")
                   : "Data inicial *"}
               </label>
               <input
@@ -342,9 +428,10 @@ export default function ParceladoRecorrenteModal({
                 className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
               />
             </div>
+
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
-                {isExpense ? "Primeiro Pagamento *" : "Data do primeiro pagamento *"}
+                {isExpense ? "1º Pagamento *" : "Data 1º pagamento *"}
               </label>
               <input
                 type="date"
@@ -355,91 +442,6 @@ export default function ParceladoRecorrenteModal({
               />
             </div>
           </div>
-
-          {/* Category */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-content-secondary">
-              Categoria *
-            </label>
-            <select
-              required
-              value={formData.category}
-              onChange={(e) => {
-                handleInputChange("category", e.target.value);
-                handleInputChange("subcategory", ""); // Reset subcategory
-              }}
-              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-            >
-              <option value="">Selecione</option>
-              {filteredCategories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Subcategory */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-content-secondary">
-              Subcategoria
-            </label>
-            <select
-              value={formData.subcategory}
-              onChange={(e) => handleInputChange("subcategory", e.target.value)}
-              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content disabled:opacity-50"
-              disabled={availableSubcategories.length === 0}
-            >
-              <option value="">
-                {availableSubcategories.length === 0 ? "---" : "Selecione"}
-              </option>
-              {availableSubcategories.map((sub) => (
-                <option key={sub.value} value={sub.value}>
-                  {sub.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Center */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-content-secondary">
-              Centro
-            </label>
-            <select
-              value={formData.center}
-              onChange={(e) => handleInputChange("center", e.target.value)}
-              className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-            >
-              <option value="">Selecione</option>
-              {filteredCenters.map((center) => (
-                <option key={center.value} value={center.value}>
-                  {center.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Supplier - apenas para Despesa */}
-          {transactionType === "EXPENSE" && (
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-content-secondary">
-                Contato
-              </label>
-              <select
-                value={formData.supplier}
-                onChange={(e) => handleInputChange("supplier", e.target.value)}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              >
-                <option value="">Selecione</option>
-                {formOptions.suppliers?.map((sup) => (
-                  <option key={sup.value} value={sup.value}>
-                    {sup.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Description */}
           <div className="space-y-1">
@@ -456,7 +458,7 @@ export default function ParceladoRecorrenteModal({
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-ui-border-soft">
+          <div className="flex justify-end gap-3 pt-2 border-t border-ui-border-soft">
             <button
               type="button"
               onClick={handleClose}

@@ -274,7 +274,7 @@ export default function Input({
   }, [autoFocus]);
 
   return (
-    <div className="flex flex-col font-poppins w-full min-w-[300px] max-w-[300px] flex-1">
+    <div className={`flex flex-col font-poppins w-full flex-1 ${full ? '' : 'min-w-[300px] max-w-[300px]'}`}>
       <Label id={id} label={label} required={required} svg={svg} />
 
       <div className="relative flex items-center">

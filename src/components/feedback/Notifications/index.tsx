@@ -7,7 +7,7 @@ import ConfirmDialog from '../ConfirmDialog';
 import Toast from '../Toast';
 
 export default function GlobalNotifications() {
-  const { toasts, hideMessage } = useMessageContext();
+  const { toasts, hideMessage, showMessage } = useMessageContext();
   const { popup, hidePopup } = usePopupContext();
 
   const handleConfirm = useCallback(() => {
@@ -27,6 +27,16 @@ export default function GlobalNotifications() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [popup.visible, hidePopup]);
+
+  // Mensagem clara quando o token expira/é invalidado em uso ativo, em vez de
+  // deixar a chamada falhar com um erro genérico.
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      showMessage('Sua sessão expirou. Por favor, faça login novamente.', 'error', 6000);
+    };
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, [showMessage]);
 
   return (
     <>

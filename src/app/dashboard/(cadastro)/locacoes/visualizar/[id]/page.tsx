@@ -326,6 +326,7 @@ export default function VisualizarLocacaoPage() {
             field: 'commission_category_display',
             label: 'Categoria de Comissão',
             type: 'text',
+            full: true,
             icon: <Building size={20} />,
             className: 'col-span-full',
             readOnly: true,

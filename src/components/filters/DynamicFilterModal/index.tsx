@@ -37,6 +37,10 @@ export interface DynamicFilter {
   min?: string;
   max?: string;
   dateRange?: boolean;
+  /** Permite selecionar mais de um valor (condição IN na consulta). */
+  multiple?: boolean;
+  /** Restringe as opções deste campo às que casam com os valores selecionados em outro filtro. */
+  dependsOn?: { field: string; matchKey: string };
 }
 
 interface DynamicFilterModalProps {
@@ -101,7 +105,12 @@ const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject
     const rect = inputEl.getBoundingClientRect();
     dropdownEl.style.top = (rect.bottom + 4) + 'px';
     dropdownEl.style.left = rect.left + 'px';
-    dropdownEl.style.width = rect.width + 'px';
+    // Auto-largura: pelo menos a largura do campo, cresce até caber a opção mais
+    // longa, sem estourar a viewport à direita (teto absoluto de 480px).
+    const maxWidth = Math.min(480, window.innerWidth - rect.left - 12);
+    dropdownEl.style.width = 'max-content';
+    dropdownEl.style.minWidth = rect.width + 'px';
+    dropdownEl.style.maxWidth = Math.max(rect.width, maxWidth) + 'px';
   }
 };
 
@@ -110,9 +119,10 @@ interface DateRangeFilterProps {
   filter: DynamicFilter;
   filterValue: FilterValue;
   onChange: (from: string, to: string) => void;
+  onClear: () => void;
 }
 
-function DateRangeFilter({ filterValue, onChange }: DateRangeFilterProps) {
+function DateRangeFilter({ filterValue, onChange, onClear }: DateRangeFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -208,13 +218,24 @@ function DateRangeFilter({ filterValue, onChange }: DateRangeFilterProps) {
         type="button"
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 px-3 h-10 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-sm"
+        className={`w-full flex items-center gap-2 px-3 h-10 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-sm ${hasValue ? 'pr-8' : ''}`}
       >
         <Calendar size={16} className="text-content-muted flex-shrink-0" />
         <span className={`truncate ${hasValue ? 'text-content' : 'text-content-muted'}`}>
           {displayText}
         </span>
       </button>
+
+      {hasValue && (
+        <button
+          type="button"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-surface-subtle rounded"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClear(); }}
+          aria-label="Limpar período"
+        >
+          <X size={14} className="text-content-muted" />
+        </button>
+      )}
 
       {isOpen && createPortal(
         <div
@@ -303,7 +324,11 @@ export default function DynamicFilterModal({
           newSearchTerms[filter.field] = '';
         } else {
           if (initialValue !== undefined && initialValue !== null && initialValue !== '') {
-            if (typeof initialValue === 'object' && ('value' in initialValue || 'values' in initialValue)) {
+            if (Array.isArray(initialValue)) {
+              // Filtro multi-seleção aplicado anteriormente: vem como array puro (sem wrapper {value,values}).
+              newFilters[filter.field] = { value: '', values: initialValue, showDropdown: false };
+              newSearchTerms[filter.field] = '';
+            } else if (typeof initialValue === 'object' && ('value' in initialValue || 'values' in initialValue)) {
               const { value, value2, values } = initialValue as any;
 
               if (isPhone && value) {
@@ -404,12 +429,34 @@ export default function DynamicFilterModal({
     };
   }, [activeDropdown]);
 
+  // Limpa (in-place, no draft) os campos que dependem de `changedField` — evita
+  // filtros inconsistentes quando o campo "pai" (ex: Categoria) muda ou é limpo.
+  const clearDependentFields = useCallback((changedField: string, draft: Record<string, FilterValue>) => {
+    visibleFilters.forEach(f => {
+      if (f.dependsOn?.field === changedField) {
+        draft[f.field] = { value: '', value2: '', values: [], showDropdown: false };
+      }
+    });
+  }, [visibleFilters]);
+
+  const clearDependentSearchTerms = useCallback((changedField: string) => {
+    const dependents = visibleFilters.filter(f => f.dependsOn?.field === changedField);
+    if (dependents.length === 0) return;
+    setSearchTerms(prev => {
+      const next = { ...prev };
+      dependents.forEach(f => { next[f.field] = ''; });
+      return next;
+    });
+  }, [visibleFilters]);
+
   // Modificado para aceitar o displayLabel
   const updateFilterValue = useCallback((field: string, key: keyof FilterValue, value: any, displayLabel?: string) => {
     setLocalFilters(prev => {
       const current = prev[field] || {};
       const updatedValue = { ...current, [key]: value, showDropdown: false };
-      return { ...prev, [field]: updatedValue };
+      const next = { ...prev, [field]: updatedValue };
+      if (key === 'value') clearDependentFields(field, next);
+      return next;
     });
 
     if (key === 'value' && value !== '') {
@@ -421,9 +468,50 @@ export default function DynamicFilterModal({
         }));
       }
     }
+    if (key === 'value') clearDependentSearchTerms(field);
 
     if (activeDropdown === field) setActiveDropdown(null);
-  }, [activeDropdown, visibleFilters]);
+  }, [activeDropdown, visibleFilters, clearDependentFields, clearDependentSearchTerms]);
+
+  // Alterna um valor dentro do array `values` de um filtro multi-seleção,
+  // mantendo o dropdown aberto para permitir escolher vários itens em sequência.
+  const handleMultiOptionToggle = useCallback((field: string, value: any) => {
+    setLocalFilters(prev => {
+      const current = prev[field] || { value: '', values: [] };
+      const existingValues: any[] = current.values || [];
+      const exists = existingValues.some(v => String(v) === String(value));
+      const newValues = exists
+        ? existingValues.filter(v => String(v) !== String(value))
+        : [...existingValues, value];
+      const next = { ...prev, [field]: { ...current, values: newValues, showDropdown: true } };
+      clearDependentFields(field, next);
+      return next;
+    });
+    setSearchTerms(prev => ({ ...prev, [field]: '' }));
+    clearDependentSearchTerms(field);
+  }, [clearDependentFields, clearDependentSearchTerms]);
+
+  const handleRemoveChipValue = useCallback((field: string, value: any) => {
+    setLocalFilters(prev => {
+      const current = prev[field] || { value: '', values: [] };
+      const newValues = (current.values || []).filter(v => String(v) !== String(value));
+      const next = { ...prev, [field]: { ...current, values: newValues } };
+      clearDependentFields(field, next);
+      return next;
+    });
+    clearDependentSearchTerms(field);
+  }, [clearDependentFields, clearDependentSearchTerms]);
+
+  const handleClearField = useCallback((field: string) => {
+    setLocalFilters(prev => {
+      const next = { ...prev, [field]: { value: '', value2: '', values: [], showDropdown: false } };
+      clearDependentFields(field, next);
+      return next;
+    });
+    setSearchTerms(prev => ({ ...prev, [field]: '' }));
+    clearDependentSearchTerms(field);
+    if (activeDropdown === field) setActiveDropdown(null);
+  }, [activeDropdown, clearDependentFields, clearDependentSearchTerms]);
 
   const handleApply = () => {
     const simplifiedFilters: Record<string, any> = {};
@@ -503,7 +591,22 @@ export default function DynamicFilterModal({
     const searchTerm = searchTerms[field]?.toLowerCase() || '';
     if (!filter) return [];
 
-    const source = filter.options || filter.values || [];
+    let source = filter.options || filter.values || [];
+
+    // Restringe as opções às vinculadas aos valores selecionados no filtro "pai"
+    // (ex: Subcategoria mostra apenas as da(s) Categoria(s) selecionada(s)).
+    if (filter.dependsOn) {
+      const parentValue = localFilters[filter.dependsOn.field];
+      const parentValues: any[] = parentValue?.values && parentValue.values.length > 0
+        ? parentValue.values
+        : (parentValue?.value ? [parentValue.value] : []);
+
+      if (parentValues.length > 0) {
+        const parentValueSet = new Set(parentValues.map(String));
+        const matchKey = filter.dependsOn.matchKey;
+        source = source.filter((item: any) => typeof item === 'object' && item !== null && parentValueSet.has(String(item[matchKey])));
+      }
+    }
 
     if (filter.type === 'select' && source.length > 0 && typeof source[0] === 'object') {
       const objectSource = source as Array<{ value: any; label: string }>;
@@ -523,8 +626,14 @@ export default function DynamicFilterModal({
     const isDropdownOpen = Boolean(filterValue.showDropdown) && activeDropdown === filter.field;
     const isPhone = isPhoneField(filter.field);
     const hasOptions = filter.autocomplete || filter.options || filter.values;
-
     const isCurrency = isCurrencyField(filter.field, filter.type);
+
+    const isMultiple = Boolean(filter.multiple) && Boolean(hasOptions);
+    const selectedValues: any[] = filterValue.values || [];
+    const fieldHasValue = isMultiple
+      ? selectedValues.length > 0
+      : (filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '');
+    const showChevron = Boolean(hasOptions) && !isPhone;
 
     return (
       <div className="relative flex flex-col gap-1" key={filter.field}>
@@ -540,6 +649,7 @@ export default function DynamicFilterModal({
               updateFilterValue(filter.field, 'value', from);
               updateFilterValue(filter.field, 'value2', to);
             }}
+            onClear={() => handleClearField(filter.field)}
           />
         ) : (
           <div className="relative">
@@ -547,7 +657,9 @@ export default function DynamicFilterModal({
               <input
                 ref={(el) => { if (el) inputRefs.current[filter.field] = el; }}
                 type={filter.inputType || 'text'}
-                className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10 h-10"
+                className={`w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10 ${
+                  showChevron && fieldHasValue ? 'pr-16' : 'pr-10'
+                }`}
                 value={isCurrency ? searchTerm : (isPhone && hasOptions ? searchTerm : (isPhone ? formatPhone(searchTerm) : searchTerm))}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -562,19 +674,39 @@ export default function DynamicFilterModal({
                   }
 
                   setSearchTerms(prev => ({ ...prev, [filter.field]: newSearchTerm }));
-                  setLocalFilters(prev => ({
-                    ...prev,
-                    [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(newSearchTerm.length > 0 && hasOptions) }
-                  }));
+
+                  if (isMultiple) {
+                    setLocalFilters(prev => ({
+                      ...prev,
+                      [filter.field]: { ...(prev[filter.field] || {}), showDropdown: true }
+                    }));
+                  } else {
+                    setLocalFilters(prev => ({
+                      ...prev,
+                      [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(newSearchTerm.length > 0 && hasOptions) }
+                    }));
+                  }
 
                   if (newSearchTerm.length > 0 && hasOptions) handleInputFocus(filter.field);
                 }}
                 onFocus={() => handleInputFocus(filter.field)}
                 onBlur={() => handleInputBlur(filter.field)}
-                placeholder={isCurrency ? "0,00" : (isPhone ? "Ex: (11) 99999-9999" : `Digite...`)}
+                placeholder={isCurrency ? "0,00" : (isPhone ? "Ex: (11) 99999-9999" : (isMultiple && selectedValues.length > 0 ? "Adicionar..." : "Digite..."))}
               />
 
-              {hasOptions && !isPhone && (
+              {fieldHasValue && (
+                <button
+                  type="button"
+                  className={`absolute top-1/2 -translate-y-1/2 p-0.5 hover:bg-surface-subtle rounded ${showChevron ? 'right-8' : 'right-2'}`}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClearField(filter.field); }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  aria-label={`Limpar ${filter.label}`}
+                >
+                  <X size={14} className="text-content-muted" />
+                </button>
+              )}
+
+              {showChevron && (
                 <button
                   type="button"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2"
@@ -613,14 +745,23 @@ export default function DynamicFilterModal({
                   suggestions.map((suggestion, index) => {
                     if (filter.type === 'select' && suggestion && typeof suggestion === 'object') {
                       const { label, value } = suggestion as { value: any; label: string };
+                      const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(value));
                       return (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, value, label); }}
+                          className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault(); e.stopPropagation();
+                            if (isMultiple) handleMultiOptionToggle(filter.field, value);
+                            else handleOptionClick(filter.field, value, label);
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault(); e.stopPropagation();
+                            if (!isMultiple) handleOptionClick(filter.field, value, label);
+                          }}
                         >
-                          {label}
+                          <span className="whitespace-normal break-words">{label}</span>
+                          {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
                         </div>
                       );
                     }
@@ -629,15 +770,24 @@ export default function DynamicFilterModal({
                     if (isCurrency && !isNaN(Number(suggestion))) {
                       formattedLabel = formatCurrencyRealtime((Number(suggestion) * 100).toFixed(0));
                     }
+                    const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(suggestion));
 
                     return (
                       <div
                         key={index}
-                        className="px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm"
-                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, formattedLabel); }}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOptionClick(filter.field, suggestion, formattedLabel); }}
+                        className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); e.stopPropagation();
+                          if (isMultiple) handleMultiOptionToggle(filter.field, suggestion);
+                          else handleOptionClick(filter.field, suggestion, formattedLabel);
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault(); e.stopPropagation();
+                          if (!isMultiple) handleOptionClick(filter.field, suggestion, formattedLabel);
+                        }}
                       >
-                        {formattedLabel}
+                        <span className="whitespace-normal break-words">{formattedLabel}</span>
+                        {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
                       </div>
                     );
                   })
@@ -646,6 +796,28 @@ export default function DynamicFilterModal({
                 )}
               </div>,
               document.body
+            )}
+
+            {isMultiple && selectedValues.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {selectedValues.map((val) => (
+                  <span
+                    key={String(val)}
+                    className="inline-flex items-center gap-1 bg-brand/10 text-brand text-xs pl-2 pr-1 py-1 rounded-md max-w-full"
+                  >
+                    <span className="truncate">{getLabelForValue(filter, val)}</span>
+                    <button
+                      type="button"
+                      className="hover:bg-brand/20 rounded p-0.5 flex-shrink-0"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveChipValue(filter.field, val); }}
+                      aria-label={`Remover ${getLabelForValue(filter, val)}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         )}

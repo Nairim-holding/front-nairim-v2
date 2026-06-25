@@ -65,6 +65,8 @@ export interface FormFieldDef {
   tabIndex?: number;
   autoFocus?: boolean;
   multiple?: boolean;
+  /** Remove a largura máxima padrão (300px) do Input, deixando-o preencher a célula. */
+  full?: boolean;
   accept?: string;
   buttonText?: string;
   textButton?: string;
