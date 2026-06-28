@@ -986,13 +986,13 @@ export default function InlineEditableTable({
 
       const rows = exportItems.map((item: any) => {
         const row: Record<string, string> = {};
-        dataColumns.forEach((col) => {
+        visibleDataColumns.forEach((col) => {
           row[col.label] = getExportCellValue(item, col);
         });
         return row;
       });
 
-      const worksheet = XLSX.utils.json_to_sheet(rows, { header: dataColumns.map(c => c.label) });
+      const worksheet = XLSX.utils.json_to_sheet(rows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
 
@@ -1011,7 +1011,7 @@ export default function InlineEditableTable({
     } finally {
       setIsExporting(false);
     }
-  }, [meta, state, resource, activeTab, dataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage]);
+  }, [meta, state, resource, activeTab, visibleDataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage]);
 
   const renderEditableCell = useCallback((item: any, column: ColumnDef, row?: EditingRow) => {
     if (!row?.isEditing) return getCellValue(item, column);
