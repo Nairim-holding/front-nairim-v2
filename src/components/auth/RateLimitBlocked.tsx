@@ -7,15 +7,19 @@ interface RateLimitBlockedProps {
   timeRemaining: number;
   initialTime: number;
   formatTimeRemaining: (seconds: number) => string;
+  blockDurationMinutes?: number;
+  maxAttempts?: number;
 }
 
-export const RateLimitBlocked: React.FC<RateLimitBlockedProps> = ({ 
-  timeRemaining, 
+export const RateLimitBlocked: React.FC<RateLimitBlockedProps> = ({
+  timeRemaining,
   initialTime,
-  formatTimeRemaining
+  formatTimeRemaining,
+  blockDurationMinutes = 5,
+  maxAttempts = 5
 }) => {
   const progressPercentage = initialTime > 0 ? (timeRemaining / initialTime) * 100 : 0;
-  
+
   return (
     <div className="w-full max-w-md mb-6 text-red-600 bg-red-50 border border-red-200 rounded-lg px-6 py-4 animate-slide-up">
       <div className="flex flex-col items-center text-center gap-4">
@@ -23,11 +27,16 @@ export const RateLimitBlocked: React.FC<RateLimitBlockedProps> = ({
           <Clock size={20} className="text-red-600" />
           <span className="font-semibold text-lg">Conta temporariamente bloqueada</span>
         </div>
-        <p className="text-sm">
-          Muitas tentativas de login falharam. Tente novamente em {formatTimeRemaining(timeRemaining)}.
-        </p>
+        <div className="space-y-3 text-sm">
+          <p>
+            Ao esgotar as {maxAttempts} tentativas de login, o sistema ficará bloqueado por {blockDurationMinutes} minutos, como medida de segurança. Preste atenção!
+          </p>
+          <p className="font-semibold">
+            Tente novamente em {formatTimeRemaining(timeRemaining)}.
+          </p>
+        </div>
         <div className="w-full bg-red-200 rounded-full h-2">
-          <div 
+          <div
             className="bg-red-600 h-2 rounded-full transition-all duration-1000 ease-linear"
             style={{ width: `${progressPercentage}%` }}
           />

@@ -13,6 +13,8 @@ interface Props {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions: SelectOption[];
+  creditCenterOptions: SelectOption[];
+  debitCenterOptions: SelectOption[];
   categoryOptions: SelectOption[];
   subcategoryOptions: SelectOption[];
   subcategoriesRaw: { id: string; name: string; category_id: string }[];
@@ -21,12 +23,12 @@ interface Props {
 const COMPLETED_STEPS = [0, 1, 2, 3, 4];
 const noop = async () => null;
 
-export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
+export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
   const activeLease = propertyData?.leases?.[0];
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, readOnly: true, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, readOnly: true, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, activeLease],
   );
 
   const transformData = useCallback(

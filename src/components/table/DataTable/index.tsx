@@ -79,6 +79,7 @@ export default function DynamicTableManager({
   
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [displayColumns, setDisplayColumns] = useState<ColumnDef[]>(columns);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(columns.map(c => c.field));
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const [columnOrder, setColumnOrder] = useState<string[]>(columns.map(c => c.field).filter(f => f !== 'actions'));
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
@@ -109,6 +110,11 @@ export default function DynamicTableManager({
             setColumnWidths(result.data.columnWidths);
             columnWidthsRef.current = result.data.columnWidths;
           }
+
+          if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
+            setVisibleColumns(result.data.visibleColumns);
+          }
+
           if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
             setColumnOrder(result.data.columnOrder);
             const orderedColumns: ColumnDef[] = [];
@@ -145,7 +151,7 @@ export default function DynamicTableManager({
   }, [resource, columns]);
 
   // Salvar preferências de colunas no servidor
-  const saveColumnPreferences = useCallback(async (widths: Record<string, number>) => {
+  const saveColumnPreferences = useCallback(async (widths: Record<string, number>, visibleCols?: string[], orderedCols?: string[]) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -158,10 +164,10 @@ export default function DynamicTableManager({
         try {
           const body = {
             resource,
-            columnOrder: columnOrder,
+            columnOrder: orderedCols || columnOrder,
             columnWidths: widths,
+            ...(visibleCols && visibleCols.length > 0 && { visibleColumns: visibleCols }),
           };
-          console.log('[DataTable] Enviando preferências:', body);
           const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
             method: 'POST',
             body: JSON.stringify(body),
@@ -180,7 +186,6 @@ export default function DynamicTableManager({
           }
 
           const result = await response.json();
-          console.log('[DataTable] Resposta JSON:', result);
 
           showMessage('Preferências de colunas salvas com sucesso', 'success', 2000);
           return true;
@@ -201,7 +206,7 @@ export default function DynamicTableManager({
 
       await attemptSave();
     }, 500);
-  }, [resource, columnOrder, showMessage]);
+  }, [resource, columnOrder, visibleColumns, showMessage]);
 
   // Sincronizar columnWidthsRef
   useEffect(() => {
@@ -243,6 +248,10 @@ export default function DynamicTableManager({
   const dataColumns = useMemo(() => {
     return displayColumns.filter(col => col.field !== "actions" && col.type !== "custom");
   }, [displayColumns]);
+
+  const visibleDataColumns = useMemo(() => {
+    return dataColumns.filter(col => visibleColumns.includes(col.field));
+  }, [dataColumns, visibleColumns]);
 
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
@@ -306,17 +315,24 @@ export default function DynamicTableManager({
     setDisplayColumns(newColumns);
     const orderedFields = newColumns.map(c => c.field).filter(f => f !== 'actions');
     setColumnOrder(orderedFields);
-    saveColumnPreferences(columnWidthsRef.current);
-  }, [saveColumnPreferences]);
+    saveColumnPreferences(columnWidthsRef.current, visibleColumns, orderedFields);
+  }, [saveColumnPreferences, visibleColumns]);
 
   const handleResetColumns = useCallback(() => {
-    setDisplayColumns(columns);
+    const allFields = columns.map(c => c.field);
     const orderedFields = columns.map(c => c.field).filter(f => f !== 'actions');
+    setDisplayColumns(columns);
     setColumnOrder(orderedFields);
     setColumnWidths({});
+    setVisibleColumns(allFields);
     columnWidthsRef.current = {};
-    saveColumnPreferences({});
+    saveColumnPreferences({}, allFields, orderedFields);
   }, [columns, saveColumnPreferences]);
+
+  const handleVisibilityChange = useCallback((visibleFields: string[]) => {
+    setVisibleColumns(visibleFields);
+    saveColumnPreferences(columnWidthsRef.current, visibleFields);
+  }, [saveColumnPreferences]);
 
   const { items, meta } = useMemo(() => {
     if (useLocalMode && localData) {
@@ -629,13 +645,13 @@ export default function DynamicTableManager({
     return `Pesquisar por ${fieldsText}...`;
   }, [searchFields, dynamicFilters, title]);
 
-  const headers = useMemo(() => 
-    dataColumns.map(col => ({
+  const headers = useMemo(() =>
+    visibleDataColumns.map(col => ({
       label: col.label,
       field: col.field,
       sortParam: col.sortParam || col.field
     }))
-  , [dataColumns]);
+  , [visibleDataColumns]);
 
   const handleTableScroll = useCallback(() => {
     if (isRestoringScrollRef.current) return;
@@ -1071,7 +1087,7 @@ export default function DynamicTableManager({
               className="bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary cursor-pointer min-h-[26px] h-fit"
               onClick={() => onRowClick?.(item)}
             >
-              {dataColumns.map((col, index) => {
+              {visibleDataColumns.map((col, index) => {
                 const isFirst = index === 0;
                 const width = columnWidths[col.field] || 150;
                 const isContactField = ['contact', 'telephone', 'phone', 'cellphone', 'email', 'contact_name'].includes(col.field);
@@ -1167,6 +1183,8 @@ export default function DynamicTableManager({
         columns={displayColumns}
         onReorder={handleColumnsChange}
         onReset={handleResetColumns}
+        visibleColumns={visibleColumns}
+        onVisibilityChange={handleVisibilityChange}
       />
 
       {isCancelLeaseModalOpen && (() => {

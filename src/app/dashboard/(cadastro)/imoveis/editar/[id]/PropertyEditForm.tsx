@@ -20,12 +20,14 @@ interface Props {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions: SelectOption[];
+  creditCenterOptions: SelectOption[];
+  debitCenterOptions: SelectOption[];
   categoryOptions: SelectOption[];
   subcategoryOptions: SelectOption[];
   subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
-export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
+export default function PropertyEditForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
   const { user, token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
@@ -38,8 +40,8 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED'); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const steps = useMemo(
-    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease }),
-    [ownerOptions, typeOptions, agencyOptions, centerOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease],
+    () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease }),
+    [ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress, activeLease],
   );
 
   const transformData = useCallback(
@@ -140,7 +142,7 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
     <>
       <DynamicForm
         resource="properties"
-        title="Imóvel"
+        title={`Imóvel – ${propertyData?.title || ''}`}
         basePath="/dashboard/imoveis"
         mode="edit"
         id={id}

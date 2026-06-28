@@ -387,6 +387,8 @@ interface InlineEditableTableProps {
   onColumnsChange?: (columns: ColumnDef[]) => void;
   onColumnWidthsChange?: (widths: Record<string, number>) => void;
   savedColumnWidths?: Record<string, number>;
+  visibleColumns?: string[];
+  onVisibilityChange?: (visibleFields: string[]) => void;
 }
 
 interface EditingRow {
@@ -396,7 +398,7 @@ interface EditingRow {
 export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
-  showTotals = true, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths,
+  showTotals = true, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -424,7 +426,15 @@ export default function InlineEditableTable({
   const [hasDateFilter, setHasDateFilter] = useState(true);
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
+  const [visibleColumnsState, setVisibleColumnsState] = useState<Set<string>>(new Set(visibleColumns || columns.map(c => c.field)));
+
+  // Sincronizar estado com prop visibleColumns quando mudar
+  useEffect(() => {
+    if (visibleColumns && visibleColumns.length > 0) {
+      setVisibleColumnsState(new Set(visibleColumns));
+    }
+  }, [visibleColumns]);
+
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   
@@ -434,6 +444,20 @@ export default function InlineEditableTable({
   });
 
   const dataColumns = useMemo(() => columns.filter(col => col.field !== "actions" && col.type !== "custom"), [columns]);
+
+  const handleVisibilityChange = useCallback((visibleFields: string[]) => {
+    const newVisible = new Set(visibleFields);
+    setVisibleColumnsState(newVisible);
+    // Chamar callback para persistência no servidor (via página pai)
+    onVisibilityChange?.(visibleFields);
+  }, [onVisibilityChange]);
+
+  // Sincronizar visibilidade de colunas com props
+  useEffect(() => {
+    if (visibleColumns && visibleColumns.length > 0) {
+      setVisibleColumnsState(new Set(visibleColumns));
+    }
+  }, [visibleColumns]);
 
   // Inicializar widths na montagem
   useEffect(() => {
@@ -779,7 +803,13 @@ export default function InlineEditableTable({
     return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
   }, [formatCellValue, getNestedValue, formOptions]);
 
-  const headers = useMemo(() => dataColumns.map(col => ({ label: col.label, field: col.field, sortParam: col.sortParam || col.field })), [dataColumns]);
+  const visibleDataColumns = useMemo(() => {
+    return dataColumns.filter(col => visibleColumnsState.has(col.field));
+  }, [dataColumns, visibleColumnsState]);
+
+  const headers = useMemo(() =>
+    visibleDataColumns.map(col => ({ label: col.label, field: col.field, sortParam: col.sortParam || col.field }))
+  , [visibleDataColumns]);
 
   const updateEditingRow = useCallback((id: string, field: string, value: any) => {
     setEditingRows(prev => prev.map(row => row.id === id ? { ...row, data: { ...row.data, [field]: value } } : row));
@@ -1271,16 +1301,15 @@ export default function InlineEditableTable({
             <RefreshCw size={16} className={isLoadingData ? 'animate-spin' : ''} />
           </button>
 
-          {hasDateFilter && dateRange.from && dateRange.to && (
-            <button
-              onClick={handleExportExcel}
-              disabled={isExporting || isLoadingData}
-              className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
-              title="Exportar para Excel"
-            >
-              <FileSpreadsheet size={16} className={isExporting ? 'animate-pulse' : ''} />
-            </button>
-          )}
+          <button
+            onClick={handleExportExcel}
+            disabled={isExporting || isLoadingData || meta.total === 0}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Exportar para Excel"
+          >
+            <FileSpreadsheet size={16} className={isExporting ? 'animate-pulse' : ''} />
+          </button>
+
           {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={4} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
           
           {/* Pesquisa logo após Limpar */}
@@ -1343,7 +1372,7 @@ export default function InlineEditableTable({
             
             return (
               <tr key={item.id} className={`bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary h-auto ${isEditing ? 'bg-brand/5 border-brand/20' : ''}`} style={maxRowHeight ? { height: `${maxRowHeight}px` } : undefined}>
-                {dataColumns.map((col, idx) => (
+                {visibleDataColumns.map((col, idx) => (
                   <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${isEditing ? 'bg-transparent' : ''}`} style={{ width: 'auto', minWidth: 'fit-content' }}>
                     <div className={`flex w-full items-center px-0.5 py-0 ${idx === 0 ? 'justify-start' : 'justify-center'}`}>
                       {idx === 0 && enableDelete && !isEditing && <input type="checkbox" className="mr-2 inp-checkbox-select rounded border-ui-border cursor-pointer w-4 h-4" checked={selectedCheckboxes.includes(item.id)} onChange={() => setSelectedCheckboxes(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />}
@@ -1599,6 +1628,8 @@ export default function InlineEditableTable({
         columns={columns}
         onReorder={onColumnsChange || (() => {})}
         onReset={handleResetColumns}
+        visibleColumns={Array.from(visibleColumnsState)}
+        onVisibilityChange={handleVisibilityChange}
       />
     </>
   );

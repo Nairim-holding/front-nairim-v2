@@ -23,6 +23,8 @@ export interface PropertyStepsConfig {
   typeOptions: SelectOption[];
   agencyOptions: SelectOption[];
   centerOptions?: SelectOption[];
+  creditCenterOptions?: SelectOption[];
+  debitCenterOptions?: SelectOption[];
   categoryOptions?: SelectOption[];
   subcategoryOptions?: SelectOption[];
   subcategoriesRaw?: { id: string; name: string; category_id: string }[];
@@ -38,6 +40,8 @@ export function buildPropertySteps({
   typeOptions,
   agencyOptions,
   centerOptions = [],
+  creditCenterOptions = [],
+  debitCenterOptions = [],
   categoryOptions = [],
   subcategoryOptions = [],
   subcategoriesRaw = [],
@@ -101,7 +105,7 @@ export function buildPropertySteps({
       title: 'Valores e Condições',
       icon: <DollarSign size={20} />,
       fields: [
-        { field: 'category_id', label: 'Categoria (Financeiro)', type: 'select', required: false, searchable: true, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
+        { field: 'category_id', label: 'Categoria (Financeiro)', type: 'select', required: false, searchable: true, autoOpen: false, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
         {
           field: 'subcategory_id',
           label: 'Subcategoria (Financeiro)',
@@ -121,8 +125,8 @@ export function buildPropertySteps({
           icon: <Landmark size={20} />,
           ...ro,
         } as any,
-        { field: 'center_id', label: 'Centro de Custo (Crédito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...centerOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
-        { field: 'debit_center_id', label: 'Centro de Custo (Débito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...centerOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
+        { field: 'center_id', label: 'Centro de Custo (Crédito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...creditCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
+        { field: 'debit_center_id', label: 'Centro de Custo (Débito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...debitCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: false, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },

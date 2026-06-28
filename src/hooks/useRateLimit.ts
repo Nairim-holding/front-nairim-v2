@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
+// Configuration constant - easy to change
+const MAX_LOGIN_ATTEMPTS = 5;
+const BLOCK_DURATION_SECONDS = 300; // 5 minutes
+
 interface RateLimitState {
   failedAttempts: number;
   isBlocked: boolean;
@@ -81,24 +85,24 @@ export const useRateLimit = () => {
     const newAttempts = state.failedAttempts + 1;
     setState(prev => ({ ...prev, failedAttempts: newAttempts }));
     localStorage.setItem('loginFailedAttempts', newAttempts.toString());
-    
-    // Auto-block after 3 failed attempts
-    if (newAttempts >= 3) {
-      blockUser(300); // 5 minutes in seconds
+
+    // Auto-block after MAX_LOGIN_ATTEMPTS failed attempts
+    if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+      blockUser(BLOCK_DURATION_SECONDS);
     }
-    
+
     return newAttempts;
   };
 
   const blockUser = (totalSeconds: number) => {
     const blockDuration = totalSeconds * 1000; // Convert to milliseconds
     const expiryTime = Date.now() + blockDuration;
-    
+
     localStorage.setItem('loginBlockExpiry', expiryTime.toString());
-    localStorage.setItem('loginFailedAttempts', '3');
-    
+    localStorage.setItem('loginFailedAttempts', MAX_LOGIN_ATTEMPTS.toString());
+
     setState({
-      failedAttempts: 3,
+      failedAttempts: MAX_LOGIN_ATTEMPTS,
       isBlocked: true,
       timeRemaining: totalSeconds,
       initialTime: totalSeconds,
@@ -141,9 +145,28 @@ export const useRateLimit = () => {
 
   const getAttemptWarningColor = () => {
     if (state.failedAttempts === 0) return '';
-    if (state.failedAttempts === 1) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    if (state.failedAttempts === 2) return 'text-orange-600 bg-orange-50 border-orange-200';
+    if (state.failedAttempts <= 2) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    if (state.failedAttempts <= 4) return 'text-orange-600 bg-orange-50 border-orange-200';
     return 'text-red-600 bg-red-50 border-red-200';
+  };
+
+  const getMaxLoginAttempts = () => MAX_LOGIN_ATTEMPTS;
+
+  const updateFromBackendStatus = (backendAttempts: number, isBlocked: boolean, blockedUntilSeconds?: number) => {
+    localStorage.setItem('loginFailedAttempts', backendAttempts.toString());
+
+    if (isBlocked && blockedUntilSeconds) {
+      const expiryTime = Date.now() + blockedUntilSeconds * 1000;
+      localStorage.setItem('loginBlockExpiry', expiryTime.toString());
+      setState({
+        failedAttempts: backendAttempts,
+        isBlocked: true,
+        timeRemaining: blockedUntilSeconds,
+        initialTime: blockedUntilSeconds,
+      });
+    } else {
+      setState(prev => ({ ...prev, failedAttempts: backendAttempts }));
+    }
   };
 
   return {
@@ -153,5 +176,7 @@ export const useRateLimit = () => {
     resetAttempts,
     formatTimeRemaining,
     getAttemptWarningColor,
+    getMaxLoginAttempts,
+    updateFromBackendStatus,
   };
 };

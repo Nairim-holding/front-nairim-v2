@@ -22,6 +22,7 @@ export interface SelectProps {
   disabled?: boolean;
   placeholder?: string;
   searchable?: boolean;
+  autoOpen?: boolean;
 }
 
 // Função auxiliar para remover acentos e caracteres especiais (ex: ç -> c, á -> a)
@@ -30,20 +31,21 @@ const normalizeText = (text: string) => {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 };
 
-export default function Select({ 
-  options, 
-  defaultValue, 
-  onChange, 
-  label, 
-  required, 
-  svg, 
-  id, 
-  tabIndex = 0, 
-  disabled, 
+export default function Select({
+  options,
+  defaultValue,
+  onChange,
+  label,
+  required,
+  svg,
+  id,
+  tabIndex = 0,
+  disabled,
   value,
   placeholder = "Selecione...",
   searchable = false,
-  ...props 
+  autoOpen = false,
+  ...props
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<string | number>(value || defaultValue || '');
@@ -118,7 +120,7 @@ export default function Select({
   };
 
   const handleFocus = () => {
-    if (!disabled && !isOpen && !isMouseDownRef.current) {
+    if (!disabled && !isOpen && !isMouseDownRef.current && autoOpen) {
       setIsOpen(true);
     }
     isMouseDownRef.current = false;

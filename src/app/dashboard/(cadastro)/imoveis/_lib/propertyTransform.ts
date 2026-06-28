@@ -120,6 +120,8 @@ export interface PropertySelectOptions {
   typeOptions: { label: string; value: string }[];
   agencyOptions: { label: string; value: string }[];
   centerOptions: { label: string; value: string }[];
+  creditCenterOptions: { label: string; value: string }[];
+  debitCenterOptions: { label: string; value: string }[];
   categoryOptions: { label: string; value: string }[];
   subcategoryOptions: { label: string; value: string }[];
   subcategoriesRaw: { id: string; name: string; category_id: string }[];
@@ -132,20 +134,22 @@ function authHeaders(token?: string): HeadersInit | undefined {
 export async function fetchPropertySelectOptions(token?: string): Promise<PropertySelectOptions> {
   const API_URL = getApiUrl();
   const headers = authHeaders(token);
-  const [ownersRes, typesRes, agenciesRes, centersRes, categoriesRes, subcategoriesRes] = await Promise.all([
+  const [ownersRes, typesRes, agenciesRes, creditCentersRes, debitCentersRes, categoriesRes, subcategoriesRes] = await Promise.all([
     fetch(`${API_URL}/owners`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/property-types`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/agencies`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/financial-center?limit=1000`, { cache: 'no-store', headers }),
+    fetch(`${API_URL}/financial-center?limit=1000&filter[type]=INCOME`, { cache: 'no-store', headers }),
+    fetch(`${API_URL}/financial-center?limit=1000&filter[type]=EXPENSE`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
     fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
   ]);
 
-  const [owners, types, agencies, centers, categories, subcategories] = await Promise.all([
+  const [owners, types, agencies, creditCenters, debitCenters, categories, subcategories] = await Promise.all([
     ownersRes.json(),
     typesRes.json(),
     agenciesRes.json(),
-    centersRes.ok ? centersRes.json() : Promise.resolve({ data: [] }),
+    creditCentersRes.ok ? creditCentersRes.json() : Promise.resolve({ data: [] }),
+    debitCentersRes.ok ? debitCentersRes.json() : Promise.resolve({ data: [] }),
     categoriesRes.ok ? categoriesRes.json() : Promise.resolve({ data: [] }),
     subcategoriesRes.ok ? subcategoriesRes.json() : Promise.resolve({ data: [] }),
   ]);
@@ -159,7 +163,9 @@ export async function fetchPropertySelectOptions(token?: string): Promise<Proper
     ownerOptions: buildOwnerOptions(owners.data || []),
     typeOptions: buildTypeOptions(types.data || []),
     agencyOptions: buildAgencyOptions(agencies.data || []),
-    centerOptions: buildCenterOptions(centers.data || []),
+    centerOptions: buildCenterOptions(creditCenters.data || []),
+    creditCenterOptions: buildCenterOptions(creditCenters.data || []),
+    debitCenterOptions: buildCenterOptions(debitCenters.data || []),
     categoryOptions: buildCategoryOptions(categoryList),
     subcategoryOptions: buildSubcategoryOptions(subcategoryList, categoryList),
     subcategoriesRaw: subcategoryList.map((s: any) => ({ id: s.id, name: s.name, category_id: s.category_id })),

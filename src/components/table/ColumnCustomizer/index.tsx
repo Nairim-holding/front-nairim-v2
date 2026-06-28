@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { X, RotateCcw } from 'lucide-react';
 import type { ColumnDef } from '@/types/types';
 
@@ -10,6 +10,8 @@ interface ColumnCustomizerProps {
   columns: ColumnDef[];
   onReorder: (columns: ColumnDef[]) => void;
   onReset: () => void;
+  visibleColumns?: string[];
+  onVisibilityChange?: (visibleFields: string[]) => void;
 }
 
 export default function ColumnCustomizer({
@@ -18,14 +20,26 @@ export default function ColumnCustomizer({
   columns,
   onReorder,
   onReset,
+  visibleColumns = [],
+  onVisibilityChange,
 }: ColumnCustomizerProps) {
   const [localColumns, setLocalColumns] = useState<ColumnDef[]>(columns);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [localVisibleColumns, setLocalVisibleColumns] = useState<Set<string>>(
+    visibleColumns.length > 0 ? new Set(visibleColumns) : new Set(columns.map(c => c.field))
+  );
 
   // Update local columns when props change
   if (JSON.stringify(localColumns.map(c => c.field)) !== JSON.stringify(columns.map(c => c.field))) {
     setLocalColumns(columns);
   }
+
+  // Sincronizar estado com prop visibleColumns quando mudar
+  useEffect(() => {
+    if (visibleColumns.length > 0) {
+      setLocalVisibleColumns(new Set(visibleColumns));
+    }
+  }, [visibleColumns]);
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -74,6 +88,21 @@ export default function ColumnCustomizer({
     onClose();
   }, [onReset, onClose]);
 
+  const handleToggleVisibility = useCallback((field: string) => {
+    setLocalVisibleColumns((prev) => {
+      const newVisible = new Set(prev);
+      if (newVisible.has(field)) {
+        newVisible.delete(field);
+      } else {
+        newVisible.add(field);
+      }
+      // Chamar callback após state update
+      const newArray = Array.from(newVisible);
+      Promise.resolve().then(() => onVisibilityChange?.(newArray));
+      return newVisible;
+    });
+  }, [onVisibilityChange]);
+
   if (!isOpen) return null;
 
   return (
@@ -106,6 +135,13 @@ export default function ColumnCustomizer({
                   : 'bg-surface-subtle hover:bg-ui-border-soft border-2 border-transparent'
               }`}
             >
+              <input
+                type="checkbox"
+                checked={localVisibleColumns.has(column.field)}
+                onChange={() => handleToggleVisibility(column.field)}
+                className="w-4 h-4 cursor-pointer"
+                title={localVisibleColumns.has(column.field) ? 'Ocultar coluna' : 'Exibir coluna'}
+              />
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-content-secondary flex-shrink-0">
                 <circle cx="9" cy="5" r="1.5" />
                 <circle cx="9" cy="12" r="1.5" />

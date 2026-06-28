@@ -31,18 +31,20 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
     resetAttempts,
     formatTimeRemaining,
     getAttemptWarningColor,
+    getMaxLoginAttempts,
+    updateFromBackendStatus,
   } = useRateLimit();
 
   const togglePassword = () => setShowPassword((prev) => !prev);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     // Prevent submission if blocked
     if (isBlocked) {
       return;
     }
-    
+
     setIsLoading(true);
     setError('');
 
@@ -61,12 +63,22 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
         }
       );
 
-      const data: ApiResponse = await response.json();
+      const data: any = await response.json();
 
       if (!response.ok || !data.success) {
+        // If we have backend rate limit status, use it
+        if (data.data?.failedAttempts !== undefined) {
+          // Use backend status directly
+          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds } = data.data;
+          // Update frontend state to match backend
+          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds);
+        } else {
+          // Fallback to frontend counting if backend doesn't provide status
+          incrementFailedAttempts();
+        }
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
-      
+
       // Successful login - reset failed attempts
       resetAttempts();
 
@@ -82,24 +94,20 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
       navigation.push(slug ? `/${slug}/dashboard` : '/dashboard');
     } catch (err: unknown) {
       let errorMessage = 'Erro ao tentar fazer login. Verifique suas credenciais.';
-      
+
       if (err instanceof Error) {
         errorMessage = err.message;
-        
+
         // Check if it's a rate limit error from backend
         if (errorMessage.includes('Muitas tentativas de login falharam')) {
           handleRateLimitError(errorMessage);
           // Don't show error message since we'll show the blocked state UI
           return;
-        } else {
-          // Regular login error - increment failed attempts
-          incrementFailedAttempts();
         }
       } else if (typeof err === 'string') {
         errorMessage = err;
-        incrementFailedAttempts();
       }
-      
+
       setError(errorMessage);
       // Focar no campo de email após erro de login
       setTimeout(() => {
@@ -114,18 +122,21 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
     <>
       {/* Rate Limiting Status */}
       {!isBlocked && failedAttempts > 0 && (
-        <RateLimitWarning 
+        <RateLimitWarning
           failedAttempts={failedAttempts}
+          maxAttempts={getMaxLoginAttempts()}
           warningColor={getAttemptWarningColor()}
         />
       )}
 
       {/* Blocked State */}
       {isBlocked && (
-        <RateLimitBlocked 
+        <RateLimitBlocked
           timeRemaining={timeRemaining}
           initialTime={initialTime}
           formatTimeRemaining={formatTimeRemaining}
+          blockDurationMinutes={5}
+          maxAttempts={getMaxLoginAttempts()}
         />
       )}
 

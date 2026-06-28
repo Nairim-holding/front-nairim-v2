@@ -82,6 +82,7 @@ export default function LancamentosPage() {
   const [options, setOptions] = useState<FormOptions>(EMPTY_OPTIONS);
   const [columns, setColumns] = useState<ColumnDef[]>(LANCAMENTOS_COLUMNS);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(LANCAMENTOS_COLUMNS.map(c => c.field));
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -155,6 +156,10 @@ export default function LancamentosPage() {
           if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
             setColumnWidths(result.data.columnWidths);
           }
+
+          if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
+            setVisibleColumns(result.data.visibleColumns);
+          }
         }
       } else if (response.status === 401) {
         console.warn('[LancamentosPage] Usuário não autenticado ao carregar preferências');
@@ -166,7 +171,7 @@ export default function LancamentosPage() {
     }
   }, []);
 
-  const saveColumnPreferences = useCallback(async (orderedFields: string[], widths: Record<string, number>) => {
+  const saveColumnPreferences = useCallback(async (orderedFields: string[], widths: Record<string, number>, visible?: string[]) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -181,6 +186,7 @@ export default function LancamentosPage() {
             resource: 'financial-transaction',
             columnOrder: orderedFields,
             columnWidths: widths,
+            ...(visible && { visibleColumns: visible }),
           };
           console.log('[LancamentosPage] Enviando preferências:', body);
           const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
@@ -227,15 +233,21 @@ export default function LancamentosPage() {
   const handleColumnsChange = useCallback((newColumns: ColumnDef[]) => {
     setColumns(newColumns);
     const orderedFields = newColumns.map(c => c.field);
-    saveColumnPreferences(orderedFields, columnWidths);
-  }, [saveColumnPreferences, columnWidths]);
+    saveColumnPreferences(orderedFields, columnWidths, visibleColumns);
+  }, [saveColumnPreferences, columnWidths, visibleColumns]);
 
   const handleColumnWidthsChange = useCallback((widths: Record<string, number>) => {
     console.log('[LancamentosPage] handleColumnWidthsChange - novo widths:', widths);
     setColumnWidths(widths);
     const orderedFields = columns.map(c => c.field);
-    saveColumnPreferences(orderedFields, widths);
-  }, [columns, saveColumnPreferences]);
+    saveColumnPreferences(orderedFields, widths, visibleColumns);
+  }, [columns, saveColumnPreferences, visibleColumns]);
+
+  const handleVisibilityChange = useCallback((visibleFields: string[]) => {
+    setVisibleColumns(visibleFields);
+    const orderedFields = columns.map(c => c.field);
+    saveColumnPreferences(orderedFields, columnWidths, visibleFields);
+  }, [columns, columnWidths, saveColumnPreferences]);
 
   useEffect(() => {
     fetchOptions();
@@ -456,6 +468,8 @@ export default function LancamentosPage() {
         onColumnsChange={handleColumnsChange}
         onColumnWidthsChange={handleColumnWidthsChange}
         savedColumnWidths={columnWidths}
+        visibleColumns={visibleColumns}
+        onVisibilityChange={handleVisibilityChange}
       />
     </Section>
   );
