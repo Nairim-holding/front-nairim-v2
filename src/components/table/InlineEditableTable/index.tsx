@@ -39,6 +39,7 @@ import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
 import CalendarPicker from "@/components/ui/CalendarPicker";
 import QuickCreateAutocomplete, { isQuickCreateSentinel, extractQuickCreateName } from "@/components/ui/QuickCreateAutocomplete";
+import SummaryPanel from "@/components/domain/financial/SummaryPanel";
 
 // Componente Select customizado que abre no foco e permite navegação por Tab
 interface CustomSelectProps {
@@ -384,6 +385,8 @@ interface InlineEditableTableProps {
   onRowCreate?: (data: any) => Promise<void>;
   onRowDelete?: (id: string) => Promise<void>;
   showTotals?: boolean;
+  /** Exibe o painel lateral retrátil de "Resumo" (somente Lançamentos). */
+  summaryPanel?: boolean;
   onColumnsChange?: (columns: ColumnDef[]) => void;
   onColumnWidthsChange?: (widths: Record<string, number>) => void;
   savedColumnWidths?: Record<string, number>;
@@ -398,7 +401,7 @@ interface EditingRow {
 export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
-  showTotals = true, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
+  showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -690,7 +693,7 @@ export default function InlineEditableTable({
 
   const totals = useMemo(() => {
     if (!showTotals) return { totalIncome: 0, totalExpense: 0, balance: 0 };
-    
+
     // Calcular no frontend com base nos itens filtrados
     // O summary do backend não tem informação de INCOME/EXPENSE, apenas status
     if (!filteredItems?.length) return { totalIncome: 0, totalExpense: 0, balance: 0 };
@@ -701,6 +704,29 @@ export default function InlineEditableTable({
       return acc;
     }, { totalIncome: 0, totalExpense: 0, balance: 0 });
   }, [filteredItems, showTotals, activeTab]);
+
+  // Saldos vindos do backend (líquidos, sobre TODO o período/histórico, não só a
+  // página atual). Quando presentes têm prioridade sobre o cálculo client-side.
+  const serverTotals = (data?.totals && typeof data.totals === 'object') ? data.totals : null;
+  const periodBalance = typeof serverTotals?.periodBalance === 'number'
+    ? serverTotals.periodBalance
+    : totals.balance;
+  const accumulatedBalance = typeof serverTotals?.accumulatedBalance === 'number'
+    ? serverTotals.accumulatedBalance
+    : null;
+
+  // Dados do painel de Resumo (tipo × status, sem transferências) — vêm do mesmo
+  // `data.totals` da grid, logo respeitam exatamente período + filtros aplicados.
+  const summaryData = useMemo(() => {
+    if (!summaryPanel || !serverTotals || typeof serverTotals.receitasPrevisto !== 'number') return null;
+    return {
+      receitasPrevisto: serverTotals.receitasPrevisto,
+      receitasRecebido: serverTotals.receitasRecebido,
+      despesasPrevisto: serverTotals.despesasPrevisto,
+      despesasPago: serverTotals.despesasPago,
+      saldoContas: typeof serverTotals.accumulatedBalance === 'number' ? serverTotals.accumulatedBalance : 0,
+    };
+  }, [summaryPanel, serverTotals]);
 
   const displayItems = useMemo(() => [
     ...editingRows.filter(row => row.isNew),
@@ -1203,9 +1229,9 @@ export default function InlineEditableTable({
       </div>
 
       {/* Linha 2: Filtros, Pesquisa e Saldo */}
-      <div className="flex justify-between items-center gap-3 mb-1 flex-wrap lg:flex-nowrap">
-        {/* Esquerda: Botões de ação + Pesquisa em linha única */}
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+      <div className="flex justify-between items-center gap-2 mb-1 flex-wrap lg:flex-nowrap">
+        {/* Esquerda: Botões de ação + Pesquisa */}
+        <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
           {selectedCheckboxes.length > 0 ? (
             enableDelete && <button onClick={handleDeleteSelected} className="bg-surface-subtle p-2 rounded hover:bg-red-100 transition-colors"><Trash2 size={20} color="var(--color-error)" /></button>
           ) : (
@@ -1213,7 +1239,7 @@ export default function InlineEditableTable({
               {enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>}
               <button
                 onClick={() => setIsColumnModalOpen(true)}
-                className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                className="hidden sm:block p-2 hover:bg-surface-subtle rounded transition-colors"
                 title="Personalizar colunas"
               >
                 <Settings2 size={20} color="var(--color-text-muted)" />
@@ -1234,9 +1260,10 @@ export default function InlineEditableTable({
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-ui-border rounded-lg hover:border-brand transition-colors text-xs whitespace-nowrap"
+              title={hasDateFilter && dateRange.from && dateRange.to ? `${dateRange.from} até ${dateRange.to}` : 'Selecionar período'}
             >
-              <Calendar size={14} className="text-content-muted" />
-              <span className="text-content-secondary font-medium">
+              <Calendar size={14} className={`flex-shrink-0 ${hasDateFilter ? 'text-brand' : 'text-content-muted'}`} />
+              <span className="hidden sm:inline text-content-secondary font-medium">
                 {hasDateFilter && dateRange.from && dateRange.to
                   ? `${(() => {
                       const parseDateString = (dateStr: string): Date => {
@@ -1251,7 +1278,7 @@ export default function InlineEditableTable({
             </button>
             
             {showDatePicker && (
-              <div className="absolute top-full left-0 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft p-3 z-50 w-[320px] max-h-[85vh] overflow-y-auto">
+              <div className="absolute top-full left-0 mt-2 bg-surface rounded-xl shadow-2xl border border-ui-border-soft p-3 z-50 w-[320px] max-w-[calc(100vw-1rem)] max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-ui-border-soft">
                   <Toggle
                     checked={isEventDate}
@@ -1287,15 +1314,16 @@ export default function InlineEditableTable({
               updateState({ filters: {}, page: 1 });
             }}
             className="flex items-center gap-1 px-2 py-1.5 bg-surface-subtle hover:bg-ui-border rounded-lg transition-colors text-xs text-content-secondary whitespace-nowrap"
+            title="Limpar filtros"
           >
-            <span>Limpar</span>
+            <span className="hidden sm:inline">Limpar</span>
             <X size={12} />
           </button>
 
           <button
             onClick={() => refreshData()}
             disabled={isLoadingData}
-            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            className="hidden sm:inline-flex p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
             title="Recarregar"
           >
             <RefreshCw size={16} className={isLoadingData ? 'animate-spin' : ''} />
@@ -1304,7 +1332,7 @@ export default function InlineEditableTable({
           <button
             onClick={handleExportExcel}
             disabled={isExporting || isLoadingData || meta.total === 0}
-            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            className="hidden sm:inline-flex p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
             title="Exportar para Excel"
           >
             <FileSpreadsheet size={16} className={isExporting ? 'animate-pulse' : ''} />
@@ -1312,15 +1340,17 @@ export default function InlineEditableTable({
 
           {filterVisible && <DynamicFilterModal visible={filterVisible} setVisible={setFilterVisible} onApply={handleApplyFilters} onClear={handleClearFilters} title={title} filters={dynamicFilters} initialValues={appliedFilters} columns={4} maxHeight={title === 'Lançamentos' ? '90vh' : undefined} excludeFieldsFromCount={['event_date', 'effective_date']} />}
           
-          {/* Pesquisa logo após Limpar */}
-          <div className="w-[200px] sm:w-[250px] lg:w-[300px]">
+          {/* Pesquisa: cresce para preencher espaço disponível */}
+          <div className="flex-1 min-w-[140px]">
             <SearchInput initialValue={state.search} onSearch={s => updateState({ search: s, page: 1 })} placeholder={`Pesquisar ${title.toLowerCase()}...`} delay={600} autoFocus={autoFocusSearch} />
           </div>
-          <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
+          <div className="hidden sm:block">
+            <SelectLimit limit={state.limit} onLimitChange={l => updateState({ limit: l, page: 1 })} />
+          </div>
         </div>
 
         {/* Direita: Ícones + Saldo */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 w-full lg:w-auto justify-start lg:justify-end">
           {/* Ícone para lançamentos parcelados/recorrentes */}
           <button
             onClick={() => setIsParceladoModalOpen(true)}
@@ -1340,11 +1370,21 @@ export default function InlineEditableTable({
           </button>
 
           {showTotals && items.length > 0 && (
-            <div className="flex items-center bg-surface-subtle px-3 py-1.5 rounded-lg border border-ui-border-soft">
-              <span className="text-xs text-content-secondary mr-1.5">Saldo:</span>
-              <span className={`text-sm font-semibold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(totals.balance)}
-              </span>
+            <div className="flex flex-col items-end bg-surface-subtle px-3 py-1 rounded-lg border border-ui-border-soft leading-tight">
+              {accumulatedBalance !== null && (
+                <div className="flex items-center">
+                  <span className="text-[11px] text-content-secondary mr-1.5">Saldo acumulado:</span>
+                  <span className={`text-xs font-semibold ${accumulatedBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(accumulatedBalance)}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center">
+                <span className="text-xs text-content-secondary mr-1.5">Saldo do período:</span>
+                <span className={`text-sm font-semibold ${periodBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(periodBalance)}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -1401,8 +1441,8 @@ export default function InlineEditableTable({
       </div>
       
       {/* Rodapé fixo na parte inferior da tela */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-4 py-2 z-50 shadow-lg">
-        <div className="flex flex-wrap justify-end items-end gap-2 max-w-[1400px] mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-3 sm:px-4 py-2 z-50 shadow-lg">
+        <div className="flex flex-wrap justify-between items-center gap-2 max-w-[1400px] mx-auto">
           <p className="text-[13px] text-content-secondary">
             {meta && meta.total > 0 ? (
               activeTab === 'ALL'
@@ -1631,6 +1671,14 @@ export default function InlineEditableTable({
         visibleColumns={Array.from(visibleColumnsState)}
         onVisibilityChange={handleVisibilityChange}
       />
+
+      {summaryPanel && (
+        <SummaryPanel
+          from={hasDateFilter ? dateRange.from : undefined}
+          to={hasDateFilter ? dateRange.to : undefined}
+          summary={summaryData}
+        />
+      )}
     </>
   );
 }

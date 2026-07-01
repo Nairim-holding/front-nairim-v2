@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Section from '@/components/layout/PageSection';
 import InlineEditableTable from '@/components/table/InlineEditableTable';
+import TransferDestinationModal from '@/components/domain/financial/TransferDestinationModal';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { authFetch } from '@/utils/authFetch';
@@ -85,6 +86,39 @@ export default function LancamentosPage() {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LANCAMENTOS_COLUMNS.map(c => c.field));
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Categorias internas de transferência (is_system + nome). Quando o lançamento
+  // usa uma delas, ao salvar abrimos o modal pedindo a conta de destino.
+  const transferCategoryIds = useMemo(() => {
+    const ids = new Set<string>();
+    (options.categories as any[]).forEach(c => {
+      const name = typeof c?.name === 'string' ? c.name.toLowerCase() : '';
+      if (c?.is_system && name.includes('transferência entre contas')) {
+        ids.add(String(c.id));
+      }
+    });
+    return ids;
+  }, [options.categories]);
+
+  const [transferModal, setTransferModal] = useState<
+    null | { originId: string; amount: number; description: string }
+  >(null);
+  const transferResolverRef = useRef<((destinationId: string | null) => void) | null>(null);
+
+  const askTransferDestination = useCallback(
+    (originId: string, amount: number, description: string) =>
+      new Promise<string | null>(resolve => {
+        transferResolverRef.current = resolve;
+        setTransferModal({ originId, amount, description });
+      }),
+    [],
+  );
+
+  const resolveTransferModal = useCallback((destinationId: string | null) => {
+    transferResolverRef.current?.(destinationId);
+    transferResolverRef.current = null;
+    setTransferModal(null);
+  }, []);
 
   const fetchOptions = useCallback(async () => {
     try {
@@ -409,6 +443,35 @@ export default function LancamentosPage() {
   const handleRowCreate = useCallback(async (data: Record<string, unknown>) => {
     try {
       const resolved = await resolveQuickCreates(data);
+
+      // Fluxo de transferência: categoria interna exige conta de destino.
+      if (transferCategoryIds.has(String(resolved.category_id))) {
+        const originId = String(resolved.financial_institution_id ?? '');
+        if (!originId) {
+          throw new Error('Selecione a instituição financeira de origem.');
+        }
+
+        const destinationId = await askTransferDestination(
+          originId,
+          Number(resolved.amount) || 0,
+          String(resolved.description ?? ''),
+        );
+        if (!destinationId) {
+          throw new Error('Transferência cancelada.');
+        }
+
+        const response = await fetch(`${API_URL}/financial-transaction/transfer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...resolved, destination_institution_id: destinationId }),
+        });
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          throw new Error(result.message ?? 'Erro ao criar transferência.');
+        }
+        return;
+      }
+
       const response = await fetch(`${API_URL}/financial-transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -423,7 +486,7 @@ export default function LancamentosPage() {
       console.error(error);
       throw error instanceof Error ? error : new Error('Erro ao criar lançamento.');
     }
-  }, [resolveQuickCreates]);
+  }, [resolveQuickCreates, transferCategoryIds, askTransferDestination]);
 
   const handleRowDelete = useCallback(async (id: string) => {
     try {
@@ -460,6 +523,7 @@ export default function LancamentosPage() {
         autoFocusSearch
         enableCreate
         enableDelete
+        summaryPanel
         defaultLimit={150}
         formOptions={options}
         onRowSave={handleRowSave}
@@ -471,6 +535,17 @@ export default function LancamentosPage() {
         visibleColumns={visibleColumns}
         onVisibilityChange={handleVisibilityChange}
       />
+
+      {transferModal && (
+        <TransferDestinationModal
+          originId={transferModal.originId}
+          institutions={options.institutions}
+          amount={transferModal.amount}
+          description={transferModal.description}
+          onConfirm={destinationId => resolveTransferModal(destinationId)}
+          onCancel={() => resolveTransferModal(null)}
+        />
+      )}
     </Section>
   );
 }

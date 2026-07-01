@@ -198,9 +198,15 @@ export default function MultiColumnManager({
   const handleSelectParent = useCallback(
     (parent: ManagerColumn) => {
       setSelectedParentId(parent.id);
+      // Categorias internas do sistema não podem ser editadas: apenas seleciona
+      // (para visualizar), sem abrir o formulário de edição.
+      if (parent.is_system) {
+        closeForm();
+        return;
+      }
       openForm('EDIT_PARENT', parent);
     },
-    [openForm],
+    [openForm, closeForm],
   );
 
   // ─── Loading ────────────────────────────────────────────────────────────────
@@ -271,22 +277,26 @@ export default function MultiColumnManager({
                 <span className={`truncate text-[14px] ${!parent.is_active ? 'opacity-60 line-through text-content-muted' : ''}`}>
                   {parent.name}
                 </span>
-                <div className={`flex gap-1 flex-shrink-0 ml-2 transition-opacity ${selectedParentId === parent.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleSelectParent(parent); }}
-                    className="p-1 hover:bg-brand/20 rounded text-brand"
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  {!parent.is_system && (
+                {parent.is_system ? (
+                  <span className="flex-shrink-0 ml-2 text-[10px] font-semibold uppercase tracking-wide text-content-muted bg-ui-border-soft px-2 py-0.5 rounded">
+                    Sistema
+                  </span>
+                ) : (
+                  <div className={`flex gap-1 flex-shrink-0 ml-2 transition-opacity ${selectedParentId === parent.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSelectParent(parent); }}
+                      className="p-1 hover:bg-brand/20 rounded text-brand"
+                    >
+                      <Edit2 size={14} />
+                    </button>
                     <button
                       onClick={(e) => handleDeleteParent(e, parent)}
                       className="p-1 hover:bg-red-100 rounded text-state-error"
                     >
                       <Trash2 size={14} />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))
           )}
