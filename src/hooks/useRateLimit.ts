@@ -11,6 +11,7 @@ interface RateLimitState {
   isBlocked: boolean;
   timeRemaining: number;
   initialTime: number;
+  shouldWarnAboutBlockage: boolean;
 }
 
 export const useRateLimit = () => {
@@ -19,6 +20,7 @@ export const useRateLimit = () => {
     isBlocked: false,
     timeRemaining: 0,
     initialTime: 0,
+    shouldWarnAboutBlockage: false,
   });
 
   // Load rate limiting state from localStorage on mount (client-side only)
@@ -74,6 +76,7 @@ export const useRateLimit = () => {
           isBlocked: false,
           timeRemaining: 0,
           initialTime: 0,
+          shouldWarnAboutBlockage: false,
         });
         localStorage.removeItem('loginFailedAttempts');
         localStorage.removeItem('loginBlockExpiry');
@@ -106,6 +109,7 @@ export const useRateLimit = () => {
       isBlocked: true,
       timeRemaining: totalSeconds,
       initialTime: totalSeconds,
+      shouldWarnAboutBlockage: false,
     });
   };
 
@@ -132,6 +136,7 @@ export const useRateLimit = () => {
       isBlocked: false,
       timeRemaining: 0,
       initialTime: 0,
+      shouldWarnAboutBlockage: false,
     });
     localStorage.removeItem('loginFailedAttempts');
     localStorage.removeItem('loginBlockExpiry');
@@ -152,7 +157,7 @@ export const useRateLimit = () => {
 
   const getMaxLoginAttempts = () => MAX_LOGIN_ATTEMPTS;
 
-  const updateFromBackendStatus = (backendAttempts: number, isBlocked: boolean, blockedUntilSeconds?: number) => {
+  const updateFromBackendStatus = (backendAttempts: number, isBlocked: boolean, blockedUntilSeconds?: number, shouldWarnAboutBlockage: boolean = false) => {
     localStorage.setItem('loginFailedAttempts', backendAttempts.toString());
 
     if (isBlocked && blockedUntilSeconds) {
@@ -163,9 +168,10 @@ export const useRateLimit = () => {
         isBlocked: true,
         timeRemaining: blockedUntilSeconds,
         initialTime: blockedUntilSeconds,
+        shouldWarnAboutBlockage: false,
       });
     } else {
-      setState(prev => ({ ...prev, failedAttempts: backendAttempts }));
+      setState(prev => ({ ...prev, failedAttempts: backendAttempts, shouldWarnAboutBlockage }));
     }
   };
 

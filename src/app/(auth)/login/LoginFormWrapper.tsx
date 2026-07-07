@@ -26,6 +26,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
     isBlocked,
     timeRemaining,
     initialTime,
+    shouldWarnAboutBlockage,
     incrementFailedAttempts,
     handleRateLimitError,
     resetAttempts,
@@ -69,9 +70,9 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
         // If we have backend rate limit status, use it
         if (data.data?.failedAttempts !== undefined) {
           // Use backend status directly
-          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds } = data.data;
+          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds, shouldWarnAboutBlockage: backendShouldWarn } = data.data;
           // Update frontend state to match backend
-          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds);
+          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds, backendShouldWarn);
         } else {
           // Fallback to frontend counting if backend doesn't provide status
           incrementFailedAttempts();
@@ -126,6 +127,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
           failedAttempts={failedAttempts}
           maxAttempts={getMaxLoginAttempts()}
           warningColor={getAttemptWarningColor()}
+          shouldWarnAboutBlockage={shouldWarnAboutBlockage}
         />
       )}
 
