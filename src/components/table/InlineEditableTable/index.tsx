@@ -392,6 +392,8 @@ interface InlineEditableTableProps {
   savedColumnWidths?: Record<string, number>;
   visibleColumns?: string[];
   onVisibilityChange?: (visibleFields: string[]) => void;
+  /** Notifica o pai sempre que os filtros aplicados na grid mudarem. */
+  onAppliedFiltersChange?: (filters: Record<string, any>) => void;
 }
 
 interface EditingRow {
@@ -402,6 +404,7 @@ export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
+  onAppliedFiltersChange,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -442,6 +445,10 @@ export default function InlineEditableTable({
   const { showPopup } = usePopupContext();
   
   const { filters: dynamicFilters, searchFields, isLoading: isLoadingFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
+
+  useEffect(() => {
+    onAppliedFiltersChange?.(appliedFilters);
+  }, [appliedFilters, onAppliedFiltersChange]);
   const { state, data, isLoading: isLoadingData, updateState, refreshData } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
   });
@@ -1136,37 +1143,41 @@ export default function InlineEditableTable({
             groups={categoryGroups.length > 0 ? categoryGroups : undefined}
             options={categoryGroups.length === 0 ? [] : []}
             placeholder="Selecione..."
+            currentLabel={item.category?.name}
           />
         );
       case 'subcategory_id':
         const subcategories = formOptions.subcategories[row.data.category_id] || [];
         return renderWrapper(
-          <QuickCreateAutocomplete 
-            value={val || ''} 
-            onChange={v => upd(v)} 
+          <QuickCreateAutocomplete
+            value={val || ''}
+            onChange={v => upd(v)}
             disabled={dis}
             options={subcategories}
             placeholder="Selecione..."
+            currentLabel={item.subcategory?.name}
           />
         );
       case 'financial_institution_id':
         return renderWrapper(
-          <QuickCreateAutocomplete 
-            value={row.data.financial_institution_id || ''} 
-            onChange={v => updateEditingRow(row.id, 'financial_institution_id', v)} 
+          <QuickCreateAutocomplete
+            value={row.data.financial_institution_id || ''}
+            onChange={v => updateEditingRow(row.id, 'financial_institution_id', v)}
             disabled={dis}
             options={formOptions.institutions}
             placeholder="Selecione..."
+            currentLabel={item.financial_institution?.name}
           />
         );
       case 'card_id':
         return renderWrapper(
-          <QuickCreateAutocomplete 
-            value={val || ''} 
-            onChange={v => upd(v)} 
+          <QuickCreateAutocomplete
+            value={val || ''}
+            onChange={v => upd(v)}
             disabled={dis}
             options={[{ value: '', label: 'Nenhum' }, ...formOptions.cards]}
             placeholder="Selecione..."
+            currentLabel={item.card?.name}
           />
         );
       case 'center_id': {
@@ -1191,12 +1202,13 @@ export default function InlineEditableTable({
         
         return renderWrapper(
           <QuickCreateAutocomplete
-            value={val || ''} 
-            onChange={v => upd(v)} 
+            value={val || ''}
+            onChange={v => upd(v)}
             disabled={dis}
             groups={centerGroups}
             options={centerOptions}
             placeholder="Selecione..."
+            currentLabel={item.center?.name}
           />
         );
       }
@@ -1207,6 +1219,7 @@ export default function InlineEditableTable({
             onChange={v => upd(v)}
             disabled={dis}
             options={formOptions.suppliers}
+            currentLabel={item.supplier?.name}
           />
         );
       default:

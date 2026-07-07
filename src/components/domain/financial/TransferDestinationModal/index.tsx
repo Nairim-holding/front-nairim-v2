@@ -8,17 +8,25 @@ interface InstitutionOption {
   value: string;
 }
 
+interface CenterOption {
+  label: string;
+  value: string;
+  type?: string;
+}
+
 interface Props {
   /** Instituição de origem (a que o usuário já escolheu no lançamento). */
   originId: string;
   /** Lista completa de instituições financeiras. */
   institutions: InstitutionOption[];
+  /** Lista completa de centros (filtrada para Centro de Receita = type INCOME). */
+  centers: CenterOption[];
   /** Valor da transferência, só para exibição. */
   amount: number;
   /** Descrição do lançamento, só para exibição. */
   description: string;
-  /** Resolve com o id da conta destino escolhida. */
-  onConfirm: (destinationId: string) => void;
+  /** Resolve com o id da conta destino e o centro de receita escolhidos. */
+  onConfirm: (destinationId: string, destinationCenterId: string) => void;
   /** Cancela a transferência. */
   onCancel: () => void;
 }
@@ -29,12 +37,14 @@ const formatCurrency = (value: number) =>
 export default function TransferDestinationModal({
   originId,
   institutions,
+  centers,
   amount,
   description,
   onConfirm,
   onCancel,
 }: Props) {
   const [destinationId, setDestinationId] = useState<string>('');
+  const [destinationCenterId, setDestinationCenterId] = useState<string>('');
 
   const originName = useMemo(
     () => institutions.find(i => String(i.value) === String(originId))?.label ?? '—',
@@ -47,9 +57,15 @@ export default function TransferDestinationModal({
     [institutions, originId],
   );
 
+  // Só centros de Receita fazem sentido no lançamento de Entrada (destino).
+  const centerOptions = useMemo(
+    () => centers.filter(c => c.type === 'INCOME'),
+    [centers],
+  );
+
   const handleConfirm = () => {
-    if (!destinationId) return;
-    onConfirm(destinationId);
+    if (!destinationId || !destinationCenterId) return;
+    onConfirm(destinationId, destinationCenterId);
   };
 
   return (
@@ -107,6 +123,21 @@ export default function TransferDestinationModal({
           </p>
         </div>
 
+        <div className="mb-6">
+          <Select
+            label="Centro de Receita (destino)"
+            required
+            searchable
+            placeholder="Selecione o centro de receita..."
+            options={centerOptions}
+            value={destinationCenterId}
+            onChange={v => setDestinationCenterId(String(v))}
+          />
+          <p className="mt-2 text-xs text-content-muted">
+            Centro usado no lançamento de entrada — não é copiado da despesa de origem.
+          </p>
+        </div>
+
         <div className="flex justify-end gap-2">
           <button
             onClick={onCancel}
@@ -116,7 +147,7 @@ export default function TransferDestinationModal({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!destinationId}
+            disabled={!destinationId || !destinationCenterId}
             className="px-5 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover disabled:opacity-50 transition-colors"
           >
             Confirmar Transferência

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useMessageContext } from '@/contexts/MessageContext';
 import { getTokenMaxAgeSeconds } from '@/utils/jwt';
 import Image from 'next/image';
 
@@ -24,6 +25,8 @@ interface Company {
 
 interface CompanySwitcherProps {
   isOpen: boolean;
+  /** Chamado ao navegar para outra tela (troca de empresa ou "Nova empresa") — fecha a sidebar no mobile. */
+  onNavigate?: () => void;
 }
 
 function CompanyAvatar({
@@ -63,8 +66,9 @@ function CompanyAvatar({
   );
 }
 
-export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
+export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherProps) {
   const { login, user } = useAuth();
+  const { showMessage } = useMessageContext();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -73,7 +77,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Busca a lista de empresas — endpoint /companies retorna formato flat { data: [...], count }
-  useEffect(() => {
+  const fetchCompanies = useCallback(() => {
     const API = process.env.NEXT_PUBLIC_URL_API ?? '';
     fetch(`${API}/companies?limit=100`)
       .then(r => r.json())
@@ -84,6 +88,13 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
       })
       .catch(() => {});
   }, []);
+
+  // Busca inicial ao montar (o Sidebar não remonta ao navegar, então este é o
+  // único fetch automático — a lista é refeita novamente ao abrir o dropdown,
+  // cobrindo o caso de uma empresa ter sido cadastrada nesse meio-tempo).
+  useEffect(() => {
+    fetchCompanies();
+  }, [fetchCompanies]);
 
   // Fecha dropdown ao clicar fora
   useEffect(() => {
@@ -96,9 +107,10 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
     return () => document.removeEventListener('mousedown', onOutside);
   }, [dropdownOpen]);
 
-  async function switchToCompany(slug: string) {
+  async function switchToCompany(slug: string, label: string) {
     if (slug === currentSlug || switching) return;
     setDropdownOpen(false);
+    onNavigate?.();
     setSwitching(slug);
 
     // Atualiza o slug imediatamente para refletir na UI antes do refresh
@@ -129,11 +141,14 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
       // Redireciona com slug na URL para identificar a empresa visualmente
       router.push(`/${slug}/dashboard`);
       router.refresh();
+
+      showMessage(`Empresa alterada para ${label}`, 'success');
     } catch (err) {
       console.error('[CompanySwitcher] Erro ao trocar empresa:', err);
       // Reverte se falhar
       const prev = document.cookie.split('; ').find(r => r.startsWith('company_slug='))?.split('=')[1] ?? '';
       setCurrentSlug(prev);
+      showMessage(err instanceof Error ? err.message : 'Erro ao trocar empresa', 'error');
     } finally {
       setSwitching(null);
     }
@@ -156,7 +171,13 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
   return (
     <div ref={containerRef} className="relative mb-3 w-full">
       <button
-        onClick={() => setDropdownOpen(v => !v)}
+        onClick={() => {
+          setDropdownOpen(v => {
+            const next = !v;
+            if (next) fetchCompanies();
+            return next;
+          });
+        }}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-ui-border-soft transition-colors duration-200"
       >
         <CompanyAvatar company={currentCompany} />
@@ -184,7 +205,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
               return (
                 <li key={c.id}>
                   <button
-                    onClick={() => switchToCompany(c.slug)}
+                    onClick={() => switchToCompany(c.slug, label)}
                     disabled={!!switching}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 disabled:opacity-60 ${
                       isActive
@@ -206,7 +227,7 @@ export default function CompanySwitcher({ isOpen }: CompanySwitcherProps) {
 
           <div className="border-t border-ui-border-soft py-1">
             <button
-              onClick={() => { setDropdownOpen(false); router.push('/dashboard/empresas/cadastrar'); }}
+              onClick={() => { setDropdownOpen(false); onNavigate?.(); router.push('/dashboard/empresas/cadastrar'); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-content-muted hover:bg-surface-subtle transition-colors duration-150"
             >
               <Plus size={14} />

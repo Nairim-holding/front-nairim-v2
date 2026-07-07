@@ -100,25 +100,46 @@ export default function LancamentosPage() {
     return ids;
   }, [options.categories]);
 
+  // Filtros aplicados na grid (espelhados do InlineEditableTable) — usados só
+  // para compor o título com as instituições selecionadas.
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>({});
+  const handleAppliedFiltersChange = useCallback((filters: Record<string, any>) => {
+    setAppliedFilters(filters);
+  }, []);
+
+  const pageTitle = useMemo(() => {
+    const raw = appliedFilters.financial_institution_id;
+    const ids: string[] = raw == null ? [] : Array.isArray(raw) ? raw : [raw];
+    const names = ids
+      .map(id => options.institutions.find(i => String(i.value) === String(id))?.label)
+      .filter((name): name is string => Boolean(name));
+    return names.length > 0 ? `Gerenciar Lançamentos – ${names.join(', ')}` : 'Gerenciar Lançamentos';
+  }, [appliedFilters, options.institutions]);
+
   const [transferModal, setTransferModal] = useState<
     null | { originId: string; amount: number; description: string }
   >(null);
-  const transferResolverRef = useRef<((destinationId: string | null) => void) | null>(null);
+  const transferResolverRef = useRef<
+    ((result: { destinationId: string; destinationCenterId: string } | null) => void) | null
+  >(null);
 
   const askTransferDestination = useCallback(
     (originId: string, amount: number, description: string) =>
-      new Promise<string | null>(resolve => {
+      new Promise<{ destinationId: string; destinationCenterId: string } | null>(resolve => {
         transferResolverRef.current = resolve;
         setTransferModal({ originId, amount, description });
       }),
     [],
   );
 
-  const resolveTransferModal = useCallback((destinationId: string | null) => {
-    transferResolverRef.current?.(destinationId);
-    transferResolverRef.current = null;
-    setTransferModal(null);
-  }, []);
+  const resolveTransferModal = useCallback(
+    (result: { destinationId: string; destinationCenterId: string } | null) => {
+      transferResolverRef.current?.(result);
+      transferResolverRef.current = null;
+      setTransferModal(null);
+    },
+    [],
+  );
 
   const fetchOptions = useCallback(async () => {
     try {
@@ -451,19 +472,23 @@ export default function LancamentosPage() {
           throw new Error('Selecione a instituição financeira de origem.');
         }
 
-        const destinationId = await askTransferDestination(
+        const transferChoice = await askTransferDestination(
           originId,
           Number(resolved.amount) || 0,
           String(resolved.description ?? ''),
         );
-        if (!destinationId) {
+        if (!transferChoice) {
           throw new Error('Transferência cancelada.');
         }
 
         const response = await fetch(`${API_URL}/financial-transaction/transfer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...resolved, destination_institution_id: destinationId }),
+          body: JSON.stringify({
+            ...resolved,
+            destination_institution_id: transferChoice.destinationId,
+            destination_center_id: transferChoice.destinationCenterId,
+          }),
         });
         if (!response.ok) {
           const result = await response.json().catch(() => ({}));
@@ -515,7 +540,7 @@ export default function LancamentosPage() {
   }
 
   return (
-    <Section title="Gerenciar Lançamentos">
+    <Section title={pageTitle}>
       <InlineEditableTable
         resource="financial-transaction"
         title="Lançamentos"
@@ -534,15 +559,19 @@ export default function LancamentosPage() {
         savedColumnWidths={columnWidths}
         visibleColumns={visibleColumns}
         onVisibilityChange={handleVisibilityChange}
+        onAppliedFiltersChange={handleAppliedFiltersChange}
       />
 
       {transferModal && (
         <TransferDestinationModal
           originId={transferModal.originId}
           institutions={options.institutions}
+          centers={options.centers}
           amount={transferModal.amount}
           description={transferModal.description}
-          onConfirm={destinationId => resolveTransferModal(destinationId)}
+          onConfirm={(destinationId, destinationCenterId) =>
+            resolveTransferModal({ destinationId, destinationCenterId })
+          }
           onCancel={() => resolveTransferModal(null)}
         />
       )}

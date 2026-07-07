@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { RefreshCw, Calendar } from 'lucide-react';
+import { RefreshCw, Calendar, FileSpreadsheet, FileText } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useSearchParams } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
@@ -343,6 +346,40 @@ export default function PlanningPageContent() {
 
   const getSelectedShortcut = useCallback(() => viewMonths, [viewMonths]);
 
+  // Exporta exatamente o que está renderizado na grid (mesmas linhas/colunas do
+  // período selecionado) — lê o <table> já montado em vez de recalcular os dados.
+  const handleExportExcel = useCallback(() => {
+    const tableEl = planningTableRef.current?.getTableElement();
+    if (!tableEl) {
+      showMessage('Não há dados para exportar', 'error');
+      return;
+    }
+
+    const worksheet = XLSX.utils.table_to_sheet(tableEl);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Planejamento');
+    XLSX.writeFile(workbook, `planejamento_${dateRange.from}_a_${dateRange.to}.xlsx`);
+  }, [dateRange, showMessage]);
+
+  // Mesma fonte que o Excel (o <table> renderizado) — usa o modo "html" do
+  // autoTable, que lê a tabela do DOM em vez de recalcular linhas/colunas.
+  const handleExportPDF = useCallback(() => {
+    const tableEl = planningTableRef.current?.getTableElement();
+    if (!tableEl) {
+      showMessage('Não há dados para exportar', 'error');
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    autoTable(doc, {
+      html: tableEl,
+      horizontalPageBreak: true,
+      styles: { fontSize: 6, cellPadding: 2 },
+      margin: { left: 20, right: 20 },
+    });
+    doc.save(`planejamento_${dateRange.from}_a_${dateRange.to}.pdf`);
+  }, [dateRange, showMessage]);
+
   const balanceMonths = useMemo(() => {
     if (!data) return [];
     const [fromYear, fromMonth] = dateRange.from.split('-').slice(0, 2).map(Number);
@@ -398,6 +435,22 @@ export default function PlanningPageContent() {
           >
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
           </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={isLoading || !data}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Exportar Excel"
+          >
+            <FileSpreadsheet size={16} />
+          </button>
+          <button
+            onClick={handleExportPDF}
+            disabled={isLoading || !data}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Exportar PDF"
+          >
+            <FileText size={16} />
+          </button>
         </div>
 
         {/* Desktop: calendário + refresh flutuam sobre o lado esquerdo da tabela */}
@@ -423,6 +476,22 @@ export default function PlanningPageContent() {
             title="Recarregar"
           >
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={isLoading || !data}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Exportar Excel"
+          >
+            <FileSpreadsheet size={16} />
+          </button>
+          <button
+            onClick={handleExportPDF}
+            disabled={isLoading || !data}
+            className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
+            title="Exportar PDF"
+          >
+            <FileText size={16} />
           </button>
         </div>
 

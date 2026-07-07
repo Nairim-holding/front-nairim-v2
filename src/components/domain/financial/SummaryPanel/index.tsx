@@ -99,17 +99,17 @@ export default function SummaryPanel({ from, to, summary }: Props) {
 
   return (
     <>
-      {/* Aba recolhível na borda direita (visível quando o painel está fechado). */}
+      {/* Aba recolhível na borda direita, à altura do título (visível quando o painel está fechado). */}
       {!open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir Resumo"
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 rounded-l-xl border-2 border-r-0 border-brand bg-brand px-3 py-4 shadow-xl hover:shadow-2xl hover:bg-brand-hover transition-all hover:-translate-x-1"
+          className="fixed right-0 top-4 z-40 flex items-center gap-1.5 rounded-l-lg border-2 border-r-0 border-brand bg-brand px-2 py-1.5 shadow-md hover:shadow-lg hover:bg-brand-hover transition-all hover:-translate-x-1"
           title="Clique para abrir o resumo financeiro"
         >
-          <ChevronLeft size={24} className="text-white flex-shrink-0" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-wider text-center">
+          <ChevronLeft size={14} className="text-white flex-shrink-0" />
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider">
             Resumo
           </span>
         </button>

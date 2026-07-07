@@ -100,6 +100,7 @@ export default function Aside() {
       label: "Cadastrar",
       submenu: [
         { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador" },
+        ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresa" }] : []),
         { href: "/dashboard/imoveis", icon: House, label: "Imóvel" },
         { href: "/dashboard/imobiliarias", icon: Building2, label: "Imobiliária" },
         { href: "/dashboard/inquilinos", icon: UserCheck, label: "Inquilinos" },
@@ -123,7 +124,6 @@ export default function Aside() {
 
       ]
     },
-    ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresas" }] : []),
     { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
   ];
 
@@ -167,7 +167,7 @@ export default function Aside() {
             </Link>
           </div>
 
-          {isSuperAdmin && <CompanySwitcher isOpen={openAside} />}
+          {isSuperAdmin && <CompanySwitcher isOpen={openAside} onNavigate={() => setOpenAside(false)} />}
 
           <div className="flex-1 w-full overflow-hidden">
             <nav className="h-full" ref={submenuRef}>

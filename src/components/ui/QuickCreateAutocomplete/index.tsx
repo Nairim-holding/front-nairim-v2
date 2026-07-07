@@ -20,6 +20,14 @@ interface QuickCreateAutocompleteProps {
   placeholder?: string;
   className?: string;
   groups?: { label: string; options: Option[]; color?: 'green' | 'red' | 'blue' | 'gray' }[];
+  /**
+   * Rótulo do valor atual, vindo do registro já carregado (ex: `item.center?.name`).
+   * Usado como fallback quando `value` não está em `options`/`groups` — o que
+   * acontece quando o registro selecionado foi desativado/excluído ou não bate
+   * no filtro aplicado ao editar (ex: centro de tipo diferente da categoria).
+   * Sem isso o campo mostraria vazio mesmo com um valor salvo de verdade.
+   */
+  currentLabel?: string;
 }
 
 const normalize = (s: string) =>
@@ -32,7 +40,8 @@ export default function QuickCreateAutocomplete({
   disabled,
   placeholder = 'Selecione ou digite...',
   className,
-  groups
+  groups,
+  currentLabel
 }: QuickCreateAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,8 +63,9 @@ export default function QuickCreateAutocomplete({
   const selectedLabel = useMemo(() => {
     if (!value) return '';
     if (isQuickCreateSentinel(value)) return extractQuickCreateName(value);
-    return flatOptions.find(o => String(o.value) === String(value))?.label ?? '';
-  }, [value, flatOptions]);
+    const found = flatOptions.find(o => String(o.value) === String(value))?.label;
+    return found ?? currentLabel ?? '';
+  }, [value, flatOptions, currentLabel]);
 
   // Sync query with selected label when not editing.
   useEffect(() => {
