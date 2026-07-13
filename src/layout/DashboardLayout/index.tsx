@@ -20,6 +20,7 @@ interface DashboardLayoutProps {
   metrics: Record<string, MetricResponse | MapCoordinate[] | null>;
   isLoading: boolean;
   onFilterChange: (filter: FilterType) => void;
+  onFinancialRangeChange: (startDate: string, endDate: string) => void;
 }
 
 function LoadingSkeleton({ filter }: { filter: FilterType }) {
@@ -36,7 +37,8 @@ function LoadingSkeleton({ filter }: { filter: FilterType }) {
 function ActiveSection({
   filter,
   metrics,
-}: Pick<DashboardLayoutProps, "filter" | "metrics">) {
+  onFinancialRangeChange,
+}: Pick<DashboardLayoutProps, "filter" | "metrics" | "onFinancialRangeChange">) {
   if (filter === "map") {
     return <MapSection data={(metrics.map as MapCoordinate[]) ?? []} />;
   }
@@ -45,14 +47,14 @@ function ActiveSection({
   if (!current) return null;
 
   switch (filter) {
-    case "financial": return <FinancialSection metrics={current} />;
+    case "financial": return <FinancialSection metrics={current} onRangeChange={onFinancialRangeChange} />;
     case "portfolio": return <PortfolioSection metrics={current} />;
     case "clients":   return <ClientsSection   metrics={current} />;
     default:          return null;
   }
 }
 
-function DashboardLayout({ filter, metrics, isLoading, onFilterChange }: DashboardLayoutProps) {
+function DashboardLayout({ filter, metrics, isLoading, onFilterChange, onFinancialRangeChange }: DashboardLayoutProps) {
   return (
     <section className="p-3 min-h-screen transition-all duration-300">
       <DashboardFilter filter={filter} setFilter={onFilterChange} />
@@ -61,7 +63,7 @@ function DashboardLayout({ filter, metrics, isLoading, onFilterChange }: Dashboa
         {isLoading ? (
           <LoadingSkeleton filter={filter} />
         ) : (
-          <ActiveSection filter={filter} metrics={metrics} />
+          <ActiveSection filter={filter} metrics={metrics} onFinancialRangeChange={onFinancialRangeChange} />
         )}
       </div>
     </section>

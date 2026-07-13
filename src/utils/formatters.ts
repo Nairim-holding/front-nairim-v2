@@ -46,28 +46,6 @@ export const formatCurrency = (value: any): string => {
   }).format(num);
 };
 
-// DEPRECATED: Use maskMoney() from @/utils/masks instead.
-// This function treats the last 2 digits as decimals, which is incorrect for user input.
-// Example: maskCurrencyInput("200") returns "2,00" instead of "200,00".
-// For input handling, use: parseCurrencyFromPTBR(value) for parsing, maskMoney(parsed) for display.
-export const maskCurrencyInput = (value: string): string => {
-  if (!value) return '';
-
-  // Remove tudo que não é dígito
-  const digits = value.replace(/\D/g, '');
-
-  if (!digits) return '';
-
-  // Divide em parte inteira e decimal (últimos 2 dígitos são centavos)
-  const integerPart = digits.slice(0, -2) || '0';
-  const decimalPart = digits.slice(-2).padEnd(2, '0');
-
-  // Formata parte inteira com separador de milhar
-  const formattedInteger = parseInt(integerPart, 10).toLocaleString('pt-BR');
-
-  return `${formattedInteger},${decimalPart}`;
-};
-
 export const formatCurrencyFixed = (v?: number): string =>
   typeof v === 'number' ? `R$ ${v.toFixed(2).replace('.', ',')}` : '';
 

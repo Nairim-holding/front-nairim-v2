@@ -18,22 +18,7 @@ import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
-import { maskMoney } from "@/utils/masks";
-
-const formatCurrencyRealtime = (value: string): string => {
-  const numbers = value.replace(/\D/g, '');
-  if (numbers.length === 0) return '';
-
-  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
-  const amount = parseInt(trimmedNumbers) / 100;
-
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
+import { maskMoney, formatCurrencyRealtime } from "@/utils/masks";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef, Option } from "@/types/types";
@@ -59,7 +44,7 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const justOpenedByFocus = useRef(false);
+  const mouseDownRef = useRef(false);
 
   // Scroll horizontal quando o select é aberto
   useEffect(() => {
@@ -200,24 +185,29 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
     }
   };
 
+  const handleMouseDown = () => {
+    mouseDownRef.current = true;
+  };
+
   const handleFocus = () => {
+    // Se o foco veio de um clique do mouse, quem decide abrir/fechar é o
+    // onClick (mesmo ciclo síncrono do evento) — evita a corrida foco×clique
+    // que fazia o dropdown abrir e fechar no mesmo clique.
+    if (mouseDownRef.current) return;
     if (!disabled && !isOpen) {
       const currentIdx = flatOptions?.findIndex(o => o.value === value);
       calculatePosition();
       setIsOpen(true);
-      justOpenedByFocus.current = true;
       // Highlight no valor atual, ou -1 se não houver valor
       setHighlightedIndex(currentIdx >= 0 ? currentIdx : -1);
-      // Reset flag após pequeno delay
-      setTimeout(() => { justOpenedByFocus.current = false; }, 100);
     }
   };
 
   const handleClick = () => {
     if (disabled) return;
-    // Se acabou de abrir por foco, ignora este clique
-    if (justOpenedByFocus.current) return;
-    setIsOpen(!isOpen);
+    mouseDownRef.current = false;
+    if (!isOpen) calculatePosition();
+    setIsOpen(o => !o);
   };
 
   const calculatePosition = useCallback(() => {
@@ -279,6 +269,7 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
       <button
         ref={buttonRef}
         type="button"
+        onMouseDown={handleMouseDown}
         onClick={handleClick}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
@@ -394,6 +385,13 @@ interface InlineEditableTableProps {
   onVisibilityChange?: (visibleFields: string[]) => void;
   /** Notifica o pai sempre que os filtros aplicados na grid mudarem. */
   onAppliedFiltersChange?: (filters: Record<string, any>) => void;
+  /**
+   * Resolve valores-sentinela de "cadastro rápido" (`__new__:Nome`) vindos do
+   * `QuickCreateAutocomplete`, criando o registro via API e devolvendo o objeto
+   * com os IDs reais. Mesma função usada no fluxo normal de criar/editar linha —
+   * reaproveitada aqui para o modal de Parcelado/Recorrente.
+   */
+  resolveQuickCreates?: (data: Record<string, any>) => Promise<Record<string, any>>;
 }
 
 interface EditingRow {
@@ -405,6 +403,7 @@ export default function InlineEditableTable({
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
   onAppliedFiltersChange,
+  resolveQuickCreates,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -1393,7 +1392,7 @@ export default function InlineEditableTable({
                 </div>
               )}
               <div className="flex items-center">
-                <span className="text-xs text-content-secondary mr-1.5">Saldo do período:</span>
+                <span className="text-xs text-content-secondary mr-1.5">Saldo mensal:</span>
                 <span className={`text-sm font-semibold ${periodBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(periodBalance)}
                 </span>
@@ -1419,12 +1418,19 @@ export default function InlineEditableTable({
           onColumnReorder={handleColumnReorder}
           tbodyRef={tableBodyRef}
         >
-          {displayItems.map((item: any) => {
+          {displayItems.map((item: any, rowIdx: number) => {
             const editingRow = editingRows.find(row => row.id === item.id);
             const isEditing = !!editingRow?.isEditing;
-            
+            // Zebrado: linhas ímpares recebem um fundo levemente mais escuro
+            // (mesmo tom claro/discreto usado no resto do design, bg-surface-subtle)
+            // para facilitar a leitura em grids com muitos lançamentos. O hover usa
+            // um tom ainda mais forte (bg-surface-muted) para continuar perceptível
+            // tanto em cima de uma linha zebrada quanto de uma linha branca.
+            const isZebra = rowIdx % 2 === 1;
+            const rowBgClass = isEditing ? 'bg-brand/5' : isZebra ? 'bg-surface-subtle' : 'bg-surface';
+
             return (
-              <tr key={item.id} className={`bg-surface hover:bg-surface-subtle border-b border-ui-border-soft text-content-secondary h-auto ${isEditing ? 'bg-brand/5 border-brand/20' : ''}`} style={maxRowHeight ? { height: `${maxRowHeight}px` } : undefined}>
+              <tr key={item.id} className={`group ${rowBgClass} hover:bg-surface-muted border-b border-ui-border-soft text-content-secondary h-auto transition-colors ${isEditing ? 'border-brand/20' : ''}`} style={maxRowHeight ? { height: `${maxRowHeight}px` } : undefined}>
                 {visibleDataColumns.map((col, idx) => (
                   <td key={col.field} className={`align-middle border-r border-ui-border-soft p-0 ${isEditing ? 'bg-transparent' : ''}`} style={{ width: 'auto', minWidth: 'fit-content' }}>
                     <div className={`flex w-full items-center px-0.5 py-0 ${idx === 0 ? 'justify-start' : 'justify-center'}`}>
@@ -1433,7 +1439,7 @@ export default function InlineEditableTable({
                     </div>
                   </td>
                 ))}
-                <td className="px-0.5 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-auto min-w-fit">
+                <td className={`px-0.5 sticky right-0 z-20 border-l border-ui-border-soft align-middle w-auto min-w-fit ${rowBgClass} group-hover:bg-surface-muted transition-colors`}>
                   <div className="flex w-full items-center justify-center gap-0">
                     {isEditing ? (
                       <>
@@ -1486,10 +1492,39 @@ export default function InlineEditableTable({
           cards: formOptions.cards || [],
           subcategories: formOptions.subcategories || {},
         }}
-        onSubmit={async (data) => {
+        onSubmit={async (rawData) => {
           try {
             const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-            
+
+            let data = rawData;
+            if (resolveQuickCreates) {
+              // Sinal do valor conforme o tipo — mesma heurística usada pelo
+              // resolveQuickCreates original para decidir INCOME/EXPENSE ao
+              // criar Categoria/Centro por cadastro rápido.
+              const amountValue = parseCurrencyFromPTBR(rawData.amount);
+              const signedAmount = rawData.transactionType === 'EXPENSE' ? -Math.abs(amountValue) : Math.abs(amountValue);
+
+              const resolvedFields = await resolveQuickCreates({
+                category_id: rawData.category,
+                subcategory_id: rawData.subcategory,
+                financial_institution_id: rawData.institution,
+                card_id: rawData.card,
+                center_id: rawData.center,
+                supplier_id: rawData.supplier,
+                amount: signedAmount,
+              });
+
+              data = {
+                ...rawData,
+                category: resolvedFields.category_id,
+                subcategory: resolvedFields.subcategory_id,
+                institution: resolvedFields.financial_institution_id,
+                card: resolvedFields.card_id,
+                center: resolvedFields.center_id,
+                supplier: resolvedFields.supplier_id,
+              };
+            }
+
             // Determinar qual endpoint usar
             let endpoint = '';
             let payload: any = {};

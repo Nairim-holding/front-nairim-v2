@@ -271,3 +271,29 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ─── Dashboard Financeiro: react-grid-layout ────────────────────────────────
+   A alça de resize padrão da lib usa borda cinza-escuro (invisível no tema
+   escuro) e o placeholder de drag é vermelho puro (parece um erro). Alinha
+   ambos aos tokens do tema. */
+.react-grid-item > .react-resizable-handle {
+  width: 24px;
+  height: 24px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+}
+
+.react-grid-item:hover > .react-resizable-handle::after {
+  border-color: var(--color-brand-primary);
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-brand-primary);
+  opacity: 0.15;
+  border-radius: 0.75rem;
+}

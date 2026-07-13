@@ -23,22 +23,26 @@ export default function DashboardFilter({
 
   return (
     <div className="flex flex-col justify-center mb-2 w-full">
-      <div className="flex justify-start items-center gap-5 mb-5 pl-10">
-        <span className="text-3xl font-normal font-poppins">
-          {filter === 'financial' && 'Financeiro'}
+      <div className="flex justify-start items-center gap-5 mb-5 pl-4 sm:pl-10">
+        <span className="text-2xl sm:text-3xl font-normal font-poppins">
+          {filter === 'financial' && 'Painel Financeiro'}
           {filter === 'portfolio' && 'Imóveis'}
           {filter === 'clients' && 'Proprietários'}
           {filter === 'map' && 'Localização dos Imóveis'}
         </span>
       </div>
-      <div className="flex items-center justify-between px-2 w-full">
-        <div className="flex items-center justify-start gap-5 w-full">
-          <span className="text-2xl font-bold text-content">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14.0011 12V19.88C14.0411 20.18 13.9411 20.5 13.7111 20.71C13.6186 20.8027 13.5087 20.8762 13.3877 20.9264C13.2668 20.9766 13.1371 21.0024 13.0061 21.0024C12.8751 21.0024 12.7455 20.9766 12.6245 20.9264C12.5035 20.8762 12.3936 20.8027 12.3011 20.71L10.2911 18.7C10.1821 18.5933 10.0992 18.4629 10.0489 18.319C9.99861 18.175 9.98225 18.0213 10.0011 17.87V12H9.97111L4.21111 4.62C4.04872 4.41153 3.97544 4.14726 4.0073 3.88493C4.03915 3.6226 4.17354 3.38355 4.38111 3.22C4.57111 3.08 4.78111 3 5.00111 3H19.0011C19.2211 3 19.4311 3.08 19.6211 3.22C19.8287 3.38355 19.9631 3.6226 19.9949 3.88493C20.0268 4.14726 19.9535 4.41153 19.7911 4.62L14.0311 12H14.0011Z" fill="var(--color-text-secondary)"/>
-            </svg>
-          </span>
-          <FilterDate onApply={handleDateFilter} />
+      <div className="flex flex-wrap items-center justify-between gap-3 px-2 w-full">
+        <div className="flex flex-wrap items-center justify-start gap-3 sm:gap-5 w-full sm:w-auto flex-1 min-w-0">
+          {filter !== "financial" && (
+            <>
+              <span className="text-2xl font-bold text-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14.0011 12V19.88C14.0411 20.18 13.9411 20.5 13.7111 20.71C13.6186 20.8027 13.5087 20.8762 13.3877 20.9264C13.2668 20.9766 13.1371 21.0024 13.0061 21.0024C12.8751 21.0024 12.7455 20.9766 12.6245 20.9264C12.5035 20.8762 12.3936 20.8027 12.3011 20.71L10.2911 18.7C10.1821 18.5933 10.0992 18.4629 10.0489 18.319C9.99861 18.175 9.98225 18.0213 10.0011 17.87V12H9.97111L4.21111 4.62C4.04872 4.41153 3.97544 4.14726 4.0073 3.88493C4.03915 3.6226 4.17354 3.38355 4.38111 3.22C4.57111 3.08 4.78111 3 5.00111 3H19.0011C19.2211 3 19.4311 3.08 19.6211 3.22C19.8287 3.38355 19.9631 3.6226 19.9949 3.88493C20.0268 4.14726 19.9535 4.41153 19.7911 4.62L14.0311 12H14.0011Z" fill="var(--color-text-secondary)"/>
+                </svg>
+              </span>
+              <FilterDate onApply={handleDateFilter} />
+            </>
+          )}
           {/* {filter === "map" && (
             <div className="flex gap-4 w-full pr-5">
               <select
@@ -65,7 +69,7 @@ export default function DashboardFilter({
             </div>
           )} */}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <button
             onClick={() => setFilter("financial")}
             className={`cursor-pointer w-[40px] h-[40px] flex items-center justify-center rounded-sm ${filter === "financial" ? "bg-gradient-to-r from-brand to-brand-hover border-none shadow-purple-soft" : "border border-ui-border bg-surface-subtle"}`}

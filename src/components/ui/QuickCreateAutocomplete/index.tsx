@@ -28,6 +28,17 @@ interface QuickCreateAutocompleteProps {
    * Sem isso o campo mostraria vazio mesmo com um valor salvo de verdade.
    */
   currentLabel?: string;
+  /**
+   * Permite a opção "Adicionar novo: ...". Default `true`. Usar `false` em telas
+   * onde o cadastro inline ainda não foi implementado no submit (evita gerar um
+   * valor-sentinela que o formulário não sabe resolver).
+   */
+  allowCreate?: boolean;
+  /**
+   * `sm` (default): altura compacta usada nas células da tabela de Lançamentos.
+   * `md`: altura/padding iguais aos demais campos de formulário (ex.: modais).
+   */
+  size?: 'sm' | 'md';
 }
 
 const normalize = (s: string) =>
@@ -41,7 +52,9 @@ export default function QuickCreateAutocomplete({
   placeholder = 'Selecione ou digite...',
   className,
   groups,
-  currentLabel
+  currentLabel,
+  allowCreate = true,
+  size = 'sm'
 }: QuickCreateAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,7 +99,7 @@ export default function QuickCreateAutocomplete({
     return flatOptions.some(o => normalize(String(o.label)) === q);
   }, [flatOptions, query]);
 
-  const showCreateOption = isOpen && query.trim().length > 0 && !exactMatch;
+  const showCreateOption = allowCreate && isOpen && query.trim().length > 0 && !exactMatch;
   const createIndex = filtered.length; // create option goes after filtered list
 
   const calculatePosition = useCallback(() => {
@@ -201,11 +214,13 @@ export default function QuickCreateAutocomplete({
           onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={placeholder}
-          className={`w-full px-2 pr-7 h-[28px] text-[13px] border rounded outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all ${disabled ? 'bg-gray-100 text-content-muted cursor-not-allowed' : 'bg-surface hover:border-brand/50'} ${isOpen ? 'border-brand ring-2 ring-brand/20' : 'border-ui-border'} ${className ?? ''}`}
+          className={`w-full border outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all ${
+            size === 'md' ? 'px-3 pr-8 py-2 rounded-lg text-sm' : 'px-2 pr-7 h-[28px] rounded text-[13px]'
+          } ${disabled ? 'bg-gray-100 text-content-muted cursor-not-allowed' : 'bg-surface hover:border-brand/50'} ${isOpen ? 'border-brand ring-2 ring-brand/20' : 'border-ui-border'} ${className ?? ''}`}
         />
         <ChevronDown
           size={14}
-          className={`absolute right-2 top-1/2 -translate-y-1/2 text-content-muted pointer-events-none transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          className={`absolute ${size === 'md' ? 'right-3' : 'right-2'} top-1/2 -translate-y-1/2 text-content-muted pointer-events-none transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </div>
 

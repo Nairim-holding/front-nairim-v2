@@ -99,6 +99,24 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
     [loadSection]
   );
 
+  // ─── Financial-tab period filter ──────────────────────────────────────────
+  // Refetches only the "financial" section client-side for the given range.
+  // Deliberately avoids router.push: that re-renders the Server Component page
+  // (which awaits fetchSection), which re-triggers the page-level Suspense
+  // fallback and remounts this whole subtree — wiping out FinancialDashboardHeader's
+  // local year/month state right after the user picks it.
+  const handleFinancialRangeChange = useCallback(
+    async (startDate: string, endDate: string) => {
+      try {
+        const data = await fetchSection("financial", { startDate, endDate, token: token ?? undefined });
+        setMetrics(prev => ({ ...prev, financial: data as any }));
+      } catch (err: any) {
+        console.error("[Client] Erro ao atualizar período financeiro:", err);
+      }
+    },
+    [token]
+  );
+
   // ─── Error / empty state ──────────────────────────────────────────────────
   if (error && !metrics[filter]) {
     return (
@@ -120,6 +138,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
       onFilterChange={handleFilterChange}
       metrics={metrics}
       isLoading={loading[filter]}
+      onFinancialRangeChange={handleFinancialRangeChange}
     />
   );
 }

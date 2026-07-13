@@ -117,17 +117,17 @@ export default function LancamentosPage() {
   }, [appliedFilters, options.institutions]);
 
   const [transferModal, setTransferModal] = useState<
-    null | { originId: string; amount: number; description: string }
+    null | { originId: string; amount: number; description: string; originType: 'INCOME' | 'EXPENSE' }
   >(null);
   const transferResolverRef = useRef<
     ((result: { destinationId: string; destinationCenterId: string } | null) => void) | null
   >(null);
 
   const askTransferDestination = useCallback(
-    (originId: string, amount: number, description: string) =>
+    (originId: string, amount: number, description: string, originType: 'INCOME' | 'EXPENSE') =>
       new Promise<{ destinationId: string; destinationCenterId: string } | null>(resolve => {
         transferResolverRef.current = resolve;
-        setTransferModal({ originId, amount, description });
+        setTransferModal({ originId, amount, description, originType });
       }),
     [],
   );
@@ -472,10 +472,18 @@ export default function LancamentosPage() {
           throw new Error('Selecione a instituição financeira de origem.');
         }
 
+        // Direção da perna de origem (Saída = EXPENSE, Entrada = INCOME) — define
+        // se o centro pedido no modal deve ser de Crédito (INCOME) ou Débito (EXPENSE).
+        const originCategory = (options.categories as any[]).find(
+          c => String(c.id) === String(resolved.category_id),
+        );
+        const originType: 'INCOME' | 'EXPENSE' = originCategory?.type === 'INCOME' ? 'INCOME' : 'EXPENSE';
+
         const transferChoice = await askTransferDestination(
           originId,
           Number(resolved.amount) || 0,
           String(resolved.description ?? ''),
+          originType,
         );
         if (!transferChoice) {
           throw new Error('Transferência cancelada.');
@@ -511,7 +519,7 @@ export default function LancamentosPage() {
       console.error(error);
       throw error instanceof Error ? error : new Error('Erro ao criar lançamento.');
     }
-  }, [resolveQuickCreates, transferCategoryIds, askTransferDestination]);
+  }, [resolveQuickCreates, transferCategoryIds, askTransferDestination, options.categories]);
 
   const handleRowDelete = useCallback(async (id: string) => {
     try {
@@ -554,6 +562,7 @@ export default function LancamentosPage() {
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}
         onRowDelete={handleRowDelete}
+        resolveQuickCreates={resolveQuickCreates}
         onColumnsChange={handleColumnsChange}
         onColumnWidthsChange={handleColumnWidthsChange}
         savedColumnWidths={columnWidths}
@@ -565,6 +574,7 @@ export default function LancamentosPage() {
       {transferModal && (
         <TransferDestinationModal
           originId={transferModal.originId}
+          originType={transferModal.originType}
           institutions={options.institutions}
           centers={options.centers}
           amount={transferModal.amount}

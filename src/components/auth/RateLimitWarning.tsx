@@ -8,13 +8,16 @@ interface RateLimitWarningProps {
   maxAttempts: number;
   warningColor: string;
   shouldWarnAboutBlockage?: boolean;
+  /** Vem do backend (fonte da verdade); só cai no default se ainda não recebemos status do servidor. */
+  blockDurationMinutes?: number;
 }
 
 export const RateLimitWarning: React.FC<RateLimitWarningProps> = ({
   failedAttempts,
   maxAttempts,
   warningColor,
-  shouldWarnAboutBlockage
+  shouldWarnAboutBlockage,
+  blockDurationMinutes = 5,
 }) => {
   if (failedAttempts === 0) return null;
 
@@ -32,7 +35,7 @@ export const RateLimitWarning: React.FC<RateLimitWarningProps> = ({
       </div>
       {shouldWarnAboutBlockage && (
         <div className="mt-3 pt-3 border-t border-current opacity-75 text-xs">
-          Ao esgotar as {maxAttempts} tentativas de login, o sistema ficará bloqueado por 5 minutos, como medida de segurança. Preste atenção!
+          Ao esgotar as {maxAttempts} tentativas de login, o sistema ficará bloqueado por {blockDurationMinutes} minutos, como medida de segurança. Preste atenção!
         </div>
       )}
     </div>

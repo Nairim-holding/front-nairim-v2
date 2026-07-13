@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 
 interface ColumnConfig {
   key: string;
@@ -102,6 +104,18 @@ function formatCellValue(value: any, key?: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DataModal({ isOpen, onClose, title, data, columns }: DataModalProps) {
+  // Trava o scroll da página por baixo do modal enquanto ele está aberto,
+  // restaurando o valor original ao fechar (sem isso, a página some por trás
+  // do overlay mas continua rolando junto com o mouse/teclado).
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
   const normalizedColumns = useMemo<ColumnConfig[]>(() => {
     if (!columns) {
       return data.length > 0
@@ -125,7 +139,9 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
     [],
   );
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -140,16 +156,17 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
           >
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-ui-border-soft">
               <h3 className="text-xl font-semibold text-content">
                 {title} — Detalhes ({data.length} itens)
               </h3>
               <button
                 onClick={onClose}
-                className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 transition"
+                className="p-2 rounded-lg hover:bg-surface-subtle transition-colors text-content-muted hover:text-content-secondary"
+                title="Fechar"
                 aria-label="Fechar modal"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
 
@@ -197,7 +214,7 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
               <span className="text-sm text-content-muted">Total: {data.length} registros</span>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-brand text-content-inverse rounded-lg hover:bg-brand-hover transition-colors text-sm font-medium"
               >
                 Fechar
               </button>
@@ -205,6 +222,7 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

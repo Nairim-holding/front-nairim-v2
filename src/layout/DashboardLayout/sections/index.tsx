@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MetricResponse, MetricWithData } from "@/types/types";
 import NumericCard from "@/components/charts/MetricCard";
-import { formatCurrencyFixed, formatCurrencyRounded } from "@/utils/displayFormatters";
 import {
-  COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_TAX_FEE, COLS_ACQUISITION,
-  COLS_FINANCIAL_VACANCY_GAUGE, COLS_VACANCY_MONTHS,
   COLS_TOTAL_PROPERTIES, COLS_PENDING_DOCS, COLS_SALE_VALUE,
   COLS_AVAILABILITY_DONUT, COLS_TYPES_DONUT, COLS_OCCUPATION_GAUGE, COLS_VACANCY_GAUGE,
   COLS_OWNERS, COLS_TENANTS, COLS_PROPERTIES_PER_OWNER, COLS_AGENCIES, COLS_PROPERTIES_BY_AGENCY,
 } from "@/lib/columns";
 import { MapCoordinate } from "@/lib/dashboard";
+import { getPeriodRange } from "@/utils/periodRange";
+import FinancialDashboardHeader from "@/components/dashboard/FinancialDashboardHeader";
+import FinancialDashboardGrid from "@/components/dashboard/FinancialDashboardGrid";
 
 export const SkeletonLoader = ({ height = "h-[240px]" }: { height?: string }) => (
   <div className={`bg-surface rounded-lg p-4 border border-ui-border-strong shadow-chart w-full cursor-pointer transition-all duration-300 flex flex-col justify-between animate-pulse ${height}`}>
@@ -39,26 +39,48 @@ function useMetricGetter(metrics: MetricResponse | null) {
     ((metrics?.[k] as MetricWithData) ?? { result: 0, variation: 0, isPositive: false, data: [] });
 }
 
-export function FinancialSection({ metrics }: { metrics: MetricResponse }) {
-  const get = useMetricGetter(metrics);
+export function FinancialSection({
+  metrics,
+  onRangeChange,
+}: {
+  metrics: MetricResponse;
+  onRangeChange: (startDate: string, endDate: string) => void;
+}) {
+  const currentYear = new Date().getFullYear();
 
-  const formatted = useMemo(() => ({
-    avgRental:       formatCurrencyFixed(metrics.averageRentalTicket?.result),
-    totalRental:     formatCurrencyFixed(metrics.totalRentalActive?.result),
-    totalTaxFee:     formatCurrencyRounded(metrics.totalPropertyTaxAndCondoFee?.result),
-    totalAcquisition:formatCurrencyFixed(metrics.totalAcquisitionValue?.result),
-    vacancyMonths:   `${Math.round(metrics.vacancyInMonths?.result ?? 0)} meses`,
-  }), [metrics]);
+  // Único filtro de período da aba: dono aqui (não no header) para que os
+  // gráficos "reais" do grid (que antes usavam cada um seu próprio "mês
+  // atual" hardcoded) também recebam o mesmo período — antes só os widgets
+  // legados (portfólio) respeitavam o filtro, os gráficos novos ignoravam.
+  const [year, setYear] = useState(currentYear);
+  // Painel inicia com o ano inteiro selecionado (não só o mês atual), igual ao
+  // que o botão "Selecionar ano inteiro" already faz manualmente.
+  const [selectedMonths, setSelectedMonths] = useState<number[]>(
+    Array.from({ length: 12 }, (_, i) => i + 1)
+  );
+
+  const { startDate, endDate } = useMemo(() => getPeriodRange(year, selectedMonths), [year, selectedMonths]);
+
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    onRangeChange(startDate, endDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate]);
 
   return (
-    <>
-      <NumericCard value={formatted.avgRental}        label="Ticket Médio do Aluguel"                variation={String(get("averageRentalTicket").variation)}        positive={get("averageRentalTicket").isPositive}        detailData={get("averageRentalTicket").data}        detailColumns={COLS_AVG_RENTAL} />
-      <NumericCard value={formatted.totalRental}      label="Valor Total de Aluguel do Portfólio"    variation={String(get("totalRentalActive").variation)}          positive={get("totalRentalActive").isPositive}          detailData={get("totalRentalActive").data}          detailColumns={COLS_TOTAL_RENTAL} />
-      <NumericCard value={formatted.totalTaxFee}      label="Total de Impostos e Taxas (Mensal Est.)"variation={String(get("totalPropertyTaxAndCondoFee").variation)} positive={get("totalPropertyTaxAndCondoFee").isPositive} detailData={get("totalPropertyTaxAndCondoFee").data} detailColumns={COLS_TAX_FEE} />
-      <NumericCard value={formatted.totalAcquisition} label="Valor Total de Aquisição do Portfólio"  variation={String(get("totalAcquisitionValue").variation)}      positive={get("totalAcquisitionValue").isPositive}      detailData={get("totalAcquisitionValue").data}      detailColumns={COLS_ACQUISITION} />
-      <EChartsGauge label="Índice de Vacância Financeira" value={get("financialVacancyRate").result} color="#8B5CF6" detailData={get("financialVacancyRate").data} detailColumns={COLS_FINANCIAL_VACANCY_GAUGE} />
-      <NumericCard value={formatted.vacancyMonths}    label="Total da Vacância em Meses"             variation={String(get("vacancyInMonths").variation)}            positive={get("vacancyInMonths").isPositive}            detailData={get("vacancyInMonths").data}            detailColumns={COLS_VACANCY_MONTHS} />
-    </>
+    <div className="w-full">
+      <FinancialDashboardHeader
+        year={year}
+        selectedMonths={selectedMonths}
+        onYearChange={setYear}
+        onMonthsChange={setSelectedMonths}
+      />
+      <FinancialDashboardGrid legacyMetrics={metrics} year={year} startDate={startDate} endDate={endDate} />
+    </div>
   );
 }
 

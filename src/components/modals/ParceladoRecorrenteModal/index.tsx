@@ -4,6 +4,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { X, RefreshCw, Layers } from "lucide-react";
 import type { Option } from "@/types/types";
+import QuickCreateAutocomplete from "@/components/ui/QuickCreateAutocomplete";
 
 // Função de máscara monetária para formatar enquanto digita
 const formatCurrencyInput = (value: string): string => {
@@ -256,18 +257,14 @@ export default function ParceladoRecorrenteModal({
               <label className="text-sm font-medium text-content-secondary">
                 Inst. Financeira
               </label>
-              <select
+              <QuickCreateAutocomplete
                 value={formData.institution}
-                onChange={(e) => handleInputChange("institution", e.target.value)}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              >
-                <option value="">Selecione</option>
-                {formOptions.institutions?.map((inst) => (
-                  <option key={inst.value} value={inst.value}>
-                    {inst.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => handleInputChange("institution", v)}
+                options={formOptions.institutions || []}
+                placeholder="Selecione ou digite..."
+                allowCreate={true}
+                size="md"
+              />
             </div>
 
             {isExpense && (
@@ -275,18 +272,14 @@ export default function ParceladoRecorrenteModal({
                 <label className="text-sm font-medium text-content-secondary">
                   Cartão de Crédito
                 </label>
-                <select
+                <QuickCreateAutocomplete
                   value={formData.card}
-                  onChange={(e) => handleInputChange("card", e.target.value)}
-                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-                >
-                  <option value="">Selecione (opcional)</option>
-                  {formOptions.cards?.map((card) => (
-                    <option key={card.value} value={card.value}>
-                      {card.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => handleInputChange("card", v)}
+                  options={formOptions.cards || []}
+                  placeholder="Selecione (opcional)..."
+                  allowCreate={true}
+                  size="md"
+                />
               </div>
             )}
 
@@ -294,22 +287,17 @@ export default function ParceladoRecorrenteModal({
               <label className="text-sm font-medium text-content-secondary">
                 Categoria *
               </label>
-              <select
-                required
+              <QuickCreateAutocomplete
                 value={formData.category}
-                onChange={(e) => {
-                  handleInputChange("category", e.target.value);
+                onChange={(v) => {
+                  handleInputChange("category", v);
                   handleInputChange("subcategory", ""); // Reset subcategory
                 }}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              >
-                <option value="">Selecione</option>
-                {filteredCategories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
+                options={filteredCategories}
+                placeholder="Selecione ou digite..."
+                allowCreate={true}
+                size="md"
+              />
             </div>
           </div>
 
@@ -319,39 +307,29 @@ export default function ParceladoRecorrenteModal({
               <label className="text-sm font-medium text-content-secondary">
                 Subcategoria
               </label>
-              <select
+              <QuickCreateAutocomplete
                 value={formData.subcategory}
-                onChange={(e) => handleInputChange("subcategory", e.target.value)}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content disabled:opacity-50"
+                onChange={(v) => handleInputChange("subcategory", v)}
+                options={availableSubcategories}
+                placeholder={availableSubcategories.length === 0 ? "---" : "Selecione ou digite..."}
                 disabled={availableSubcategories.length === 0}
-              >
-                <option value="">
-                  {availableSubcategories.length === 0 ? "---" : "Selecione"}
-                </option>
-                {availableSubcategories.map((sub) => (
-                  <option key={sub.value} value={sub.value}>
-                    {sub.label}
-                  </option>
-                ))}
-              </select>
+                allowCreate={true}
+                size="md"
+              />
             </div>
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
                 Centro
               </label>
-              <select
+              <QuickCreateAutocomplete
                 value={formData.center}
-                onChange={(e) => handleInputChange("center", e.target.value)}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              >
-                <option value="">Selecione</option>
-                {filteredCenters.map((center) => (
-                  <option key={center.value} value={center.value}>
-                    {center.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => handleInputChange("center", v)}
+                options={filteredCenters}
+                placeholder="Selecione ou digite..."
+                allowCreate={true}
+                size="md"
+              />
             </div>
 
             {isExpense && (
@@ -359,18 +337,14 @@ export default function ParceladoRecorrenteModal({
                 <label className="text-sm font-medium text-content-secondary">
                   Contato
                 </label>
-                <select
+                <QuickCreateAutocomplete
                   value={formData.supplier}
-                  onChange={(e) => handleInputChange("supplier", e.target.value)}
-                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-                >
-                  <option value="">Selecione</option>
-                  {formOptions.suppliers?.map((sup) => (
-                    <option key={sup.value} value={sup.value}>
-                      {sup.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => handleInputChange("supplier", v)}
+                  options={formOptions.suppliers || []}
+                  placeholder="Selecione ou digite..."
+                  allowCreate={true}
+                  size="md"
+                />
               </div>
             )}
           </div>

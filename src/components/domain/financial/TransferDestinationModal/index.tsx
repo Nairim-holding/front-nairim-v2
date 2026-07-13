@@ -17,9 +17,15 @@ interface CenterOption {
 interface Props {
   /** Instituição de origem (a que o usuário já escolheu no lançamento). */
   originId: string;
+  /**
+   * Tipo da categoria de origem: EXPENSE (Saída) → espelho é Entrada, pede
+   * centro de Crédito (INCOME). INCOME (Entrada) → espelho é Saída, pede
+   * centro de Débito (EXPENSE).
+   */
+  originType: 'INCOME' | 'EXPENSE';
   /** Lista completa de instituições financeiras. */
   institutions: InstitutionOption[];
-  /** Lista completa de centros (filtrada para Centro de Receita = type INCOME). */
+  /** Lista completa de centros (filtrada conforme a direção do espelho). */
   centers: CenterOption[];
   /** Valor da transferência, só para exibição. */
   amount: number;
@@ -36,6 +42,7 @@ const formatCurrency = (value: number) =>
 
 export default function TransferDestinationModal({
   originId,
+  originType,
   institutions,
   centers,
   amount,
@@ -57,10 +64,14 @@ export default function TransferDestinationModal({
     [institutions, originId],
   );
 
-  // Só centros de Receita fazem sentido no lançamento de Entrada (destino).
+  // Origem Saída (EXPENSE) → espelho é Entrada → centro de Crédito (INCOME).
+  // Origem Entrada (INCOME) → espelho é Saída → centro de Débito (EXPENSE).
+  const mirrorCenterType: 'INCOME' | 'EXPENSE' = originType === 'EXPENSE' ? 'INCOME' : 'EXPENSE';
+  const isCredit = mirrorCenterType === 'INCOME';
+
   const centerOptions = useMemo(
-    () => centers.filter(c => c.type === 'INCOME'),
-    [centers],
+    () => centers.filter(c => c.type === mirrorCenterType),
+    [centers, mirrorCenterType],
   );
 
   const handleConfirm = () => {
@@ -125,16 +136,18 @@ export default function TransferDestinationModal({
 
         <div className="mb-6">
           <Select
-            label="Centro de Receita (destino)"
+            label={isCredit ? 'Centro de Receita (Crédito – destino)' : 'Centro de Despesa (Débito – destino)'}
             required
             searchable
-            placeholder="Selecione o centro de receita..."
+            placeholder={isCredit ? 'Selecione o centro de receita...' : 'Selecione o centro de despesa...'}
             options={centerOptions}
             value={destinationCenterId}
             onChange={v => setDestinationCenterId(String(v))}
           />
           <p className="mt-2 text-xs text-content-muted">
-            Centro usado no lançamento de entrada — não é copiado da despesa de origem.
+            {isCredit
+              ? 'Centro usado no lançamento de entrada — não é copiado da despesa de origem.'
+              : 'Centro usado no lançamento de saída — não é copiado da receita de origem.'}
           </p>
         </div>
 

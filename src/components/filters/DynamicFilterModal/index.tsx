@@ -7,21 +7,7 @@ import { createPortal } from "react-dom";
 import { X, Check, Calendar } from "lucide-react";
 import CalendarPicker from "@/components/ui/CalendarPicker";
 import { parseCurrencyFromPTBR } from "@/utils/formatters";
-
-const formatCurrencyRealtime = (value: string): string => {
-  const numbers = value.replace(/\D/g, '');
-  if (numbers.length === 0) return '';
-
-  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
-  const amount = parseInt(trimmedNumbers) / 100;
-
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
+import { formatCurrencyRealtime } from "@/utils/masks";
 
 // Definição do tipo corrigido
 export interface DynamicFilter {
@@ -37,6 +23,8 @@ export interface DynamicFilter {
   min?: string;
   max?: string;
   dateRange?: boolean;
+  /** Renderiza dois campos numéricos (mín/máx) aplicados como intervalo (gte/lte). */
+  numberRange?: boolean;
   /** Permite selecionar mais de um valor (condição IN na consulta). */
   multiple?: boolean;
   /** Restringe as opções deste campo às que casam com os valores selecionados em outro filtro. */
@@ -322,6 +310,17 @@ export default function DynamicFilterModal({
             newFilters[filter.field] = { value: '', value2: '', showDropdown: false };
           }
           newSearchTerms[filter.field] = '';
+        } else if (filter.numberRange) {
+          if (initialValue && typeof initialValue === 'object' && ('min' in initialValue || 'max' in initialValue)) {
+            newFilters[filter.field] = {
+              value: initialValue.min !== undefined && initialValue.min !== null ? formatCurrencyRealtime(String(Math.round(Number(initialValue.min) * 100))) : '',
+              value2: initialValue.max !== undefined && initialValue.max !== null ? formatCurrencyRealtime(String(Math.round(Number(initialValue.max) * 100))) : '',
+              showDropdown: false
+            };
+          } else {
+            newFilters[filter.field] = { value: '', value2: '', showDropdown: false };
+          }
+          newSearchTerms[filter.field] = '';
         } else {
           if (initialValue !== undefined && initialValue !== null && initialValue !== '') {
             if (Array.isArray(initialValue)) {
@@ -523,6 +522,15 @@ export default function DynamicFilterModal({
         const hasTo = filterValue.value2 !== undefined && filterValue.value2 !== null && filterValue.value2 !== '';
         if (hasFrom && hasTo) simplifiedFilters[field] = { from: filterValue.value, to: filterValue.value2 };
         else if (hasFrom) simplifiedFilters[field] = filterValue.value;
+      } else if (filterConfig?.numberRange) {
+        const hasMin = filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '';
+        const hasMax = filterValue.value2 !== undefined && filterValue.value2 !== null && filterValue.value2 !== '';
+        if (hasMin || hasMax) {
+          simplifiedFilters[field] = {
+            ...(hasMin ? { min: parseCurrencyFromPTBR(filterValue.value) } : {}),
+            ...(hasMax ? { max: parseCurrencyFromPTBR(filterValue.value2) } : {})
+          };
+        }
       } else {
         const hasValue = filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '' || (filterValue.values && filterValue.values.length > 0);
         if (hasValue) {
@@ -641,7 +649,27 @@ export default function DynamicFilterModal({
           {filter.label}
         </label>
 
-        {filter.dateRange ? (
+        {filter.numberRange ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              inputMode="decimal"
+              className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
+              placeholder="Mín."
+              value={filterValue.value ?? ''}
+              onChange={(e) => updateFilterValue(filter.field, 'value', formatCurrencyRealtime(e.target.value))}
+            />
+            <span className="text-content-muted text-sm">até</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              className="w-full border border-ui-border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent h-10"
+              placeholder="Máx."
+              value={filterValue.value2 ?? ''}
+              onChange={(e) => updateFilterValue(filter.field, 'value2', formatCurrencyRealtime(e.target.value))}
+            />
+          </div>
+        ) : filter.dateRange ? (
           <DateRangeFilter
             filter={filter}
             filterValue={filterValue}

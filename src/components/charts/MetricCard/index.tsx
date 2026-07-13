@@ -25,6 +25,8 @@ interface NumericCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   detailData?: any[];
   detailColumns?: DetailColumn[];
+  /** Quando informado, o título vira a alça de arrastar (mesmo padrão do ChartCard: a barra do título é a alça, sem ícone flutuante sobre o texto). */
+  dragHandleClassName?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -72,6 +74,7 @@ export default function NumericCard({
   loading = false,
   detailData,
   detailColumns,
+  dragHandleClassName,
 }: NumericCardProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -162,13 +165,18 @@ export default function NumericCard({
     );
   }
 
-  const hasDetailData = detailData && detailData.length > 0;
+  // Ícone sempre visível quando o card foi configurado com colunas de detalhe,
+  // mesmo que o período atual não tenha registros — mesmo padrão dos gráficos
+  // novos (ChartCard/EChartsGauge), onde o DataModal mostra "Nenhum dado
+  // disponível" em vez do ícone simplesmente sumir.
+  const hasDetailData = !!detailColumns && detailColumns.length > 0;
 
   return (
     <div className="p-4 bg-surface rounded-lg shadow-chart border border-ui-border-strong flex flex-col justify-start items-start relative group hover:shadow-lg transition-all duration-300 flex-grow min-w-[300px]">
       {hasDetailData && (
         <button
           onClick={openDetailModal}
+          onMouseDown={(e) => e.stopPropagation()}
           className="absolute top-3 right-3 p-2 rounded-full bg-surface-subtle hover:bg-surface-subtle transition z-10"
           title="Ver detalhes"
           aria-label="Ver detalhes"
@@ -183,8 +191,8 @@ export default function NumericCard({
         </button>
       )}
 
-      <div className="text-sm w-full">
-        <h3 className="text-lg text-content-secondary mb-2 text-start">{label}</h3>
+      <div className={`text-sm w-full ${dragHandleClassName ? `${dragHandleClassName} cursor-move` : ''}`}>
+        <h3 className="text-lg text-content-secondary mb-2 text-start pr-8">{label}</h3>
       </div>
 
       {variation !== undefined && (

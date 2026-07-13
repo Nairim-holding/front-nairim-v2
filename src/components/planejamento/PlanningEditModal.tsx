@@ -6,7 +6,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useMessageContext } from '@/contexts';
 import { authFetch } from '@/utils/authFetch';
 import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
-import { maskMoney } from '@/utils/masks';
+import { maskMoney, formatCurrencyRealtime } from '@/utils/masks';
 import type { DashboardItem, CategoryDashboard } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -15,21 +15,6 @@ const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
-
-const formatCurrencyRealtime = (value: string): string => {
-  const numbers = value.replace(/\D/g, '');
-  if (numbers.length === 0) return '';
-
-  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
-  const amount = parseInt(trimmedNumbers) / 100;
-
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
 
 interface Props {
   item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string; initialPlanType?: 'FIXED' | 'VARIABLE' };

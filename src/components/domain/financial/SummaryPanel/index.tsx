@@ -94,8 +94,12 @@ export default function SummaryPanel({ from, to, summary }: Props) {
   const resumoPrevisto = s && totalReceber != null && totalPagar != null ? totalReceber - totalPagar : null;
   const faltaReceber = s ? s.receitasPrevisto - s.receitasRecebido : null;
   const faltaPagar = s ? s.despesasPrevisto - s.despesasPago : null;
+  // "Previsto restante" é só o que ainda falta se realizar (pendente), não o
+  // resumo previsto inteiro — esse já inclui o que foi recebido/pago, e o
+  // saldo da conta abaixo já reflete isso. Usá-lo aqui contaria em dobro.
+  const previstoRestante = s && faltaReceber != null && faltaPagar != null ? faltaReceber - faltaPagar : null;
   const saldoContas = s ? s.saldoContas : null;
-  const previsaoFechamento = s && saldoContas != null && resumoPrevisto != null ? saldoContas + resumoPrevisto : null;
+  const previsaoFechamento = s && saldoContas != null && previstoRestante != null ? saldoContas + previstoRestante : null;
 
   return (
     <>
@@ -105,13 +109,10 @@ export default function SummaryPanel({ from, to, summary }: Props) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir Resumo"
-          className="fixed right-0 top-4 z-40 flex items-center gap-1.5 rounded-l-lg border-2 border-r-0 border-brand bg-brand px-2 py-1.5 shadow-md hover:shadow-lg hover:bg-brand-hover transition-all hover:-translate-x-1"
-          title="Clique para abrir o resumo financeiro"
+          className="fixed right-0 top-4 z-40 flex items-center rounded-l-md border border-r-0 border-ui-border-soft bg-surface px-1.5 py-1 shadow-sm hover:shadow-md hover:bg-surface-subtle transition-all hover:-translate-x-0.5"
+          title="Resumo"
         >
-          <ChevronLeft size={14} className="text-white flex-shrink-0" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-            Resumo
-          </span>
+          <ChevronLeft size={14} className="text-content-muted flex-shrink-0" />
         </button>
       )}
 
@@ -169,7 +170,7 @@ export default function SummaryPanel({ from, to, summary }: Props) {
             {/* Bloco Resultado */}
             <Block title="Resultado">
               <ValueRow label="Saldo da(s) conta(s)" value={saldoContas} tone="auto" />
-              <ValueRow label="Previsto restante" value={resumoPrevisto} tone="auto" />
+              <ValueRow label="Previsto restante" value={previstoRestante} tone="auto" />
               <div className="my-1 border-t border-ui-border-soft" />
               <ValueRow label="Previsão de Fechamento" value={previsaoFechamento} tone="auto" strong />
             </Block>

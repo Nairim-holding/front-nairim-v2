@@ -12,6 +12,8 @@ interface RateLimitState {
   timeRemaining: number;
   initialTime: number;
   shouldWarnAboutBlockage: boolean;
+  /** Duração do bloqueio em minutos — vem do backend quando disponível, cai no default só até a 1ª resposta do servidor. */
+  blockDurationMinutes: number;
 }
 
 export const useRateLimit = () => {
@@ -21,6 +23,7 @@ export const useRateLimit = () => {
     timeRemaining: 0,
     initialTime: 0,
     shouldWarnAboutBlockage: false,
+    blockDurationMinutes: BLOCK_DURATION_SECONDS / 60,
   });
 
   // Load rate limiting state from localStorage on mount (client-side only)
@@ -71,13 +74,14 @@ export const useRateLimit = () => {
       // Timer expired, unblock user
       // Use setTimeout to avoid synchronous setState in effect
       setTimeout(() => {
-        setState({
+        setState(prev => ({
           failedAttempts: 0,
           isBlocked: false,
           timeRemaining: 0,
           initialTime: 0,
           shouldWarnAboutBlockage: false,
-        });
+          blockDurationMinutes: prev.blockDurationMinutes,
+        }));
         localStorage.removeItem('loginFailedAttempts');
         localStorage.removeItem('loginBlockExpiry');
       }, 0);
@@ -110,6 +114,7 @@ export const useRateLimit = () => {
       timeRemaining: totalSeconds,
       initialTime: totalSeconds,
       shouldWarnAboutBlockage: false,
+      blockDurationMinutes: Math.round(totalSeconds / 60),
     });
   };
 
@@ -137,6 +142,7 @@ export const useRateLimit = () => {
       timeRemaining: 0,
       initialTime: 0,
       shouldWarnAboutBlockage: false,
+      blockDurationMinutes: BLOCK_DURATION_SECONDS / 60,
     });
     localStorage.removeItem('loginFailedAttempts');
     localStorage.removeItem('loginBlockExpiry');
@@ -157,21 +163,33 @@ export const useRateLimit = () => {
 
   const getMaxLoginAttempts = () => MAX_LOGIN_ATTEMPTS;
 
-  const updateFromBackendStatus = (backendAttempts: number, isBlocked: boolean, blockedUntilSeconds?: number, shouldWarnAboutBlockage: boolean = false) => {
+  const updateFromBackendStatus = (
+    backendAttempts: number,
+    isBlocked: boolean,
+    blockedUntilSeconds?: number,
+    shouldWarnAboutBlockage: boolean = false,
+    blockDurationMinutes?: number
+  ) => {
     localStorage.setItem('loginFailedAttempts', backendAttempts.toString());
 
     if (isBlocked && blockedUntilSeconds) {
       const expiryTime = Date.now() + blockedUntilSeconds * 1000;
       localStorage.setItem('loginBlockExpiry', expiryTime.toString());
-      setState({
+      setState(prev => ({
         failedAttempts: backendAttempts,
         isBlocked: true,
         timeRemaining: blockedUntilSeconds,
         initialTime: blockedUntilSeconds,
         shouldWarnAboutBlockage: false,
-      });
+        blockDurationMinutes: blockDurationMinutes ?? prev.blockDurationMinutes,
+      }));
     } else {
-      setState(prev => ({ ...prev, failedAttempts: backendAttempts, shouldWarnAboutBlockage }));
+      setState(prev => ({
+        ...prev,
+        failedAttempts: backendAttempts,
+        shouldWarnAboutBlockage,
+        blockDurationMinutes: blockDurationMinutes ?? prev.blockDurationMinutes,
+      }));
     }
   };
 

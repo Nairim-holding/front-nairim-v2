@@ -27,6 +27,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
     timeRemaining,
     initialTime,
     shouldWarnAboutBlockage,
+    blockDurationMinutes,
     incrementFailedAttempts,
     handleRateLimitError,
     resetAttempts,
@@ -70,9 +71,9 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
         // If we have backend rate limit status, use it
         if (data.data?.failedAttempts !== undefined) {
           // Use backend status directly
-          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds, shouldWarnAboutBlockage: backendShouldWarn } = data.data;
+          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds, shouldWarnAboutBlockage: backendShouldWarn, blockDurationMinutes: backendBlockDurationMinutes } = data.data;
           // Update frontend state to match backend
-          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds, backendShouldWarn);
+          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds, backendShouldWarn, backendBlockDurationMinutes);
         } else {
           // Fallback to frontend counting if backend doesn't provide status
           incrementFailedAttempts();
@@ -128,6 +129,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
           maxAttempts={getMaxLoginAttempts()}
           warningColor={getAttemptWarningColor()}
           shouldWarnAboutBlockage={shouldWarnAboutBlockage}
+          blockDurationMinutes={blockDurationMinutes}
         />
       )}
 
@@ -137,7 +139,7 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
           timeRemaining={timeRemaining}
           initialTime={initialTime}
           formatTimeRemaining={formatTimeRemaining}
-          blockDurationMinutes={5}
+          blockDurationMinutes={blockDurationMinutes}
           maxAttempts={getMaxLoginAttempts()}
         />
       )}

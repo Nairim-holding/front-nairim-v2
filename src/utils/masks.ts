@@ -43,3 +43,20 @@ export function maskMoney(value: string | number): string {
   const floatValue = parseFloat(numbers) / 100;
   return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
+// Máscara de moeda para digitação em tempo real (últimos 2 dígitos = centavos).
+// Única máscara de moeda usada em toda a aplicação — não duplicar.
+export function formatCurrencyRealtime(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 0) return '';
+
+  const trimmedNumbers = numbers.replace(/^0+/, '') || '0';
+  const amount = parseInt(trimmedNumbers) / 100;
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
