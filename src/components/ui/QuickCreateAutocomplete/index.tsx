@@ -209,7 +209,16 @@ export default function QuickCreateAutocomplete({
             if (disabled) return;
             setIsOpen(true);
             setQuery('');
-            setHighlightedIndex(-1);
+            // Pré-seleciona visualmente o valor já registrado (destaca a opção atual).
+            setHighlightedIndex(value ? flatOptions.findIndex(o => String(o.value) === String(value)) : -1);
+          }}
+          onBlur={() => {
+            // Ao sair por TAB/clique fora, apenas fecha o dropdown — NUNCA limpa o
+            // valor. O efeito de sincronização restaura `query = selectedLabel`,
+            // reexibindo o valor salvo. Seleção por mouse é preservada porque as
+            // opções chamam `preventDefault` no mousedown (o blur não dispara antes
+            // do clique).
+            setIsOpen(false);
           }}
           onKeyDown={handleKeyDown}
           disabled={disabled}
@@ -264,6 +273,7 @@ export default function QuickCreateAutocomplete({
                         key={opt.value}
                         type="button"
                         role="option"
+                        tabIndex={-1}
                         aria-selected={isSelected}
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => commitSelect(String(opt.value), String(opt.label))}
@@ -289,6 +299,7 @@ export default function QuickCreateAutocomplete({
                   key={opt.value}
                   type="button"
                   role="option"
+                  tabIndex={-1}
                   aria-selected={isSelected}
                   onMouseDown={e => e.preventDefault()}
                   onClick={() => commitSelect(String(opt.value), String(opt.label))}
@@ -308,6 +319,7 @@ export default function QuickCreateAutocomplete({
             <button
               type="button"
               role="option"
+              tabIndex={-1}
               onMouseDown={e => e.preventDefault()}
               onClick={() => commitCreate(query)}
               onMouseEnter={() => setHighlightedIndex(createIndex)}

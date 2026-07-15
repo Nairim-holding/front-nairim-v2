@@ -2,15 +2,38 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUploadSSE } from '@/hooks/useUploadSSE';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
+import LeaseCancellationModal from '@/components/domain/leases/LeaseCancellationModal';
 import { FormStep } from '@/types/types';
 import {
-  FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users
+  FileText, Calendar, DollarSign, User, Building,
+  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload
 } from 'lucide-react';
+
+// Extrai um nome de arquivo legível do caminho salvo (remove diretórios e o
+// prefixo de timestamp gerado no upload). Espelha o padrão de Imóveis.
+const extractFileName = (filePath: string): string => {
+  if (!filePath) return 'Arquivo';
+  const parts = filePath.split('/');
+  return decodeURIComponent(parts[parts.length - 1].replace(/^\d+-/, ''));
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapLeaseDocument = (doc: any) => ({
+  id: doc.id,
+  file_name: doc.description && doc.description !== 'Lease Contract' && doc.description !== 'Lease Document'
+    ? doc.description
+    : extractFileName(doc.file_path),
+  file_url: doc.file_path,
+  type: doc.type,
+  mime_type: doc.file_type,
+  is_featured: doc.is_featured ?? false,
+});
 
 const parseMoney = (value: string | number) => {
   if (!value && value !== 0) return 0;
@@ -41,8 +64,14 @@ export default function EditarLocacaoPage() {
   const id = params.id as string;
   
   const { showMessage } = useMessageContext();
+  const { user, token } = useAuth();
+  const { uploadAndTrack } = useUploadSSE();
   const router = useRouter();
-  
+
+  // Documentos originais (mídias) carregados da API — usados para calcular quais
+  // foram removidos ao salvar. Populado no transformData.
+  const originalDocumentsRef = useRef<any[]>([]);
+
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
   const [agencies, setAgencies] = useState<any[]>([]);
@@ -50,6 +79,7 @@ export default function EditarLocacaoPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
   const [isCanceled, setIsCanceled] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -243,6 +273,41 @@ export default function EditarLocacaoPage() {
         throw new Error(result.message || `Erro ${response.status}`);
       }
 
+      // Sincroniza as mídias da locação (arquivos novos + remoções), reaproveitando
+      // o mesmo mecanismo de upload de Imóveis (useUploadSSE → multipart). Só dispara
+      // quando há mudança. Falha aqui não invalida a locação já salva.
+      const currentDocs: any[] = Array.isArray(data.arquivosLocacao) ? data.arquivosLocacao : [];
+      const newFiles = currentDocs.filter((f: any) => f instanceof File) as File[];
+      const keptIds = new Set(
+        currentDocs.filter((f: any) => f && !(f instanceof File) && f.id).map((f: any) => String(f.id)),
+      );
+      const removedIds = originalDocumentsRef.current
+        .map((d: any) => String(d.id))
+        .filter((docId: string) => !keptIds.has(docId));
+
+      if (newFiles.length > 0 || removedIds.length > 0) {
+        try {
+          const fd = new FormData();
+          newFiles.forEach((file) => fd.append('arquivosLocacao', file, file.name));
+          if (removedIds.length > 0) fd.append('removedDocuments', JSON.stringify(removedIds));
+          fd.append('userId', user?.id ?? '');
+
+          await uploadAndTrack({
+            url: `${API_URL}/leases/${id}/documents`,
+            method: 'PUT',
+            body: fd,
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            compressImages: false,
+          });
+        } catch (mediaError: any) {
+          showMessage(
+            `Locação salva, mas houve erro ao sincronizar os arquivos: ${mediaError?.message ?? 'falha no upload'}`,
+            'error',
+            6000,
+          );
+        }
+      }
+
       return result;
     } catch (error: any) {
       throw new Error(`Erro ao atualizar locação: ${error.message}`);
@@ -252,7 +317,9 @@ export default function EditarLocacaoPage() {
   const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     if (apiData.status === 'CANCELED') setIsCanceled(true);
-    
+
+    originalDocumentsRef.current = Array.isArray(apiData.documents) ? apiData.documents : [];
+
     const formatDate = (dateString: string) => {
       if (!dateString) return '';
       return new Date(dateString).toISOString().split('T')[0];
@@ -310,6 +377,7 @@ export default function EditarLocacaoPage() {
       insurance_type: apiData.insurance_type || '',
       insurance_policy: apiData.insurance_policy || '',
       guarantors: apiData.guarantors || [],
+      arquivosLocacao: (apiData.documents ?? []).map(mapLeaseDocument),
     };
   }, []);
 
@@ -623,6 +691,66 @@ export default function EditarLocacaoPage() {
       });
     }
 
+    // Mídias — sempre a ÚLTIMA aba. Anexa arquivos (ex.: contrato) à locação.
+    baseSteps.push({
+      title: 'Mídias',
+      icon: <Upload size={20} />,
+      fields: [
+        {
+          field: 'arquivosLocacao',
+          label: 'Arquivos da Locação (ex.: contrato)',
+          type: 'file',
+          accept: '.pdf',
+          multiple: true,
+          maxFiles: 10,
+          textButton: 'Escolher arquivos',
+          placeholder: 'Nenhum arquivo selecionado',
+          icon: <FileText size={20} />,
+          className: 'col-span-full w-full',
+        } as any,
+      ],
+    });
+
+    // Cancelamento — botão que abre o modal de cancelamento. Fica DEPOIS de Mídias
+    // e só para locações ainda não canceladas (a locação cancelada exibe a aba de
+    // detalhes do cancelamento acima). Fase 1: apenas abre o formulário do modal.
+    if (!isCanceled) {
+      baseSteps.push({
+        title: 'Cancelamento',
+        icon: <AlertCircle size={20} />,
+        fields: [
+          {
+            field: 'cancellation_action',
+            label: '',
+            type: 'custom',
+            className: 'col-span-full',
+            render: () => (
+              <div className="flex flex-col items-start gap-3 rounded-xl border border-ui-border-soft bg-surface-subtle p-5">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-red-50 text-red-600">
+                    <AlertCircle size={20} />
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-semibold text-content">Cancelamento antecipado</p>
+                    <p className="text-[13px] text-content-secondary">
+                      Encerre a locação antes do vencimento, revise os lançamentos futuros e lance encargos (se houver).
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCancelModalOpen(true)}
+                  className="px-5 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Iniciar Cancelamento
+                </button>
+              </div>
+            ),
+          } as any,
+        ],
+      });
+    }
+
     return baseSteps;
   }, [properties, tenants, agencies, institutions, loadingData, isCanceled]);
 
@@ -642,18 +770,35 @@ export default function EditarLocacaoPage() {
   }
 
   return (
-    <DynamicFormManager
-      resource="leases"
-      title="Locação"
-      basePath="/dashboard/locacoes"
-      mode="edit"
-      id={id}
-      steps={steps}
-      onSubmit={handleSubmit}
-      onSubmitSuccess={onSubmitSuccess}
-      onFieldChange={handleFieldChange}
-      transformData={transformData}
-      onFormValuesChange={setFormValues}
-    />
+    <>
+      <DynamicFormManager
+        resource="leases"
+        title="Locação"
+        basePath="/dashboard/locacoes"
+        mode="edit"
+        id={id}
+        steps={steps}
+        onSubmit={handleSubmit}
+        onSubmitSuccess={onSubmitSuccess}
+        onFieldChange={handleFieldChange}
+        transformData={transformData}
+        onFormValuesChange={setFormValues}
+      />
+
+      {cancelModalOpen && (
+        <LeaseCancellationModal
+          leaseId={id}
+          contractNumber={formValues?.contract_number}
+          startDate={formValues?.start_date}
+          endDate={formValues?.end_date}
+          onClose={() => setCancelModalOpen(false)}
+          onCancelled={() => {
+            setCancelModalOpen(false);
+            showMessage('Locação cancelada. Redirecionando...', 'success');
+            router.push('/dashboard/locacoes');
+          }}
+        />
+      )}
+    </>
   );
 }

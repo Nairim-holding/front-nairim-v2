@@ -1,14 +1,276 @@
 'use client';
 
+import { useState, useRef } from 'react';
+import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMessageContext } from '@/contexts/MessageContext';
+import { authFetch } from '@/utils/authFetch';
+
+const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+
+const isAdminRole = (role?: string) =>
+  !!role && role.toLowerCase().includes('admin');
 
 export default function ConfiguracoesPage() {
+  const { user } = useAuth();
+  const { showMessage } = useMessageContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Export state
+  const [generating, setGenerating] = useState(false);
+
+  // Restore state
+  const [restoring, setRestoring] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [confirmationName, setConfirmationName] = useState('');
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+
+  const isAdmin = isAdminRole(user?.role);
+
+  const handleBackup = async () => {
+    setGenerating(true);
+    try {
+      const res = await authFetch(`${API_URL}/backup/export`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.message || 'Erro ao gerar o backup.');
+      }
+
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match?.[1] || `backup-nairim-${new Date().toISOString().slice(0, 10)}.json`;
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showMessage('Backup gerado. O download foi iniciado.', 'success');
+    } catch (e: any) {
+      showMessage(e?.message ?? 'Erro ao gerar o backup.', 'error');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      showMessage('Por favor, selecione um arquivo .json', 'error');
+      return;
+    }
+
+    setSelectedFile(file);
+    setConfirmationName('');
+  };
+
+  const handleRestore = async () => {
+    if (!selectedFile || !confirmationName) {
+      showMessage('Arquivo e confirmação são obrigatórios', 'error');
+      return;
+    }
+
+    if (confirmationName !== user?.company_slug) {
+      showMessage('Confirmação inválida. Digite o nome/slug da empresa.', 'error');
+      return;
+    }
+
+    setRestoring(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('confirmationName', confirmationName);
+
+      const res = await fetch(`${API_URL}/backup/restore`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+        },
+        body: formData,
+      });
+
+      const j = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(j.message || 'Erro ao restaurar backup');
+      }
+
+      showMessage('✅ Restauração concluída com sucesso! Recarregando...', 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e: any) {
+      showMessage(e?.message ?? 'Erro ao restaurar backup.', 'error');
+    } finally {
+      setRestoring(false);
+      setShowRestoreConfirm(false);
+    }
+  };
+
   return (
     <Section title="Configurações">
-      <div className="bg-surface border border-ui-border rounded-xl p-6">
-        <p className="text-content-muted">
-          Página de configurações em desenvolvimento.
-        </p>
+      <div className="max-w-2xl space-y-6">
+        {/* Backup */}
+        <div className="bg-surface border border-ui-border rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 rounded-lg bg-brand/10 text-brand">
+              <DatabaseBackup size={22} />
+            </div>
+            <h2 className="text-lg font-semibold text-content">Gerar Backup</h2>
+          </div>
+          <p className="text-[13px] text-content-secondary mb-4">
+            Gere uma cópia dos dados da sua empresa. O arquivo inclui imóveis, locações,
+            financeiro, cadastros; arquivos de mídia são referenciados por link.
+          </p>
+
+          {isAdmin ? (
+            <button
+              onClick={handleBackup}
+              disabled={generating}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover disabled:opacity-60 transition-colors"
+            >
+              {generating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              {generating ? 'Gerando backup...' : 'Gerar e baixar backup'}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-ui-border-soft bg-surface-subtle px-3 py-2 text-[13px] text-content-secondary">
+              <ShieldAlert size={16} className="text-content-muted flex-shrink-0" />
+              Apenas administradores podem gerar backups.
+            </div>
+          )}
+        </div>
+
+        {/* Restauração */}
+        {isAdmin && (
+          <div className="bg-surface border border-ui-border rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-orange-100/50">
+                <Upload size={22} className="text-orange-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-content">Restaurar de Backup</h2>
+            </div>
+            <p className="text-[13px] text-content-secondary mb-4">
+              ⚠️ Restaurar um backup substituirá TODOS os dados atuais. Um backup automático
+              será criado antes de qualquer restauração.
+            </p>
+
+            {!selectedFile ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-ui-border rounded-lg p-6 text-center cursor-pointer hover:bg-surface-subtle transition-colors"
+              >
+                <Upload size={24} className="mx-auto mb-2 text-content-muted" />
+                <p className="text-sm font-medium text-content">Clique para selecionar o arquivo</p>
+                <p className="text-xs text-content-muted">ou arraste aqui</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center text-white text-xs">
+                      ✓
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium text-content">{selectedFile.name}</p>
+                      <p className="text-xs text-content-secondary">
+                        {(selectedFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setConfirmationName('');
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Remover
+                  </button>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-content block mb-1">
+                    Confirmação: Digite o nome da sua empresa
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={user?.company_slug || 'Nome da empresa'}
+                    value={confirmationName}
+                    onChange={e => setConfirmationName(e.target.value)}
+                    className="w-full px-3 py-2 border border-ui-border rounded-lg text-sm focus:outline-none focus:border-brand"
+                  />
+                  <p className="text-xs text-content-muted mt-1">
+                    Para confirmar a restauração, digite exatamente: <strong>{user?.company_slug}</strong>
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowRestoreConfirm(true)}
+                  disabled={restoring || confirmationName !== user?.company_slug}
+                  className="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                >
+                  {restoring ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+                  {restoring ? 'Restaurando...' : 'Restaurar agora'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Modal de confirmação */}
+        {showRestoreConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="bg-surface rounded-xl shadow-xl max-w-md p-6 mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-red-100/50">
+                  <AlertTriangle size={20} className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-content">Confirmar restauração</h3>
+              </div>
+
+              <p className="text-sm text-content-secondary mb-4">
+                Você está prestes a restaurar um backup. Todos os dados atuais serão <strong>permanentemente substituídos</strong>.
+                Um backup automático será criado para segurança.
+              </p>
+
+              <p className="text-sm font-medium text-red-600 mb-4 p-3 bg-red-50 rounded-lg">
+                ⚠️ Esta ação não pode ser desfeita sem restaurar o backup automático.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRestoreConfirm(false)}
+                  disabled={restoring}
+                  className="flex-1 px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle disabled:opacity-60 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleRestore}
+                  disabled={restoring}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                >
+                  {restoring ? <Loader2 size={14} className="animate-spin" /> : null}
+                  {restoring ? 'Restaurando...' : 'Restaurar agora'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Section>
   );

@@ -872,10 +872,17 @@ export default function InlineEditableTable({
 
     const newRowId = isNew ? `new-${Date.now()}` : id;
 
+    // Pré-preenche a Instituição do novo registro quando o filtro tem EXATAMENTE
+    // uma instituição selecionada (agiliza lançamento em massa). O valor do filtro
+    // pode vir como array (multi-seleção) ou escalar (valor único). Continua editável.
+    const instFilter = appliedFilters.financial_institution_id;
+    const selectedInstitutionIds = instFilter == null ? [] : Array.isArray(instFilter) ? instFilter : [instFilter];
+    const defaultInstitutionId = selectedInstitutionIds.length === 1 ? String(selectedInstitutionIds[0]) : '';
+
     setEditingRows(prev => [...prev.filter(r => !r.isNew), {
       id: newRowId,
       data: isNew
-        ? { description: '', amount: 0, status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: '', card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
+        ? { description: '', amount: 0, status: 'PENDING', event_date: new Date().toISOString().split('T')[0], effective_date: new Date().toISOString().split('T')[0], category_id: '', financial_institution_id: defaultInstitutionId, card_id: '', center_id: '', supplier_id: '', subcategory_id: '' }
         : {
             ...item,
             amount: typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount),
@@ -902,7 +909,7 @@ export default function InlineEditableTable({
         }
       }
     }, 100);
-  }, [items]);
+  }, [items, appliedFilters]);
 
   const saveEditingRow = useCallback(async (id: string) => {
     const row = editingRows.find(r => r.id === id);
@@ -1417,6 +1424,7 @@ export default function InlineEditableTable({
           onMouseDownResize={handleMouseDownResize}
           onColumnReorder={handleColumnReorder}
           tbodyRef={tableBodyRef}
+          stickyHeader
         >
           {displayItems.map((item: any, rowIdx: number) => {
             const editingRow = editingRows.find(row => row.id === item.id);

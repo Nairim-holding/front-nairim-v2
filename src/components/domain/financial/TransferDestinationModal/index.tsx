@@ -69,6 +69,11 @@ export default function TransferDestinationModal({
   const mirrorCenterType: 'INCOME' | 'EXPENSE' = originType === 'EXPENSE' ? 'INCOME' : 'EXPENSE';
   const isCredit = mirrorCenterType === 'INCOME';
 
+  // Entrada: a conta do lançamento é o DESTINO e a conta selecionada é a ORIGEM
+  // (dinheiro sai dela → espelho de SAÍDA). Só inverte os rótulos; a lógica do
+  // espelho já está correta. Saída (EXPENSE) mantém os textos originais.
+  const isEntrada = originType === 'INCOME';
+
   const centerOptions = useMemo(
     () => centers.filter(c => c.type === mirrorCenterType),
     [centers, mirrorCenterType],
@@ -104,7 +109,7 @@ export default function TransferDestinationModal({
 
         <div className="space-y-2 mb-5 text-sm">
           <div className="flex justify-between">
-            <span className="text-content-muted">Conta de origem</span>
+            <span className="text-content-muted">{isEntrada ? 'Conta de destino' : 'Conta de origem'}</span>
             <span className="font-medium text-content">{originName}</span>
           </div>
           <div className="flex justify-between">
@@ -121,16 +126,18 @@ export default function TransferDestinationModal({
 
         <div className="mb-6">
           <Select
-            label="Conta de destino"
+            label={isEntrada ? 'Conta de origem' : 'Conta de destino'}
             required
             searchable
-            placeholder="Selecione a conta destino..."
+            placeholder={isEntrada ? 'Selecione a conta de origem...' : 'Selecione a conta destino...'}
             options={destinationOptions}
             value={destinationId}
             onChange={v => setDestinationId(String(v))}
           />
           <p className="mt-2 text-xs text-content-muted">
-            Será criado automaticamente o lançamento de entrada nessa conta.
+            {isEntrada
+              ? 'Será criado automaticamente o lançamento de saída nesta conta.'
+              : 'Será criado automaticamente o lançamento de entrada nessa conta.'}
           </p>
         </div>
 

@@ -539,7 +539,7 @@ export default function LancamentosPage() {
 
   if (isLoadingOptions || isLoadingColumns) {
     return (
-      <Section title="Gerenciar Lançamentos">
+      <Section title="Gerenciar Lançamentos" fill>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
         </div>
@@ -548,7 +548,7 @@ export default function LancamentosPage() {
   }
 
   return (
-    <Section title={pageTitle}>
+    <Section title={pageTitle} fill>
       <InlineEditableTable
         resource="financial-transaction"
         title="Lançamentos"

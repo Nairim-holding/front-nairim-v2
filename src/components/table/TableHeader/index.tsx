@@ -17,6 +17,12 @@ interface TableInformationsProps {
   onMouseDownResize?: (e: React.MouseEvent, field: string) => void;
   onColumnReorder?: (dragIndex: number, dropIndex: number) => void;
   tbodyRef?: RefObject<HTMLTableSectionElement | null>;
+  /**
+   * Fixa o cabeçalho no topo do container de rolagem (`sticky top-0`).
+   * Só tem efeito quando um ancestral com altura limitada + `overflow-y-auto`
+   * atua como container de scroll (ex.: grid de Lançamentos).
+   */
+  stickyHeader?: boolean;
 }
 
 export default function TableInformations({
@@ -32,6 +38,7 @@ export default function TableInformations({
   onMouseDownResize,
   onColumnReorder,
   tbodyRef,
+  stickyHeader = false,
 }: TableInformationsProps) {
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
@@ -76,7 +83,7 @@ export default function TableInformations({
 
   return (
     <table className="min-w-full text-xs text-left text-content-secondary" style={{ tableLayout: 'fixed' }}>
-      <thead className="bg-surface-muted uppercase text-content-secondary font-semibold border-b border-ui-border-soft">
+      <thead className={`bg-surface-muted uppercase text-content-secondary font-semibold border-b border-ui-border-soft ${stickyHeader ? 'sticky top-0 z-20' : ''}`}>
         <tr className="h-[36px]">
           {dataHeaders.map((header, idx) => {
             const isSortable = header?.sortParam && header.field !== "actions";
@@ -148,7 +155,7 @@ export default function TableInformations({
           {hasActions && (
             <th
               key="actions"
-              className="py-1 px-2 font-normal text-xs whitespace-nowrap sticky right-0 bg-surface-muted z-20 w-[70px] min-w-[70px] max-w-[70px]"
+              className={`py-1 px-2 font-normal text-xs whitespace-nowrap sticky right-0 bg-surface-muted w-[70px] min-w-[70px] max-w-[70px] ${stickyHeader ? 'z-30' : 'z-20'}`}
             >
               <div className="flex items-center justify-center gap-1 capitalize">
                 <span>Ação</span>
