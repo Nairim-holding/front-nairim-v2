@@ -78,8 +78,13 @@ export default function ConfiguracoesPage() {
       return;
     }
 
-    if (confirmationName !== user?.company_slug) {
-      showMessage('Confirmação inválida. Digite o nome/slug da empresa.', 'error');
+    // Aceita tanto o nome quanto o slug da empresa (case-insensitive)
+    const isValidConfirmation =
+      confirmationName.toLowerCase() === user?.company_slug?.toLowerCase() ||
+      confirmationName.toLowerCase() === user?.name?.toLowerCase();
+
+    if (!isValidConfirmation) {
+      showMessage(`Confirmação inválida. Digite exatamente: "${user?.company_slug}" ou "${user?.name}"`, 'error');
       return;
     }
 
@@ -216,7 +221,7 @@ export default function ConfiguracoesPage() {
                     className="w-full px-3 py-2 border border-ui-border rounded-lg text-sm focus:outline-none focus:border-brand"
                   />
                   <p className="text-xs text-content-muted mt-1">
-                    Para confirmar a restauração, digite exatamente: <strong>{user?.company_slug}</strong>
+                    Aceita: <strong>{user?.company_slug}</strong> ou <strong>{user?.name}</strong>
                   </p>
                 </div>
 
