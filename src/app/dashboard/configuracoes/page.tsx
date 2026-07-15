@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle, History } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -11,6 +11,12 @@ const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 const isAdminRole = (role?: string) =>
   !!role && role.toLowerCase().includes('admin');
+
+interface AutoBackup {
+  name: string;
+  size: number;
+  createdAt: string;
+}
 
 export default function ConfiguracoesPage() {
   const { user } = useAuth();
@@ -26,7 +32,53 @@ export default function ConfiguracoesPage() {
   const [confirmationName, setConfirmationName] = useState('');
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
 
+  // Auto-backups (gerados antes de cada restore)
+  const [autoBackups, setAutoBackups] = useState<AutoBackup[]>([]);
+
   const isAdmin = isAdminRole(user?.role);
+
+  // Confirmação do restore: aceita o slug OU o nome da empresa (case-insensitive).
+  const confirmationValid =
+    !!confirmationName &&
+    (confirmationName.toLowerCase() === user?.company_slug?.toLowerCase() ||
+      confirmationName.toLowerCase() === user?.name?.toLowerCase());
+
+  const loadAutoBackups = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await authFetch(`${API_URL}/backup/auto`);
+      if (!res.ok) return;
+      const j = await res.json().catch(() => ({}));
+      setAutoBackups(Array.isArray(j.data) ? j.data : []);
+    } catch {
+      /* silencioso: lista opcional */
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    loadAutoBackups();
+  }, [loadAutoBackups]);
+
+  const handleDownloadAutoBackup = async (name: string) => {
+    try {
+      const res = await authFetch(`${API_URL}/backup/auto/${encodeURIComponent(name)}`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.message || 'Erro ao baixar o backup automático.');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      showMessage(e?.message ?? 'Erro ao baixar o backup automático.', 'error');
+    }
+  };
 
   const handleBackup = async () => {
     setGenerating(true);
@@ -227,7 +279,7 @@ export default function ConfiguracoesPage() {
 
                 <button
                   onClick={() => setShowRestoreConfirm(true)}
-                  disabled={restoring || confirmationName !== user?.company_slug}
+                  disabled={restoring || !confirmationValid}
                   className="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
                 >
                   {restoring ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
@@ -235,6 +287,42 @@ export default function ConfiguracoesPage() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Backups automáticos (gerados antes de cada restore) */}
+        {isAdmin && autoBackups.length > 0 && (
+          <div className="bg-surface border border-ui-border rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-brand/10 text-brand">
+                <History size={22} />
+              </div>
+              <h2 className="text-lg font-semibold text-content">Backups automáticos</h2>
+            </div>
+            <p className="text-[13px] text-content-secondary mb-4">
+              Cópias do estado da empresa geradas automaticamente <strong>antes</strong> de
+              cada restauração. Use para reverter caso algo dê errado.
+            </p>
+
+            <ul className="divide-y divide-ui-border-soft">
+              {autoBackups.map((b) => (
+                <li key={b.name} className="flex items-center justify-between py-2.5 gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-content truncate">{b.name}</p>
+                    <p className="text-xs text-content-muted">
+                      {new Date(b.createdAt).toLocaleString('pt-BR')} · {(b.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDownloadAutoBackup(b.name)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand border border-ui-border rounded-lg hover:bg-surface-subtle transition-colors flex-shrink-0"
+                  >
+                    <Download size={14} />
+                    Baixar
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
