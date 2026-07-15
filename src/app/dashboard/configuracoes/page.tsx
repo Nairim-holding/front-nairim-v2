@@ -89,12 +89,14 @@ export default function ConfiguracoesPage() {
       formData.append('file', selectedFile);
       formData.append('confirmationName', confirmationName);
 
-      const res = await fetch(`${API_URL}/backup/restore`, {
+      // Usar authFetch com FormData (não define Content-Type, deixa navegador fazer)
+      const res = await authFetch(`${API_URL}/backup/restore`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
-        },
         body: formData,
+        headers: {
+          // NÃO definir Content-Type: multipart/form-data — deixa o navegador fazer
+          // Remover qualquer Content-Type que authFetch possa ter adicionado
+        },
       });
 
       const j = await res.json().catch(() => ({}));

@@ -79,7 +79,7 @@ export default function EditarAdministradorPage() {
       validation: {
         // Usamos o pattern direto, igual no Cadastro.
         // O DynamicFormManager já é inteligente o suficiente para não validar se o campo estiver vazio!
-        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/,
+        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&\-_.])[A-Za-z\d@$!%*?#&\-_.]{8,}$/,
         patternMessage: 'A senha não atende aos requisitos mínimos.'
       },
       className: 'mt-6',
@@ -94,7 +94,7 @@ export default function EditarAdministradorPage() {
           { label: 'Letra maiúscula', met: /[A-Z]/.test(val) },
           { label: 'Letra minúscula', met: /[a-z]/.test(val) },
           { label: 'Número', met: /\d/.test(val) },
-          { label: 'Símbolo (@$!%*?#&)', met: /[@$!%*?#&]/.test(val) },
+          { label: 'Símbolo (@$!%*?#&-_.)', met: /[@$!%*?#&\-_.]/.test(val) },
         ];
 
         return (

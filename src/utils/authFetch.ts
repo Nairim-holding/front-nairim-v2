@@ -21,9 +21,12 @@ export async function authFetch(
     console.warn('[authFetch] Token não foi encontrado, requisição será feita sem autenticação');
   }
 
-  // Sempre garantir Content-Type para requisições com body
+  // Garantir Content-Type para requisições com body (mas NÃO para FormData)
   if (options?.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+    // Se for FormData, deixa o navegador definir multipart/form-data automaticamente
+    if (!(options.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
   }
 
   console.log('[authFetch] Requisição para:', url);

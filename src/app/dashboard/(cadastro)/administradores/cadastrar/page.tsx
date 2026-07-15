@@ -72,7 +72,7 @@ export default function CadastrarAdministradorPage() {
       required: true,
       placeholder: 'Insira a senha',
       validation: {
-        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/,
+        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&\-_.])[A-Za-z\d@$!%*?#&\-_.]{8,}$/,
         patternMessage: 'A senha não atende aos requisitos mínimos.'
       },
       className: 'mt-6',
@@ -84,7 +84,7 @@ export default function CadastrarAdministradorPage() {
           { label: 'Letra maiúscula', met: /[A-Z]/.test(val) },
           { label: 'Letra minúscula', met: /[a-z]/.test(val) },
           { label: 'Número', met: /\d/.test(val) },
-          { label: 'Símbolo (@$!%*?#&)', met: /[@$!%*?#&]/.test(val) },
+          { label: 'Símbolo (@$!%*?#&-_.)', met: /[@$!%*?#&\-_.]/.test(val) },
         ];
 
         return (
