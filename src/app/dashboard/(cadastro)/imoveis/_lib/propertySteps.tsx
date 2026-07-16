@@ -128,6 +128,26 @@ export function buildPropertySteps({
         { field: 'center_id', label: 'Centro de Custo (Crédito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...creditCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'debit_center_id', label: 'Centro de Custo (Débito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...debitCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
+        { field: 'iptu_refund_category_id', label: 'Categoria (Restituição IPTU)', type: 'select', required: false, searchable: true, autoOpen: false, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
+        {
+          field: 'iptu_refund_subcategory_id',
+          label: 'Subcategoria (Restituição IPTU)',
+          type: 'select',
+          required: false,
+          searchable: true,
+          options: (formValues: any) => {
+            const categoryId = formValues?.iptu_refund_category_id;
+            if (!categoryId) return [{ label: 'Nenhuma', value: '' }];
+            return [
+              { label: 'Nenhuma', value: '' },
+              ...subcategoriesRaw
+                .filter((s) => s.category_id === categoryId)
+                .map((s) => ({ label: s.name || 'Sem nome', value: s.id })),
+            ];
+          },
+          icon: <Landmark size={20} />,
+          ...ro,
+        } as any,
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: false, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },
         { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },

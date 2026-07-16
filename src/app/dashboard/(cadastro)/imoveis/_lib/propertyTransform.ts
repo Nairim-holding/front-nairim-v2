@@ -222,6 +222,8 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     debit_center_id:  data.debit_center_id ?? '',
     category_id:      data.category_id ?? '',
     subcategory_id:   data.subcategory_id ?? '',
+    iptu_refund_category_id:    data.iptu_refund_category_id ?? '',
+    iptu_refund_subcategory_id: data.iptu_refund_subcategory_id ?? '',
     furnished:        data.furnished?.toString() ?? 'false',
     registration_number: data.registration_number ?? '',
     notes:            data.notes ?? '',
@@ -305,6 +307,8 @@ export function buildPropertyFormData(
     debit_center_id:  data.debit_center_id || null,
     category_id:      data.category_id || null,
     subcategory_id:   data.subcategory_id || null,
+    iptu_refund_category_id:    data.iptu_refund_category_id || null,
+    iptu_refund_subcategory_id: data.iptu_refund_subcategory_id || null,
     registration_number: data.registration_number || null,
   }));
 
