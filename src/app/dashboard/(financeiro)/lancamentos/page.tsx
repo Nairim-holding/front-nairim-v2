@@ -526,7 +526,7 @@ export default function LancamentosPage() {
       const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
         throw new Error(result.message ?? 'Erro ao excluir lançamento.');
@@ -536,6 +536,41 @@ export default function LancamentosPage() {
       throw error instanceof Error ? error : new Error('Erro ao excluir lançamento.');
     }
   }, []);
+
+  // Duplica um lançamento criando uma cópia idêntica (mesma data, valor, status,
+  // categoria, etc.). Os IDs relacionados já são reais, então cria direto via
+  // POST sem passar por resolveQuickCreates. Itens de transferência entre contas
+  // são ignorados (exigem fluxo com modal de conta-destino).
+  const handleRowDuplicate = useCallback(async (item: any) => {
+    if (transferCategoryIds.has(String(item.category_id))) {
+      return { skipped: true };
+    }
+
+    const payload = {
+      event_date: item.event_date ?? null,
+      effective_date: item.effective_date ?? null,
+      category_id: item.category_id ?? null,
+      subcategory_id: item.subcategory_id ?? null,
+      financial_institution_id: item.financial_institution_id ?? null,
+      card_id: item.card_id ?? null,
+      center_id: item.center_id ?? null,
+      supplier_id: item.supplier_id ?? null,
+      description: item.description ?? null,
+      amount: item.amount,
+      status: item.status,
+    };
+
+    const response = await fetch(`${API_URL}/financial-transaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message ?? 'Erro ao duplicar lançamento.');
+    }
+  }, [transferCategoryIds]);
 
   if (isLoadingOptions || isLoadingColumns) {
     return (
@@ -562,6 +597,8 @@ export default function LancamentosPage() {
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}
         onRowDelete={handleRowDelete}
+        onRowDuplicate={handleRowDuplicate}
+        enableDuplicate
         resolveQuickCreates={resolveQuickCreates}
         onColumnsChange={handleColumnsChange}
         onColumnWidthsChange={handleColumnWidthsChange}

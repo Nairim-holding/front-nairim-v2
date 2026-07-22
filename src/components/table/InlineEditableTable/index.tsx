@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
@@ -375,6 +375,14 @@ interface InlineEditableTableProps {
   onRowSave?: (id: string, data: any) => Promise<void>;
   onRowCreate?: (data: any) => Promise<void>;
   onRowDelete?: (id: string) => Promise<void>;
+  /**
+   * Duplica um registro selecionado, criando uma cópia idêntica (mesma data,
+   * valor, status, etc.). Recebe o item original completo. Resolver
+   * `{ skipped: true }` sinaliza que o item foi ignorado (ex.: transferência),
+   * para contabilizar no resultado sem tratar como erro.
+   */
+  onRowDuplicate?: (item: any) => Promise<{ skipped?: boolean } | void>;
+  enableDuplicate?: boolean;
   showTotals?: boolean;
   /** Exibe o painel lateral retrátil de "Resumo" (somente Lançamentos). */
   summaryPanel?: boolean;
@@ -401,7 +409,7 @@ interface EditingRow {
 export default function InlineEditableTable({
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
-  showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
+  showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
   onAppliedFiltersChange,
   resolveQuickCreates,
 }: InlineEditableTableProps) {
@@ -796,13 +804,18 @@ export default function InlineEditableTable({
         chunks.push(desc.substring(i, i + chunkSize));
       }
       const formattedDesc = chunks.join('\n');
-      
+
+      // Lançamentos recorrentes exibem "(Recorrente)" em cor diferente ao final
+      // da descrição — sufixo de render (não é armazenado no dado).
+      const isRecurring = item.is_recurring === true || item.payment_mode === 'RECORRENTE';
+
       return (
-        <span 
+        <span
           className="block whitespace-pre-wrap break-words"
           style={{ lineHeight: '14px' }}
         >
           {formattedDesc}
+          {isRecurring && <span className="text-brand font-medium"> (Recorrente)</span>}
         </span>
       );
     }
@@ -919,18 +932,50 @@ export default function InlineEditableTable({
 
     setEditingRows(prev => prev.map(r => r.id === id ? { ...r, isSaving: true } : r));
     try {
-      const payload = { 
-        ...row.data, 
-        amount: typeof row.data.amount === 'number' ? row.data.amount : parseCurrencyFromPTBR(row.data.amount), 
-        card_id: row.data.card_id || null, 
+      const newAmount = typeof row.data.amount === 'number' ? row.data.amount : parseCurrencyFromPTBR(row.data.amount);
+      const payload: any = {
+        ...row.data,
+        amount: newAmount,
+        card_id: row.data.card_id || null,
         center_id: row.data.center_id || null,
         supplier_id: row.data.supplier_id || null,
         subcategory_id: row.data.subcategory_id || null
       };
-      
+
+      // Propagação de reajuste em parcelados/recorrentes: se o VALOR mudou e a
+      // linha pertence a uma série com parcelas SEGUINTES, pergunta se deseja
+      // atualizar as demais. Vale para débito e crédito.
+      if (!row.isNew) {
+        const original = items.find((it: any) => it.id === id);
+        const originalAmount = original ? Number(original.amount) : undefined;
+        const amountChanged = originalAmount !== undefined && originalAmount !== newAmount;
+
+        const isInstallment = !!original?.installment_group_id && original?.installment_number != null;
+        const isRecurring = !!original?.recurring_group_id && original?.occurrence_number != null;
+        const total = original?.total_installments ?? null;
+        const position = isInstallment ? original?.installment_number : original?.occurrence_number;
+        // "Tem seguintes": parcelada com número < total; recorrente assume que
+        // pode haver seguintes (o backend filtra por occurrence_number maior).
+        const hasFollowing = isInstallment
+          ? (total == null || position < total)
+          : isRecurring;
+
+        if (amountChanged && (isInstallment || isRecurring) && hasFollowing) {
+          const propagate = await new Promise<boolean>((resolve) => {
+            showPopup(
+              'Atualizar demais parcelas',
+              'O valor foi alterado. Deseja atualizar as demais parcelas seguintes desta série?',
+              () => resolve(true),
+              () => resolve(false),
+            );
+          });
+          if (propagate) payload.propagate_to_following = true;
+        }
+      }
+
       if (row.isNew && onRowCreate) await onRowCreate(payload);
       else if (!row.isNew && onRowSave) await onRowSave(id, payload);
-      
+
       showMessage(`Lançamento ${row.isNew ? 'criado' : 'atualizado'} com sucesso!`, 'success');
       setEditingRows(prev => prev.filter(r => r.id !== id));
       refreshData();
@@ -938,7 +983,7 @@ export default function InlineEditableTable({
       showMessage(error instanceof Error ? error.message : 'Erro ao salvar', 'error');
       setEditingRows(prev => prev.map(r => r.id === id ? { ...r, isSaving: false } : r));
     }
-  }, [editingRows, validateEditingRow, onRowCreate, onRowSave, refreshData, showMessage]);
+  }, [editingRows, validateEditingRow, onRowCreate, onRowSave, refreshData, showMessage, items, showPopup]);
 
   // --- NOVA FUNÇÃO PARA PROCESSAR A DELEÇÃO EM MASSA ---
   const handleDeleteSelected = useCallback(() => {
@@ -978,6 +1023,55 @@ export default function InlineEditableTable({
       () => {}
     );
   }, [selectedCheckboxes, onRowDelete, showPopup, showMessage, refreshData]);
+
+  // --- DUPLICAÇÃO EM MASSA ---
+  // Cria uma cópia idêntica de cada registro selecionado (mesma data, valor,
+  // status, etc.). Itens ignorados pelo pai (ex.: transferências) são
+  // contabilizados via `{ skipped: true }` sem contar como erro.
+  const handleDuplicateSelected = useCallback(() => {
+    if (!selectedCheckboxes.length || !onRowDuplicate) return;
+
+    showPopup(
+      'Duplicar Registros',
+      selectedCheckboxes.length > 1
+        ? `Serão criadas ${selectedCheckboxes.length} cópias dos registros selecionados. Deseja continuar?`
+        : `Deseja criar uma cópia do registro selecionado?`,
+      async () => {
+        let successCount = 0;
+        let skippedCount = 0;
+        let errorCount = 0;
+        let lastErrorMessage = "";
+
+        for (const id of selectedCheckboxes) {
+          const original = items.find((it: any) => it.id === id);
+          if (!original) { errorCount++; continue; }
+          try {
+            const result = await onRowDuplicate(original);
+            if (result && result.skipped) skippedCount++;
+            else successCount++;
+          } catch (error: any) {
+            errorCount++;
+            lastErrorMessage = error.message || "Erro desconhecido";
+          }
+        }
+
+        const parts: string[] = [];
+        if (successCount > 0) parts.push(`${successCount} ${successCount > 1 ? 'cópias criadas' : 'cópia criada'}`);
+        if (skippedCount > 0) parts.push(`${skippedCount} ignorado(s) (transferência)`);
+        if (errorCount > 0) parts.push(`${errorCount} erro(s)`);
+
+        if (errorCount === 0) {
+          showMessage(parts.join(', ') || 'Nada a duplicar', 'success');
+        } else {
+          showMessage(`${parts.join(', ')}. ${lastErrorMessage}`, 'error');
+        }
+
+        setSelectedCheckboxes([]);
+        refreshData();
+      },
+      () => {}
+    );
+  }, [selectedCheckboxes, onRowDuplicate, items, showPopup, showMessage, refreshData]);
 
   // Exporta para .xlsx todos os registros que casam com o período/filtros/busca
   // atualmente aplicados (não apenas a página em exibição) — pagina internamente
@@ -1024,14 +1118,41 @@ export default function InlineEditableTable({
       });
 
       const rows = exportItems.map((item: any) => {
-        const row: Record<string, string> = {};
+        const row: Record<string, string | number> = {};
         visibleDataColumns.forEach((col) => {
-          row[col.label] = getExportCellValue(item, col);
+          // Valor: grava o número real (não a string "R$ ...") para que o Excel
+          // reconheça como número e permita SOMA. A formatação de moeda é aplicada
+          // como número-formato da célula abaixo, mantendo o valor numérico por baixo.
+          if (col.field === 'amount') {
+            row[col.label] = typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount);
+          } else {
+            row[col.label] = getExportCellValue(item, col);
+          }
         });
         return row;
       });
 
       const worksheet = XLSX.utils.json_to_sheet(rows);
+
+      // Aplica formato de moeda BRL à coluna "Valor", mantendo o conteúdo numérico.
+      // O Excel exibe conforme o locale do usuário (pt-BR → vírgula decimal).
+      const amountLabel = visibleDataColumns.find((col) => col.field === 'amount')?.label;
+      if (amountLabel && rows.length > 0) {
+        const range = XLSX.utils.decode_range(worksheet['!ref'] as string);
+        // Localiza o índice da coluna do Valor pelo header (linha 0).
+        let amountCol = -1;
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const headerCell = worksheet[XLSX.utils.encode_cell({ r: 0, c })];
+          if (headerCell && headerCell.v === amountLabel) { amountCol = c; break; }
+        }
+        if (amountCol !== -1) {
+          for (let r = range.s.r + 1; r <= range.e.r; r++) {
+            const cell = worksheet[XLSX.utils.encode_cell({ r, c: amountCol })];
+            if (cell && cell.t === 'n') cell.z = 'R$ #,##0.00';
+          }
+        }
+      }
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
 
@@ -1252,7 +1373,10 @@ export default function InlineEditableTable({
         {/* Esquerda: Botões de ação + Pesquisa */}
         <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
           {selectedCheckboxes.length > 0 ? (
-            enableDelete && <button onClick={handleDeleteSelected} className="bg-surface-subtle p-2 rounded hover:bg-red-100 transition-colors"><Trash2 size={20} color="var(--color-error)" /></button>
+            <>
+              {enableDelete && <button onClick={handleDeleteSelected} className="bg-surface-subtle p-2 rounded hover:bg-red-100 transition-colors" title="Excluir selecionado(s)"><Trash2 size={20} color="var(--color-error)" /></button>}
+              {enableDuplicate && onRowDuplicate && <button onClick={handleDuplicateSelected} className="bg-surface-subtle p-2 rounded hover:bg-brand/10 transition-colors" title="Duplicar selecionado(s)"><Copy size={20} color="var(--color-text-muted)" /></button>}
+            </>
           ) : (
             <>
               {enableCreate && <button onClick={() => startEditingRow('new', true)} className="bg-surface-subtle p-2 rounded hover:bg-ui-border transition-colors"><Plus size={20} color="var(--color-text-muted)" /></button>}
@@ -1593,11 +1717,13 @@ export default function InlineEditableTable({
                 first_payment_date: data.firstPaymentDate,
               };
             } else if (data.paymentMode === 'RECORRENTE') {
-              // Despesa recorrente - amount é o valor mensal
-              const installmentAmount = parseCurrencyFromPTBR(data.amount);
-              endpoint = '/financial-transaction/installments';
+              // Despesa recorrente (modelo único infinito): cria config + gera
+              // 5 anos de lançamentos conforme a periodicidade ("Se Repete").
+              const recurringAmount = parseCurrencyFromPTBR(data.amount);
+              endpoint = '/financial-transaction/recurrence';
               payload = {
                 transaction_type: 'EXPENSE',
+                frequency: data.frequency || 'MONTHLY',
                 institution_id: data.institution,
                 card_id: data.card || null,
                 category_id: data.category,
@@ -1605,9 +1731,7 @@ export default function InlineEditableTable({
                 center_id: data.center || null,
                 supplier_id: data.supplier || null,
                 description: data.description || null,
-                installment_amount: installmentAmount,
-                num_installments: parseInt(data.numInstallments),
-                total_amount: installmentAmount * parseInt(data.numInstallments),
+                amount: recurringAmount,
                 start_date: data.startDate,
                 first_payment_date: data.firstPaymentDate,
               };

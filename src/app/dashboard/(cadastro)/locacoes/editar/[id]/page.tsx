@@ -12,7 +12,7 @@ import LeaseCancellationModal from '@/components/domain/leases/LeaseCancellation
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building,
-  Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload
+  Home, File as FileIcon, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload
 } from 'lucide-react';
 
 // Extrai um nome de arquivo legível do caminho salvo (remove diretórios e o
@@ -277,9 +277,9 @@ export default function EditarLocacaoPage() {
       // o mesmo mecanismo de upload de Imóveis (useUploadSSE → multipart). Só dispara
       // quando há mudança. Falha aqui não invalida a locação já salva.
       const currentDocs: any[] = Array.isArray(data.arquivosLocacao) ? data.arquivosLocacao : [];
-      const newFiles = currentDocs.filter((f: any) => f instanceof File) as File[];
+      const newFiles = currentDocs.filter((f: any) => f instanceof globalThis.File) as File[];
       const keptIds = new Set(
-        currentDocs.filter((f: any) => f && !(f instanceof File) && f.id).map((f: any) => String(f.id)),
+        currentDocs.filter((f: any) => f && !(f instanceof globalThis.File) && f.id).map((f: any) => String(f.id)),
       );
       const removedIds = originalDocumentsRef.current
         .map((d: any) => String(d.id))
@@ -411,7 +411,7 @@ export default function EditarLocacaoPage() {
           { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, icon: <DollarSign size={20} />, mask: 'money' },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
-          { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <File size={20} />, mask: 'money' },
+          { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <FileIcon size={20} />, mask: 'money' },
           { field: 'extra_charges', label: 'Taxas Extras', type: 'text', icon: <Calculator size={20} />, mask: 'money' },
           { field: 'agency_commission', label: 'Comissão Imobiliária (%)', type: 'number', maxLength: 3, icon: <Percent size={20} /> },
           { field: 'commission_amount', label: 'Valor Comissão', type: 'text', icon: <DollarSign size={20} />, readOnly: true, disabled: true, className: 'bg-gray-50', mask: 'money' },

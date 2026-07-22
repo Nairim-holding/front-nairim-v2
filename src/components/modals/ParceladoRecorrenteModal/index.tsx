@@ -38,6 +38,18 @@ const extractNumericValue = (formattedValue: string): number => {
   return isNaN(num) ? 0 : num;
 };
 
+// Opções de periodicidade ("Se Repete") para lançamentos recorrentes.
+// Os valores casam com o enum RecurringFrequency do backend.
+const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
+  { value: "WEEKLY", label: "Semanalmente" },
+  { value: "BIWEEKLY", label: "Quinzenalmente" },
+  { value: "MONTHLY", label: "Mensalmente" },
+  { value: "BIMONTHLY", label: "Bimestralmente" },
+  { value: "QUARTERLY", label: "Trimestralmente" },
+  { value: "SEMIANNUAL", label: "Semestralmente" },
+  { value: "YEARLY", label: "Anualmente" },
+];
+
 interface FormOptions {
   institutions: Option[];
   incomeCategories: Option[];
@@ -84,6 +96,7 @@ export default function ParceladoRecorrenteModal({
     startDate: getToday(),
     firstPaymentDate: getToday(),
     numInstallments: "",
+    frequency: "MONTHLY",
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -108,6 +121,7 @@ export default function ParceladoRecorrenteModal({
         startDate: getToday(),
         firstPaymentDate: getToday(),
         numInstallments: "",
+        frequency: "MONTHLY",
       });
     }, 300);
   }, [onClose]);
@@ -125,6 +139,8 @@ export default function ParceladoRecorrenteModal({
         ...formData,
         amount: extractNumericValue(formData.amount), // Extrai valor numérico formatado
         numInstallments: parseInt(formData.numInstallments) || 1,
+        // Periodicidade da recorrência (só relevante quando paymentMode === RECORRENTE)
+        frequency: formData.frequency,
         // Para receita, também usar firstPaymentDate separado
       };
 
@@ -158,8 +174,11 @@ export default function ParceladoRecorrenteModal({
   }, [formData.category, formOptions.subcategories]);
 
   // Show/hide fields based on payment mode and transaction type
-  const showInstallments = paymentMode === "PARCELADO";
   const isExpense = transactionType === "EXPENSE";
+  const showInstallments = paymentMode === "PARCELADO";
+  // Recorrência só se aplica a despesas (o toggle Parcelado/Recorrente só aparece
+  // em EXPENSE). Quando ativo, exibe "Se Repete" e gera a série recorrente.
+  const isRecurring = isExpense && paymentMode === "RECORRENTE";
 
   if (!isOpen) return null;
 
@@ -349,25 +368,43 @@ export default function ParceladoRecorrenteModal({
             )}
           </div>
 
-          {/* Número + Valor + Datas */}
+          {/* Número/Periodicidade + Valor + Datas */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-content-secondary">
-                {isExpense
-                  ? (showInstallments ? "Nº parcelas *" : "Nº lançamentos *")
-                  : "Nº parcelas *"}
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                required
-                value={formData.numInstallments}
-                onChange={(e) => handleInputChange("numInstallments", e.target.value)}
-                placeholder={isExpense && showInstallments ? "Ex: 12" : "Ex: 24"}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              />
-            </div>
+            {isRecurring ? (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-content-secondary">
+                  Se Repete *
+                </label>
+                <select
+                  required
+                  value={formData.frequency}
+                  onChange={(e) => handleInputChange("frequency", e.target.value)}
+                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+                >
+                  {FREQUENCY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-content-secondary">
+                  {isExpense
+                    ? (showInstallments ? "Nº parcelas *" : "Nº lançamentos *")
+                    : "Nº parcelas *"}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  required={!isRecurring}
+                  value={formData.numInstallments}
+                  onChange={(e) => handleInputChange("numInstallments", e.target.value)}
+                  placeholder={isExpense && showInstallments ? "Ex: 12" : "Ex: 24"}
+                  className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
+                />
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
