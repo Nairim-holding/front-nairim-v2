@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import Select from '@/components/ui/Select';
-import { Plus, Trash2, User, MapPin, Phone, Mail, X, Edit2, Heart, Globe, FileText, Briefcase } from 'lucide-react';
+import { Plus, Trash2, User, MapPin, Phone, Mail, X, Edit2, Heart, Globe, FileText, Briefcase, ShieldCheck } from 'lucide-react';
 
 interface Address {
   zip_code?: string;
@@ -35,6 +35,8 @@ interface Guarantor {
   rg_issuing_state?: string;
   address?: Address;
   contacts?: Contact[];
+  // Textos livres de garantia da locação (ex.: garantia de imóvel com matrícula)
+  guarantees?: string[];
 }
 
 interface GuarantorManagerProps {
@@ -113,6 +115,7 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
       country: 'Brasil',
     },
     contacts: [],
+    guarantees: [],
   });
 
   const openModal = (mode: 'add' | 'edit', index?: number) => {
@@ -145,6 +148,7 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
           country: 'Brasil',
         },
         contacts: [],
+        guarantees: [],
       });
     }
     setIsModalOpen(true);
@@ -209,12 +213,18 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
   const handleSaveGuarantor = () => {
     if (!tempGuarantor.name) return;
 
+    // Descarta garantias em branco antes de persistir
+    const cleanedGuarantor: Guarantor = {
+      ...tempGuarantor,
+      guarantees: (tempGuarantor.guarantees || []).map((g) => g.trim()).filter(Boolean),
+    };
+
     const newGuarantors = [...guarantors];
 
     if (editingIndex !== null) {
-      newGuarantors[editingIndex] = tempGuarantor;
+      newGuarantors[editingIndex] = cleanedGuarantor;
     } else {
-      newGuarantors.push(tempGuarantor);
+      newGuarantors.push(cleanedGuarantor);
     }
 
     setGuarantors(newGuarantors);
@@ -243,6 +253,21 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
   const removeContact = (contactIndex: number) => {
     const newContacts = tempGuarantor.contacts?.filter((_, i) => i !== contactIndex) || [];
     setTempGuarantor({ ...tempGuarantor, contacts: newContacts });
+  };
+
+  const addGuarantee = () => {
+    setTempGuarantor({ ...tempGuarantor, guarantees: [...(tempGuarantor.guarantees || []), ''] });
+  };
+
+  const updateGuarantee = (guaranteeIndex: number, value: string) => {
+    const newGuarantees = [...(tempGuarantor.guarantees || [])];
+    newGuarantees[guaranteeIndex] = value;
+    setTempGuarantor({ ...tempGuarantor, guarantees: newGuarantees });
+  };
+
+  const removeGuarantee = (guaranteeIndex: number) => {
+    const newGuarantees = tempGuarantor.guarantees?.filter((_, i) => i !== guaranteeIndex) || [];
+    setTempGuarantor({ ...tempGuarantor, guarantees: newGuarantees });
   };
 
   return (
@@ -348,6 +373,13 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {g.guarantees && g.guarantees.length > 0 && (
+              <div className="mt-2 text-xs text-brand font-medium flex items-center gap-1" title={g.guarantees.join('\n\n')}>
+                <ShieldCheck size={12} />
+                <span>Com Garantias</span>
               </div>
             )}
           </div>
@@ -709,6 +741,48 @@ export default function GuarantorManager({ value = [], onChange, readOnly = fals
                   >
                     <Plus size={16} />
                     Adicionar Contato
+                  </button>
+                </div>
+              </div>
+
+              {/* Garantias */}
+              <div>
+                <h4 className="text-sm font-semibold text-content-secondary mb-3 flex items-center gap-2">
+                  <ShieldCheck size={16} />
+                  Garantias
+                </h4>
+                <div className="space-y-3">
+                  {tempGuarantor.guarantees?.map((guarantee: string, gIdx: number) => (
+                    <div key={gIdx} className="flex items-start gap-2 p-3 bg-surface-subtle rounded-lg">
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium text-content-secondary mb-1">
+                          Descrição da Garantia
+                        </label>
+                        <textarea
+                          value={guarantee}
+                          onChange={(e) => updateGuarantee(gIdx, e.target.value)}
+                          rows={4}
+                          className="w-full p-2 border border-ui-border rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent outline-none resize-y"
+                          placeholder="Ex.: Garantia imóvel, matrícula 19.528 do SRI GARÇA, livre de ônus, especialmente quanto as futuras decorrentes da locação, até a efetiva entrega das chaves..."
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeGuarantee(gIdx)}
+                        className="p-2 mt-5 text-state-error hover:bg-state-error/10 rounded-lg"
+                        title="Remover garantia"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addGuarantee}
+                    className="flex items-center gap-2 text-sm text-brand hover:text-brand-hover font-medium"
+                  >
+                    <Plus size={16} />
+                    Garantias
                   </button>
                 </div>
               </div>

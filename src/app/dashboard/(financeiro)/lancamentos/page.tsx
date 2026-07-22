@@ -146,7 +146,7 @@ export default function LancamentosPage() {
       const [catRes, subRes, instRes, cardRes, centRes, supRes] = await Promise.all([
         fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-institution?limit=1000`),
+        fetch(`${API_URL}/financial-institution?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-card?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-center?limit=1000&filter[is_active]=true`),
         fetch(`${API_URL}/financial-supplier?limit=1000`),
@@ -541,6 +541,15 @@ export default function LancamentosPage() {
   // categoria, etc.). Os IDs relacionados já são reais, então cria direto via
   // POST sem passar por resolveQuickCreates. Itens de transferência entre contas
   // são ignorados (exigem fluxo com modal de conta-destino).
+  // Sufixa a descrição do clone com "(cópia)" para distinguir do original.
+  // Clone de clone não empilha sufixo ("X (cópia)" continua "X (cópia)").
+  const buildCloneDescription = (description: unknown): string => {
+    const base = String(description ?? '').trim();
+    if (!base) return '(cópia)';
+    if (/\(cópia\)$/i.test(base)) return base;
+    return `${base} (cópia)`;
+  };
+
   const handleRowDuplicate = useCallback(async (item: any) => {
     if (transferCategoryIds.has(String(item.category_id))) {
       return { skipped: true };
@@ -555,7 +564,7 @@ export default function LancamentosPage() {
       card_id: item.card_id ?? null,
       center_id: item.center_id ?? null,
       supplier_id: item.supplier_id ?? null,
-      description: item.description ?? null,
+      description: buildCloneDescription(item.description),
       amount: item.amount,
       status: item.status,
     };

@@ -4,12 +4,14 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUploadSSE } from '@/hooks/useUploadSSE';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
 import {
-  FileText, Calendar, DollarSign, User, Building, 
-  Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users
+  FileText, Calendar, DollarSign, User, Building,
+  Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users, Upload
 } from 'lucide-react';
 
 const parseMoney = (value: string | number) => {
@@ -38,6 +40,8 @@ const formatMoney = (value: number) => {
 
 export default function CadastrarLocacaoPage() {
   const { showMessage } = useMessageContext();
+  const { user, token } = useAuth();
+  const { uploadAndTrack } = useUploadSSE();
   const router = useRouter();
   
   const [properties, setProperties] = useState<any[]>([]);
@@ -161,6 +165,7 @@ export default function CadastrarLocacaoPage() {
       if (!data.center_display || data.center_display === 'Sem centro de custo') throw new Error('O imóvel deve ter um centro de custo selecionado');
       if (!data.agency_id) throw new Error('Selecione uma imobiliária para continuar');
       if (!data.commission_category_display || data.commission_category_display === 'Sem categoria de comissão') throw new Error('A imobiliária selecionada deve ter uma categoria de comissão');
+      if (!data.financial_institution_id) throw new Error('Selecione a Instituição Financeira na aba Valores da Locação');
 
       const formattedData: any = {
         property_id: data.property_id,
@@ -232,13 +237,42 @@ export default function CadastrarLocacaoPage() {
         throw new Error(result.message || `Erro ${response.status}`);
       }
 
+      // Envia as mídias anexadas na aba Mídias para a locação recém-criada,
+      // reaproveitando o mesmo endpoint/mecanismo da edição (PUT /leases/:id/documents
+      // via useUploadSSE). Falha aqui não invalida a locação já salva.
+      const createdLeaseId = result?.data?.id;
+      const newFiles = (Array.isArray(data.arquivosLocacao) ? data.arquivosLocacao : [])
+        .filter((f: any) => f instanceof globalThis.File) as File[];
+
+      if (createdLeaseId && newFiles.length > 0) {
+        try {
+          const fd = new FormData();
+          newFiles.forEach((file) => fd.append('arquivosLocacao', file, file.name));
+          fd.append('userId', user?.id ?? '');
+
+          await uploadAndTrack({
+            url: `${API_URL}/leases/${createdLeaseId}/documents`,
+            method: 'PUT',
+            body: fd,
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            compressImages: false,
+          });
+        } catch (mediaError: any) {
+          showMessage(
+            `Locação criada, mas houve erro ao enviar os arquivos: ${mediaError?.message ?? 'falha no upload'}`,
+            'error',
+            6000,
+          );
+        }
+      }
+
       return result;
     } catch (error: any) {
       throw new Error(`Erro ao cadastrar locação: ${error.message}`);
     }
   };
 
-  const steps: FormStep[] = useMemo(() => {
+  const steps: FormStep[] = useMemo((): FormStep[] => {
     return [
       {
         title: 'Dados da Locação',
@@ -265,7 +299,7 @@ export default function CadastrarLocacaoPage() {
           { field: 'subcategory_display', label: 'Subcategoria do Imóvel', type: 'text', icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel' },
           { field: 'center_display', label: 'Centro de Custo', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel', className: 'col-span-full' },
           { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, full: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
-          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
+          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, placeholder: 'R$ 0,00', icon: <DollarSign size={20} />, mask: 'money' },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', placeholder: 'R$ 0,00', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, placeholder: 'R$ 0,00', icon: <File size={20} />, mask: 'money' },
@@ -525,12 +559,32 @@ export default function CadastrarLocacaoPage() {
             defaultValue: [],
             className: 'col-span-full',
             render: (value: any, formValues: any, onChange: any) => (
-              <GuarantorManager 
-                value={value} 
-                onChange={onChange} 
+              <GuarantorManager
+                value={value}
+                onChange={onChange}
               />
             )
           }
+        ],
+      },
+      // Mídias — última aba, igual à edição. Os arquivos são enviados após o
+      // POST criar a locação (PUT /leases/:id/documents no handleSubmit).
+      {
+        title: 'Mídias',
+        icon: <Upload size={20} />,
+        fields: [
+          {
+            field: 'arquivosLocacao',
+            label: 'Arquivos da Locação (ex.: contrato)',
+            type: 'file',
+            accept: '.pdf',
+            multiple: true,
+            maxFiles: 10,
+            textButton: 'Escolher arquivos',
+            placeholder: 'Nenhum arquivo selecionado',
+            icon: <FileText size={20} />,
+            className: 'col-span-full w-full',
+          } as any,
         ],
       }
     ];

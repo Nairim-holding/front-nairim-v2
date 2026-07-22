@@ -124,7 +124,9 @@ export function useUploadSSE() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const b = body as any;
           let msg = b?.message || `Erro ${status}`;
-          if (status === 400 && b?.errors) {
+          // Só sobrescreve com "Erros de validação" quando errors tem conteúdo —
+          // a API sempre envia errors: [] e o array vazio mascarava a mensagem real.
+          if (status === 400 && b?.errors && Object.keys(b.errors).length > 0) {
             msg = `Erros de validação: ${Object.entries(b.errors)
               .map(([f, m]) => `${f}: ${Array.isArray(m) ? m.join(', ') : m}`)
               .join('; ')}`;

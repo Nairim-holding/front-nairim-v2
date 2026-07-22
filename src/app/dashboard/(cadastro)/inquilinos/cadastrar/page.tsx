@@ -45,37 +45,29 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
     setTipoSelecionado(tipoParam);
   }, [tipoParam, router, showMessage]);
 
-  // Buscar último inquilino para gerar código interno automaticamente
+  // Buscar próximo código interno no backend (MAX numérico + 1 no escopo da empresa).
+  // Substitui o antigo sort[internal_code]=desc, que ordenava a string
+  // lexicograficamente ("9" > "12") e sugeria códigos já usados.
   useEffect(() => {
-    const fetchLastTenant = async () => {
+    const fetchNextInternalCode = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_URL_API;
-        const response = await fetch(`${API_URL}/tenants?sort[internal_code]=desc&limit=1`);
-        
+        const response = await fetch(`${API_URL}/tenants/next-internal-code`);
+
         if (response.ok) {
           const data = await response.json();
-          if (data.data && data.data.length > 0) {
-            const lastCode = data.data[0].internal_code;
-            const codeNumber = parseInt(lastCode, 10);
-            
-            if (!isNaN(codeNumber)) {
-              setGeneratedInternalCode(String(codeNumber + 1));
-            } else {
-              setGeneratedInternalCode(lastCode);
-            }
-          } else {
-            setGeneratedInternalCode('1');
-          }
+          const nextCode = data?.data?.next_internal_code;
+          setGeneratedInternalCode(nextCode ? String(nextCode) : '1');
         } else {
           setGeneratedInternalCode('1');
         }
       } catch (error) {
-        console.error('Erro ao buscar último inquilino:', error);
+        console.error('Erro ao buscar próximo código interno:', error);
         setGeneratedInternalCode('1');
       }
     };
 
-    fetchLastTenant();
+    fetchNextInternalCode();
   }, []);
 
   const handleFieldChange = async (fieldName: string, value: any) => {

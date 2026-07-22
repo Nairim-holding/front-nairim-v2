@@ -406,6 +406,17 @@ export default function LeaseCancellationModal({
             <p className="text-[12px] text-content-muted">
               {selectedCount} lançamento(s) marcado(s) para exclusão.
             </p>
+            {(() => {
+              const uncheckedCompleted = transactions.filter(
+                (t) => t.status === 'COMPLETED' && !selectedIds.has(t.id),
+              ).length;
+              return uncheckedCompleted > 0 ? (
+                <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  {uncheckedCompleted} lançamento(s) concluído(s) NÃO serão excluídos.
+                  Marque-os acima se também devem ser removidos no cancelamento.
+                </p>
+              ) : null;
+            })()}
 
             <div className="flex justify-between gap-2 pt-2">
               <button onClick={() => setStep(1)} className="px-4 py-2 text-sm text-content-secondary bg-surface-subtle rounded-lg hover:bg-surface-muted transition-colors flex items-center gap-1">

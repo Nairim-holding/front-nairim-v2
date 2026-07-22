@@ -195,6 +195,7 @@ export default function EditarLocacaoPage() {
       if (!data.center_display || data.center_display === 'Sem centro de custo') throw new Error('O imóvel deve ter um centro de custo selecionado');
       if (!data.agency_id) throw new Error('Selecione uma imobiliária para continuar');
       if (!data.commission_category_display || data.commission_category_display === 'Sem categoria de comissão') throw new Error('A imobiliária selecionada deve ter uma categoria de comissão');
+      if (!data.financial_institution_id) throw new Error('Selecione a Instituição Financeira na aba Valores da Locação');
 
       const formattedData: any = {
         property_id: data.property_id,
@@ -408,7 +409,7 @@ export default function EditarLocacaoPage() {
           { field: 'subcategory_display', label: 'Subcategoria do Imóvel', type: 'text', icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel' },
           { field: 'center_display', label: 'Centro de Custo', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel', className: 'col-span-full' },
           { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, full: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
-          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
+          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, icon: <DollarSign size={20} />, mask: 'money' },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <FileIcon size={20} />, mask: 'money' },

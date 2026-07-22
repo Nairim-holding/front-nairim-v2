@@ -332,7 +332,8 @@ export default function PlanningPageContent() {
   }, [isCalendarOpen]);
 
   const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
-    if (range.from && range.to && range.from !== range.to) {
+    // from === to é válido: período de um único dia
+    if (range.from && range.to) {
       setDateRange(range);
       setIsCalendarOpen(false);
     }

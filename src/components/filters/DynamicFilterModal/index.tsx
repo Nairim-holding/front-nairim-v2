@@ -255,7 +255,8 @@ function DateRangeFilter({ filterValue, onChange, onClear }: DateRangeFilterProp
             dateRange={{ from: filterValue.value || '', to: filterValue.value2 || '' }}
             onChange={(range) => {
               onChange(range.from, range.to);
-              if (range.from && range.to && range.from !== range.to) {
+              // from === to é válido: período de um único dia
+              if (range.from && range.to) {
                 setIsOpen(false);
               }
             }}

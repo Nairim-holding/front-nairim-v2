@@ -1435,7 +1435,8 @@ export default function InlineEditableTable({
                   onChange={(range) => {
                     setDateRange(range);
                     setHasDateFilter(true);
-                    if (range.from && range.to && range.from !== range.to) {
+                    // from === to é válido: período de um único dia (backend trata o intervalo como inclusivo)
+                    if (range.from && range.to) {
                       const dateFieldName = isEventDate ? 'event_date' : 'effective_date';
                       const filters: Record<string, any> = { ...appliedFilters };
                       filters[dateFieldName] = { from: range.from, to: range.to };

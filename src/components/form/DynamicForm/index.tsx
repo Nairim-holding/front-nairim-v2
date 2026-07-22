@@ -63,12 +63,30 @@ const readDraft = (key: string): { values: Record<string, any>; step: number } |
   }
 };
 
+// Remove objetos File dos valores antes de serializar: JSON.stringify(File)
+// vira {} e o restore criaria "arquivos fantasmas" na UI. Arquivos anexados
+// não sobrevivem ao draft (limitação do sessionStorage) — o restante persiste.
+const stripFiles = (values: Record<string, any>): Record<string, any> => {
+  const out: Record<string, any> = {};
+  Object.entries(values).forEach(([k, v]) => {
+    if (v instanceof File) return;
+    if (Array.isArray(v)) {
+      const filtered = v.filter((item) => !(item instanceof File));
+      if (filtered.length !== v.length && filtered.length === 0) return;
+      out[k] = filtered;
+      return;
+    }
+    out[k] = v;
+  });
+  return out;
+};
+
 const writeDraft = (key: string, values: Record<string, any>, step: number) => {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.setItem(
       `${DRAFT_STORAGE_PREFIX}${key}`,
-      JSON.stringify({ values, step }),
+      JSON.stringify({ values: stripFiles(values), step }),
     );
   } catch {
     /* storage cheio / bloqueado — falha silenciosa */
