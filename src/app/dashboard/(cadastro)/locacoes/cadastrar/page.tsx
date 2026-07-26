@@ -58,7 +58,8 @@ export default function CadastrarLocacaoPage() {
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=100`),
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/agencies?limit=1000`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000`),
+          // Só instituições ativas — mesmo critério do filtro de Lançamentos.
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000&filter[is_active]=true`),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');

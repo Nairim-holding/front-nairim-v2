@@ -20,13 +20,19 @@ function SearchInputComponent({
   autoFocus = false,
 }: SearchInputProps) {
   const [inputValue, setInputValue] = useState(initialValue);
+  const [syncedValue, setSyncedValue] = useState(initialValue);
+  const [isFocused, setIsFocused] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync with external value changes
-  useEffect(() => {
-    setInputValue(initialValue);
-  }, [initialValue]);
+  // Sincroniza com o valor externo ajustando o estado durante o render (sem
+  // effect, para não disparar render em cascata).
+  // Enquanto o usuário está digitando, o valor externo é ignorado: ele chega
+  // atrasado pelo debounce e sobrescreveria os caracteres recém-digitados.
+  if (initialValue !== syncedValue) {
+    setSyncedValue(initialValue);
+    if (!isFocused) setInputValue(initialValue);
+  }
 
   // Auto focus on mount when requested
   useEffect(() => {
@@ -85,6 +91,8 @@ function SearchInputComponent({
         value={inputValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
       {inputValue ? (
         <button

@@ -120,12 +120,34 @@ const buildQueryString = useCallback((currentState: TableState) => {
     fetchData();
   }, [fetchData]);
 
+  /**
+   * Aplica uma alteração na linha já carregada, sem esperar o servidor.
+   * Usado para dar resposta imediata ao salvar; a revalidação vem em seguida
+   * em segundo plano e sobrescreve com o dado oficial.
+   */
+  const patchRow = useCallback((id: string, patch: Record<string, any>) => {
+    setData((prev: any) => {
+      if (!prev) return prev;
+
+      const rows = prev.data ?? prev.items;
+      if (!Array.isArray(rows)) return prev;
+
+      const patched = rows.map((row: any) => (row?.id === id ? { ...row, ...patch } : row));
+      return prev.data ? { ...prev, data: patched } : { ...prev, items: patched };
+    });
+  }, []);
+
   return {
     state,
     data,
     isLoading,
+    // Só a primeira carga justifica esconder a tela: revalidações posteriores
+    // acontecem em segundo plano para não desmontar a busca e os filtros.
+    isInitialLoading: isLoading && data === null,
+    isRefreshing: isLoading && data !== null,
     error,
     updateState,
-    refreshData
+    refreshData,
+    patchRow
   };
 };

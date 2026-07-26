@@ -26,6 +26,125 @@ import CalendarPicker from "@/components/ui/CalendarPicker";
 import QuickCreateAutocomplete, { isQuickCreateSentinel, extractQuickCreateName } from "@/components/ui/QuickCreateAutocomplete";
 import SummaryPanel from "@/components/domain/financial/SummaryPanel";
 
+// ─── Propagação em séries (Parcelado / Recorrente) ───────────────────────────
+// Campos que podem ser replicados nos lançamentos SEGUINTES da série. Espelha a
+// whitelist de `api-nairim-v2/src/utils/seriesPropagation.ts`.
+const PROPAGATABLE_FIELDS = [
+  'amount',
+  'description',
+  'category_id',
+  'subcategory_id',
+  'financial_institution_id',
+  'card_id',
+  'center_id',
+  'supplier_id',
+] as const;
+
+type PropagatableField = (typeof PROPAGATABLE_FIELDS)[number];
+
+const PROPAGATABLE_FIELD_LABELS: Record<PropagatableField, string> = {
+  amount: 'Valor',
+  description: 'Descrição',
+  category_id: 'Categoria',
+  subcategory_id: 'Subcategoria',
+  financial_institution_id: 'Instituição',
+  card_id: 'Cartão',
+  center_id: 'Centro',
+  supplier_id: 'Contato',
+};
+
+// Subcategoria e Centro pertencem a uma categoria específica — propagar a
+// Categoria sozinha deixaria as seguintes com vínculos da categoria antiga.
+const CATEGORY_DEPENDENT_FIELDS: PropagatableField[] = ['subcategory_id', 'center_id'];
+
+// O item da listagem pode trazer o id direto ou só a relação aninhada.
+const PROPAGATABLE_FIELD_RELATIONS: Partial<Record<PropagatableField, string[]>> = {
+  category_id: ['category'],
+  subcategory_id: ['subcategory'],
+  financial_institution_id: ['financial_institution', 'institution'],
+  card_id: ['card'],
+  center_id: ['center'],
+  supplier_id: ['supplier'],
+};
+
+const readOriginalFieldValue = (original: any, field: PropagatableField) => {
+  const direct = original?.[field];
+  if (direct !== undefined && direct !== null && direct !== '') return direct;
+
+  for (const relation of PROPAGATABLE_FIELD_RELATIONS[field] ?? []) {
+    const id = original?.[relation]?.id;
+    if (id) return id;
+  }
+  return direct;
+};
+
+const normalizePropagatableValue = (field: PropagatableField, value: unknown) => {
+  if (field === 'amount') {
+    const parsed = typeof value === 'number' ? value : parseCurrencyFromPTBR(value as any);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  if (field === 'description') return String(value ?? '').trim();
+
+  return value === null || value === undefined || value === '' ? null : String(value);
+};
+
+/**
+ * Diferença entre o registro original e o payload prestes a ser salvo,
+ * restrita aos campos propagáveis. Alterar a Categoria arrasta os dependentes.
+ */
+const getChangedPropagatableFields = (original: any, payload: any): PropagatableField[] => {
+  const changed = new Set<PropagatableField>();
+
+  for (const field of PROPAGATABLE_FIELDS) {
+    if (!(field in payload)) continue;
+
+    const before = normalizePropagatableValue(field, readOriginalFieldValue(original, field));
+    const after = normalizePropagatableValue(field, payload[field]);
+    if (before !== after) changed.add(field);
+  }
+
+  if (changed.has('category_id')) {
+    for (const dependent of CATEGORY_DEPENDENT_FIELDS) changed.add(dependent);
+  }
+
+  return PROPAGATABLE_FIELDS.filter(field => changed.has(field));
+};
+
+/**
+ * A tabela exibe os relacionamentos pelo nome aninhado (`item.category.name`).
+ * Após salvar, a linha é atualizada localmente com os ids novos — sem estes
+ * stubs ela mostraria o nome antigo até a revalidação chegar.
+ */
+const buildRelationStubs = (payload: any, formOptions: any) => {
+  const stub = (options: Option[] | undefined, id: unknown) => {
+    if (!id) return null;
+    const found = (options ?? []).find(o => String(o.value) === String(id));
+    return found ? { id: String(id), name: found.label } : undefined;
+  };
+
+  const categories = [
+    ...(formOptions.incomeCategories ?? []),
+    ...(formOptions.expenseCategories ?? []),
+  ];
+  const subcategories = formOptions.subcategories?.[payload.category_id] ?? [];
+
+  // `undefined` preserva o valor atual da linha (opção não encontrada nas
+  // listas locais); `null` limpa de fato o relacionamento.
+  const stubs: Record<string, any> = {
+    category: stub(categories, payload.category_id),
+    subcategory: stub(subcategories, payload.subcategory_id),
+    financial_institution: stub(formOptions.institutions, payload.financial_institution_id),
+    card: stub(formOptions.cards, payload.card_id),
+    center: stub(formOptions.centers, payload.center_id),
+    supplier: stub(formOptions.suppliers, payload.supplier_id),
+  };
+
+  for (const key of Object.keys(stubs)) {
+    if (stubs[key] === undefined) delete stubs[key];
+  }
+  return stubs;
+};
+
 // Componente Select customizado que abre no foco e permite navegação por Tab
 interface CustomSelectProps {
   value: string;
@@ -456,7 +575,16 @@ export default function InlineEditableTable({
   useEffect(() => {
     onAppliedFiltersChange?.(appliedFilters);
   }, [appliedFilters, onAppliedFiltersChange]);
-  const { state, data, isLoading: isLoadingData, updateState, refreshData } = useOptimizedTableData(resource, {
+  const {
+    state,
+    data,
+    isLoading: isLoadingData,
+    isInitialLoading,
+    isRefreshing,
+    updateState,
+    refreshData,
+    patchRow
+  } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
   });
 
@@ -794,16 +922,11 @@ export default function InlineEditableTable({
     };
     if (field in specialFields) return formatCellValue(specialFields[field] || '', column);
 
-    // Descrição quebra linha a cada 50 caracteres
+    // Descrição quebra na largura real da coluna (acompanha o monitor), e não
+    // num número fixo de caracteres. `whitespace-normal` mantém a quebra visual:
+    // copiar a célula devolve o texto em linha única, sem espaços espúrios.
     if (field === 'description') {
       const desc = item[field] || '';
-      // Quebrar texto em linhas de 50 caracteres
-      const chunkSize = 50;
-      const chunks = [];
-      for (let i = 0; i < desc.length; i += chunkSize) {
-        chunks.push(desc.substring(i, i + chunkSize));
-      }
-      const formattedDesc = chunks.join('\n');
 
       // Lançamentos recorrentes exibem "(Recorrente)" em cor diferente ao final
       // da descrição — sufixo de render (não é armazenado no dado).
@@ -811,10 +934,10 @@ export default function InlineEditableTable({
 
       return (
         <span
-          className="block whitespace-pre-wrap break-words"
+          className="block whitespace-normal break-words"
           style={{ lineHeight: '14px' }}
         >
-          {formattedDesc}
+          {desc}
           {isRecurring && <span className="text-brand font-medium"> (Recorrente)</span>}
         </span>
       );
@@ -942,13 +1065,11 @@ export default function InlineEditableTable({
         subcategory_id: row.data.subcategory_id || null
       };
 
-      // Propagação de reajuste em parcelados/recorrentes: se o VALOR mudou e a
-      // linha pertence a uma série com parcelas SEGUINTES, pergunta se deseja
-      // atualizar as demais. Vale para débito e crédito.
+      // Propagação em parcelados/recorrentes: se algum campo propagável mudou e
+      // a linha pertence a uma série com lançamentos SEGUINTES, pergunta UMA vez
+      // se deseja aplicar tudo às demais. Vale para débito e crédito.
       if (!row.isNew) {
         const original = items.find((it: any) => it.id === id);
-        const originalAmount = original ? Number(original.amount) : undefined;
-        const amountChanged = originalAmount !== undefined && originalAmount !== newAmount;
 
         const isInstallment = !!original?.installment_group_id && original?.installment_number != null;
         const isRecurring = !!original?.recurring_group_id && original?.occurrence_number != null;
@@ -960,16 +1081,22 @@ export default function InlineEditableTable({
           ? (total == null || position < total)
           : isRecurring;
 
-        if (amountChanged && (isInstallment || isRecurring) && hasFollowing) {
+        const changedFields = original ? getChangedPropagatableFields(original, payload) : [];
+
+        if (changedFields.length > 0 && (isInstallment || isRecurring) && hasFollowing) {
+          const labels = changedFields.map(field => PROPAGATABLE_FIELD_LABELS[field]).join(', ');
           const propagate = await new Promise<boolean>((resolve) => {
             showPopup(
               'Atualizar demais parcelas',
-              'O valor foi alterado. Deseja atualizar as demais parcelas seguintes desta série?',
+              `Você alterou: ${labels}. Deseja aplicar essas alterações aos lançamentos seguintes desta série?`,
               () => resolve(true),
               () => resolve(false),
             );
           });
-          if (propagate) payload.propagate_to_following = true;
+          if (propagate) {
+            payload.propagate_to_following = true;
+            payload.propagate_fields = changedFields;
+          }
         }
       }
 
@@ -978,12 +1105,23 @@ export default function InlineEditableTable({
 
       showMessage(`Lançamento ${row.isNew ? 'criado' : 'atualizado'} com sucesso!`, 'success');
       setEditingRows(prev => prev.filter(r => r.id !== id));
+
+      // Aplica a edição na linha já visível para a tabela responder na hora. A
+      // revalidação abaixo traz o dado oficial (e as demais linhas da série,
+      // quando houve propagação) em segundo plano, sem esconder a tela.
+      if (!row.isNew) {
+        const rowFields = { ...payload };
+        delete rowFields.propagate_to_following;
+        delete rowFields.propagate_fields;
+        patchRow(id, { ...rowFields, ...buildRelationStubs(payload, formOptions) });
+      }
+
       refreshData();
     } catch (error) {
       showMessage(error instanceof Error ? error.message : 'Erro ao salvar', 'error');
       setEditingRows(prev => prev.map(r => r.id === id ? { ...r, isSaving: false } : r));
     }
-  }, [editingRows, validateEditingRow, onRowCreate, onRowSave, refreshData, showMessage, items, showPopup]);
+  }, [editingRows, validateEditingRow, onRowCreate, onRowSave, refreshData, patchRow, formOptions, showMessage, items, showPopup]);
 
   // --- NOVA FUNÇÃO PARA PROCESSAR A DELEÇÃO EM MASSA ---
   const handleDeleteSelected = useCallback(() => {
@@ -1196,6 +1334,13 @@ export default function InlineEditableTable({
           <textarea
             value={val || ''}
             onChange={e => upd(e.target.value)}
+            // Enter salva a linha, como nos demais campos. Nenhuma variação de
+            // Enter insere quebra: o textarea gravaria um \n real na descrição.
+            onKeyDown={e => {
+              if (e.key !== 'Enter') return;
+              e.preventDefault();
+              if (!e.shiftKey) saveEditingRow(row.id);
+            }}
             disabled={dis}
             rows={1}
             className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
@@ -1352,9 +1497,12 @@ export default function InlineEditableTable({
       default:
         return renderWrapper(<input type="text" value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} />);
     }
-  }, [getCellValue, updateEditingRow, formOptions, activeTab]);
+  }, [getCellValue, updateEditingRow, formOptions, activeTab, saveEditingRow]);
 
-  if (isLoadingFilters || isLoadingData) return <SkeletonTable />;
+  // Só a primeira carga troca a tela pelo skeleton. Revalidações posteriores
+  // (salvar, filtrar, pesquisar) mantêm a árvore montada — desmontá-la recriava
+  // o campo de pesquisa no DOM, derrubando o foco e o que estava sendo digitado.
+  if (isLoadingFilters || isInitialLoading) return <SkeletonTable />;
   if (!Array.isArray(displayItems)) return <div className="flex justify-center items-center my-3"><div className="bg-surface-subtle py-4 px-6 rounded-sm text-content-secondary">Erro ao carregar dados</div></div>;
 
   return (
@@ -1537,7 +1685,12 @@ export default function InlineEditableTable({
       {/* Container da tabela com altura flexível e rodapé fixo */}
       <div className="relative flex-1 flex flex-col min-h-0">
         {/* Tabela com scroll ocupando espaço disponível */}
-        <div ref={tableContainerRef} className="overflow-x-auto rounded-lg shadow-sm flex-1 overflow-y-auto">
+        {/* Durante a revalidação em segundo plano a tabela apenas esmaece —
+            trocá-la pelo skeleton desmontaria a barra de pesquisa. */}
+        <div
+          ref={tableContainerRef}
+          className={`overflow-x-auto rounded-lg shadow-sm flex-1 overflow-y-auto transition-opacity ${isRefreshing ? 'opacity-60' : 'opacity-100'}`}
+        >
         <TableInformations
           headers={headers}
           sort={state.sort}
@@ -1675,6 +1828,7 @@ export default function InlineEditableTable({
                   category_id: data.category,
                   subcategory_id: data.subcategory || null,
                   center_id: data.center || null,
+                  supplier_id: data.supplier || null,
                   description: data.description || null,  // ✅ Enviar null se vazio
                   installment_amount: installmentAmount,
                   num_installments: numInstallments,
@@ -1690,6 +1844,7 @@ export default function InlineEditableTable({
                   subcategory_id: data.subcategory || null,
                   financial_institution_id: data.institution || null,  // Enviar null se vazio
                   center_id: data.center || null,
+                  supplier_id: data.supplier || null,
                   description: data.description || null,  // Enviar null se vazio
                   amount: parseCurrencyFromPTBR(data.amount),
                   event_date: data.startDate,
@@ -1835,7 +1990,9 @@ export default function InlineEditableTable({
               console.log('❌ Erro do backend:', error);
               throw new Error(error.error || error.message || 'Erro ao atualizar fatura');
             }
-            showMessage('Fatura atualizada com sucesso!', 'success');
+            // O backend informa quantos lançamentos da fatura foram atualizados.
+            const result = await response.json().catch(() => ({}));
+            showMessage(result.message || 'Fatura atualizada com sucesso!', 'success');
           } catch (error) {
             console.error('Error updating invoice:', error);
             showMessage(error instanceof Error ? error.message : 'Erro ao atualizar fatura', 'error');

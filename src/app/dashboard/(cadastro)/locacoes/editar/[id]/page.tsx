@@ -76,6 +76,9 @@ export default function EditarLocacaoPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [agencies, setAgencies] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  // Instituição vinculada à locação que não consta entre as ativas (foi
+  // inativada depois). Mantida nas opções para não sumir o dado já salvo.
+  const [linkedInstitution, setLinkedInstitution] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
   const [isCanceled, setIsCanceled] = useState(false);
@@ -88,7 +91,9 @@ export default function EditarLocacaoPage() {
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=50`),
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
           fetch(`${process.env.NEXT_PUBLIC_URL_API}/agencies?limit=1000`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000`),
+          // Só instituições ativas — mesmo critério do filtro de Lançamentos.
+          // A instituição já vinculada à locação é reinserida abaixo, mesmo inativa.
+          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000&filter[is_active]=true`),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
@@ -319,6 +324,12 @@ export default function EditarLocacaoPage() {
     if (!apiData) return {};
     if (apiData.status === 'CANCELED') setIsCanceled(true);
 
+    // O GET da locação já traz o relacionamento completo, então a instituição
+    // inativa é recuperada daqui mesmo, sem requisição extra.
+    if (apiData.financial_institution?.is_active === false) {
+      setLinkedInstitution(apiData.financial_institution);
+    }
+
     originalDocumentsRef.current = Array.isArray(apiData.documents) ? apiData.documents : [];
 
     const formatDate = (dateString: string) => {
@@ -382,6 +393,16 @@ export default function EditarLocacaoPage() {
     };
   }, []);
 
+  // Ativas + a instituição já vinculada à locação, ainda que inativa, para que o
+  // valor salvo continue visível e identificável na edição.
+  const institutionOptions = useMemo(() => {
+    const options = institutions.map((i) => ({ label: i.name, value: i.id }));
+    if (linkedInstitution && !institutions.some((i) => i.id === linkedInstitution.id)) {
+      options.push({ label: `${linkedInstitution.name} (inativa)`, value: linkedInstitution.id });
+    }
+    return options;
+  }, [institutions, linkedInstitution]);
+
   const steps: FormStep[] = useMemo(() => {
     const baseSteps: FormStep[] = [
       {
@@ -409,7 +430,7 @@ export default function EditarLocacaoPage() {
           { field: 'subcategory_display', label: 'Subcategoria do Imóvel', type: 'text', icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel' },
           { field: 'center_display', label: 'Centro de Custo', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel', className: 'col-span-full' },
           { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, full: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
-          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
+          { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutionOptions], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, icon: <DollarSign size={20} />, mask: 'money' },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <FileIcon size={20} />, mask: 'money' },
@@ -753,7 +774,7 @@ export default function EditarLocacaoPage() {
     }
 
     return baseSteps;
-  }, [properties, tenants, agencies, institutions, loadingData, isCanceled]);
+  }, [properties, tenants, agencies, institutionOptions, loadingData, isCanceled]);
 
   const onSubmitSuccess = (result?: any) => {
     showMessage('Locação atualizada com sucesso!', 'success');

@@ -320,8 +320,8 @@ export default function ParceladoRecorrenteModal({
             </div>
           </div>
 
-          {/* Subcategoria + Centro + Contato (Despesa) */}
-          <div className={isExpense ? "grid grid-cols-1 lg:grid-cols-3 gap-3" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
+          {/* Subcategoria + Centro + Contato */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="text-sm font-medium text-content-secondary">
                 Subcategoria
@@ -351,21 +351,21 @@ export default function ParceladoRecorrenteModal({
               />
             </div>
 
-            {isExpense && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-content-secondary">
-                  Contato
-                </label>
-                <QuickCreateAutocomplete
-                  value={formData.supplier}
-                  onChange={(v) => handleInputChange("supplier", v)}
-                  options={formOptions.suppliers || []}
-                  placeholder="Selecione ou digite..."
-                  allowCreate={true}
-                  size="md"
-                />
-              </div>
-            )}
+            {/* Contato vale para os dois tipos: despesa tem fornecedor, receita
+                tem pagador. Opcional em ambos. */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-content-secondary">
+                Contato
+              </label>
+              <QuickCreateAutocomplete
+                value={formData.supplier}
+                onChange={(v) => handleInputChange("supplier", v)}
+                options={formOptions.suppliers || []}
+                placeholder="Selecione ou digite..."
+                allowCreate={true}
+                size="md"
+              />
+            </div>
           </div>
 
           {/* Número/Periodicidade + Valor + Datas */}
