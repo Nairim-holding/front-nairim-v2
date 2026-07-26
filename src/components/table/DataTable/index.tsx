@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Filter, Trash2, Plus, Edit, Eye, X, Settings2 } from "lucide-react";
+import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import { authFetch } from "@/utils/authFetch";
@@ -529,6 +529,24 @@ export default function DynamicTableManager({
 
       const isLease = resource === 'leases';
       if (isLease) {
+        if (column.field === "contract_number") {
+          const count = item._count?.documents ?? 0;
+          const text = formatValue(item.contract_number, column);
+          if (count > 0) {
+            return (
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="inline-flex shrink-0 text-content-secondary"
+                  title={`Contém ${count} arquivo${count === 1 ? '' : 's'} anexado${count === 1 ? '' : 's'}`}
+                >
+                  <Paperclip size={14} />
+                </span>
+                <span>{text}</span>
+              </span>
+            );
+          }
+          return text;
+        }
         if (column.field === "property_title") return formatValue(item.property?.title, column);
         if (column.field === "type") return formatValue(item.property?.type?.description, column);
         if (column.field === "owner") return formatValue(item.owner?.name, column);
@@ -540,7 +558,7 @@ export default function DynamicTableManager({
           const paymentMap: Record<string, string> = {
             'IN_FULL_15_DISCOUNT': 'À vista (15% desc.)',
             'SECOND_INSTALLMENT_10_DISCOUNT': '2ª parcela (10% desc.)',
-            'INSTALLMENTS_12X': 'Parcelado (12x)'
+            'INSTALLMENTS': 'Parcelado (12x)'
           };
           return paymentMap[item.payment_condition] || '-';
         }

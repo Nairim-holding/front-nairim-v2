@@ -216,7 +216,9 @@ export default function EditarLocacaoPage() {
         condo_fee: data.condo_fee ? parseMoney(data.condo_fee) : null,
         property_tax: data.property_tax ? parseMoney(data.property_tax) : null,
         extra_charges: data.extra_charges ? parseMoney(data.extra_charges) : null,
-        agency_commission: data.agency_commission ? parseFloat(data.agency_commission) : null,
+        agency_commission: data.agency_commission !== undefined && data.agency_commission !== null && data.agency_commission !== ''
+          ? parseFloat(data.agency_commission)
+          : null,
         commission_amount: data.commission_amount ? parseMoney(data.commission_amount) : null,
         rent_due_day: parseInt(data.rent_due_day) || 5,
         tax_due_day: data.tax_due_day ? parseInt(data.tax_due_day) : null,
@@ -230,7 +232,9 @@ export default function EditarLocacaoPage() {
         property_tax_first_installment_due_date: data.property_tax_first_installment_due_date || null,
         property_tax_second_installment: data.property_tax_second_installment ? parseMoney(data.property_tax_second_installment) : null,
         property_tax_second_installment_due_date: data.property_tax_second_installment_due_date || null,
-        iptu_installments_count: data.iptu_installments_count ? parseInt(data.iptu_installments_count) : null,
+        iptu_installments_count: data.iptu_installments_count !== undefined && data.iptu_installments_count !== null && data.iptu_installments_count !== ''
+          ? parseInt(data.iptu_installments_count)
+          : null,
         iptu_installments: data.iptu_installments 
           ? data.iptu_installments
               .map((inst: any) => typeof inst === 'string' ? parseMoney(inst) : parseMoney(inst?.value || 0))
@@ -360,7 +364,11 @@ export default function EditarLocacaoPage() {
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
       property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
-      agency_commission: apiData.agency_commission ? String(apiData.agency_commission) : '5',
+      agency_commission: apiData.agency_commission !== null && apiData.agency_commission !== undefined
+        ? String(apiData.agency_commission)
+        : (apiData.commission_amount && apiData.rent_amount
+            ? String(Math.round((Number(apiData.commission_amount) / Number(apiData.rent_amount)) * 10000) / 100)
+            : '5'),
       commission_amount: apiData.commission_amount ? formatMoney(apiData.commission_amount) : 'R$ 0,00',
       rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
       tax_due_day: apiData.tax_due_day ? String(apiData.tax_due_day) : '10',
@@ -378,7 +386,9 @@ export default function EditarLocacaoPage() {
       property_tax_first_installment_due_date: apiData.property_tax_first_installment_due_date ? apiData.property_tax_first_installment_due_date.split('T')[0] : '',
       property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
       property_tax_second_installment_due_date: apiData.property_tax_second_installment_due_date ? apiData.property_tax_second_installment_due_date.split('T')[0] : '',
-      iptu_installments_count: apiData.iptu_installments_count ? String(apiData.iptu_installments_count) : '',
+      iptu_installments_count: apiData.iptu_installments_count !== null && apiData.iptu_installments_count !== undefined
+        ? String(apiData.iptu_installments_count)
+        : '',
       iptu_installments: Array.isArray(apiData.iptu_installments)
         ? apiData.iptu_installments.map((val: number, idx: number) => ({
             value: formatMoney(val),

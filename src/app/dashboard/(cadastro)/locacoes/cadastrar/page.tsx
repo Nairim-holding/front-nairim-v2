@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUploadSSE } from '@/hooks/useUploadSSE';
@@ -50,6 +50,14 @@ export default function CadastrarLocacaoPage() {
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
+
+  // Guarda a última sugestão de comissão preenchida automaticamente, para nunca
+  // sobrescrever um valor que o usuário já tenha digitado manualmente.
+  const lastAutoCommissionRef = useRef<string | null>(null);
+  const shouldAutoFillCommission = useCallback((currentValue: any) => {
+    return currentValue === undefined || currentValue === null || currentValue === ''
+      || currentValue === lastAutoCommissionRef.current;
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,9 +121,14 @@ export default function CadastrarLocacaoPage() {
           extra_charges: propertyValues.extra_charges ? formatMoney(parseMoney(propertyValues.extra_charges)) : '',
         };
 
-        if (propertyValues.rental_value) {
-          updates.agency_commission = '5';
-          updates.commission_amount = formatMoney(parseMoney(propertyValues.rental_value) * 0.05);
+        if (propertyValues.rental_value && shouldAutoFillCommission(formValues?.agency_commission)) {
+          const suggested = propertyAgency?.commission_percentage !== null && propertyAgency?.commission_percentage !== undefined
+            ? String(propertyAgency.commission_percentage)
+            : '';
+          lastAutoCommissionRef.current = suggested;
+          const commissionPercent = parseFloat(suggested) || 0;
+          updates.agency_commission = suggested;
+          updates.commission_amount = formatMoney(parseMoney(propertyValues.rental_value) * (commissionPercent / 100));
         }
         showMessage('Dados do imóvel carregados com sucesso!', 'success');
         return updates;
@@ -127,12 +140,22 @@ export default function CadastrarLocacaoPage() {
 
     if (fieldName === 'agency_id' && value) {
       const agency = agencies.find(a => a.id === value);
-      if (agency?.commission_category) {
-        return {
-          commission_category_display: `${agency.commission_category.name}${agency.commission_subcategory ? ' › ' + agency.commission_subcategory.name : ''}`,
-        };
+      const patch: any = agency?.commission_category
+        ? { commission_category_display: `${agency.commission_category.name}${agency.commission_subcategory ? ' › ' + agency.commission_subcategory.name : ''}` }
+        : { commission_category_display: 'Sem categoria de comissão' };
+
+      if (shouldAutoFillCommission(formValues?.agency_commission)) {
+        const suggested = agency?.commission_percentage !== null && agency?.commission_percentage !== undefined
+          ? String(agency.commission_percentage)
+          : '';
+        lastAutoCommissionRef.current = suggested;
+        const rentAmount = parseMoney(formValues?.rent_amount || 0);
+        const commissionPercent = parseFloat(suggested) || 0;
+        patch.agency_commission = suggested;
+        patch.commission_amount = formatMoney(rentAmount * (commissionPercent / 100));
       }
-      return { commission_category_display: 'Sem categoria de comissão' };
+
+      return patch;
     }
 
     if (fieldName === 'agency_commission' || fieldName === 'rent_amount') {
@@ -157,7 +180,7 @@ export default function CadastrarLocacaoPage() {
     }
 
     return null;
-  }, [formValues, showMessage, agencies]);
+  }, [formValues, showMessage, agencies, shouldAutoFillCommission]);
 
   const handleSubmit = async (data: any) => {
     try {

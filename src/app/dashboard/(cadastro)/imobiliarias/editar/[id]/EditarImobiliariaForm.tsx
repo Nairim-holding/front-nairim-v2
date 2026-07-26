@@ -101,6 +101,9 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
         license_number: data.license_number,
         commission_category_id: data.commission_category_id || null,
         commission_subcategory_id: data.commission_subcategory_id || null,
+        commission_percentage: data.commission_percentage !== undefined && data.commission_percentage !== null && data.commission_percentage !== ''
+          ? parseFloat(data.commission_percentage)
+          : null,
         addresses: [
           {
             zip_code: data.zip_code?.replace(/\D/g, ''),
@@ -162,6 +165,9 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
       license_number: apiData.license_number || '',
       commission_category_id: apiData.commission_category_id || '',
       commission_subcategory_id: apiData.commission_subcategory_id || '',
+      commission_percentage: apiData.commission_percentage !== null && apiData.commission_percentage !== undefined
+        ? String(apiData.commission_percentage)
+        : '',
       zip_code: address.zip_code || '',
       street: address.street || '',
       number: address.number || '',
@@ -275,6 +281,7 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
           icon: <Landmark size={20} />,
           className: 'col-span-full',
         } as any,
+        { field: 'commission_percentage', label: '% de Comissão Imobiliária', type: 'number', required: false, placeholder: 'Ex: 7', maxLength: 3, icon: <Percent size={20} /> },
       ],
     },
     {
