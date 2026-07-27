@@ -535,13 +535,13 @@ export default function DynamicTableManager({
           if (count > 0) {
             return (
               <span className="inline-flex items-center gap-1.5">
+                <span>{text}</span>
                 <span
-                  className="inline-flex shrink-0 text-content-secondary"
+                  className="inline-flex shrink-0 text-blue-500"
                   title={`Contém ${count} arquivo${count === 1 ? '' : 's'} anexado${count === 1 ? '' : 's'}`}
                 >
                   <Paperclip size={14} />
                 </span>
-                <span>{text}</span>
               </span>
             );
           }

@@ -78,6 +78,7 @@ const isPhoneField = (fieldName: string): boolean => {
 
 const isCurrencyField = (fieldName: string, type?: string): boolean => {
   if (type === 'currency') return true;
+  if (fieldName.toLowerCase().includes('due_day')) return false;
   const currencyFields = [
     'value', 'price', 'amount', 'total', 'tax', 'fee', 'valor', 'preco', 'custo', 'pagamento',
     'cota', 'parcela', 'iptu', 'condo_fee', 'property_tax', 'purchase_value', 'rental_value', 'sale_value', 'market_value'
