@@ -72,7 +72,7 @@ export function FinancialSection({
   }, [startDate, endDate]);
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-[#f8fafc] dark:bg-surface-subtle/30 p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-ui-border-soft/40 transition-colors">
       <FinancialDashboardHeader
         year={year}
         selectedMonths={selectedMonths}

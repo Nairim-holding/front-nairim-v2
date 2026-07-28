@@ -9,11 +9,20 @@ import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
+interface SubcategoryDashboard {
+  id?: string;
+  name: string;
+  planned_amount: number;
+  realized_amount: number;
+}
+
 interface CategoryDashboard {
+  id?: string;
   name: string;
   type: 'INCOME' | 'EXPENSE';
   planned_amount: number;
   realized_amount: number;
+  subcategories?: SubcategoryDashboard[];
 }
 
 interface RealizedVsPlannedChartProps {
@@ -53,26 +62,49 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
     };
   }, [startDate, endDate]);
 
-  // Só entram categorias com planejamento definido: "realizado x planejado" não
-  // faz sentido para uma categoria sem plano (percentual ficaria enganosamente 0%
-  // mesmo havendo gasto real).
-  const items: DualColorBarItem[] = useMemo(
-    () => categories
-      .filter((c) => c.planned_amount > 0)
-      .map((c) => ({
-        label: c.name,
-        reference: c.planned_amount,
-        actual: c.realized_amount,
-        percentage: Math.round((c.realized_amount / c.planned_amount) * 1000) / 10,
-      })),
-    [categories]
-  );
+  // Remover "Total de Despesas" (global) e extrair subcategorias para o gráfico (Tarefa 7)
+  const items: DualColorBarItem[] = useMemo(() => {
+    const list: DualColorBarItem[] = [];
+    const validCategories = categories.filter(
+      (c) => c.id !== 'expenses-global' && !c.name.toLowerCase().includes('total de despesas')
+    );
+
+    for (const cat of validCategories) {
+      if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
+        for (const sub of cat.subcategories) {
+          const planned = Number(sub.planned_amount ?? 0);
+          const realized = Number(sub.realized_amount ?? 0);
+          if (planned > 0 || realized > 0) {
+            list.push({
+              label: sub.name,
+              reference: planned,
+              actual: realized,
+              percentage: planned > 0 ? Math.round((realized / planned) * 1000) / 10 : 0,
+            });
+          }
+        }
+      } else {
+        const planned = Number(cat.planned_amount ?? 0);
+        const realized = Number(cat.realized_amount ?? 0);
+        if (planned > 0 || realized > 0) {
+          list.push({
+            label: cat.name,
+            reference: planned,
+            actual: realized,
+            percentage: planned > 0 ? Math.round((realized / planned) * 1000) / 10 : 0,
+          });
+        }
+      }
+    }
+
+    return list;
+  }, [categories]);
 
   const periodLabel = formatPeriodLabel(startDate, endDate);
 
   const detailData = useMemo(
     () => items.map((i) => ({
-      category: i.label,
+      subcategory: i.label,
       month: periodLabel,
       planned: i.reference,
       realized: i.actual,
@@ -83,7 +115,7 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
 
   const detailColumns = useMemo(
     () => [
-      { key: 'category', label: 'Categoria' },
+      { key: 'subcategory', label: 'Subcategoria' },
       { key: 'month', label: 'Mês' },
       { key: 'planned', label: 'Planejado', format: (v: number) => formatCurrency(v) },
       { key: 'realized', label: 'Realizado', format: (v: number) => formatCurrency(v) },
@@ -94,25 +126,64 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
 
   return (
     <ChartCard
-      title="Despesas: Realizado x Planejado"
+      title="DESPESAS: REALIZADO VS PLANEJADO"
       subtitle={periodLabel}
       detailData={detailData}
       detailColumns={detailColumns}
     >
-      {({ isFullscreen }) => (
-        !isLoading && items.length === 0 ? (
+      {() => (
+        isLoading ? (
           <div className="flex items-center justify-center h-full text-content-muted text-sm">
-            Nenhuma categoria com planejamento configurado neste período.
+            Carregando...
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-content-muted text-sm">
+            Nenhuma despesa registrada no período.
           </div>
         ) : (
-          <DualColorBarChart
-            items={items}
-            referenceLabel="Planejado"
-            actualLabel="Realizado"
-            isFullscreen={isFullscreen}
-            isLoading={isLoading}
-            valueFormatter={formatCurrency}
-          />
+          <div className="w-full h-full flex flex-col p-3 overflow-y-auto gap-2.5">
+            {items.map((item, index) => {
+              const fillWidth = Math.min(item.percentage, 100);
+              const isOver = item.percentage > 100;
+              return (
+                <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-xs">
+                  {/* Nome da Categoria / Subcategoria */}
+                  <span
+                    className="w-28 sm:w-32 shrink-0 font-bold text-slate-700 dark:text-slate-200 truncate"
+                    title={item.label}
+                  >
+                    {item.label}
+                  </span>
+
+                  {/* Trilha da Barra de Progresso com Percentual Centralizado */}
+                  <div className="flex-1 h-7 rounded-lg bg-[#fdf0e6] dark:bg-slate-800/80 relative overflow-hidden flex items-center justify-center">
+                    <div
+                      className={`absolute left-0 top-0 bottom-0 rounded-lg transition-all duration-500 ${
+                        isOver ? 'bg-brand' : 'bg-brand'
+                      }`}
+                      style={{ width: `${fillWidth}%` }}
+                    />
+                    <span
+                      className={`relative z-10 font-extrabold text-xs tracking-tight ${
+                        fillWidth > 40 ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+                      }`}
+                    >
+                      {item.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  {/* Valor Formatado à Direita */}
+                  <span
+                    className={`w-24 sm:w-28 text-right font-bold text-xs shrink-0 ${
+                      isOver ? 'text-brand font-black' : 'text-slate-800 dark:text-slate-100'
+                    }`}
+                  >
+                    {formatCurrency(item.actual)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )
       )}
     </ChartCard>

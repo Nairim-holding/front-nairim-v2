@@ -199,7 +199,7 @@ export default function Select({
   };
 
   return (
-    <div className="relative font-poppins w-full min-w-[300px] flex-1">
+    <div className="relative font-poppins w-full flex-1">
       <Label id={id} label={label} required={required} svg={svg} />
       
       <div
@@ -221,7 +221,7 @@ export default function Select({
       {isOpen && !disabled && (
         <div
           ref={optionsListRef as React.RefObject<HTMLDivElement>}
-          className="absolute z-50 min-w-full w-max max-w-[min(32rem,90vw)] bg-surface border border-ui-border rounded-lg mt-1 shadow-lg max-h-60 flex flex-col"
+          className="absolute top-full left-0 right-0 z-[999] min-w-full w-full bg-surface border border-ui-border rounded-lg mt-1 shadow-2xl max-h-60 flex flex-col overflow-hidden"
         >
           {searchable && (
             <div className="p-2 border-b border-ui-border-soft sticky top-0 bg-surface z-10 flex items-center gap-2">

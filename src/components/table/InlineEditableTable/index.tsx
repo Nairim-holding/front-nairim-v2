@@ -500,7 +500,7 @@ interface InlineEditableTableProps {
    * `{ skipped: true }` sinaliza que o item foi ignorado (ex.: transferência),
    * para contabilizar no resultado sem tratar como erro.
    */
-  onRowDuplicate?: (item: any) => Promise<{ skipped?: boolean } | void>;
+  onRowDuplicate?: (item: any) => Promise<{ skipped?: boolean, id?: string } | any>;
   enableDuplicate?: boolean;
   showTotals?: boolean;
   /** Exibe o painel lateral retrátil de "Resumo" (somente Lançamentos). */
@@ -872,6 +872,7 @@ export default function InlineEditableTable({
 
   const displayItems = useMemo(() => [
     ...editingRows.filter(row => row.isNew),
+    ...editingRows.filter(row => !row.isNew && !filteredItems.some((fi: any) => fi.id === row.id)),
     ...filteredItems.map((item: any) => ({ ...item, isEditing: editingRows.some(row => row.id === item.id && row.isEditing) }))
   ], [filteredItems, editingRows]);
 
@@ -994,8 +995,10 @@ export default function InlineEditableTable({
     return e;
   }, [formOptions]);
 
-  const startEditingRow = useCallback((id: string, isNew = false) => {
-    const item = isNew ? {} : items.find((i: any) => i.id === id);
+  const startEditingRow = useCallback((idOrItem: string | any, isNew = false) => {
+    const isObject = typeof idOrItem === 'object' && idOrItem !== null;
+    const id = isObject ? idOrItem.id : idOrItem;
+    const item = isNew ? {} : (isObject ? idOrItem : items.find((i: any) => i.id === id));
     if (!item && !isNew) return;
 
     const safeDateInput = (val: any) => val ? String(val).split('T')[0] : '';
@@ -1186,7 +1189,12 @@ export default function InlineEditableTable({
           try {
             const result = await onRowDuplicate(original);
             if (result && result.skipped) skippedCount++;
-            else successCount++;
+            else {
+              successCount++;
+              if (selectedCheckboxes.length === 1 && result && result.id) {
+                setTimeout(() => startEditingRow(result, false), 100);
+              }
+            }
           } catch (error: any) {
             errorCount++;
             lastErrorMessage = error.message || "Erro desconhecido";

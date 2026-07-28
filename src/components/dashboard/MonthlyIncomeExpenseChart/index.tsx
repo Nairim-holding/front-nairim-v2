@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
+import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useMonthlySummary } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
+import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 export const MONTH_LABELS_FULL = [
@@ -46,29 +48,39 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
     []
   );
 
+  const xAxisLabels = useMemo(() => MONTH_LABELS.map((m) => `${m} ${year}`), [year]);
+
   const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
     backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis',
-      confine: true,
-      valueFormatter: (value) => formatCurrency(Number(value)),
-    },
+    tooltip: getCustomEchartsTooltipConfig((params: any) => {
+      const itemsArray = Array.isArray(params) ? params : [params];
+      const header = itemsArray[0]?.axisValueLabel || itemsArray[0]?.name || '';
+      const items = itemsArray.map((item: any) => ({
+        label: item.seriesName || '',
+        value: Number(item.value ?? 0),
+        color: item.seriesName === 'Receitas' ? tokens.success : tokens.brandPrimary,
+      }));
+      return buildCustomTooltipHTML(header, items);
+    }),
     legend: {
-      data: ['Receitas', 'Despesas'],
-      top: 0,
-      textStyle: { color: tokens.textSecondary },
+      show: false,
     },
     grid: {
-      top: 36,
-      bottom: isLarge ? 32 : 24,
-      left: isLarge ? 64 : 44,
-      right: 16,
+      top: 24,
+      bottom: isLarge ? 48 : 36,
+      left: isLarge ? 90 : 75,
+      right: 20,
       containLabel: true,
     },
     xAxis: {
       type: 'category',
-      data: MONTH_LABELS,
-      axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 13 : 11 },
+      data: xAxisLabels,
+      axisLabel: {
+        color: tokens.textMuted,
+        fontSize: isLarge ? 11 : 10,
+        rotate: 35,
+        interval: 0,
+      },
       axisLine: { lineStyle: { color: tokens.borderSoft } },
       axisTick: { show: false },
     },
@@ -76,8 +88,8 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
       type: 'value',
       axisLabel: {
         color: tokens.textMuted,
-        fontSize: 11,
-        formatter: (value: number) => (Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}k` : String(value)),
+        fontSize: 10,
+        formatter: (value: number) => formatCurrency(value),
       },
       splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
     },
@@ -86,26 +98,40 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
         name: 'Receitas',
         type: 'line',
         smooth: true,
-        symbolSize: 6,
+        symbol: 'circle',
+        symbolSize: 10,
         data: months.map((m) => m.income),
-        lineStyle: { color: tokens.success, width: 2 },
-        itemStyle: { color: tokens.success },
+        lineStyle: { color: tokens.success, width: 3.5 },
+        itemStyle: { color: '#ffffff', borderColor: tokens.success, borderWidth: 3 },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: `${tokens.success}70` },
+            { offset: 1, color: `${tokens.success}05` },
+          ]),
+        },
       },
       {
         name: 'Despesas',
         type: 'line',
         smooth: true,
-        symbolSize: 6,
+        symbol: 'circle',
+        symbolSize: 10,
         data: months.map((m) => m.expense),
-        lineStyle: { color: tokens.warning, width: 2 },
-        itemStyle: { color: tokens.warning },
+        lineStyle: { color: tokens.brandPrimary, width: 3.5 },
+        itemStyle: { color: '#ffffff', borderColor: tokens.brandPrimary, borderWidth: 3 },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: `${tokens.brandPrimary}70` },
+            { offset: 1, color: `${tokens.brandPrimary}05` },
+          ]),
+        },
       },
     ],
-  }), [months, tokens]);
+  }), [months, tokens, xAxisLabels]);
 
   return (
     <ChartCard
-      title="Receitas x Despesas"
+      title="RECEITAS E DESPESAS"
       subtitle={`Totais mensais de ${year}`}
       detailData={detailData}
       detailColumns={detailColumns}

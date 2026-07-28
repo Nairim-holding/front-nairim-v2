@@ -8,6 +8,7 @@ import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
+import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -68,20 +69,19 @@ export default function AccountBalanceChart() {
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
     backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      confine: true,
-      formatter: (params: any) => {
-        const item = Array.isArray(params) ? params[0] : params;
-        return `${item.name}<br/>${formatCurrency(accounts[item.dataIndex]?.balance ?? 0)}`;
-      },
-    },
+    tooltip: getCustomEchartsTooltipConfig((params: any) => {
+      const item = Array.isArray(params) ? params[0] : params;
+      const account = accounts[item.dataIndex];
+      const name = account?.name || item.name || '';
+      const val = account?.balance ?? Number(item.value ?? 0);
+      return buildCustomTooltipHTML(name, [
+        { label: 'Saldo Atual', value: val, color: item.color },
+      ]);
+    }),
     grid: {
-      top: 24,
-      // Espaço extra embaixo para os nomes das contas inclinados (não truncados).
-      bottom: isLarge ? 110 : 90,
-      left: isLarge ? 72 : 56,
+      top: 36,
+      bottom: isLarge ? 80 : 60,
+      left: 16,
       right: 16,
       containLabel: true,
     },
@@ -90,31 +90,33 @@ export default function AccountBalanceChart() {
       data: accounts.map((a) => a.name),
       axisLabel: {
         color: tokens.textMuted,
-        fontSize: isLarge ? 13 : 11,
-        rotate: 35,
+        fontSize: isLarge ? 12 : 11,
+        rotate: accounts.length > 5 ? 25 : 0,
         interval: 0,
-        overflow: 'none',
       },
       axisLine: { lineStyle: { color: tokens.borderSoft } },
       axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
-      axisLabel: {
-        color: tokens.textMuted,
-        fontSize: 11,
-        formatter: (v: number) => (Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)),
-      },
-      splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
+      show: false,
     },
     series: [
       {
         type: 'bar',
         data: accounts.map((a) => a.balance),
-        barMaxWidth: 48,
+        barMaxWidth: 44,
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (p: any) => formatCurrency(Number(p.value)),
+          fontSize: isLarge ? 12 : 10,
+          fontWeight: 'bold',
+          color: tokens.textSecondary,
+        },
         itemStyle: {
-          borderRadius: [4, 4, 0, 0],
-          color: (params: any) => (accounts[params.dataIndex]?.balance >= 0 ? tokens.success : tokens.error),
+          borderRadius: [6, 6, 0, 0],
+          color: (params: any) => tokens.chartSeries[params.dataIndex % tokens.chartSeries.length],
         },
       },
     ],
@@ -129,11 +131,11 @@ export default function AccountBalanceChart() {
     >
       {({ isFullscreen }) => (
         <div className="w-full h-full flex flex-col p-3 gap-2">
-          <div className="text-center rounded-lg py-2 shrink-0 bg-surface-subtle">
-            <div className={`font-bold ${isFullscreen ? 'text-3xl' : 'text-xl'} ${totalBalance >= 0 ? 'text-content' : 'text-state-error'}`}>
+          <div className="text-center rounded-xl py-3 px-4 shrink-0 bg-surface-subtle border border-ui-border-soft shadow-2xs">
+            <div className={`font-extrabold tracking-tight ${isFullscreen ? 'text-3xl' : 'text-2xl'} ${totalBalance >= 0 ? 'text-content' : 'text-state-error'}`}>
               {formatCurrency(totalBalance)}
             </div>
-            <div className="text-xs text-content-muted mt-1">Saldo Total</div>
+            <div className="text-xs font-semibold text-content-muted mt-0.5">Saldo Total</div>
           </div>
           {!isLoading && accounts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-content-muted text-sm">

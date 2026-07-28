@@ -21,6 +21,17 @@ interface CardUsageChartProps {
   endDate?: string;
 }
 
+function getCardInitials(name: string): string {
+  if (!name) return 'CR';
+  const clean = name.replace(/^(Cartão|Visa|Mastercard|Elo|Amex|Hipercard)\s+/i, '').trim();
+  const target = clean || name;
+  const parts = target.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return target.slice(0, 2).toUpperCase();
+}
+
 export default function CardUsageChart({ startDate: startDateProp, endDate: endDateProp }: CardUsageChartProps) {
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
   const startDate = startDateProp ?? fallback.startDate;
@@ -89,28 +100,79 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
     []
   );
 
+  const totalFaturas = useMemo(
+    () => cards.reduce((sum, c) => sum + c.consumed, 0),
+    [cards]
+  );
+
   return (
     <ChartCard
-      title="Gastos com Cartões"
+      title="GASTOS COM CARTÕES DE CRÉDITO"
       subtitle={periodLabel}
       detailData={detailData}
       detailColumns={detailColumns}
     >
-      {({ isFullscreen }) => (
-        !isLoading && items.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-content-muted text-sm">
-            Nenhum cartão com limite configurado.
+      {() => (
+        <div className="w-full h-full flex flex-col p-3">
+          {/* Header com Total das Faturas (Imagem 4 & 5) */}
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-ui-border-soft shrink-0">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              CARTÕES DE CRÉDITO
+            </span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+              TOTAL DAS FATURAS: <span className="text-brand font-extrabold">{formatCurrency(totalFaturas)}</span>
+            </span>
           </div>
-        ) : (
-          <DualColorBarChart
-            items={items}
-            referenceLabel="Limite"
-            actualLabel="Consumido"
-            isFullscreen={isFullscreen}
-            isLoading={isLoading}
-            valueFormatter={formatCurrency}
-          />
-        )
+
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center text-content-muted text-sm">
+              Carregando...
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-content-muted text-sm">
+              Nenhum cartão com limite configurado.
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto min-h-0">
+              {items.map((item, index) => {
+                const fillWidth = Math.min(item.percentage, 100);
+                return (
+                  <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-xs">
+                    {/* Ícone de Cartão + Nome */}
+                    <div className="flex items-center gap-2 w-32 sm:w-36 shrink-0 min-w-0">
+                      <div className="w-6 h-6 rounded bg-brand/15 text-brand dark:bg-brand/25 dark:text-brand-light flex items-center justify-center font-extrabold text-[10px] border border-brand/20 shrink-0">
+                        {getCardInitials(item.label)}
+                      </div>
+                      <span className="font-bold text-slate-700 dark:text-slate-200 truncate" title={item.label}>
+                        {item.label}
+                      </span>
+                    </div>
+
+                    {/* Trilha da Barra de Progresso com Percentual */}
+                    <div className="flex-1 h-7 rounded-lg bg-[#fdf0e6] dark:bg-slate-800/80 relative overflow-hidden flex items-center justify-center">
+                      <div
+                        className="absolute left-0 top-0 bottom-0 rounded-lg bg-brand transition-all duration-500"
+                        style={{ width: `${fillWidth}%` }}
+                      />
+                      <span
+                        className={`relative z-10 font-extrabold text-xs tracking-tight ${
+                          fillWidth > 40 ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        {item.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    {/* Valor Consumido à Direita */}
+                    <span className="w-24 sm:w-28 text-right font-extrabold text-xs text-slate-800 dark:text-slate-100 shrink-0">
+                      {formatCurrency(item.actual)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </ChartCard>
   );

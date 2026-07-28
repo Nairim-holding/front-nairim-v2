@@ -9,6 +9,7 @@ import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
+import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -64,13 +65,14 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
 
   const totalExpense = useMemo(() => categories.reduce((sum, c) => sum + c.value, 0), [categories]);
 
-  const percentages = useMemo(
-    () => categories.map((c) => ({
-      ...c,
-      percentage: totalIncome > 0 ? Math.round((c.value / totalIncome) * 10000) / 100 : 0,
-    })),
-    [categories, totalIncome]
-  );
+  const sortedPercentages = useMemo(() => {
+    return categories
+      .map((c) => ({
+        ...c,
+        percentage: totalIncome > 0 ? Math.round((c.value / totalIncome) * 10000) / 100 : 0,
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+  }, [categories, totalIncome]);
 
   const detailData = useMemo(
     () => [
@@ -88,66 +90,69 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
     []
   );
 
-  const buildOption = useCallback((isLarge: boolean): EChartsOption => {
-    // Ordem ascendente: com eixo de categoria normal (não invertido), o maior valor
-    // acaba desenhado no topo do gráfico de barras horizontais.
-    const sorted = [...percentages].sort((a, b) => a.percentage - b.percentage);
-
-    return {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        confine: true,
-        formatter: (params: any) => {
-          const item = Array.isArray(params) ? params[0] : params;
-          const cat = sorted[item.dataIndex];
-          return `${cat.name}<br/>${cat.percentage}% da Receita<br/>${formatCurrency(cat.value)}`;
-        },
-      },
-      grid: {
-        top: 16,
-        bottom: 16,
-        left: isLarge ? 180 : 130,
-        right: 56,
-        containLabel: true,
-      },
-      xAxis: {
-        type: 'value',
-        axisLabel: { color: tokens.textMuted, fontSize: 11, formatter: (v: number) => `${v}%` },
-        splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
-      },
-      yAxis: {
-        type: 'category',
-        data: sorted.map((c) => c.name),
-        axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 13 : 11 },
-        axisLine: { lineStyle: { color: tokens.borderSoft } },
-        axisTick: { show: false },
-      },
-      series: [
+  const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
+    backgroundColor: 'transparent',
+    tooltip: getCustomEchartsTooltipConfig((params: any) => {
+      const item = Array.isArray(params) ? params[0] : params;
+      const cat = sortedPercentages[item.dataIndex];
+      const name = cat?.name || item.name || '';
+      return buildCustomTooltipHTML(name, [
         {
-          type: 'bar',
-          data: sorted.map((c) => c.percentage),
-          barMaxWidth: 22,
-          itemStyle: {
-            borderRadius: [0, 4, 4, 0],
-            color: (params: any) => tokens.chartSeries[params.dataIndex % tokens.chartSeries.length],
-          },
-          label: {
-            show: true,
-            position: 'right',
-            formatter: (params: any) => `${params.value}%`,
-            color: tokens.textSecondary,
-            fontSize: isLarge ? 13 : 11,
-          },
+          label: 'Categorias',
+          value: formatCurrency(cat?.value ?? 0),
+          color: item.color,
+          formattedValue: `${formatCurrency(cat?.value ?? 0)} (${cat?.percentage ?? 0}%)`,
         },
-      ],
-    };
-  }, [percentages, tokens]);
+      ]);
+    }),
+    grid: {
+      top: 36,
+      bottom: isLarge ? 80 : 60,
+      left: 16,
+      right: 16,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: sortedPercentages.map((c) => c.name),
+      axisLabel: {
+        color: tokens.textMuted,
+        fontSize: isLarge ? 11 : 10,
+        fontWeight: 500,
+        interval: 0,
+        rotate: 40,
+      },
+      axisLine: { lineStyle: { color: tokens.borderSoft } },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      show: false,
+    },
+    series: [
+      {
+        type: 'bar',
+        data: sortedPercentages.map((c) => c.percentage),
+        barMaxWidth: isLarge ? 48 : 36,
+        itemStyle: {
+          borderRadius: [10, 10, 0, 0],
+          color: (params: any) => tokens.chartSeries[params.dataIndex % tokens.chartSeries.length],
+        },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (params: any) => `${params.value}%`,
+          color: tokens.textPrimary,
+          fontSize: isLarge ? 11 : 10,
+          fontWeight: 'bold',
+        },
+      },
+    ],
+  }), [sortedPercentages, tokens]);
 
   return (
     <ChartCard
-      title="% por Categoria em relação à Receita"
+      title="% POR CATEGORIA DE GASTO EM RELAÇÃO À RECEITA"
       subtitle={formatPeriodLabel(startDate, endDate)}
       detailData={detailData}
       detailColumns={detailColumns}
@@ -158,7 +163,9 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
             Nenhuma despesa registrada no período.
           </div>
         ) : (
-          <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
+          <div className="w-full h-full p-2 relative min-h-0">
+            <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
+          </div>
         )
       )}
     </ChartCard>

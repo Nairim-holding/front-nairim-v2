@@ -77,13 +77,13 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-14', x: 0, y: 3, w: 4, h: 3 },
   { i: 'widget-16', x: 4, y: 3, w: 4, h: 3 },
   { i: 'widget-15', x: 8, y: 3, w: 4, h: 3 },
-  { i: 'widget-1', x: 0, y: 9, w: 12, h: 6 },
-  { i: 'widget-3', x: 0, y: 15, w: 12, h: 6 },
-  { i: 'widget-2', x: 0, y: 21, w: 6, h: 6 },
-  { i: 'widget-7', x: 6, y: 21, w: 6, h: 8 },
-  { i: 'widget-8', x: 0, y: 29, w: 6, h: 8 },
-  { i: 'widget-9', x: 6, y: 29, w: 6, h: 8 },
-  { i: 'widget-10', x: 0, y: 37, w: 6, h: 8 },
+  { i: 'widget-1', x: 0, y: 6, w: 8, h: 8 },
+  { i: 'widget-2', x: 8, y: 6, w: 4, h: 8 },
+  { i: 'widget-7', x: 0, y: 14, w: 6, h: 8 },
+  { i: 'widget-8', x: 6, y: 14, w: 6, h: 8 },
+  { i: 'widget-3', x: 0, y: 22, w: 6, h: 8 },
+  { i: 'widget-10', x: 6, y: 22, w: 6, h: 8 },
+  { i: 'widget-9', x: 0, y: 30, w: 12, h: 11 },
 ];
 
 interface FinancialDashboardGridProps extends FinancialWidgetProps {
@@ -92,7 +92,7 @@ interface FinancialDashboardGridProps extends FinancialWidgetProps {
   legacyMetrics?: MetricResponse | null;
 }
 
-export default function FinancialDashboardGrid({ resource = 'financeiro', legacyMetrics = null, year, startDate, endDate }: FinancialDashboardGridProps) {
+export default function FinancialDashboardGrid({ resource = 'financeiro-v5', legacyMetrics = null, year, startDate, endDate }: FinancialDashboardGridProps) {
   const { layout, isLoading, saveLayout } = useDashboardLayout(resource, DEFAULT_LAYOUT);
   const isMobile = useIsMobile(MOBILE_BREAKPOINT_PX);
 
@@ -102,12 +102,14 @@ export default function FinancialDashboardGrid({ resource = 'financeiro', legacy
   // Sem isso, layouts salvos antes de uma mudança de widgets renderizam cards
   // vazios/quebrados ou simplesmente não mostram os gráficos novos.
   const displayLayout = useMemo(() => {
-    // widget-15 (gauge) precisa ficar do mesmo tamanho dos cards vizinhos
-    // (h:3) — corrige aqui qualquer layout já salvo por um usuário com a
-    // altura antiga (h:6, de uma versão anterior deste widget).
+    // Corrige aqui qualquer layout já salvo por um usuário com a altura antiga
     const known = layout
       .filter((item) => KNOWN_WIDGET_IDS.has(item.i))
-      .map((item) => (item.i === 'widget-15' && item.h !== 3 ? { ...item, h: 3 } : item));
+      .map((item) => {
+        if (item.i === 'widget-15' && item.h !== 3) return { ...item, h: 3 };
+        if (item.i === 'widget-9' && item.h !== 11) return { ...item, h: 11 };
+        return item;
+      });
     const present = new Set(known.map((item) => item.i));
     const bottom = known.reduce((max, item) => Math.max(max, item.y + item.h), 0);
     const missing = DEFAULT_LAYOUT
@@ -196,7 +198,9 @@ export default function FinancialDashboardGrid({ resource = 'financeiro', legacy
                 // Sem wrapper bg-surface aqui: estes widgets já têm moldura própria
                 // completa (NumericCard/EChartsGauge) — duplicar geraria card-dentro-de-card.
                 ? 'h-full'
-                : 'bg-surface rounded-xl border border-ui-border-soft shadow-sm overflow-hidden flex flex-col'
+                : `bg-white dark:bg-surface rounded-xl border border-slate-200/80 dark:border-ui-border-soft shadow-sm flex flex-col transition-all ${
+                    item.i === 'widget-10' ? 'overflow-visible z-20 hover:z-30' : 'overflow-hidden'
+                  }`
             }
           >
             {body}

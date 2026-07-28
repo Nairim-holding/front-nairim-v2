@@ -579,6 +579,9 @@ export default function LancamentosPage() {
       const result = await response.json().catch(() => ({}));
       throw new Error(result.message ?? 'Erro ao duplicar lançamento.');
     }
+
+    const json = await response.json();
+    return json.data || json;
   }, [transferCategoryIds]);
 
   if (isLoadingOptions || isLoadingColumns) {

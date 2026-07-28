@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import type { EChartsOption } from 'echarts';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getThemeTokens } from '@/utils';
+import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 export interface DualColorBarItem {
   label: string;
@@ -69,7 +70,7 @@ export default function DualColorBarChart({
   valueFormatter,
 }: DualColorBarChartProps) {
   const tokens = getThemeTokens();
-  const baseColor = color ?? tokens.warning;
+  const baseColor = color ?? tokens.brandPrimary;
   const lightColor = hexToRgba(baseColor, 0.3);
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {
@@ -79,15 +80,14 @@ export default function DualColorBarChart({
 
     return {
       backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        confine: true,
-        formatter: (params: any) => {
-          const item = sorted[params[0].dataIndex];
-          return `<strong>${item.label}</strong><br/>${referenceLabel}: ${valueFormatter(item.reference)}<br/>${actualLabel}: ${valueFormatter(item.actual)}<br/>${item.percentage.toFixed(1)}%`;
-        },
-      },
+      tooltip: getCustomEchartsTooltipConfig((params: any) => {
+        const item = sorted[params[0]?.dataIndex ?? 0];
+        if (!item) return '';
+        return buildCustomTooltipHTML(item.label, [
+          { label: referenceLabel, value: item.reference, color: lightColor },
+          { label: actualLabel, value: item.actual, color: baseColor, formattedValue: `${valueFormatter(item.actual)} (${item.percentage.toFixed(1)}%)` },
+        ]);
+      }),
       legend: {
         data: [referenceLabel, actualLabel],
         top: 0,
@@ -132,17 +132,17 @@ export default function DualColorBarChart({
           name: referenceLabel,
           type: 'bar',
           data: sorted.map((i) => i.reference),
-          barWidth: isLarge ? 18 : 12,
-          itemStyle: { color: lightColor, borderRadius: [0, 4, 4, 0] },
+          barWidth: isLarge ? 22 : 16,
+          itemStyle: { color: lightColor, borderRadius: 10 },
           z: 1,
         },
         {
           name: actualLabel,
           type: 'bar',
           data: sorted.map((i) => i.actual),
-          barWidth: isLarge ? 10 : 7,
+          barWidth: isLarge ? 22 : 16,
           barGap: '-100%',
-          itemStyle: { color: baseColor, borderRadius: [0, 4, 4, 0] },
+          itemStyle: { color: baseColor, borderRadius: 10 },
           z: 2,
         },
       ],
