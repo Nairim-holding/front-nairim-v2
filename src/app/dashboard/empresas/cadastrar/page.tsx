@@ -8,7 +8,7 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
-import { Building2, Globe, Type, Sun, Moon } from 'lucide-react';
+import { Building2, Globe, Type, Sun, Moon, Database } from 'lucide-react';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -192,6 +192,25 @@ export default function CadastrarEmpresaPage() {
           onBlur: (value: string) => checkSlugUnique(value),
           className: 'col-span-full',
         },
+        {
+          field: 'db_quota_mb',
+          label: 'Limite de banco de dados (MB)',
+          type: 'number',
+          placeholder: 'Em branco = limite padrão do sistema',
+          icon: <Database size={20} />,
+          showIncrementButtons: false,
+          validation: {
+            custom: (value: unknown) => {
+              if (value === '' || value === null || value === undefined) return null;
+              const parsed = Number(value);
+              if (!Number.isInteger(parsed) || parsed <= 0) {
+                return 'Informe um número inteiro de MB maior que zero';
+              }
+              return null;
+            },
+          },
+          className: 'col-span-full',
+        },
       ],
     },
     {
@@ -240,6 +259,11 @@ export default function CadastrarEmpresaPage() {
     const payload: Record<string, unknown> = {
       name: data.name,
       slug: typeof data.slug === 'string' ? data.slug.toLowerCase().trim() : data.slug,
+      // Em branco vai como null: a empresa usa o limite padrão do ambiente.
+      db_quota_mb:
+        data.db_quota_mb === '' || data.db_quota_mb === null || data.db_quota_mb === undefined
+          ? null
+          : Number(data.db_quota_mb),
     };
     for (const key of BRANDING_FIELD_KEYS) {
       if (data[key]) payload[key] = data[key];

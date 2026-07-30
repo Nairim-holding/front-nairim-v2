@@ -20,16 +20,28 @@ export function useDashboardLayout(resource: string, defaultLayout: DashboardLay
   const { showMessage } = useMessageContext();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Em ref para o efeito depender só de `resource`: o array default costuma ser
+  // uma constante de módulo, mas na dependência do efeito qualquer recriação
+  // dispararia um refetch desnecessário.
+  const defaultLayoutRef = useRef(defaultLayout);
+  defaultLayoutRef.current = defaultLayout;
+
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
 
     (async () => {
       try {
         const response = await authFetch(`${API_URL}/user-preferences/dashboard-layout?resource=${resource}`);
         if (response.ok) {
           const result = await response.json();
-          if (!cancelled && Array.isArray(result.data?.layout) && result.data.layout.length > 0) {
-            setLayout(result.data.layout);
+          const saved = result.data?.layout;
+          if (!cancelled) {
+            // Sem layout salvo, volta ao default. Antes o state anterior era
+            // mantido: ao trocar de `resource` (o bump de versão que aplica um
+            // novo arranjo padrão), o grid continuava exibindo o layout do
+            // resource antigo, e a nova versão parecia não ter efeito.
+            setLayout(Array.isArray(saved) && saved.length > 0 ? saved : defaultLayoutRef.current);
           }
         }
       } catch (error) {

@@ -67,9 +67,21 @@ export default function EChartsGauge({
     const sidePadding = isLarge ? 20 : 4;
     const maxRadiusByWidth = containerWidth / 2 - sidePadding;
     const maxRadiusByHeight = containerHeight - topPadding - detailSpace;
-    const radius = Math.max(24, Math.min(maxRadiusByWidth, maxRadiusByHeight));
+    // Teto no card compacto: sem ele o raio acompanha o container, e num widget
+    // largo (w6 h8, a par dos gráficos de rosca) o arco vira um semicírculo
+    // gigante — com a espessura em radius*0.32, a faixa sozinha passa de 100px.
+    // Em tela cheia não há teto: ali o gauge é o conteúdo principal.
+    const maxCompactRadius = 140;
+    const radius = Math.max(
+      24,
+      Math.min(maxRadiusByWidth, maxRadiusByHeight, isLarge ? Infinity : maxCompactRadius)
+    );
     const centerX = containerWidth / 2;
-    const centerY = topPadding + radius;
+    // Com o raio no teto sobra altura no card; centraliza o conjunto
+    // (semicírculo + rótulo) em vez de deixá-lo grudado no topo.
+    const usedHeight = topPadding + radius + detailSpace;
+    const verticalSlack = Math.max(0, (containerHeight - usedHeight) / 2);
+    const centerY = topPadding + radius + verticalSlack;
 
     return {
       backgroundColor: 'transparent',

@@ -1,10 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
-import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout/legacy';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
-import { useDashboardLayout, DashboardLayoutItem } from '@/hooks/useDashboardLayout';
+import { useCallback, type ComponentType } from 'react';
+import { DashboardLayoutItem } from '@/hooks/useDashboardLayout';
+import DashboardWidgetGrid, { type DashboardWidget } from '@/components/dashboard/DashboardWidgetGrid';
 import { MetricResponse } from '@/types/types';
 import MonthlyIncomeExpenseChart from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import ExpenseRatioChart from '@/components/dashboard/ExpenseRatioChart';
@@ -18,29 +16,6 @@ import {
   VacancyGaugeWidget, VacancyMonthsWidget,
 } from './LegacyPortfolioWidgets';
 import { FinancialWidgetProps } from './types';
-
-const ResponsiveGridLayout = WidthProvider(GridLayout);
-
-const ROW_HEIGHT = 40;
-const GRID_GAP = 16;
-/** Abaixo disso, o grid arrastável de 12 colunas fica ilegível (colunas
- * viram tiras estreitas) — troca para uma lista empilhada de largura total,
- * sem drag/resize (não faz sentido em touch de qualquer forma). */
-const MOBILE_BREAKPOINT_PX = 768;
-
-function useIsMobile(breakpointPx: number): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${breakpointPx}px)`);
-    setIsMobile(mql.matches);
-    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handleChange);
-    return () => mql.removeEventListener('change', handleChange);
-  }, [breakpointPx]);
-
-  return isMobile;
-}
 
 // Widgets com gráfico real já conectado. Todos recebem o mesmo período
 // (year/startDate/endDate) do filtro único da aba — quem não precisa de uma
@@ -68,8 +43,6 @@ const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | n
   'widget-16': VacancyMonthsWidget,
 };
 
-const KNOWN_WIDGET_IDS = new Set([...Object.keys(REAL_WIDGETS), ...Object.keys(LEGACY_WIDGETS)]);
-
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-11', x: 0, y: 0, w: 4, h: 3 },
   { i: 'widget-12', x: 4, y: 0, w: 4, h: 3 },
@@ -86,127 +59,54 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-9', x: 0, y: 30, w: 12, h: 11 },
 ];
 
+/** Corrige layouts já salvos por usuários com a altura antiga destes widgets. */
+const normalizeItem = (item: DashboardLayoutItem): DashboardLayoutItem => {
+  if (item.i === 'widget-15' && item.h !== 3) return { ...item, h: 3 };
+  if (item.i === 'widget-9' && item.h !== 11) return { ...item, h: 11 };
+  return item;
+};
+
 interface FinancialDashboardGridProps extends FinancialWidgetProps {
   resource?: string;
   /** Métricas de portfólio/imóveis para os widgets que já existiam no financeiro. */
   legacyMetrics?: MetricResponse | null;
 }
 
-export default function FinancialDashboardGrid({ resource = 'financeiro-v5', legacyMetrics = null, year, startDate, endDate }: FinancialDashboardGridProps) {
-  const { layout, isLoading, saveLayout } = useDashboardLayout(resource, DEFAULT_LAYOUT);
-  const isMobile = useIsMobile(MOBILE_BREAKPOINT_PX);
-
-  // Reconcilia o layout salvo com o conjunto atual de widgets: descarta ids que
-  // não existem mais (ex.: placeholders antigos) e acrescenta ao final os que o
-  // usuário ainda não tem salvos (ex.: widgets novos adicionados em uma release).
-  // Sem isso, layouts salvos antes de uma mudança de widgets renderizam cards
-  // vazios/quebrados ou simplesmente não mostram os gráficos novos.
-  const displayLayout = useMemo(() => {
-    // Corrige aqui qualquer layout já salvo por um usuário com a altura antiga
-    const known = layout
-      .filter((item) => KNOWN_WIDGET_IDS.has(item.i))
-      .map((item) => {
-        if (item.i === 'widget-15' && item.h !== 3) return { ...item, h: 3 };
-        if (item.i === 'widget-9' && item.h !== 11) return { ...item, h: 11 };
-        return item;
-      });
-    const present = new Set(known.map((item) => item.i));
-    const bottom = known.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-    const missing = DEFAULT_LAYOUT
-      .filter((d) => !present.has(d.i))
-      .map((d) => ({ ...d, y: bottom + d.y }));
-    return [...known, ...missing];
-  }, [layout]);
-
-  const handleLayoutChange = useCallback(
-    (newLayout: Layout) => {
-      saveLayout(newLayout.map(({ i, x, y, w, h }) => ({ i, x, y, w, h })));
-    },
-    [saveLayout]
-  );
-
-  const renderWidgetBody = useCallback(
-    (id: string) => {
+export default function FinancialDashboardGrid({
+  resource = 'financeiro-v5',
+  legacyMetrics = null,
+  year,
+  startDate,
+  endDate,
+}: FinancialDashboardGridProps) {
+  const renderWidget = useCallback(
+    (id: string): DashboardWidget | null => {
       const RealWidget = REAL_WIDGETS[id];
-      if (RealWidget) return <RealWidget year={year} startDate={startDate} endDate={endDate} />;
+      if (RealWidget) {
+        return {
+          body: <RealWidget year={year} startDate={startDate} endDate={endDate} />,
+          framed: true,
+          // Este card tem dropdown de categoria, que precisa escapar do cartão.
+          overflowVisible: id === 'widget-10',
+        };
+      }
 
       const LegacyWidget = LEGACY_WIDGETS[id];
-      if (LegacyWidget) return <LegacyWidget metrics={legacyMetrics} />;
+      if (LegacyWidget) {
+        return { body: <LegacyWidget metrics={legacyMetrics} />, framed: false };
+      }
 
       return null;
     },
     [year, startDate, endDate, legacyMetrics]
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
-      </div>
-    );
-  }
-
-  // Em telas estreitas o grid arrastável de 12 colunas fica ilegível (cada
-  // coluna vira uma tira estreita demais para os gráficos). Sem drag/resize
-  // (sem sentido em touch), lista simplesmente empilhada de largura total,
-  // preservando a altura relativa de cada widget (h * linha) do layout salvo.
-  if (isMobile) {
-    return (
-      <div className="flex flex-col gap-4 w-full">
-        {displayLayout.map((item) => {
-          const body = renderWidgetBody(item.i);
-          if (!body) return null;
-          const isLegacy = Boolean(LEGACY_WIDGETS[item.i]);
-          const heightPx = item.h * ROW_HEIGHT + (item.h - 1) * GRID_GAP;
-          return (
-            <div
-              key={item.i}
-              style={{ height: heightPx }}
-              className={
-                isLegacy
-                  ? 'w-full'
-                  : 'w-full bg-surface rounded-xl border border-ui-border-soft shadow-sm overflow-hidden flex flex-col'
-              }
-            >
-              {body}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
-    <ResponsiveGridLayout
-      className="w-full"
-      layout={displayLayout}
-      cols={12}
-      rowHeight={ROW_HEIGHT}
-      margin={[GRID_GAP, GRID_GAP]}
-      draggableHandle=".widget-drag-handle"
-      onLayoutChange={handleLayoutChange}
-    >
-      {displayLayout.map((item) => {
-        const body = renderWidgetBody(item.i);
-        if (!body) return null;
-        const isLegacy = Boolean(LEGACY_WIDGETS[item.i]);
-        return (
-          <div
-            key={item.i}
-            className={
-              isLegacy
-                // Sem wrapper bg-surface aqui: estes widgets já têm moldura própria
-                // completa (NumericCard/EChartsGauge) — duplicar geraria card-dentro-de-card.
-                ? 'h-full'
-                : `bg-white dark:bg-surface rounded-xl border border-slate-200/80 dark:border-ui-border-soft shadow-sm flex flex-col transition-all ${
-                    item.i === 'widget-10' ? 'overflow-visible z-20 hover:z-30' : 'overflow-hidden'
-                  }`
-            }
-          >
-            {body}
-          </div>
-        );
-      })}
-    </ResponsiveGridLayout>
+    <DashboardWidgetGrid
+      resource={resource}
+      defaultLayout={DEFAULT_LAYOUT}
+      renderWidget={renderWidget}
+      normalizeItem={normalizeItem}
+    />
   );
 }

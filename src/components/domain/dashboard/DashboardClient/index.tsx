@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
-import { fetchSection, FilterType, DashboardData } from "@/lib/dashboard";
+import { fetchSection, getDefaultDateRange, FilterType, DashboardData } from "@/lib/dashboard";
 import { useAuth } from "@/contexts";
 
 interface DashboardContentProps {
@@ -42,15 +42,11 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
   const getDateRange = useCallback(() => {
     const startDate = searchParams.get("startDate");
     const endDate   = searchParams.get("endDate");
-
-    const today      = new Date();
-    const firstDay   = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay    = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const fmt        = (d: Date) => d.toISOString().split("T")[0];
+    const defaults  = getDefaultDateRange();
 
     return {
-      startDate: startDate ?? fmt(firstDay),
-      endDate:   endDate   ?? fmt(lastDay),
+      startDate: startDate ?? defaults.start,
+      endDate:   endDate   ?? defaults.end,
     };
   }, [searchParams]);
 
@@ -80,7 +76,9 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
         setFilter(section);
       }
     },
-    [getDateRange]
+    // `token` importa: sem ele na lista, um token que chega depois da montagem
+    // deixaria este callback preso ao valor antigo (fetch sem Authorization).
+    [getDateRange, token]
   );
 
   // ─── Re-fetch everything when the date range changes ─────────────────────
@@ -99,19 +97,20 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
     [loadSection]
   );
 
-  // ─── Financial-tab period filter ──────────────────────────────────────────
-  // Refetches only the "financial" section client-side for the given range.
+  // ─── Per-tab period filter ────────────────────────────────────────────────
+  // Refetches only the given section client-side for the chosen range. Every tab
+  // owns its own period filter, so every tab routes through here.
   // Deliberately avoids router.push: that re-renders the Server Component page
   // (which awaits fetchSection), which re-triggers the page-level Suspense
-  // fallback and remounts this whole subtree — wiping out FinancialDashboardHeader's
+  // fallback and remounts this whole subtree — wiping out the section header's
   // local year/month state right after the user picks it.
-  const handleFinancialRangeChange = useCallback(
-    async (startDate: string, endDate: string) => {
+  const handleSectionRangeChange = useCallback(
+    async (section: FilterType, startDate: string, endDate: string) => {
       try {
-        const data = await fetchSection("financial", { startDate, endDate, token: token ?? undefined });
-        setMetrics(prev => ({ ...prev, financial: data as any }));
+        const data = await fetchSection(section, { startDate, endDate, token: token ?? undefined });
+        setMetrics(prev => ({ ...prev, [section]: data as any }));
       } catch (err: any) {
-        console.error("[Client] Erro ao atualizar período financeiro:", err);
+        console.error(`[Client] Erro ao atualizar período de ${section}:`, err);
       }
     },
     [token]
@@ -138,7 +137,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
       onFilterChange={handleFilterChange}
       metrics={metrics}
       isLoading={loading[filter]}
-      onFinancialRangeChange={handleFinancialRangeChange}
+      onSectionRangeChange={handleSectionRangeChange}
     />
   );
 }

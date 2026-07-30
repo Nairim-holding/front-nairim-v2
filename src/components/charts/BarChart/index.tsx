@@ -24,13 +24,16 @@ interface BarCardProps {
   loading?: boolean;
   colors?: string[];
   detailColumns?: Array<{ key: string; label: string; format?: (value: any) => string }>;
+  /** Quando dentro de um grid arrastável, a barra do título vira a alça de arrastar. */
+  dragHandleClassName?: string;
 }
 
 export default function EChartsBar({
   data = [],
   label = "Comparativo",
   colors = [],
-  detailColumns = []
+  detailColumns = [],
+  dragHandleClassName
 }: BarCardProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const fullscreenChartRef = useRef<HTMLDivElement>(null);
@@ -186,12 +189,16 @@ export default function EChartsBar({
     <>
       {/* Card Pequeno */}
       <div className="bg-surface rounded-xl p-4 border border-ui-border-soft shadow-sm hover:shadow-md transition-all duration-300 hover:border-brand group h-full flex flex-col relative">
-        <div className="flex justify-between items-center mb-2">
+        <div
+          className={`flex justify-between items-center mb-2 ${dragHandleClassName ? `${dragHandleClassName} cursor-move` : ''}`}
+        >
           <h3 className="text-base font-semibold text-content text-start truncate pr-16">
             {label}
           </h3>
-          
-          <div className="flex gap-1">
+
+          {/* stopPropagation no mousedown: sem isso, clicar nos botões inicia o
+              arrasto do grid em vez de acionar o botão. */}
+          <div className="flex gap-1" onMouseDown={(e) => e.stopPropagation()}>
             {/* BOTÃO VER DETALHES SOLICITADO */}
             {allDetailData.length > 0 && (
               <button

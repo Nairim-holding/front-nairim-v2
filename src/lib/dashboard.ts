@@ -24,12 +24,13 @@ const ENDPOINT_MAP: Record<FilterType, string> = {
   map:       "/dashboard/map",
 };
 
-function getDefaultDateRange(): { start: string; end: string } {
-  const today    = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastDay  = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+/** Ano corrente inteiro — o mesmo default do filtro de período das abas. Antes
+ * era o mês corrente, então o cabeçalho dizia "Ano inteiro" enquanto os dados
+ * eram só do mês, até o usuário mexer no filtro. */
+export function getDefaultDateRange(): { start: string; end: string } {
+  const year = new Date().getFullYear();
   const fmt = (d: Date) => d.toISOString().split("T")[0];
-  return { start: fmt(firstDay), end: fmt(lastDay) };
+  return { start: fmt(new Date(year, 0, 1)), end: fmt(new Date(year, 11, 31)) };
 }
 
 export async function fetchSection<T = MetricResponse | MapCoordinate[]>(

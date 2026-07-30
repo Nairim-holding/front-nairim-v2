@@ -11,7 +11,7 @@ import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
-import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye } from 'lucide-react';
+import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye, Database } from 'lucide-react';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -226,6 +226,25 @@ export default function EditarEmpresaPage({ params }: Props) {
           className: 'col-span-full',
         },
         {
+          field: 'db_quota_mb',
+          label: 'Limite de banco de dados (MB)',
+          type: 'number',
+          placeholder: 'Em branco = limite padrão do sistema',
+          icon: <Database size={20} />,
+          showIncrementButtons: false,
+          validation: {
+            custom: (value: unknown) => {
+              if (value === '' || value === null || value === undefined) return null;
+              const parsed = Number(value);
+              if (!Number.isInteger(parsed) || parsed <= 0) {
+                return 'Informe um número inteiro de MB maior que zero';
+              }
+              return null;
+            },
+          },
+          className: 'col-span-full',
+        },
+        {
           field: 'is_active',
           label: 'Empresa ativa',
           type: 'boolean',
@@ -328,6 +347,9 @@ export default function EditarEmpresaPage({ params }: Props) {
       name: d?.name ?? '',
       slug: d?.slug ?? '',
       is_active: d?.is_active ?? true,
+      // Sem limite próprio, o campo fica vazio (usa o padrão do ambiente) —
+      // não zero, que o backend rejeitaria como cota inválida.
+      db_quota_mb: d?.db_quota_mb ?? '',
     };
     for (const key of ALL_BRANDING_FIELDS) {
       result[key] = branding?.[key] ?? '';
@@ -340,6 +362,11 @@ export default function EditarEmpresaPage({ params }: Props) {
       name: data.name,
       slug: typeof data.slug === 'string' ? data.slug.toLowerCase().trim() : data.slug,
       is_active: data.is_active,
+      // Em branco vai como null: a empresa volta ao limite padrão do ambiente.
+      db_quota_mb:
+        data.db_quota_mb === '' || data.db_quota_mb === null || data.db_quota_mb === undefined
+          ? null
+          : Number(data.db_quota_mb),
     };
     for (const key of ALL_BRANDING_FIELDS) {
       if (data[key]) payload[key] = data[key];

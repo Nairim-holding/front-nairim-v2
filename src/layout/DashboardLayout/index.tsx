@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { memo } from "react";
@@ -20,7 +19,8 @@ interface DashboardLayoutProps {
   metrics: Record<string, MetricResponse | MapCoordinate[] | null>;
   isLoading: boolean;
   onFilterChange: (filter: FilterType) => void;
-  onFinancialRangeChange: (startDate: string, endDate: string) => void;
+  /** Rebusca só a seção informada com o período escolhido no filtro dela. */
+  onSectionRangeChange: (section: FilterType, startDate: string, endDate: string) => void;
 }
 
 function LoadingSkeleton({ filter }: { filter: FilterType }) {
@@ -37,24 +37,29 @@ function LoadingSkeleton({ filter }: { filter: FilterType }) {
 function ActiveSection({
   filter,
   metrics,
-  onFinancialRangeChange,
-}: Pick<DashboardLayoutProps, "filter" | "metrics" | "onFinancialRangeChange">) {
+  onSectionRangeChange,
+}: Pick<DashboardLayoutProps, "filter" | "metrics" | "onSectionRangeChange">) {
+  // Cada seção é dona do seu filtro de período e avisa aqui para rebuscar só
+  // a si mesma — por isso o range change é amarrado à seção ativa.
+  const handleRangeChange = (startDate: string, endDate: string) =>
+    onSectionRangeChange(filter, startDate, endDate);
+
   if (filter === "map") {
-    return <MapSection data={(metrics.map as MapCoordinate[]) ?? []} />;
+    return <MapSection data={(metrics.map as MapCoordinate[]) ?? []} onRangeChange={handleRangeChange} />;
   }
 
   const current = metrics[filter] as MetricResponse | null;
   if (!current) return null;
 
   switch (filter) {
-    case "financial": return <FinancialSection metrics={current} onRangeChange={onFinancialRangeChange} />;
-    case "portfolio": return <PortfolioSection metrics={current} />;
-    case "clients":   return <ClientsSection   metrics={current} />;
+    case "financial": return <FinancialSection metrics={current} onRangeChange={handleRangeChange} />;
+    case "portfolio": return <PortfolioSection metrics={current} onRangeChange={handleRangeChange} />;
+    case "clients":   return <ClientsSection   metrics={current} onRangeChange={handleRangeChange} />;
     default:          return null;
   }
 }
 
-function DashboardLayout({ filter, metrics, isLoading, onFilterChange, onFinancialRangeChange }: DashboardLayoutProps) {
+function DashboardLayout({ filter, metrics, isLoading, onFilterChange, onSectionRangeChange }: DashboardLayoutProps) {
   return (
     <section className="p-3 min-h-screen transition-all duration-300">
       <DashboardFilter filter={filter} setFilter={onFilterChange} />
@@ -63,7 +68,7 @@ function DashboardLayout({ filter, metrics, isLoading, onFilterChange, onFinanci
         {isLoading ? (
           <LoadingSkeleton filter={filter} />
         ) : (
-          <ActiveSection filter={filter} metrics={metrics} onFinancialRangeChange={onFinancialRangeChange} />
+          <ActiveSection filter={filter} metrics={metrics} onSectionRangeChange={onSectionRangeChange} />
         )}
       </div>
     </section>

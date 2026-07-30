@@ -24,6 +24,8 @@ interface ChartCardProps {
   detailData?: any[];
   detailColumns?: ChartCardColumn[];
   dragHandleClassName?: string;
+  /** Fora do grid arrastável (ex.: aba Portfólio) não há o que arrastar — sem alça nem cursor-move. */
+  isDraggable?: boolean;
   children: (opts: ChartCardRenderOpts) => ReactNode;
 }
 
@@ -42,6 +44,7 @@ export default function ChartCard({
   detailData = [],
   detailColumns,
   dragHandleClassName = 'widget-drag-handle',
+  isDraggable = true,
   children,
 }: ChartCardProps) {
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
@@ -56,7 +59,7 @@ export default function ChartCard({
   return (
     <>
       <div
-        className={`${dragHandleClassName} cursor-move px-4 py-3 border-b border-ui-border-soft shrink-0 flex items-center justify-between gap-2`}
+        className={`${isDraggable ? `${dragHandleClassName} cursor-move` : ''} px-4 py-3 border-b border-ui-border-soft shrink-0 flex items-center justify-between gap-2`}
       >
         <h3 className="text-sm font-semibold text-content truncate">{title}</h3>
         <div className="flex gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>

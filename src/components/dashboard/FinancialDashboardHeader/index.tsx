@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Calendar, TrendingUp, TrendingDown, Scale } from 'lucide-react';
-import YearSelect from './YearSelect';
-import MonthMultiSelect from './MonthMultiSelect';
+import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
+import { PeriodFilterSelector } from '@/components/dashboard/PeriodFilter';
 import { useMonthlySummary } from '@/hooks/useMonthlySummary';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 
@@ -65,18 +64,12 @@ export default function FinancialDashboardHeader({ year, selectedMonths, onYearC
 
   return (
     <div className="bg-surface rounded-xl border border-ui-border-soft shadow-sm p-4 mb-4 flex flex-col lg:flex-row lg:items-center gap-4">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-brand/10 text-brand shrink-0">
-          <Calendar size={18} />
-        </div>
-        <div>
-          <div className="text-xs text-content-muted mb-1">Período de análise</div>
-          <div className="flex items-center rounded-xl border border-ui-border bg-surface divide-x divide-ui-border-soft shadow-sm hover:shadow transition-shadow">
-            <YearSelect value={year} onChange={onYearChange} />
-            <MonthMultiSelect selectedMonths={selectedMonths} onChange={onMonthsChange} />
-          </div>
-        </div>
-      </div>
+      <PeriodFilterSelector
+        year={year}
+        selectedMonths={selectedMonths}
+        onYearChange={onYearChange}
+        onMonthsChange={onMonthsChange}
+      />
 
       <div className="hidden lg:block w-px self-stretch bg-ui-border-soft" />
 
