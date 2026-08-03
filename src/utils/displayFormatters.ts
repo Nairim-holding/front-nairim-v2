@@ -50,6 +50,21 @@ export const formatDate = (v: any): string => {
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
 };
 
+/** Data + hora, ao contrário de formatDate (só data) — usado onde o momento
+ *  exato importa, como a trilha de auditoria. */
+export const formatDateTime = (v: any): string => {
+  if (!v) return 'N/A';
+  const date = new Date(v);
+  if (isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 export const formatCPFCNPJ = (value: string): string => {
   if (!value) return '-';
   const clean = value.replace(/\D/g, '');

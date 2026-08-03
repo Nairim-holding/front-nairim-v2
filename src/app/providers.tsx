@@ -12,6 +12,7 @@
 import { ReactNode } from 'react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { PermissionsProvider } from '@/contexts/PermissionsContext';
 import { PopupProvider } from '@/contexts/PopupContext';
 import { MessageProvider } from '@/contexts/MessageContext';
 import { FilterProvider } from '@/contexts/filter-context';
@@ -31,11 +32,13 @@ export function AppProviders({
       <FetchInterceptor />
       <ThemeProvider>
         <AuthProvider>
-          <PopupProvider>
-            <MessageProvider>
-              <FilterProvider>{children}</FilterProvider>
-            </MessageProvider>
-          </PopupProvider>
+          <PermissionsProvider>
+            <PopupProvider>
+              <MessageProvider>
+                <FilterProvider>{children}</FilterProvider>
+              </MessageProvider>
+            </PopupProvider>
+          </PermissionsProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrandingProvider>

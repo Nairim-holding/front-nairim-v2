@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { fetchSection, getDefaultDateRange, FilterType, DashboardData } from "@/lib/dashboard";
 import { useAuth } from "@/contexts";
+import ForbiddenNotice from "@/components/layout/PermissionGate/ForbiddenNotice";
 
 interface DashboardContentProps {
   /** Pre-fetched data from the Server Component (financial is populated, rest are null) */
@@ -32,6 +33,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
     map:       false,
   });
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
   // Track which sections have already been fetched to avoid redundant calls
   const fetchedRef = useRef<Set<FilterType>>(
@@ -61,6 +63,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
 
       setLoading(prev => ({ ...prev, [section]: true }));
       setError(null);
+      setErrorStatus(null);
 
       try {
         const { startDate, endDate } = getDateRange();
@@ -71,6 +74,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
       } catch (err: any) {
         console.error(`[Client] Erro ao carregar ${section}:`, err);
         setError(err.message ?? "Erro desconhecido");
+        setErrorStatus(err.status ?? null);
       } finally {
         setLoading(prev => ({ ...prev, [section]: false }));
         setFilter(section);
@@ -118,6 +122,17 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
 
   // ─── Error / empty state ──────────────────────────────────────────────────
   if (error && !metrics[filter]) {
+    // 403 = sem permissão no grupo — mensagem amigável, sem botão de retry
+    // (tentar de novo não muda o resultado; quem resolve é um admin ajustando
+    // as diretivas de acesso do grupo).
+    if (errorStatus === 403) {
+      return (
+        <div className="flex flex-col justify-center items-center min-h-screen">
+          <ForbiddenNotice />
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col gap-4 justify-center items-center min-h-screen text-red-600">
         <p>{error}</p>

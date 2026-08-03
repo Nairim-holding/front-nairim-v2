@@ -2,11 +2,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
+import { usePermissions } from "@/contexts/PermissionsContext";
+import { normalizeResourceKey } from "@/utils/permissionResource";
 import { authFetch } from "@/utils/authFetch";
 import SkeletonTable from "../TableSkeleton";
 import DynamicFilterModal from "../../filters/DynamicFilterModal";
@@ -16,7 +18,7 @@ import Pagination from "../../filters/Pagination";
 import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import Input from "../../ui/Input";
-import { formatCurrency, formatDate, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/displayFormatters";
+import { formatCurrency, formatDate, formatDateTime, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/displayFormatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { ColumnDef } from "@/types/types";
@@ -42,6 +44,20 @@ interface DynamicTableManagerProps {
   onDelete?: (item: any, index: number) => void;
   hideActionButtons?: boolean;
   onSortChange?: (sort: Record<string, 'asc' | 'desc'>) => void;
+  /**
+   * Ações extras por linha, renderizadas depois de Visualizar/Editar.
+   * Opcional: sem ela a célula de ações continua exatamente como antes.
+   */
+  rowActions?: RowAction[];
+}
+
+export interface RowAction {
+  key: string;
+  title: string;
+  icon: ReactNode;
+  onClick: (item: any) => void;
+  /** Ação da diretiva de acesso que autoriza este botão (default: sempre visível). */
+  action?: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'custom_field';
 }
 
 export default function DynamicTableManager({
@@ -63,7 +79,28 @@ export default function DynamicTableManager({
   onDelete,
   hideActionButtons = false,
   onSortChange,
+  rowActions,
 }: DynamicTableManagerProps) {
+  const { can } = usePermissions();
+  const permResource = normalizeResourceKey(resource);
+  // Diretiva de acesso do grupo AND a prop (a prop já desliga o botão por
+  // regra de negócio da página; a diretiva desliga por permissão do usuário).
+  const canView = enableView && can(permResource, 'view');
+  const canEditPerm = (enableEdit || !!onEdit) && can(permResource, 'edit');
+  const canDeletePerm = enableDelete && can(permResource, 'delete');
+  const canCreatePerm = enableCreate && can(permResource, 'create');
+  const visibleRowActions = (rowActions ?? []).filter(
+    (action) => !action.action || can(permResource, action.action)
+  );
+
+  // A célula de ações é sticky e tinha largura fixa de 50px (cabia Ver + Editar).
+  // Com rowActions o total varia, então a largura acompanha a quantidade de ícones.
+  const actionsCount =
+    (canView ? 1 : 0) +
+    (canEditPerm ? 1 : 0) +
+    visibleRowActions.length;
+  const actionsCellWidth = `${Math.max(50, actionsCount * 26 + 8)}px`;
+
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>(defaultFilters);
@@ -438,6 +475,7 @@ export default function DynamicTableManager({
       switch (column.formatter) {
         case 'currency': return formatCurrency(value);
         case 'date': return formatDate(value);
+        case 'datetime': return formatDateTime(value);
         case 'cpfCnpj': return formatCPFCNPJ(value);
         case 'gender': return formatGender(value);
         case 'phone': return formatPhone(value);
@@ -972,7 +1010,7 @@ export default function DynamicTableManager({
           <div className="flex items-center gap-4">
             {!hideActionButtons && (
               <>
-                {enableCreate && (
+                {canCreatePerm && (
                   resource === 'owners' || resource === 'tenants' ? (
                     <div className="relative">
                       <button
@@ -1028,8 +1066,8 @@ export default function DynamicTableManager({
                     </span>
                   )}
                 </div>
-                {enableDelete && (
-                  <button 
+                {canDeletePerm && (
+                  <button
                     type="button"
                     onClick={handleDeleteClick}
                     className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1095,7 +1133,7 @@ export default function DynamicTableManager({
           onSort={handleSort}
           onSelectAll={(e) => handleSelectAll(e.target.checked)}
           allSelected={tableData.allSelected}
-          hasActions={!!(enableView || enableEdit || onEdit || onDelete)}
+          hasActions={!!(canView || canEditPerm || actionsCount > 0)}
           columnWidths={columnWidths}
           onMouseDownResize={handleMouseDownResize}
         >
@@ -1117,7 +1155,7 @@ export default function DynamicTableManager({
                     style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                   >
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${isFirst ? 'justify-start' : 'justify-center'}`}>
-                      {isFirst && enableDelete && (
+                      {isFirst && canDeletePerm && (
                         <div className="mr-2 flex shrink-0 items-center justify-center w-4 h-4">
                           <input
                             type="checkbox"
@@ -1150,12 +1188,15 @@ export default function DynamicTableManager({
                 );
               })}
 
-              {(enableView || enableEdit || onEdit) && (
-                <td className="px-1 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle w-[50px] min-w-[50px] max-w-[50px] p-0 h-[26px]">
+              {(canView || canEditPerm || actionsCount > 0) && (
+                <td
+                  className="px-1 sticky right-0 bg-surface z-20 border-l border-ui-border-soft align-middle p-0 h-[26px]"
+                  style={{ width: actionsCellWidth, minWidth: actionsCellWidth, maxWidth: actionsCellWidth }}
+                >
                   <div className="flex items-center justify-center h-full min-h-[26px]">
-                    {enableView && (
-                      <Link 
-                        href={`${basePath}/visualizar/${item.id}`} 
+                    {canView && (
+                      <Link
+                        href={`${basePath}/visualizar/${item.id}`}
                         title="Visualizar"
                         className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
                         onClick={(e) => e.stopPropagation()}
@@ -1163,9 +1204,9 @@ export default function DynamicTableManager({
                         <Eye size={16} />
                       </Link>
                     )}
-                    {enableEdit && !onEdit && (
-                      <Link 
-                        href={`${basePath}/editar/${item.id}`} 
+                    {canEditPerm && !onEdit && (
+                      <Link
+                        href={`${basePath}/editar/${item.id}`}
                         title="Editar"
                         className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
                         onClick={(e) => e.stopPropagation()}
@@ -1173,7 +1214,7 @@ export default function DynamicTableManager({
                         <Edit size={16} />
                       </Link>
                     )}
-                    {onEdit && (
+                    {canEditPerm && onEdit && (
                       <button
                         type="button"
                         title="Editar"
@@ -1187,6 +1228,20 @@ export default function DynamicTableManager({
                         <Edit size={16} />
                       </button>
                     )}
+                    {visibleRowActions.map((action) => (
+                      <button
+                        key={action.key}
+                        type="button"
+                        title={action.title}
+                        className="p-1 hover:bg-surface-subtle rounded transition-colors text-brand"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          action.onClick(item);
+                        }}
+                      >
+                        {action.icon}
+                      </button>
+                    ))}
                   </div>
                 </td>
               )}

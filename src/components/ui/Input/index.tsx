@@ -17,7 +17,7 @@ export interface InputProps {
   svg?: React.ReactNode;
   disabled?: boolean;
   tabIndex?: number;
-  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros' | 'date';
+  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'telefoneSemDDD' | 'money' | 'metros2' | 'metros' | 'date';
   autoFocus?: boolean;
   password?: boolean;
   maxLength?: number;
@@ -64,6 +64,15 @@ const maskPhone = (value: string): string => {
   if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
   if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6, 10)}`;
   return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+};
+
+// Telefone sem DDD: 0000-0000 ou 00000-0000 — para formulários que já separam
+// o código de área em outro campo (ex.: DDI/Área/Telefone/Ramal).
+const maskPhoneLocal = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 4) return numbers;
+  if (numbers.length <= 8) return `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+  return `${numbers.slice(0, 5)}-${numbers.slice(5, 9)}`;
 };
 
 const maskMoney = (value: string): string => {
@@ -117,6 +126,7 @@ const applyMask = (maskType: InputProps['mask'], value: string): string => {
     case "rg": return maskRG(value);
     case "cep": return maskCEP(value);
     case "telefone": return maskPhone(value);
+    case "telefoneSemDDD": return maskPhoneLocal(value);
     case "money": return maskMoney(value);
     case "metros2": return maskMetros2(value);
     case "metros": return maskMetros(value);
@@ -134,6 +144,7 @@ const removeMask = (maskType: InputProps['mask'], value: string): string => {
     case "rg":
     case "cep":
     case "telefone":
+    case "telefoneSemDDD":
       return value.replace(/\D/g, '');
     case "money":
     case "metros2":

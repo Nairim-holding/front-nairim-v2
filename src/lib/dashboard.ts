@@ -66,7 +66,13 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
     ...options.fetchOptions,
   });
 
-  if (!res.ok) throw new Error(`Erro ao carregar ${section}: ${res.status}`);
+  if (!res.ok) {
+    // `status` permite o chamador distinguir "sem permissão" (403) de falhas
+    // reais (500, rede) e mostrar uma mensagem amigável em vez do status cru.
+    const error = new Error(`Erro ao carregar ${section}: ${res.status}`) as Error & { status?: number };
+    error.status = res.status;
+    throw error;
+  }
 
   const json = await res.json();
   if (!json.success) throw new Error(json.message ?? `Erro na resposta da API (${section})`);

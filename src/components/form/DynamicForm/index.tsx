@@ -869,7 +869,7 @@ export default function DynamicFormManager({
               {...commonProps}
               type={field.type}
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
             {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
@@ -901,7 +901,7 @@ export default function DynamicFormManager({
                   type="password"
                   password
                 />
-                {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+                {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
                 {field.validation?.patternMessage && !error && !(field as any).renderBottom && (
                   <p className="text-content-muted text-xs mt-1">
                     {field.validation.patternMessage}
@@ -920,9 +920,14 @@ export default function DynamicFormManager({
                   placeholder={confirmField.placeholder}
                   disabled={shouldDisable}
                   value={String(confirmValue)}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleChange(confirmField.field, e.target.value)
                   }
+                  // Espelha o campo primário: sem isso o par fica assimétrico
+                  // (um preenche a metade da linha, o outro trava em 300px).
+                  svg={confirmField.icon}
+                  tabIndex={confirmField.tabIndex}
+                  full={(confirmField as any).full}
                 />
                 {errors[confirmField.field] && <p className="text-state-error text-sm mt-1">{errors[confirmField.field]}</p>}
               </div>
@@ -942,7 +947,7 @@ export default function DynamicFormManager({
               type="password"
               password
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
             {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
@@ -966,7 +971,7 @@ export default function DynamicFormManager({
               tabIndex={field.tabIndex}
               searchable={(field as any).searchable}
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
             {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );
@@ -994,7 +999,7 @@ export default function DynamicFormManager({
               maxLength={field.maxLength}
               autoFocus={field.autoFocus} 
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
           </div>
         );
 
@@ -1011,7 +1016,7 @@ export default function DynamicFormManager({
               label={field.label}
               disabled={shouldDisable || isReadOnly}
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
           </div>
         );
 
@@ -1037,7 +1042,7 @@ export default function DynamicFormManager({
               isViewMode={isViewMode}
               enableFeatureSelection={(field as any).enableFeatureSelection}
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
           </div>
         );
 
@@ -1052,9 +1057,9 @@ export default function DynamicFormManager({
               {field.label}
             </label>
             <div className="mt-1">
-              {field.render ? field.render(value, formValues, (newValue: any) => handleChange(field.field, newValue)) : null}
+              {field.render ? field.render(value, formValues, (newValue: any) => handleChange(field.field, newValue), handleChange) : null}
             </div>
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
           </div>
         );
 
@@ -1068,7 +1073,7 @@ export default function DynamicFormManager({
               {...commonProps}
               type="text"
             />
-            {(field as any).renderBottom && (field as any).renderBottom(value, formValues)}
+            {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
             {error && <p className="text-state-error text-sm mt-1">{error}</p>}
           </div>
         );

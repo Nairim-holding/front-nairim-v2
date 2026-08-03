@@ -26,7 +26,7 @@ export interface ColumnDef {
   label: string;
   sortParam?: string;
   type?: ColumnType;
-  formatter?: 'currency' | 'date' | 'cpfCnpj' | 'rg' | 'phone' | 'boolean' | 'gender' | 'address' | 'propertyStatus' | 'cep';
+  formatter?: 'currency' | 'date' | 'datetime' | 'cpfCnpj' | 'rg' | 'phone' | 'boolean' | 'gender' | 'address' | 'propertyStatus' | 'cep';
   nestedField?: string;
   width?: string;
   align?: 'left' | 'center' | 'right';
@@ -59,7 +59,7 @@ export interface FormFieldDef {
   disabled?: boolean;
   readOnly?: boolean;
   hidden?: boolean | ((formValues: any) => boolean);
-  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'money' | 'metros2' | 'metros';
+  mask?: 'cpf' | 'cnpj' | 'rg' | 'cep' | 'telefone' | 'telefoneSemDDD' | 'money' | 'metros2' | 'metros';
   maxLength?: number;
   showIncrementButtons?: boolean;
   tabIndex?: number;
@@ -75,7 +75,21 @@ export interface FormFieldDef {
   max?: number;
   rows?: number;
   // CORREÇÃO: Adicionado onChange como terceiro parâmetro opcional
-  render?: (value: any, formValues?: any, onChange?: (value: any) => void) => React.ReactNode;
+  // 4º parâmetro (setFieldValue) permite que um campo customizado atualize OUTRO
+  // campo do formulário — ex.: um botão "gerar senha" que preenche senha e
+  // confirmação ao mesmo tempo.
+  render?: (
+    value: any,
+    formValues?: any,
+    onChange?: (value: any) => void,
+    setFieldValue?: (field: string, value: any) => void
+  ) => React.ReactNode;
+  /** Conteúdo extra abaixo do campo nativo (ex.: checklist de senha, idade calculada). */
+  renderBottom?: (
+    value: any,
+    formValues?: any,
+    setFieldValue?: (field: string, value: any) => void
+  ) => React.ReactNode;
 }
 
 export interface FormStep {

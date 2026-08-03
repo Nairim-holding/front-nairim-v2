@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -26,11 +26,14 @@ import {
   Users,
   FolderInput,
   BarChart2,
-  Briefcase
+  Briefcase,
+  FileClock
 } from "lucide-react";
 import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/contexts/PermissionsContext";
+import { resourceForHref } from "@/utils/permissionResource";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Aside() {
@@ -43,6 +46,7 @@ export default function Aside() {
   const menuItemsRef = useRef<HTMLUListElement>(null);
 
   const { logout, user } = useAuth();
+  const { can } = usePermissions();
   const { isDark, toggleTheme } = useTheme();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
@@ -92,40 +96,50 @@ export default function Aside() {
     }, 300);
   };
 
-  const menuItems = [
-    { href: "/dashboard", icon: Home, label: "Resumo" },
-    {
-      href: "#",
-      icon: PlusCircle,
-      label: "Cadastrar",
-      submenu: [
-        { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador" },
-        ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresa" }] : []),
-        { href: "/dashboard/imoveis", icon: House, label: "Imóvel" },
-        { href: "/dashboard/imobiliarias", icon: Building2, label: "Imobiliária" },
-        { href: "/dashboard/inquilinos", icon: UserCheck, label: "Inquilinos" },
-        { href: "/dashboard/proprietarios", icon: UserCircle, label: "Proprietários" },
-        { href: "/dashboard/tipo-imovel", icon: Tag, label: "Tipo Imóvel" },
-      ]
-    },
-    { href: "/dashboard/locacoes", icon: Key, label: "Locações" },
-    {
-      href: "#",
-      icon: PiggyBank,
-      label: "Financeiro",
-      submenu: [
-        { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras" },
-        { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias" },
-        { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito" },
-        { href: "/dashboard/centros", icon: HandCoins, label: "Centros" },
-        { href: "/dashboard/fornecedores", icon: Users, label: "Contatos" },
-        { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos" },
-        { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle" },
+  // `resource` vem de RESOURCE_ROUTES (utils/permissionResource.ts) — mesma
+  // tabela usada pelo PermissionGate para bloquear acesso direto por URL, para
+  // as duas features nunca divergirem sobre "que rota cobre que recurso".
+  // Item sem `resource` (os "guarda-chuva" Cadastrar/Financeiro) não é
+  // filtrado direto: fica visível se sobrar ao menos 1 item no submenu.
+  const menuItems = useMemo(() => {
+    const raw = [
+      { href: "/dashboard", icon: Home, label: "Resumo", resource: resourceForHref("/dashboard") },
+      {
+        href: "#",
+        icon: PlusCircle,
+        label: "Cadastrar",
+        submenu: [
+          { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador", resource: resourceForHref("/dashboard/administradores") },
+          { href: "/dashboard/grupos-usuario", icon: Users, label: "Grupo de Usuário", resource: resourceForHref("/dashboard/grupos-usuario") },
+          ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresa", resource: resourceForHref("/dashboard/empresas") }] : []),
+          { href: "/dashboard/imoveis", icon: House, label: "Imóvel", resource: resourceForHref("/dashboard/imoveis") },
+          { href: "/dashboard/imobiliarias", icon: Building2, label: "Imobiliária", resource: resourceForHref("/dashboard/imobiliarias") },
+          { href: "/dashboard/inquilinos", icon: UserCheck, label: "Inquilinos", resource: resourceForHref("/dashboard/inquilinos") },
+          { href: "/dashboard/proprietarios", icon: UserCircle, label: "Proprietários", resource: resourceForHref("/dashboard/proprietarios") },
+          { href: "/dashboard/tipo-imovel", icon: Tag, label: "Tipo Imóvel", resource: resourceForHref("/dashboard/tipo-imovel") },
+        ].filter((sub) => can(sub.resource, 'view')),
+      },
+      { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
+      {
+        href: "#",
+        icon: PiggyBank,
+        label: "Financeiro",
+        submenu: [
+          { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras", resource: resourceForHref("/dashboard/instituicoes-financeiras") },
+          { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias", resource: resourceForHref("/dashboard/categorias") },
+          { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito", resource: resourceForHref("/dashboard/cartoes") },
+          { href: "/dashboard/centros", icon: HandCoins, label: "Centros", resource: resourceForHref("/dashboard/centros") },
+          { href: "/dashboard/fornecedores", icon: Users, label: "Contatos", resource: resourceForHref("/dashboard/fornecedores") },
+          { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
+          { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
+        ].filter((sub) => can(sub.resource, 'view')),
+      },
+      { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações", resource: resourceForHref("/dashboard/configuracoes") },
+      { href: "/dashboard/auditoria", icon: FileClock, label: "Auditoria", resource: resourceForHref("/dashboard/auditoria") },
+    ];
 
-      ]
-    },
-    { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
-  ];
+    return raw.filter((item) => (item.submenu ? item.submenu.length > 0 : can(item.resource, 'view')));
+  }, [isSuperAdmin, can]);
 
   const handleLogout = async () => {
     logout();
