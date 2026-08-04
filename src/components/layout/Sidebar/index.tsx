@@ -27,7 +27,8 @@ import {
   FolderInput,
   BarChart2,
   Briefcase,
-  FileClock
+  FileClock,
+  FileBarChart2
 } from "lucide-react";
 import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
@@ -132,6 +133,7 @@ export default function Aside() {
           { href: "/dashboard/fornecedores", icon: Users, label: "Contatos", resource: resourceForHref("/dashboard/fornecedores") },
           { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
           { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
+          { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios") },
         ].filter((sub) => can(sub.resource, 'view')),
       },
       { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações", resource: resourceForHref("/dashboard/configuracoes") },

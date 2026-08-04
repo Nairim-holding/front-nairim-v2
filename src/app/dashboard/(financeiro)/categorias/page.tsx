@@ -6,6 +6,14 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
 import MultiColumnManager from '@/components/form/MultiColumnManager';
 
+const DFC_GROUP_OPTIONS = [
+  { value: '', label: 'Não classificada' },
+  { value: 'TAXES', label: 'Impostos' },
+  { value: 'VARIABLE_EXPENSE', label: 'Despesa Variável' },
+  { value: 'FIXED_EXPENSE', label: 'Despesa Fixa' },
+  { value: 'PAYROLL', label: 'Despesas com Pessoal' },
+];
+
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
@@ -190,6 +198,30 @@ export default function CategoriasPage() {
           onSaveChild={handleSaveChild}
           onDeleteParent={handleDeleteParent}
           onDeleteChild={handleDeleteChild}
+          parentExtraDefaults={(record) => ({ dfc_group: (record as { dfc_group?: string | null } | null)?.dfc_group ?? null })}
+          parentExtraFields={
+            transactionType === 'EXPENSE'
+              ? (formData, setFormData) => (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-semibold text-content-secondary">Classificação no DFC</label>
+                    <select
+                      value={(formData.dfc_group as string | null) ?? ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, dfc_group: e.target.value || null }))
+                      }
+                      className="w-full px-3 py-2.5 text-[14px] border border-ui-border rounded-lg outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all bg-surface"
+                    >
+                      {DFC_GROUP_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-content-muted">
+                      Usada no relatório Demonstrativo (DFC) do Fluxo de Caixa, em Relatórios.
+                    </p>
+                  </div>
+                )
+              : undefined
+          }
         />
 
       </div>

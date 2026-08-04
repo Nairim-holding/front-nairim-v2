@@ -42,6 +42,7 @@ export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
   { path: '/dashboard/fornecedores', resource: 'financial-suppliers' },
   { path: '/dashboard/lancamentos', resource: 'financial-transactions' },
   { path: '/dashboard/planejamento', resource: 'planning' },
+  { path: '/dashboard/relatorios', resource: 'financial-reports' },
   { path: '/dashboard/configuracoes', resource: 'settings' },
   { path: '/dashboard/auditoria', resource: 'audit-logs' },
 ];

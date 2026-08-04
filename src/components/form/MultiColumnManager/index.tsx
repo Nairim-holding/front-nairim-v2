@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { Plus, Trash2, Edit2, X, Search } from 'lucide-react';
 import Toggle from '@/components/ui/Toggle';
 
@@ -22,6 +22,7 @@ interface FormData {
   id: string;
   name: string;
   is_active: boolean;
+  [key: string]: unknown;
 }
 
 interface MultiColumnManagerProps {
@@ -39,6 +40,10 @@ interface MultiColumnManagerProps {
   onDeleteChild: (id: string, name: string) => Promise<void>;
   isLoading: boolean;
   resetTrigger?: unknown;
+  /** Campos extras exibidos apenas no formulário do Parent (entre Nome e Status). */
+  parentExtraFields?: (formData: FormData, setFormData: (updater: (prev: FormData) => FormData) => void) => ReactNode;
+  /** Valores iniciais dos campos extras do Parent ao abrir o formulário (create ou edit). */
+  parentExtraDefaults?: (record: ManagerColumn | null) => Record<string, unknown>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -70,6 +75,8 @@ export default function MultiColumnManager({
   onDeleteChild,
   isLoading,
   resetTrigger,
+  parentExtraFields,
+  parentExtraDefaults,
 }: MultiColumnManagerProps) {
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [searchParent, setSearchParent] = useState('');
@@ -128,12 +135,14 @@ export default function MultiColumnManager({
 
   const openForm = useCallback((mode: FormMode, record: ManagerColumn | null = null) => {
     setFormMode(mode);
+    const extra = mode.includes('PARENT') ? parentExtraDefaults?.(record) ?? {} : {};
     setFormData({
       id: record?.id ?? '',
       name: record?.name ?? '',
       is_active: record !== null ? record.is_active : true,
+      ...extra,
     });
-  }, []);
+  }, [parentExtraDefaults]);
 
   const closeForm = useCallback(() => {
     setFormMode('IDLE');
@@ -145,16 +154,17 @@ export default function MultiColumnManager({
 
     setIsSaving(true);
     try {
-      const payload = { id: formData.id, name: formData.name, is_active: formData.is_active };
       const isCreate = formMode.includes('CREATE');
       const apiMode = isCreate ? 'CREATE' : 'EDIT';
 
       if (formMode === 'CREATE_PARENT' || formMode === 'EDIT_PARENT') {
-        const result = await onSaveParent(payload, apiMode);
+        // Formulário do Parent pode ter campos extras (ex.: dfc_group) — inclui tudo.
+        const result = await onSaveParent(formData, apiMode);
         if (formMode === 'CREATE_PARENT' && result?.id && hasChild) {
           setSelectedParentId(result.id);
         }
       } else {
+        const payload = { id: formData.id, name: formData.name, is_active: formData.is_active };
         await onSaveChild(payload, selectedParentId!, apiMode);
       }
 
@@ -404,6 +414,8 @@ export default function MultiColumnManager({
                   className="w-full px-3 py-2.5 text-[14px] border border-ui-border rounded-lg outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
                 />
               </div>
+
+              {formMode.includes('PARENT') && parentExtraFields?.(formData, setFormData)}
 
               <div className="flex flex-col gap-2 mt-2">
                 <label className="text-[13px] font-semibold text-content-secondary">Status</label>
