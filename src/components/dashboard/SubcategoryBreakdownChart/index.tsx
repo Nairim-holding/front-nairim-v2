@@ -8,6 +8,7 @@ import Select, { type Option } from '@/components/ui/Select';
 import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { getPeriodRange } from '@/utils/periodRange';
+import { appendFilterParams } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
@@ -23,14 +24,22 @@ interface SubcategoryItem {
 interface SubcategoryBreakdownChartProps {
   startDate?: string;
   endDate?: string;
+  filters?: Record<string, unknown>;
 }
 
-export default function SubcategoryBreakdownChart({ startDate: startDateProp, endDate: endDateProp }: SubcategoryBreakdownChartProps) {
+/**
+ * Detalhamento de Gastos por Subcategorias (Tarefa 7, 29/07/26). Era um
+ * gráfico de PIZZA — subcategorias com percentual pequeno ficavam ilegíveis
+ * fatiadas. Agora é barras verticais, no mesmo estilo do "Saldo por Conta"
+ * (AccountBalanceChart): cada subcategoria é uma barra, valor no topo.
+ */
+export default function SubcategoryBreakdownChart({ startDate: startDateProp, endDate: endDateProp, filters }: SubcategoryBreakdownChartProps) {
   useTheme();
   const tokens = getThemeTokens();
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
   const startDate = startDateProp ?? fallback.startDate;
   const endDate = endDateProp ?? fallback.endDate;
+  const filterKey = JSON.stringify(filters ?? {});
 
   const [categories, setCategories] = useState<Option[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -75,9 +84,9 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
 
     (async () => {
       try {
-        const response = await authFetch(
-          `${API_URL}/financial-transaction/subcategory-breakdown?categoryId=${selectedCategoryId}&startDate=${startDate}&endDate=${endDate}`
-        );
+        const params = new URLSearchParams({ categoryId: selectedCategoryId, startDate, endDate });
+        appendFilterParams(params, filters);
+        const response = await authFetch(`${API_URL}/financial-transaction/subcategory-breakdown?${params}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled) {
@@ -96,7 +105,8 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
     return () => {
       cancelled = true;
     };
-  }, [selectedCategoryId, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategoryId, startDate, endDate, filterKey]);
 
   const percentages = useMemo(
     () => subcategories.map((s) => ({
@@ -106,18 +116,16 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
     [subcategories, total]
   );
 
+  // Totalizador vem do rodapé em negrito do DataModal (summable).
   const detailData = useMemo(
-    () => [
-      ...subcategories.map((s) => ({ subcategory: s.name, value: s.value })),
-      { subcategory: 'Total', value: total },
-    ],
-    [subcategories, total]
+    () => subcategories.map((s) => ({ subcategory: s.name, value: s.value })),
+    [subcategories]
   );
 
   const detailColumns = useMemo(
     () => [
       { key: 'subcategory', label: 'Subcategoria' },
-      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v) },
+      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );
@@ -134,61 +142,56 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
         { label: 'Gasto', value: val, color: item.color, formattedValue: `${formatCurrency(val)} (${pct.toFixed(1)}%)` },
       ]);
     }),
-    title: {
-      text: `TOTAL GASTO\n${formatCurrency(total)}`,
-      left: '38%',
-      top: '42%',
-      textAlign: 'center',
-      textStyle: {
-        color: tokens.textMuted,
-        fontSize: isLarge ? 13 : 11,
-        fontWeight: 'bold',
-        lineHeight: 16,
-      },
+    grid: {
+      top: 36,
+      bottom: isLarge ? 80 : 60,
+      left: 16,
+      right: 16,
+      containLabel: true,
     },
-    legend: {
-      orient: 'vertical',
-      right: 8,
-      top: 'middle',
-      icon: 'circle',
-      textStyle: {
-        color: tokens.textSecondary,
+    xAxis: {
+      type: 'category',
+      data: percentages.map((s) => s.name),
+      axisLabel: {
+        color: tokens.textMuted,
         fontSize: isLarge ? 12 : 11,
-        fontWeight: 500,
+        rotate: percentages.length > 4 ? 35 : 0,
+        interval: 0,
       },
-      itemGap: 8,
+      axisLine: { lineStyle: { color: tokens.borderSoft } },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: tokens.textMuted, fontSize: 11, formatter: (value: number) => formatCurrency(value) },
+      splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
     },
     series: [
       {
-        type: 'pie',
-        radius: isLarge ? ['50%', '76%'] : ['44%', '70%'],
-        center: ['38%', '50%'],
-        avoidLabelOverlap: true,
+        type: 'bar',
+        data: percentages.map((s) => s.value),
+        barMaxWidth: 44,
         label: {
           show: true,
-          position: 'inside',
-          formatter: (params: any) => `${params.percent.toFixed(1)}%`,
-          color: tokens.textInverse,
+          position: 'top',
+          formatter: (p: any) => `${formatCurrency(Number(p.value))}\n${percentages[p.dataIndex]?.percentage.toFixed(1)}%`,
           fontSize: isLarge ? 11 : 9,
           fontWeight: 'bold',
+          color: tokens.textSecondary,
+          lineHeight: 14,
         },
-        labelLine: { show: false },
-        itemStyle: { borderColor: tokens.bgSurface, borderWidth: 2 },
-        data: percentages.map((s, idx) => ({
-          name: s.name,
-          value: s.value,
-          itemStyle: { color: tokens.chartSeries[idx % tokens.chartSeries.length] },
-        })),
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: (params: any) => tokens.chartSeries[params.dataIndex % tokens.chartSeries.length],
+        },
       },
     ],
-  }), [percentages, total, tokens]);
-
-  const hasData = !isLoadingData && subcategories.length > 0;
+  }), [percentages, tokens]);
 
   return (
     <ChartCard
-      title="DETALHAMENTO DE GASTOS POR CATEGORIA"
-      subtitle={categoryName ? `Categoria: ${categoryName}` : undefined}
+      title="DETALHAMENTO DE GASTOS POR SUBCATEGORIAS"
+      subtitle={categoryName ? `Categoria: ${categoryName} · Total: ${formatCurrency(total)}` : undefined}
       detailData={detailData}
       detailColumns={detailColumns}
     >

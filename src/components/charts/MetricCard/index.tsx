@@ -12,6 +12,15 @@ export interface DetailColumn {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: (value: any) => string | ReactNode;
   width?: string;
+  tooltip?: string;
+  /** Soma esta coluna na linha de totais do rodapé do modal de detalhes. */
+  summable?: boolean;
+}
+
+export interface DetailGroupBy {
+  key: string;
+  order?: string[];
+  unitLabel?: (count: number) => string;
 }
 
 interface NumericCardProps {
@@ -25,6 +34,10 @@ interface NumericCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   detailData?: any[];
   detailColumns?: DetailColumn[];
+  /** Agrupa o "Ver Dados Detalhados" por um campo dos dados, com subtotal por grupo. */
+  detailGroupBy?: DetailGroupBy;
+  /** Unidade mostrada no rodapé do modal de detalhes ("Total: N <detailTotalLabel>"). */
+  detailTotalLabel?: string;
   /** Quando informado, o título vira a alça de arrastar (mesmo padrão do ChartCard: a barra do título é a alça, sem ícone flutuante sobre o texto). */
   dragHandleClassName?: string;
 }
@@ -74,6 +87,8 @@ export default function NumericCard({
   loading = false,
   detailData,
   detailColumns,
+  detailGroupBy,
+  detailTotalLabel,
   dragHandleClassName,
 }: NumericCardProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -218,6 +233,8 @@ export default function NumericCard({
         title={label}
         data={detailData ?? []}
         columns={detailColumns}
+        groupBy={detailGroupBy}
+        totalLabel={detailTotalLabel}
       />
     </div>
   );

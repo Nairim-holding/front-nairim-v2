@@ -77,6 +77,20 @@ export default function DashboardWidgetGrid({
     return [...known, ...missing];
   }, [layout, knownIds, defaultLayout, normalizeItem]);
 
+  // Resolve cada widget UMA VEZ e descarta os ocultos (Tarefa 10: "Personalizar
+  // Gráficos" faz `renderWidget` retornar null para ids escondidos) — layout e
+  // children precisam ficar em sincronia, senão o react-grid-layout recebe uma
+  // lista de posições maior que a de filhos renderizados de fato (null não vira
+  // filho) e desalinha/sobrepõe os cards restantes.
+  const renderedItems = useMemo(
+    () =>
+      displayLayout
+        .map((item) => ({ item, widget: renderWidget(item.i) }))
+        .filter((entry): entry is { item: DashboardLayoutItem; widget: DashboardWidget } => entry.widget !== null),
+    [displayLayout, renderWidget]
+  );
+  const visibleLayout = useMemo(() => renderedItems.map((entry) => entry.item), [renderedItems]);
+
   const handleLayoutChange = useCallback(
     (newLayout: Layout) => {
       saveLayout(newLayout.map(({ i, x, y, w, h }) => ({ i, x, y, w, h })));
@@ -99,9 +113,7 @@ export default function DashboardWidgetGrid({
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4 w-full">
-        {displayLayout.map((item) => {
-          const widget = renderWidget(item.i);
-          if (!widget) return null;
+        {renderedItems.map(({ item, widget }) => {
           const heightPx = item.h * ROW_HEIGHT + (item.h - 1) * GRID_GAP;
           return (
             <div
@@ -124,31 +136,27 @@ export default function DashboardWidgetGrid({
   return (
     <ResponsiveGridLayout
       className="w-full"
-      layout={displayLayout}
+      layout={visibleLayout}
       cols={12}
       rowHeight={ROW_HEIGHT}
       margin={[GRID_GAP, GRID_GAP]}
       draggableHandle={`.${DRAG_HANDLE_CLASS}`}
       onLayoutChange={handleLayoutChange}
     >
-      {displayLayout.map((item) => {
-        const widget = renderWidget(item.i);
-        if (!widget) return null;
-        return (
-          <div
-            key={item.i}
-            className={
-              widget.framed
-                ? `bg-white dark:bg-surface rounded-xl border border-slate-200/80 dark:border-ui-border-soft shadow-sm flex flex-col transition-all ${
-                    widget.overflowVisible ? 'overflow-visible z-20 hover:z-30' : 'overflow-hidden'
-                  }`
-                : 'h-full'
-            }
-          >
-            {widget.body}
-          </div>
-        );
-      })}
+      {renderedItems.map(({ item, widget }) => (
+        <div
+          key={item.i}
+          className={
+            widget.framed
+              ? `bg-white dark:bg-surface rounded-xl border border-slate-200/80 dark:border-ui-border-soft shadow-sm flex flex-col transition-all ${
+                  widget.overflowVisible ? 'overflow-visible z-20 hover:z-30' : 'overflow-hidden'
+                }`
+              : 'h-full'
+          }
+        >
+          {widget.body}
+        </div>
+      ))}
     </ResponsiveGridLayout>
   );
 }

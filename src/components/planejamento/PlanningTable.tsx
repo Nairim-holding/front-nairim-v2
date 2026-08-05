@@ -34,19 +34,28 @@ export interface PlanningTableHandle {
   getTableElement: () => HTMLTableElement | null;
 }
 
+export interface RealizedDetailParams {
+  subcategoryId: string;
+  subcategoryName: string;
+  month: number;
+  year: number;
+}
+
 interface Props {
   data: DashboardResponse;
   dateRangeFrom?: string;
   viewMonths?: number | null;
   onEditItem?: (item: (DashboardItem | CategoryDashboard) & { parentCategoryId?: string }) => void;
   onSaveInline?: (item: { id: string; parentCategoryId?: string; amount: number }) => Promise<void>;
+  /** Tarefa 11 (29/07/26): clique no Realizado de uma SUBCATEGORIA abre o detalhe dos lançamentos. */
+  onViewRealizedDetail?: (params: RealizedDetailParams) => void;
   balanceMonths?: { month: number; year: number }[];
   balances?: DashboardResponse['balances'];
   filterSlot?: ReactNode;
   statsSlot?: ReactNode;
 }
 
-const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, viewMonths, onEditItem, balanceMonths, balances, filterSlot, statsSlot }, ref) => {
+const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeFrom, viewMonths, onEditItem, onViewRealizedDetail, balanceMonths, balances, filterSlot, statsSlot }, ref) => {
   const tableRef = useRef<HTMLTableElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -99,7 +108,7 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
     onEditItem?.(itemToEdit);
   };
 
-  const renderCategoryRow = (category: CategoryDashboard | DashboardItem, isSubcategory = false, parentId?: string) => {
+  const renderCategoryRow = (category: CategoryDashboard | DashboardItem, isSubcategory = false, parentId?: string, isExpenseSection = false) => {
     const hasSubcategories = !isSubcategory && 'subcategories' in category && category.subcategories.length > 0;
     const isEditable = !hasSubcategories;
     const stats = computeStats(category.monthly_data);
@@ -159,18 +168,28 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
         {months.map(({ month, year }) => {
           const plannedValue = getPlannedMonthlyValue(category.monthly_values, month);
           const realizedValue = getMonthlyValue(category.monthly_data, month, year);
-          const isExpense = 'type' in category && category.type === 'EXPENSE';
+          // Categoria (topo) tem `type`; subcategoria não — por isso o chamador
+          // informa explicitamente a seção (Tarefa 12: o destaque de estouro
+          // não acendia em nenhuma subcategoria por só checar `category.type`).
+          const isExpense = isExpenseSection;
           const isOverBudget = isExpense && plannedValue !== null && realizedValue !== null && realizedValue > plannedValue;
 
           const hasRealized = realizedValue !== null && realizedValue !== 0;
           const hasPlanned = plannedValue !== null && plannedValue !== 0;
           const isVariable = category.planning_type === 'VARIABLE';
+          // Tarefa 11: só SUBCATEGORIA é clicável — categoria/total são somatórios.
+          const isClickable = isSubcategory && hasRealized && !!onViewRealizedDetail;
 
           return (
             <td
               key={`${month}-${year}`}
-              className={`px-3 py-2 text-xs text-right whitespace-nowrap border-l border-ui-border-soft relative z-0 ${isExpense ? 'text-red-600' : 'text-green-600'} ${isOverBudget ? 'font-semibold text-red-700' : ''}`}
-              title={`Planejado: ${plannedValue !== null ? formatCurrency(plannedValue) : '---'} | Realizado: ${realizedValue !== null ? formatCurrency(realizedValue) : '---'}`}
+              className={`px-3 py-2 text-xs text-right whitespace-nowrap border-l border-ui-border-soft relative z-0 ${isExpense ? 'text-red-600' : 'text-green-600'} ${isOverBudget ? 'font-semibold text-red-700' : ''} ${isClickable ? 'cursor-pointer hover:underline hover:opacity-80' : ''}`}
+              title={`Planejado: ${plannedValue !== null ? formatCurrency(plannedValue) : '---'} | Realizado: ${realizedValue !== null ? formatCurrency(realizedValue) : '---'}${isClickable ? ' | Clique para ver os lançamentos' : ''}`}
+              onClick={
+                isClickable
+                  ? () => onViewRealizedDetail!({ subcategoryId: category.id, subcategoryName: category.name, month, year })
+                  : undefined
+              }
             >
               {hasRealized ? (
                 <span className="inline-flex items-center justify-end gap-1">
@@ -305,9 +324,9 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
               {renderGlobalRow(data.incomes[0], '#0d9488', true)}
               {data.incomes.slice(1).map(category => (
                 <Fragment key={`income-${category.id}`}>
-                  {renderCategoryRow(category)}
+                  {renderCategoryRow(category, false, undefined, false)}
                   {category.subcategories.map(sub => (
-                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id)}</Fragment>
+                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id, false)}</Fragment>
                   ))}
                 </Fragment>
               ))}
@@ -318,9 +337,9 @@ const PlanningTable = forwardRef<PlanningTableHandle, Props>(({ data, dateRangeF
               {renderGlobalRow(data.expenses[0], '#ea580c', false)}
               {data.expenses.slice(1).map(category => (
                 <Fragment key={`expense-${category.id}`}>
-                  {renderCategoryRow(category)}
+                  {renderCategoryRow(category, false, undefined, true)}
                   {category.subcategories.map(sub => (
-                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id)}</Fragment>
+                    <Fragment key={`sub-${sub.id}`}>{renderCategoryRow(sub, true, category.id, true)}</Fragment>
                   ))}
                 </Fragment>
               ))}

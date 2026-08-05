@@ -43,6 +43,15 @@ export default function MonthMultiSelect({ selectedMonths, onChange }: MonthMult
     setIsOpen(false);
   };
 
+  // Tarefa 6.2 (29/07/26): com o ano inteiro já marcado, o botão vira um
+  // toggle — "Selecionar mês corrente" deixa marcado só o mês atual.
+  const selectCurrentMonth = () => {
+    onChange([new Date().getMonth() + 1]);
+    setIsOpen(false);
+  };
+
+  const isFullYear = selectedMonths.length === 12;
+
   const label = selectedMonths.length === 12
     ? 'Ano inteiro'
     : selectedMonths.length === 1
@@ -85,10 +94,10 @@ export default function MonthMultiSelect({ selectedMonths, onChange }: MonthMult
           </div>
           <button
             type="button"
-            onClick={selectAllMonths}
+            onClick={isFullYear ? selectCurrentMonth : selectAllMonths}
             className="w-full text-center text-xs font-medium text-content-muted hover:text-brand py-1.5 border-t border-ui-border-soft transition-colors cursor-pointer"
           >
-            Selecionar ano inteiro
+            {isFullYear ? 'Selecionar mês corrente' : 'Selecionar ano inteiro'}
           </button>
         </div>
       )}

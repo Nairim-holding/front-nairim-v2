@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
-import DualColorBarChart, { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
+import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
+import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
 import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
+import { appendFilterParams } from '@/hooks/useMonthlySummary';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -19,6 +21,7 @@ interface CardUsage {
 interface CardUsageChartProps {
   startDate?: string;
   endDate?: string;
+  filters?: Record<string, unknown>;
 }
 
 function getCardInitials(name: string): string {
@@ -32,10 +35,11 @@ function getCardInitials(name: string): string {
   return target.slice(0, 2).toUpperCase();
 }
 
-export default function CardUsageChart({ startDate: startDateProp, endDate: endDateProp }: CardUsageChartProps) {
+export default function CardUsageChart({ startDate: startDateProp, endDate: endDateProp, filters }: CardUsageChartProps) {
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
   const startDate = startDateProp ?? fallback.startDate;
   const endDate = endDateProp ?? fallback.endDate;
+  const filterKey = JSON.stringify(filters ?? {});
   const [cards, setCards] = useState<CardUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +49,9 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/financial-card/usage?startDate=${startDate}&endDate=${endDate}`);
+        const params = new URLSearchParams({ startDate, endDate });
+        appendFilterParams(params, filters);
+        const response = await authFetch(`${API_URL}/financial-card/usage?${params}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled && Array.isArray(result.data)) {
@@ -62,7 +68,8 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
     return () => {
       cancelled = true;
     };
-  }, [startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate, filterKey]);
 
   // Só entram cartões com limite configurado: percentual sobre limite não faz
   // sentido para um cartão sem limite definido.
@@ -93,8 +100,8 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
   const detailColumns = useMemo(
     () => [
       { key: 'card', label: 'Cartão' },
-      { key: 'limit', label: 'Limite', format: (v: number) => formatCurrency(v) },
-      { key: 'consumed', label: 'Consumido', format: (v: number) => formatCurrency(v) },
+      { key: 'limit', label: 'Limite', format: (v: number) => formatCurrency(v), summable: true },
+      { key: 'consumed', label: 'Consumido', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'percentage', label: 'Percentual', format: (v: number) => `${v.toFixed(1)}%` },
     ],
     []
@@ -120,7 +127,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
               CARTÕES DE CRÉDITO
             </span>
             <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
-              TOTAL DAS FATURAS: <span className="text-brand font-extrabold">{formatCurrency(totalFaturas)}</span>
+              TOTAL DAS FATURAS: <span className="text-chart-accent font-extrabold">{formatCurrency(totalFaturas)}</span>
             </span>
           </div>
 
@@ -137,13 +144,21 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
               {items.map((item, index) => {
                 const fillWidth = Math.min(item.percentage, 100);
                 return (
-                  <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-xs">
+                  <RowHoverTooltip
+                    key={`${item.label}-${index}`}
+                    className="flex items-center gap-3 text-xs"
+                    title={item.label}
+                    rows={[
+                      { label: 'Valor do Limite do Cartão', value: formatCurrency(item.reference) },
+                      { label: 'Valor Consumido no Cartão', value: formatCurrency(item.actual) },
+                    ]}
+                  >
                     {/* Ícone de Cartão + Nome */}
                     <div className="flex items-center gap-2 w-32 sm:w-36 shrink-0 min-w-0">
-                      <div className="w-6 h-6 rounded bg-brand/15 text-brand dark:bg-brand/25 dark:text-brand-light flex items-center justify-center font-extrabold text-[10px] border border-brand/20 shrink-0">
+                      <div className="w-6 h-6 rounded bg-chart-accent/15 text-chart-accent dark:bg-chart-accent/25 flex items-center justify-center font-extrabold text-[10px] border border-chart-accent/20 shrink-0">
                         {getCardInitials(item.label)}
                       </div>
-                      <span className="font-bold text-slate-700 dark:text-slate-200 truncate" title={item.label}>
+                      <span className="font-bold text-slate-700 dark:text-slate-200 truncate">
                         {item.label}
                       </span>
                     </div>
@@ -151,7 +166,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
                     {/* Trilha da Barra de Progresso com Percentual */}
                     <div className="flex-1 h-7 rounded-lg bg-[#fdf0e6] dark:bg-slate-800/80 relative overflow-hidden flex items-center justify-center">
                       <div
-                        className="absolute left-0 top-0 bottom-0 rounded-lg bg-brand transition-all duration-500"
+                        className="absolute left-0 top-0 bottom-0 rounded-lg bg-chart-accent transition-all duration-500"
                         style={{ width: `${fillWidth}%` }}
                       />
                       <span
@@ -167,7 +182,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
                     <span className="w-24 sm:w-28 text-right font-extrabold text-xs text-slate-800 dark:text-slate-100 shrink-0">
                       {formatCurrency(item.actual)}
                     </span>
-                  </div>
+                  </RowHoverTooltip>
                 );
               })}
             </div>

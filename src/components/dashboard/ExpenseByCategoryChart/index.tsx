@@ -7,6 +7,7 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
+import { appendFilterParams } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
@@ -22,14 +23,16 @@ interface CategoryExpense {
 interface ExpenseByCategoryChartProps {
   startDate?: string;
   endDate?: string;
+  filters?: Record<string, unknown>;
 }
 
-export default function ExpenseByCategoryChart({ startDate: startDateProp, endDate: endDateProp }: ExpenseByCategoryChartProps) {
+export default function ExpenseByCategoryChart({ startDate: startDateProp, endDate: endDateProp, filters }: ExpenseByCategoryChartProps) {
   useTheme();
   const tokens = getThemeTokens();
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
   const startDate = startDateProp ?? fallback.startDate;
   const endDate = endDateProp ?? fallback.endDate;
+  const filterKey = JSON.stringify(filters ?? {});
 
   const [totalIncome, setTotalIncome] = useState(0);
   const [categories, setCategories] = useState<CategoryExpense[]>([]);
@@ -41,9 +44,9 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
 
     (async () => {
       try {
-        const response = await authFetch(
-          `${API_URL}/financial-transaction/expense-by-category?startDate=${startDate}&endDate=${endDate}`
-        );
+        const params = new URLSearchParams({ startDate, endDate });
+        appendFilterParams(params, filters);
+        const response = await authFetch(`${API_URL}/financial-transaction/expense-by-category?${params}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled) {
@@ -61,9 +64,8 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
     return () => {
       cancelled = true;
     };
-  }, [startDate, endDate]);
-
-  const totalExpense = useMemo(() => categories.reduce((sum, c) => sum + c.value, 0), [categories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate, filterKey]);
 
   const sortedPercentages = useMemo(() => {
     return categories
@@ -74,18 +76,17 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
       .sort((a, b) => b.percentage - a.percentage);
   }, [categories, totalIncome]);
 
+  // Totalizador vem do rodapé do DataModal (summable) — não injetar uma linha
+  // "Total" manual aqui, senão o rodapé soma o total duas vezes.
   const detailData = useMemo(
-    () => [
-      ...categories.map((c) => ({ name: c.name, value: c.value })),
-      { name: 'Total', value: totalExpense },
-    ],
-    [categories, totalExpense]
+    () => categories.map((c) => ({ name: c.name, value: c.value })),
+    [categories]
   );
 
   const detailColumns = useMemo(
     () => [
       { key: 'name', label: 'Categoria' },
-      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v) },
+      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );

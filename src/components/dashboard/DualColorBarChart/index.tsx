@@ -70,7 +70,7 @@ export default function DualColorBarChart({
   valueFormatter,
 }: DualColorBarChartProps) {
   const tokens = getThemeTokens();
-  const baseColor = color ?? tokens.brandPrimary;
+  const baseColor = color ?? tokens.chartSeries[0];
   const lightColor = hexToRgba(baseColor, 0.3);
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {

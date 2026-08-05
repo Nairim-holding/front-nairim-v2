@@ -125,7 +125,7 @@ export function VacancyGaugeWidget({ metrics }: LegacyWidgetProps) {
       <EChartsGauge
         label="Índice de Vacância Financeira"
         value={get('financialVacancyRate').result}
-        color="#8B5CF6"
+        color="#F97316"
         detailData={get('financialVacancyRate').data}
         detailColumns={COLS_FINANCIAL_VACANCY_GAUGE}
         dragHandleClassName={DRAG_HANDLE_CLASS}

@@ -11,6 +11,22 @@ import {
   COLS_TOTAL_PROPERTIES, COLS_PENDING_DOCS, COLS_SALE_VALUE,
   COLS_AVAILABILITY_DONUT, COLS_TYPES_DONUT, COLS_OCCUPATION_GAUGE, COLS_VACANCY_GAUGE,
 } from '@/lib/columns';
+import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
+import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
+
+// Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
+const WIDGET_LABELS: Record<string, string> = {
+  'widget-p1': 'Total de Imóveis',
+  'widget-p2': 'Imóveis com Documentação Pendente',
+  'widget-p3': 'Imóveis com Valor de Venda Definido',
+  'widget-p4': 'Imóveis por Status de Disponibilidade',
+  'widget-p6': 'Taxa de Ocupação',
+  'widget-p5': 'Imóveis na Carteira',
+  'widget-p7': 'Taxa de Vacância Física',
+  'widget-p8': 'Consumo de Anexos',
+  'widget-p9': 'Consumo de Banco de Dados',
+};
+const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
 
 const EChartsDonut = dynamic(() => import('@/components/charts/DonutChart'), { ssr: false });
 const EChartsGauge = dynamic(() => import('@/components/charts/GaugeChart'), { ssr: false });
@@ -73,6 +89,7 @@ export default function PortfolioDashboardGrid({
   metrics,
 }: PortfolioDashboardGridProps) {
   const get = useMetricGetter(metrics);
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility(resource, ALL_WIDGET_IDS);
 
   const vacancyData = useMemo(
     () => (get('vacancyRate').data ?? []).map((item: any) => ({ ...item, status: 'AVAILABLE', areaTotal: item.areaTotal ?? 0 })),
@@ -102,6 +119,8 @@ export default function PortfolioDashboardGrid({
 
   const renderWidget = useCallback(
     (id: string): DashboardWidget | null => {
+      if (!visibleWidgetIds.includes(id)) return null;
+
       switch (id) {
         case 'widget-p1':
           return {
@@ -235,14 +254,23 @@ export default function PortfolioDashboardGrid({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [metrics, availabilityDonutData, typesData]
+    [metrics, availabilityDonutData, typesData, visibleWidgetIds]
   );
 
   return (
-    <DashboardWidgetGrid
-      resource={resource}
-      defaultLayout={DEFAULT_LAYOUT}
-      renderWidget={renderWidget}
-    />
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-end">
+        <WidgetPersonalizer
+          widgets={ALL_WIDGET_IDS.map((id) => ({ id, label: WIDGET_LABELS[id] }))}
+          visibleWidgetIds={visibleWidgetIds}
+          onChange={setVisibleWidgetIds}
+        />
+      </div>
+      <DashboardWidgetGrid
+        resource={resource}
+        defaultLayout={DEFAULT_LAYOUT}
+        renderWidget={renderWidget}
+      />
+    </div>
   );
 }

@@ -24,13 +24,15 @@ const ENDPOINT_MAP: Record<FilterType, string> = {
   map:       "/dashboard/map",
 };
 
-/** Ano corrente inteiro — o mesmo default do filtro de período das abas. Antes
- * era o mês corrente, então o cabeçalho dizia "Ano inteiro" enquanto os dados
- * eram só do mês, até o usuário mexer no filtro. */
+/** Mês corrente — o mesmo default do filtro de período das abas (Tarefa 5.3/6.1,
+ * 29/07/26). Precisa ficar em sincronia com o default de useSectionPeriod: os
+ * dois alimentam o mesmo primeiro carregamento (fetch inicial aqui, cabeçalho
+ * lá), e já tivemos um bug de um dizer "Ano inteiro" enquanto o outro trazia
+ * só o mês. */
 export function getDefaultDateRange(): { start: string; end: string } {
-  const year = new Date().getFullYear();
+  const now = new Date();
   const fmt = (d: Date) => d.toISOString().split("T")[0];
-  return { start: fmt(new Date(year, 0, 1)), end: fmt(new Date(year, 11, 31)) };
+  return { start: fmt(new Date(now.getFullYear(), now.getMonth(), 1)), end: fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0)) };
 }
 
 export async function fetchSection<T = MetricResponse | MapCoordinate[]>(

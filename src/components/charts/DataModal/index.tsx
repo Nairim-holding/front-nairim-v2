@@ -4,7 +4,7 @@ import { useMemo, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, HelpCircle } from 'lucide-react';
 
 interface ColumnConfig {
   key: string;
@@ -12,6 +12,19 @@ interface ColumnConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: (value: any) => string | ReactNode;
   width?: string;
+  /** Texto exibido em um ícone de ajuda ao lado do cabeçalho (ex.: explicação de fórmula). */
+  tooltip?: string;
+  /** Soma esta coluna na linha de totais do rodapé (para colunas de valor, não percentuais/contagens). */
+  summable?: boolean;
+}
+
+/** Agrupa as linhas da tabela por um campo, com um cabeçalho de subtotal por grupo. */
+interface GroupByConfig {
+  key: string;
+  /** Ordem explícita dos valores do grupo (ex.: faixas do gráfico); os demais entram depois, em ordem alfabética. */
+  order?: string[];
+  /** Rótulo do subtotal do grupo, ex.: (n) => `Total de ${n} locações`. */
+  unitLabel?: (count: number) => string;
 }
 
 interface DataModalProps {
@@ -21,6 +34,9 @@ interface DataModalProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[];
   columns?: ColumnConfig[] | string[];
+  groupBy?: GroupByConfig;
+  /** Unidade mostrada no rodapé "Total: N <totalLabel>". Padrão: "registros". */
+  totalLabel?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -103,7 +119,7 @@ function formatCellValue(value: any, key?: string): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DataModal({ isOpen, onClose, title, data, columns }: DataModalProps) {
+export default function DataModal({ isOpen, onClose, title, data, columns, groupBy, totalLabel = 'registros' }: DataModalProps) {
   // Trava o scroll da página por baixo do modal enquanto ele está aberto,
   // restaurando o valor original ao fechar (sem isso, a página some por trás
   // do overlay mas continua rolando junto com o mouse/teclado).
@@ -139,13 +155,50 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
     [],
   );
 
+  const groupedRows = useMemo(() => {
+    if (!groupBy) return null;
+
+    const map = new Map<string, typeof data>();
+    for (const row of data) {
+      const groupKey = String(row[groupBy.key] ?? '—');
+      if (!map.has(groupKey)) map.set(groupKey, []);
+      map.get(groupKey)!.push(row);
+    }
+
+    const allKeys = [...map.keys()];
+    const ordered = groupBy.order
+      ? [
+          ...groupBy.order.filter((k) => map.has(k)),
+          ...allKeys.filter((k) => !groupBy.order!.includes(k)).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+        ]
+      : allKeys.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    return ordered.map((groupKey) => ({ key: groupKey, rows: map.get(groupKey)! }));
+  }, [data, groupBy]);
+
+  // Linha de totais no rodapé: soma toda coluna marcada `summable`, ignorando
+  // valores não numéricos. Some sobre TODAS as linhas, mesmo com agrupamento.
+  const totals = useMemo(() => {
+    const summableColumns = normalizedColumns.filter((col) => col.summable);
+    if (summableColumns.length === 0) return null;
+
+    const sums: Record<string, number> = {};
+    for (const col of summableColumns) {
+      sums[col.key] = data.reduce((acc, row) => {
+        const value = Number(row[col.key]);
+        return acc + (Number.isFinite(value) ? value : 0);
+      }, 0);
+    }
+    return sums;
+  }, [data, normalizedColumns]);
+
   if (typeof document === 'undefined') return null;
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4"
+          className="fixed inset-0 bg-black/70 z-[9990] flex justify-center items-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -186,32 +239,85 @@ export default function DataModal({ isOpen, onClose, title, data, columns }: Dat
                             className="px-6 py-3 text-left text-xs font-medium text-content-muted uppercase tracking-wider"
                             style={{ width: col.width ?? 'auto' }}
                           >
-                            {col.label}
+                            <span className="inline-flex items-center gap-1">
+                              {col.label}
+                              {col.tooltip && (
+                                <span
+                                  title={col.tooltip}
+                                  aria-label={col.tooltip}
+                                  className="inline-flex text-content-muted/70 cursor-help normal-case tracking-normal"
+                                >
+                                  <HelpCircle size={12} />
+                                </span>
+                              )}
+                            </span>
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="bg-surface divide-y divide-ui-border-soft">
-                      {data.map((row, idx) => (
-                        <tr key={row.id ?? idx} className="hover:bg-surface-subtle">
-                          {normalizedColumns.map((col) => (
+                      {groupedRows
+                        ? groupedRows.flatMap((group) => [
+                            <tr key={`group-${group.key}`} className="bg-surface-subtle">
+                              <td
+                                colSpan={normalizedColumns.length}
+                                className="px-6 py-2 text-xs font-semibold text-content uppercase tracking-wide"
+                              >
+                                {group.key} —{' '}
+                                {groupBy?.unitLabel ? groupBy.unitLabel(group.rows.length) : `Total de ${group.rows.length}`}
+                              </td>
+                            </tr>,
+                            ...group.rows.map((row, idx) => (
+                              <tr key={row.id ?? `${group.key}-${idx}`} className="hover:bg-surface-subtle">
+                                {normalizedColumns.map((col) => (
+                                  <td
+                                    key={col.key}
+                                    className="px-6 py-4 whitespace-nowrap text-sm text-content-muted"
+                                  >
+                                    {renderCell(col, row)}
+                                  </td>
+                                ))}
+                              </tr>
+                            )),
+                          ])
+                        : data.map((row, idx) => (
+                            <tr key={row.id ?? idx} className="hover:bg-surface-subtle">
+                              {normalizedColumns.map((col) => (
+                                <td
+                                  key={col.key}
+                                  className="px-6 py-4 whitespace-nowrap text-sm text-content-muted"
+                                >
+                                  {renderCell(col, row)}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                    </tbody>
+                    {totals && (
+                      <tfoot>
+                        <tr className="bg-surface-subtle border-t-2 border-ui-border-strong">
+                          {normalizedColumns.map((col, idx) => (
                             <td
                               key={col.key}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-content-muted"
+                              className="px-6 py-3 whitespace-nowrap text-sm text-content font-bold"
                             >
-                              {renderCell(col, row)}
+                              {idx === 0
+                                ? 'Total'
+                                : col.summable
+                                  ? (col.format ? col.format(totals[col.key]) : formatCellValue(totals[col.key], col.key))
+                                  : ''}
                             </td>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
+                      </tfoot>
+                    )}
                   </table>
                 </div>
               )}
             </div>
 
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-ui-border-soft">
-              <span className="text-sm text-content-muted">Total: {data.length} registros</span>
+              <span className="text-sm text-content-muted">Total: {data.length} {totalLabel}</span>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-brand text-content-inverse rounded-lg hover:bg-brand-hover transition-colors text-sm font-medium"

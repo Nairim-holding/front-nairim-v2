@@ -31,7 +31,7 @@ const FALLBACK_TOKENS: ThemeTokens = {
   borderDefault: '#CCCCCC',
   borderSoft: '#E5E7EB',
   overlay: 'rgba(0, 0, 0, 0.5)',
-  chartSeries: ['#8B5CF6', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#EC4899'],
+  chartSeries: ['#F97316', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#EC4899'],
   mapMaskFill: '#374151',
   mapMaskStroke: '#4B5563',
   mapOcean: '#E5E7EB',

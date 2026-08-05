@@ -51,18 +51,17 @@ export default function AccountBalanceChart() {
 
   const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
 
+  // A linha de Totais agora vem do rodapé em negrito do DataModal (summable),
+  // não mais de uma linha "Total" manual injetada nos dados.
   const detailData = useMemo(
-    () => [
-      ...accounts.map((a) => ({ account: a.name, value: a.balance })),
-      { account: 'Total', value: totalBalance },
-    ],
-    [accounts, totalBalance]
+    () => accounts.map((a) => ({ account: a.name, value: a.balance })),
+    [accounts]
   );
 
   const detailColumns = useMemo(
     () => [
       { key: 'account', label: 'Conta' },
-      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v) },
+      { key: 'value', label: 'Valor', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );

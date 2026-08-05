@@ -21,10 +21,16 @@ type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 const normalizeText = (text: string) =>
   text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
 
-const formatCurrency = (val: number | null | undefined): string =>
-  val == null || val === 0 ? '---' : maskMoney(val);
+// `val` chega como number no formulário, mas a API retorna o Decimal do Prisma
+// serializado como STRING (ex.: "7000", sem casas decimais para valores
+// inteiros). Sem o Number(...), maskMoney tratava a string como um buffer de
+// dígitos digitados (últimos 2 = centavos) e "7000" virava R$ 70,00.
+const formatCurrency = (val: number | string | null | undefined): string => {
+  const numeric = val == null ? 0 : Number(val);
+  return val == null || numeric === 0 ? '---' : maskMoney(numeric);
+};
 
-const formatLimit = (val: number | null | undefined): string =>
+const formatLimit = (val: number | string | null | undefined): string =>
   val == null ? 'Sem limite' : formatCurrency(val);
 
 const parseMoneyCents = (value: string): number | null => {

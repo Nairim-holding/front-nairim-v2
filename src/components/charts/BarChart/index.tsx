@@ -23,7 +23,7 @@ interface BarCardProps {
   label?: string;
   loading?: boolean;
   colors?: string[];
-  detailColumns?: Array<{ key: string; label: string; format?: (value: any) => string }>;
+  detailColumns?: Array<{ key: string; label: string; format?: (value: any) => string; summable?: boolean }>;
   /** Quando dentro de um grid arrastável, a barra do título vira a alça de arrastar. */
   dragHandleClassName?: string;
 }
@@ -85,7 +85,8 @@ export default function EChartsBar({
       },
       grid: {
         top: isLarge ? 40 : 20,
-        bottom: isLarge ? 40 : 20,
+        // Rótulos completos (sem corte) exigem mais espaço abaixo do eixo X.
+        bottom: isLarge ? 60 : 56,
         left: isLarge ? 40 : 10,
         right: isLarge ? 40 : 10,
         containLabel: true
@@ -97,11 +98,10 @@ export default function EChartsBar({
           color: tokens.textMuted,
           fontSize: isMobile ? 10 : 12,
           interval: 0,
-          rotate: isLarge ? 0 : 45, 
-          formatter: (value: string) => {
-             if (!isLarge && value.length > 8) return value.slice(0, 8) + '...';
-             return value;
-          }
+          // Nome completo da imobiliária sempre visível — antes cortava em 8
+          // caracteres na visão pequena, e o tooltip (que mostra o nome
+          // completo) só aparece ao passar o mouse.
+          rotate: 45,
         },
         axisLine: { show: false },
         axisTick: { show: false }

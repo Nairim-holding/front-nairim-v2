@@ -92,8 +92,8 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
   const detailColumns = useMemo(
     () => [
       { key: 'label', label: 'Local' },
-      { key: 'megabytes', label: 'Tamanho (MB)', format: (v: number) => formatMegabytes(v) },
-      { key: 'files', label: 'Qtde de arquivos' },
+      { key: 'megabytes', label: 'Tamanho (MB)', format: (v: number) => formatMegabytes(v), summable: true },
+      { key: 'files', label: 'Qtde de arquivos', summable: true },
     ],
     []
   );

@@ -1,18 +1,46 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { RefreshCw, Calendar, FileSpreadsheet, FileText } from 'lucide-react';
+import { RefreshCw, Calendar, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useSearchParams } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
+import DynamicFilterModal from '@/components/filters/DynamicFilterModal';
+import { useDynamicFilters } from '@/hooks/useDynamicFilters';
 import { useMessageContext } from '@/contexts';
 import { authFetch } from '@/utils/authFetch';
-import PlanningTable, { type PlanningTableHandle } from '@/components/planejamento/PlanningTable';
+import PlanningTable, { type PlanningTableHandle, type RealizedDetailParams } from '@/components/planejamento/PlanningTable';
 import PlanningEditModal from '@/components/planejamento/PlanningEditModal';
+import DataModal from '@/components/charts/DataModal';
 import type { DashboardResponse, DashboardItem, CategoryDashboard, MonthlyData } from '@/components/planejamento/types';
+
+const MONTH_NAMES_FULL = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+const formatMoneyBRL = (value: number): string =>
+  `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const formatDateBR = (value: string): string => {
+  if (!value) return '-';
+  const iso = value.slice(0, 10);
+  const [y, m, d] = iso.split('-');
+  return y && m && d ? `${d}/${m}/${y}` : value;
+};
+
+interface RealizedTransactionRow {
+  id: string;
+  effective_date: string;
+  description: string;
+  amount: number;
+  financial_institution?: { name?: string } | null;
+  supplier?: { legal_name?: string } | null;
+  status: string;
+}
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -57,6 +85,65 @@ export default function PlanningPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<(DashboardItem | CategoryDashboard) & { parentCategoryId?: string } | null>(null);
 
+  // Tarefa 13 (29/07/26): botão Filtro, mesmo componente/endpoint de Lançamentos.
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters);
+  const activeFilterCount = Object.keys(appliedFilters).length;
+
+  const handleApplyFilters = useCallback((f: Record<string, unknown>) => {
+    setAppliedFilters(f);
+    setIsFilterVisible(false);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setAppliedFilters({});
+    setIsFilterVisible(false);
+  }, []);
+
+  // Tarefa 11 (29/07/26): modal com os lançamentos por trás de um Realizado de subcategoria.
+  const [realizedDetail, setRealizedDetail] = useState<RealizedDetailParams | null>(null);
+  const [realizedTransactions, setRealizedTransactions] = useState<RealizedTransactionRow[]>([]);
+  const [isRealizedDetailLoading, setIsRealizedDetailLoading] = useState(false);
+
+  const handleViewRealizedDetail = useCallback(async (params: RealizedDetailParams) => {
+    setRealizedDetail(params);
+    setRealizedTransactions([]);
+    setIsRealizedDetailLoading(true);
+    try {
+      const monthStr = String(params.month).padStart(2, '0');
+      const lastDay = new Date(params.year, params.month, 0).getDate();
+      const from = `${params.year}-${monthStr}-01`;
+      const to = `${params.year}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+
+      const qs = new URLSearchParams({
+        subcategory_id: params.subcategoryId,
+        status: 'COMPLETED',
+        effective_date: JSON.stringify({ from, to }),
+        limit: '200',
+      });
+      const res = await authFetch(`${API_URL}/financial-transaction?${qs}`);
+      if (!res.ok) throw new Error('Falha ao carregar os lançamentos');
+      const json = await res.json();
+      setRealizedTransactions(Array.isArray(json.data) ? json.data : []);
+    } catch (e) {
+      showMessage(e instanceof Error ? e.message : 'Erro ao carregar os lançamentos', 'error');
+    } finally {
+      setIsRealizedDetailLoading(false);
+    }
+  }, [showMessage]);
+
+  const realizedDetailColumns = useMemo(
+    () => [
+      { key: 'effective_date', label: 'Data', format: (v: string) => formatDateBR(v) },
+      { key: 'description', label: 'Descrição' },
+      { key: 'financial_institution', label: 'Instituição', format: (v: RealizedTransactionRow['financial_institution']) => v?.name ?? '-' },
+      { key: 'supplier', label: 'Contato', format: (v: RealizedTransactionRow['supplier']) => v?.legal_name ?? '-' },
+      { key: 'amount', label: 'Valor', format: (v: number) => formatMoneyBRL(Number(v)), summable: true },
+    ],
+    []
+  );
+
   const planningTableRef = useRef<PlanningTableHandle>(null);
 
   const fetchDashboard = useCallback(async () => {
@@ -72,6 +159,11 @@ export default function PlanningPageContent() {
       const params = new URLSearchParams({
         startDate: dateRange.from,
         endDate: dateRange.to,
+      });
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') return;
+        if (Array.isArray(value)) value.forEach((v) => params.append(key, String(v)));
+        else params.append(key, String(value));
       });
 
       const urlFinal = `${API_URL}/planning/dashboard?${params}`;
@@ -180,7 +272,7 @@ export default function PlanningPageContent() {
       setIsLoading(false);
       console.log('═══════════════════════════════════════════════════════════════\n');
     }
-  }, [dateRange, showMessage]);
+  }, [dateRange, appliedFilters, showMessage]);
 
   const handleSaveInline = useCallback(async (item: { id: string; parentCategoryId?: string; amount: number }) => {
     const startTime = new Date().toISOString();
@@ -437,6 +529,18 @@ export default function PlanningPageContent() {
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
           </button>
           <button
+            onClick={() => setIsFilterVisible(true)}
+            className="relative p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle transition-colors"
+            title="Filtro"
+          >
+            <Filter size={16} color={activeFilterCount > 0 ? 'var(--color-brand-primary)' : undefined} />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <button
             onClick={handleExportExcel}
             disabled={isLoading || !data}
             className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
@@ -479,6 +583,18 @@ export default function PlanningPageContent() {
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
           </button>
           <button
+            onClick={() => setIsFilterVisible(true)}
+            className="relative p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle transition-colors"
+            title="Filtro"
+          >
+            <Filter size={16} color={activeFilterCount > 0 ? 'var(--color-brand-primary)' : undefined} />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <button
             onClick={handleExportExcel}
             disabled={isLoading || !data}
             className="p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors"
@@ -518,6 +634,7 @@ export default function PlanningPageContent() {
                 viewMonths={viewMonths}
                 onEditItem={setEditingItem}
                 onSaveInline={handleSaveInline}
+                onViewRealizedDetail={handleViewRealizedDetail}
                 balanceMonths={balanceMonths.length > 0 ? balanceMonths : undefined}
                 balances={data.balances}
                 statsSlot={
@@ -546,6 +663,32 @@ export default function PlanningPageContent() {
             setEditingItem(null);
             fetchDashboard();
           }}
+        />
+      )}
+
+      <DataModal
+        isOpen={!!realizedDetail}
+        onClose={() => setRealizedDetail(null)}
+        title={
+          realizedDetail
+            ? `${realizedDetail.subcategoryName} — ${MONTH_NAMES_FULL[realizedDetail.month - 1]} de ${realizedDetail.year}`
+            : ''
+        }
+        data={isRealizedDetailLoading ? [] : realizedTransactions}
+        columns={realizedDetailColumns}
+        totalLabel="lançamentos"
+      />
+
+      {isFilterVisible && (
+        <DynamicFilterModal
+          visible={isFilterVisible}
+          setVisible={setIsFilterVisible}
+          onApply={handleApplyFilters}
+          onClear={handleClearFilters}
+          title="Planejamento e Controle"
+          filters={dynamicFilters}
+          initialValues={appliedFilters}
+          columns={3}
         />
       )}
     </Section>

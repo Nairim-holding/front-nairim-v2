@@ -15,9 +15,20 @@ function emptyMonths(): MonthSummary[] {
   return Array.from({ length: 12 }, (_, i) => ({ month: i + 1, income: 0, expense: 0 }));
 }
 
-export function useMonthlySummary(year: number) {
+/** Serializa os filtros do botão Filtro (Tarefa 5.1) na mesma convenção da grid de Lançamentos: chave repetida = seleção múltipla. */
+export function appendFilterParams(params: URLSearchParams, filters?: Record<string, unknown>): void {
+  if (!filters) return;
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) value.forEach((v) => params.append(key, String(v)));
+    else params.append(key, String(value));
+  });
+}
+
+export function useMonthlySummary(year: number, filters?: Record<string, unknown>) {
   const [months, setMonths] = useState<MonthSummary[]>(emptyMonths);
   const [isLoading, setIsLoading] = useState(true);
+  const filterKey = JSON.stringify(filters ?? {});
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +36,9 @@ export function useMonthlySummary(year: number) {
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/financial-transaction/monthly-summary?year=${year}`);
+        const params = new URLSearchParams({ year: String(year) });
+        appendFilterParams(params, filters);
+        const response = await authFetch(`${API_URL}/financial-transaction/monthly-summary?${params}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled && Array.isArray(result.data?.months)) {
@@ -42,7 +55,8 @@ export function useMonthlySummary(year: number) {
     return () => {
       cancelled = true;
     };
-  }, [year]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, filterKey]);
 
   return { months, isLoading };
 }

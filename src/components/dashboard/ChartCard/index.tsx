@@ -11,6 +11,15 @@ export interface ChartCardColumn {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: (value: any) => string | ReactNode;
   width?: string;
+  tooltip?: string;
+  /** Soma esta coluna na linha de totais do rodapé do modal de detalhes. */
+  summable?: boolean;
+}
+
+export interface ChartCardGroupBy {
+  key: string;
+  order?: string[];
+  unitLabel?: (count: number) => string;
 }
 
 export interface ChartCardRenderOpts {
@@ -23,6 +32,10 @@ interface ChartCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   detailData?: any[];
   detailColumns?: ChartCardColumn[];
+  /** Agrupa o "Ver Dados Detalhados" por um campo dos dados, com subtotal por grupo. */
+  detailGroupBy?: ChartCardGroupBy;
+  /** Unidade mostrada no rodapé do modal de detalhes ("Total: N <detailTotalLabel>"). */
+  detailTotalLabel?: string;
   dragHandleClassName?: string;
   /** Fora do grid arrastável (ex.: aba Portfólio) não há o que arrastar — sem alça nem cursor-move. */
   isDraggable?: boolean;
@@ -43,6 +56,8 @@ export default function ChartCard({
   subtitle,
   detailData = [],
   detailColumns,
+  detailGroupBy,
+  detailTotalLabel,
   dragHandleClassName = 'widget-drag-handle',
   isDraggable = true,
   children,
@@ -92,6 +107,8 @@ export default function ChartCard({
         title={title}
         data={detailData}
         columns={detailColumns}
+        groupBy={detailGroupBy}
+        totalLabel={detailTotalLabel}
       />
 
       {isFullscreenOpen && typeof document !== 'undefined' && createPortal(

@@ -44,11 +44,6 @@ const formatDateBr = (iso: string) => {
   return `${d}/${m}/${y}`;
 };
 
-const formatYears = (years: number) => {
-  const n = Number(years) || 0;
-  return `${n.toFixed(2).replace('.', ',')} ${n === 1 ? 'ano' : 'anos'}`;
-};
-
 /**
  * Distribuição das locações por tempo de permanência do inquilino no imóvel.
  *
@@ -119,6 +114,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
     [leases]
   );
 
+  // Faixa vira cabeçalho de grupo no modal de detalhes (abaixo); não repetida como coluna.
   const detailColumns = useMemo(
     () => [
       { key: 'tenantName', label: 'Inquilino', width: '200px' },
@@ -127,10 +123,18 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
       { key: 'startDate', label: 'Início', width: '110px', format: (v: string) => formatDateBr(v) },
       { key: 'endDate', label: 'Fim', width: '110px', format: (v: string) => formatDateBr(v) },
       { key: 'situation', label: 'Situação', width: '110px' },
-      { key: 'years', label: 'Tempo', width: '110px', format: (v: number) => formatYears(v) },
-      { key: 'bucketLabel', label: 'Faixa', width: '170px' },
     ],
     []
+  );
+
+  // Mesma ordem das faixas do gráfico (a API já retorna `buckets` nessa ordem).
+  const detailGroupBy = useMemo(
+    () => ({
+      key: 'bucketLabel',
+      order: buckets.map((b) => b.label),
+      unitLabel: (n: number) => `Total de ${n} ${n === 1 ? 'locação' : 'locações'}`,
+    }),
+    [buckets]
   );
 
   const buildOption = useCallback(
@@ -171,7 +175,9 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
       },
       yAxis: {
         type: 'value',
-        show: false,
+        // Mesmo padrão visual do eixo Y do gráfico "Imóveis por Imobiliárias".
+        axisLabel: { color: tokens.textMuted, fontSize: 11 },
+        splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
         // Contagens são inteiras: sem isso o eixo interpola 0,5 locação.
         minInterval: 1,
       },
@@ -203,6 +209,8 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
       subtitle={`${formatPeriodLabel(startDate, endDate)} • ${total} ${total === 1 ? 'locação' : 'locações'}`}
       detailData={detailData}
       detailColumns={detailColumns}
+      detailGroupBy={detailGroupBy}
+      detailTotalLabel="locações"
     >
       {({ isFullscreen }) =>
         !isLoading && total === 0 ? (

@@ -46,7 +46,10 @@ body {
   --color-scrollbar-thumb: #d1d5db;
   --color-scrollbar-thumb-hover: #9ca3af;
 
-  --chart-series-1: #8b5cf6;
+  /* Tarefa 1 (29/07/26): roxo trocado por laranja nos gráficos do Resumo —
+     verde + laranja combina melhor visualmente, mesmo com a marca sendo roxa
+     (--color-brand-primary continua roxo, é a cor de identidade). */
+  --chart-series-1: #f97316;
   --chart-series-2: #10b981;
   --chart-series-3: #f59e0b;
   --chart-series-4: #3b82f6;
@@ -96,7 +99,7 @@ body.dark {
   --color-scrollbar-thumb: #4b5563;
   --color-scrollbar-thumb-hover: #6b7280;
 
-  --chart-series-1: #8b5cf6;
+  --chart-series-1: #fb923c;
   --chart-series-2: #10b981;
   --chart-series-3: #f59e0b;
   --chart-series-4: #60a5fa;
@@ -130,6 +133,10 @@ body.dark {
   --color-brand: var(--color-brand-primary);
   --color-brand-hover: var(--color-brand-primary-hover);
   --color-brand-logo: var(--color-brand-logo);
+
+  /* Cor de destaque dos GRÁFICOS (laranja) — distinta de --color-brand (roxo,
+     identidade visual), para os gráficos hand-rolled que hoje usam bg-brand. */
+  --color-chart-accent: var(--chart-series-1);
 
   --color-state-success: var(--color-success);
   --color-state-warning: var(--color-warning);

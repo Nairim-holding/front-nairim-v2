@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { PeriodFilterSelector } from '@/components/dashboard/PeriodFilter';
-import { useMonthlySummary } from '@/hooks/useMonthlySummary';
+import { useMonthlySummaryMulti } from '@/hooks/useMonthlySummaryMulti';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 
 function TotalTile({
@@ -37,38 +37,51 @@ function TotalTile({
 }
 
 interface FinancialDashboardHeaderProps {
-  year: number;
+  years: number[];
   selectedMonths: number[];
-  onYearChange: (year: number) => void;
+  onYearsChange: (years: number[]) => void;
   onMonthsChange: (months: number[]) => void;
+  isCleared?: boolean;
+  onClear?: () => void;
 }
 
 /**
- * Filtro de período único da aba Financeiro: seletor de ano + meses (múltipla
- * seleção) e os totais do período (Receitas/Despesas/Resultado). O estado do
- * período vive no pai (FinancialSection), que também alimenta com ele os
- * gráficos do grid abaixo — este componente é controlado, não dono do estado.
+ * Filtro de período único da aba Financeiro: seletor de ano(s) + meses
+ * (múltipla seleção) e os totais do período (Receitas/Despesas/Resultado). O
+ * estado do período vive no pai (FinancialSection), que também alimenta com
+ * ele os gráficos do grid abaixo — este componente é controlado, não dono do
+ * estado.
  */
-export default function FinancialDashboardHeader({ year, selectedMonths, onYearChange, onMonthsChange }: FinancialDashboardHeaderProps) {
-  const { months, isLoading } = useMonthlySummary(year);
+export default function FinancialDashboardHeader({ years, selectedMonths, onYearsChange, onMonthsChange, isCleared, onClear }: FinancialDashboardHeaderProps) {
+  const { byYear, isLoading } = useMonthlySummaryMulti(years);
 
+  // Soma os meses selecionados em CADA ano escolhido (Tarefa 5.2: mais de um
+  // ano soma tudo junto nos tiles do topo).
   const { totalIncome, totalExpense } = useMemo(() => {
-    const selected = months.filter((m) => selectedMonths.includes(m.month));
-    return {
-      totalIncome: selected.reduce((sum, m) => sum + m.income, 0),
-      totalExpense: selected.reduce((sum, m) => sum + m.expense, 0),
-    };
-  }, [months, selectedMonths]);
+    let totalIncome = 0;
+    let totalExpense = 0;
+    for (const year of years) {
+      const months = byYear[year] ?? [];
+      for (const m of months) {
+        if (!selectedMonths.includes(m.month)) continue;
+        totalIncome += m.income;
+        totalExpense += m.expense;
+      }
+    }
+    return { totalIncome, totalExpense };
+  }, [byYear, years, selectedMonths]);
 
   const resultado = totalIncome - totalExpense;
 
   return (
     <div className="bg-surface rounded-xl border border-ui-border-soft shadow-sm p-4 mb-4 flex flex-col lg:flex-row lg:items-center gap-4">
       <PeriodFilterSelector
-        year={year}
+        years={years}
         selectedMonths={selectedMonths}
-        onYearChange={onYearChange}
+        onYearsChange={onYearsChange}
         onMonthsChange={onMonthsChange}
+        isCleared={isCleared}
+        onClear={onClear}
       />
 
       <div className="hidden lg:block w-px self-stretch bg-ui-border-soft" />

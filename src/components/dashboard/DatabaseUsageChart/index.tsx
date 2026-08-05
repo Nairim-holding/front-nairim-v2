@@ -96,8 +96,8 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
   const detailColumns = useMemo(
     () => [
       { key: 'companyName', label: 'Empresa' },
-      { key: 'usedMb', label: 'Usado (MB)', format: (v: number) => formatMb(v) },
-      { key: 'quotaMb', label: 'Contratado (MB)', format: (v: number) => formatMb(v) },
+      { key: 'usedMb', label: 'Usado (MB)', format: (v: number) => formatMb(v), summable: true },
+      { key: 'quotaMb', label: 'Contratado (MB)', format: (v: number) => formatMb(v), summable: true },
       { key: 'percent', label: '% de uso', format: (v: number) => `${formatMb(v)}%` },
     ],
     []

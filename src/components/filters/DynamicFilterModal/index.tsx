@@ -869,11 +869,11 @@ export default function DynamicFilterModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[55] bg-black/50" onClick={() => setVisible(false)} />
+      <div className="fixed inset-0 z-[9990] bg-black/50" onClick={() => setVisible(false)} />
 
       <div
         ref={modalRef}
-        className="fixed top-[5%] left-1/2 -translate-x-1/2 z-[60] bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col"
+        className="fixed top-[5%] left-1/2 -translate-x-1/2 z-[9995] bg-surface rounded-xl shadow-2xl border border-ui-border-soft flex flex-col"
         style={{ width: 'min(90vw, 1400px)', maxHeight: maxHeight || '85vh' }}
       >
         <div className="p-4 flex justify-between items-center border-b border-ui-border-soft flex-shrink-0 bg-surface">

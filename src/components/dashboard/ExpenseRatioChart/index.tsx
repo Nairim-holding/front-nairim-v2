@@ -12,9 +12,10 @@ import { getThemeTokens } from '@/utils';
 interface ExpenseRatioChartProps {
   year?: number;
   endDate?: string;
+  filters?: Record<string, unknown>;
 }
 
-export default function ExpenseRatioChart({ year: yearProp, endDate }: ExpenseRatioChartProps) {
+export default function ExpenseRatioChart({ year: yearProp, endDate, filters }: ExpenseRatioChartProps) {
   useTheme();
   const tokens = getThemeTokens();
   const now = useMemo(() => new Date(), []);
@@ -22,7 +23,7 @@ export default function ExpenseRatioChart({ year: yearProp, endDate }: ExpenseRa
   // Mês de referência: o mais recente do período selecionado no filtro (fim do
   // intervalo), caindo para o mês corrente quando nenhum período é informado.
   const currentMonthIndex = endDate ? new Date(`${endDate}T00:00:00`).getMonth() : now.getMonth();
-  const { months, isLoading } = useMonthlySummary(year);
+  const { months, isLoading } = useMonthlySummary(year, filters);
 
   const currentMonth = months[currentMonthIndex];
   const ratio = currentMonth && currentMonth.income > 0
@@ -42,8 +43,8 @@ export default function ExpenseRatioChart({ year: yearProp, endDate }: ExpenseRa
   const detailColumns = useMemo(
     () => [
       { key: 'month', label: 'Mês' },
-      { key: 'income', label: 'Receita', format: (v: number) => formatCurrency(v) },
-      { key: 'expense', label: 'Despesa', format: (v: number) => formatCurrency(v) },
+      { key: 'income', label: 'Receita', format: (v: number) => formatCurrency(v), summable: true },
+      { key: 'expense', label: 'Despesa', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );
@@ -82,7 +83,7 @@ export default function ExpenseRatioChart({ year: yearProp, endDate }: ExpenseRa
             {
               value: despesaSlice,
               name: 'Despesas',
-              itemStyle: { color: isOverBudget ? tokens.error : tokens.brandPrimary },
+              itemStyle: { color: isOverBudget ? tokens.error : tokens.chartSeries[0] },
             },
             ...(restanteSlice > 0
               ? [

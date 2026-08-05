@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardLayoutItem } from '@/hooks/useDashboardLayout';
 import DashboardWidgetGrid, { DRAG_HANDLE_CLASS, type DashboardWidget } from '@/components/dashboard/DashboardWidgetGrid';
@@ -8,8 +8,45 @@ import { MetricResponse, MetricWithData } from '@/types/types';
 import NumericCard from '@/components/charts/MetricCard';
 import TenantTenureChart from '@/components/dashboard/TenantTenureChart';
 import {
-  COLS_OWNERS, COLS_TENANTS, COLS_PROPERTIES_PER_OWNER, COLS_AGENCIES, COLS_PROPERTIES_BY_AGENCY,
+  COLS_OWNERS, COLS_TENANTS_BY_PROPERTY, COLS_PROPERTIES_PER_OWNER, COLS_AGENCIES, COLS_PROPERTIES_BY_AGENCY,
 } from '@/lib/columns';
+import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
+import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
+
+// Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
+const WIDGET_LABELS: Record<string, string> = {
+  'widget-c1': 'Tempo de Permanência dos Inquilinos por Faixa',
+  'widget-c2': 'Total de Proprietários',
+  'widget-c3': 'Total de Inquilinos',
+  'widget-c4': 'Média de Imóveis por Proprietário',
+  'widget-c5': 'Total de Imobiliárias',
+  'widget-c6': 'Imóveis por Imobiliárias',
+};
+const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
+
+const NO_PROPERTY_GROUP = 'Sem imóvel vinculado';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/** "Total de Inquilinos" mostrava uma linha por inquilino com os imóveis colapsados
+ * num texto truncado ("Casa A, Casa B (+2)"). Achatamos para uma linha por vínculo
+ * inquilino-imóvel, que o card então agrupa por imóvel (mesmo padrão do gráfico de
+ * Tempo de Permanência). */
+function flattenTenantsByProperty(tenants: any[]): any[] {
+  return tenants.flatMap((tenant, tenantIdx) => {
+    const properties = Array.isArray(tenant.properties) && tenant.properties.length > 0
+      ? tenant.properties
+      : [{ title: NO_PROPERTY_GROUP }];
+    return properties.map((property: any, propertyIdx: number) => ({
+      id: `${tenant.id ?? tenantIdx}-${property.id ?? propertyIdx}`,
+      tenantName: tenant.name,
+      propertyTitle: property.title ?? NO_PROPERTY_GROUP,
+      contractNumber: property.contractNumber ?? '-',
+      rentalValue: property.rentalValue ?? 0,
+      tenantSince: tenant.createdAt,
+    }));
+  });
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const EChartsBar = dynamic(() => import('@/components/charts/BarChart'), { ssr: false });
 
@@ -53,9 +90,18 @@ export default function ClientsDashboardGrid({
   endDate,
 }: ClientsDashboardGridProps) {
   const get = useMetricGetter(metrics);
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility(resource, ALL_WIDGET_IDS);
+
+  const tenantsByPropertyData = useMemo(
+    () => flattenTenantsByProperty(get('tenantsTotal').data ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [metrics]
+  );
 
   const renderWidget = useCallback(
     (id: string): DashboardWidget | null => {
+      if (!visibleWidgetIds.includes(id)) return null;
+
       switch (id) {
         case 'widget-c1':
           return {
@@ -91,8 +137,13 @@ export default function ClientsDashboardGrid({
                   label="Total de Inquilinos"
                   variation={String(get('tenantsTotal').variation)}
                   positive={get('tenantsTotal').isPositive}
-                  detailData={get('tenantsTotal').data}
-                  detailColumns={COLS_TENANTS}
+                  detailData={tenantsByPropertyData}
+                  detailColumns={COLS_TENANTS_BY_PROPERTY}
+                  detailGroupBy={{
+                    key: 'propertyTitle',
+                    unitLabel: (n) => `Total de ${n} ${n === 1 ? 'inquilino' : 'inquilinos'}`,
+                  }}
+                  detailTotalLabel="vínculos"
                   dragHandleClassName={DRAG_HANDLE_CLASS}
                 />
               </SelfFramedWidget>
@@ -155,14 +206,23 @@ export default function ClientsDashboardGrid({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [metrics, startDate, endDate]
+    [metrics, startDate, endDate, visibleWidgetIds]
   );
 
   return (
-    <DashboardWidgetGrid
-      resource={resource}
-      defaultLayout={DEFAULT_LAYOUT}
-      renderWidget={renderWidget}
-    />
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-end">
+        <WidgetPersonalizer
+          widgets={ALL_WIDGET_IDS.map((id) => ({ id, label: WIDGET_LABELS[id] }))}
+          visibleWidgetIds={visibleWidgetIds}
+          onChange={setVisibleWidgetIds}
+        />
+      </div>
+      <DashboardWidgetGrid
+        resource={resource}
+        defaultLayout={DEFAULT_LAYOUT}
+        renderWidget={renderWidget}
+      />
+    </div>
   );
 }

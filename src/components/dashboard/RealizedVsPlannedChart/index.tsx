@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
-import DualColorBarChart, { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
+import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
+import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
 import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
+import { appendFilterParams } from '@/hooks/useMonthlySummary';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
@@ -28,12 +30,14 @@ interface CategoryDashboard {
 interface RealizedVsPlannedChartProps {
   startDate?: string;
   endDate?: string;
+  filters?: Record<string, unknown>;
 }
 
-export default function RealizedVsPlannedChart({ startDate: startDateProp, endDate: endDateProp }: RealizedVsPlannedChartProps) {
+export default function RealizedVsPlannedChart({ startDate: startDateProp, endDate: endDateProp, filters }: RealizedVsPlannedChartProps) {
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
   const startDate = startDateProp ?? fallback.startDate;
   const endDate = endDateProp ?? fallback.endDate;
+  const filterKey = JSON.stringify(filters ?? {});
   const [categories, setCategories] = useState<CategoryDashboard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +47,9 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/planning/dashboard?startDate=${startDate}&endDate=${endDate}`);
+        const params = new URLSearchParams({ startDate, endDate });
+        appendFilterParams(params, filters);
+        const response = await authFetch(`${API_URL}/planning/dashboard?${params}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled && Array.isArray(result.data?.expenses)) {
@@ -60,7 +66,8 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
     return () => {
       cancelled = true;
     };
-  }, [startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate, filterKey]);
 
   // Remover "Total de Despesas" (global) e extrair subcategorias para o gráfico (Tarefa 7)
   const items: DualColorBarItem[] = useMemo(() => {
@@ -117,8 +124,8 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
     () => [
       { key: 'subcategory', label: 'Subcategoria' },
       { key: 'month', label: 'Mês' },
-      { key: 'planned', label: 'Planejado', format: (v: number) => formatCurrency(v) },
-      { key: 'realized', label: 'Realizado', format: (v: number) => formatCurrency(v) },
+      { key: 'planned', label: 'Planejado', format: (v: number) => formatCurrency(v), summable: true },
+      { key: 'realized', label: 'Realizado', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'percentage', label: 'Percentual', format: (v: number) => `${v.toFixed(1)}%` },
     ],
     []
@@ -146,21 +153,25 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
               const fillWidth = Math.min(item.percentage, 100);
               const isOver = item.percentage > 100;
               return (
-                <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-xs">
-                  {/* Nome da Categoria / Subcategoria */}
-                  <span
-                    className="w-28 sm:w-32 shrink-0 font-bold text-slate-700 dark:text-slate-200 truncate"
-                    title={item.label}
-                  >
+                <RowHoverTooltip
+                  key={`${item.label}-${index}`}
+                  className="flex items-center gap-3 text-xs"
+                  title={item.label}
+                  rows={[
+                    { label: 'Valor Planejado', value: formatCurrency(item.reference) },
+                    { label: 'Valor Realizado', value: formatCurrency(item.actual) },
+                  ]}
+                >
+                  {/* Nome da Categoria / Subcategoria — largura maior e sem corte
+                      (Tarefa 3): quebra em até 2 linhas em vez de truncar com "...". */}
+                  <span className="w-44 sm:w-56 shrink-0 font-bold text-slate-700 dark:text-slate-200 line-clamp-2 leading-tight">
                     {item.label}
                   </span>
 
                   {/* Trilha da Barra de Progresso com Percentual Centralizado */}
                   <div className="flex-1 h-7 rounded-lg bg-[#fdf0e6] dark:bg-slate-800/80 relative overflow-hidden flex items-center justify-center">
                     <div
-                      className={`absolute left-0 top-0 bottom-0 rounded-lg transition-all duration-500 ${
-                        isOver ? 'bg-brand' : 'bg-brand'
-                      }`}
+                      className="absolute left-0 top-0 bottom-0 rounded-lg bg-chart-accent transition-all duration-500"
                       style={{ width: `${fillWidth}%` }}
                     />
                     <span
@@ -175,12 +186,12 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
                   {/* Valor Formatado à Direita */}
                   <span
                     className={`w-24 sm:w-28 text-right font-bold text-xs shrink-0 ${
-                      isOver ? 'text-brand font-black' : 'text-slate-800 dark:text-slate-100'
+                      isOver ? 'text-chart-accent font-black' : 'text-slate-800 dark:text-slate-100'
                     }`}
                   >
                     {formatCurrency(item.actual)}
                   </span>
-                </div>
+                </RowHoverTooltip>
               );
             })}
           </div>

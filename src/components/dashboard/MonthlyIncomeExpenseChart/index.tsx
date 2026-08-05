@@ -22,13 +22,14 @@ export function formatCurrency(value: number): string {
 
 interface MonthlyIncomeExpenseChartProps {
   year?: number;
+  filters?: Record<string, unknown>;
 }
 
-export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyIncomeExpenseChartProps) {
+export default function MonthlyIncomeExpenseChart({ year: yearProp, filters }: MonthlyIncomeExpenseChartProps) {
   useTheme();
   const tokens = getThemeTokens();
   const year = yearProp ?? new Date().getFullYear();
-  const { months, isLoading } = useMonthlySummary(year);
+  const { months, isLoading } = useMonthlySummary(year, filters);
 
   const detailData = useMemo(
     () => months.map((m) => ({
@@ -42,8 +43,8 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
   const detailColumns = useMemo(
     () => [
       { key: 'month', label: 'Mês' },
-      { key: 'income', label: 'Receita', format: (v: number) => formatCurrency(v) },
-      { key: 'expense', label: 'Despesa', format: (v: number) => formatCurrency(v) },
+      { key: 'income', label: 'Receita', format: (v: number) => formatCurrency(v), summable: true },
+      { key: 'expense', label: 'Despesa', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );
@@ -58,7 +59,7 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
       const items = itemsArray.map((item: any) => ({
         label: item.seriesName || '',
         value: Number(item.value ?? 0),
-        color: item.seriesName === 'Receitas' ? tokens.success : tokens.brandPrimary,
+        color: item.seriesName === 'Receitas' ? tokens.success : tokens.chartSeries[0],
       }));
       return buildCustomTooltipHTML(header, items);
     }),
@@ -117,12 +118,12 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp }: MonthlyInc
         symbol: 'circle',
         symbolSize: 10,
         data: months.map((m) => m.expense),
-        lineStyle: { color: tokens.brandPrimary, width: 3.5 },
-        itemStyle: { color: '#ffffff', borderColor: tokens.brandPrimary, borderWidth: 3 },
+        lineStyle: { color: tokens.chartSeries[0], width: 3.5 },
+        itemStyle: { color: '#ffffff', borderColor: tokens.chartSeries[0], borderWidth: 3 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: `${tokens.brandPrimary}70` },
-            { offset: 1, color: `${tokens.brandPrimary}05` },
+            { offset: 0, color: `${tokens.chartSeries[0]}70` },
+            { offset: 1, color: `${tokens.chartSeries[0]}05` },
           ]),
         },
       },
