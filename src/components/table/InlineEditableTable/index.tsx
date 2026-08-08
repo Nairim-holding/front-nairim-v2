@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
@@ -17,6 +17,7 @@ import TableInformations from "../TableHeader";
 import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
+import TransactionAttachmentsModal from "@/components/domain/financial/TransactionAttachmentsModal";
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
 import { maskMoney, formatCurrencyRealtime } from "@/utils/masks";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
@@ -542,6 +543,9 @@ export default function InlineEditableTable({
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [isParceladoModalOpen, setIsParceladoModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  // Anexos do lançamento (Tarefa 2 do guia de correções) — id do lançamento com
+  // o modal de anexos aberto, ou null quando fechado.
+  const [attachmentsModalRowId, setAttachmentsModalRowId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
   // Toggle: false = Data de efetivação (padrão), true = Data do evento
   const [isEventDate, setIsEventDate] = useState(false);
@@ -1741,7 +1745,19 @@ export default function InlineEditableTable({
                         <button onClick={() => setEditingRows(p => p.filter(r => r.id !== editingRow!.id))} disabled={editingRow!.isSaving} className="p-1 hover:bg-red-100 rounded text-red-600 disabled:opacity-50"><X size={16} /></button>
                       </>
                     ) : (
-                      <button onClick={() => startEditingRow(item.id)} className="p-1 hover:bg-surface-subtle rounded text-brand"><Edit2 size={16} /></button>
+                      <>
+                        <button onClick={() => startEditingRow(item.id)} className="p-1 hover:bg-surface-subtle rounded text-brand"><Edit2 size={16} /></button>
+                        {resource === 'financial-transaction' && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setAttachmentsModalRowId(item.id); }}
+                            title="Anexo"
+                            className={`p-1 rounded transition-colors ${item._attachmentsCount ? 'text-brand hover:bg-brand/10' : 'text-content-muted hover:text-content-secondary hover:bg-surface-subtle'}`}
+                          >
+                            <Paperclip size={16} />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </td>
@@ -2023,6 +2039,14 @@ export default function InlineEditableTable({
           from={hasDateFilter ? dateRange.from : undefined}
           to={hasDateFilter ? dateRange.to : undefined}
           summary={summaryData}
+        />
+      )}
+
+      {attachmentsModalRowId && (
+        <TransactionAttachmentsModal
+          transactionId={attachmentsModalRowId}
+          onClose={() => setAttachmentsModalRowId(null)}
+          onCountChange={(count) => patchRow(attachmentsModalRowId, { _attachmentsCount: count })}
         />
       )}
     </>

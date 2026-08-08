@@ -43,6 +43,8 @@ export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
   { path: '/dashboard/lancamentos', resource: 'financial-transactions' },
   { path: '/dashboard/planejamento', resource: 'planning' },
   { path: '/dashboard/relatorios', resource: 'financial-reports' },
+  // Rota própria (não /dashboard/auditoria — essa já é a trilha de log de sistema).
+  { path: '/dashboard/financeiro-auditoria', resource: 'financial-audit' },
   { path: '/dashboard/configuracoes', resource: 'settings' },
   { path: '/dashboard/auditoria', resource: 'audit-logs' },
 ];

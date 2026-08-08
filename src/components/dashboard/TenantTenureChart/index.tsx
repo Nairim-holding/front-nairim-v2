@@ -45,14 +45,12 @@ const formatDateBr = (iso: string) => {
 };
 
 /**
- * Distribuição das locações por tempo de permanência do inquilino no imóvel.
+ * Distribuição das locações por tempo de permanência do inquilino no imóvel
+ * ("Tempo de Locação" — Tarefa 1.3 do guia de correções).
  *
  * Unidade de contagem: a LOCAÇÃO — um inquilino com dois imóveis conta duas
- * vezes (e pode aparecer em duas faixas). É o que faz a soma das barras bater
+ * vezes (e pode aparecer em duas faixas). É o que faz a soma das fatias bater
  * exatamente com o número de linhas do "Ver Dados Detalhados".
- *
- * Barras (não pizza): 6 faixas ordenadas formam uma progressão, que o olho lê
- * melhor em barras; e o rótulo de contagem fica visível sem legenda.
  */
 export default function TenantTenureChart({ startDate: startDateProp, endDate: endDateProp }: TenantTenureChartProps) {
   useTheme();
@@ -154,49 +152,43 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
           },
         ]);
       }),
-      grid: {
-        top: 36,
-        bottom: isLarge ? 60 : 44,
-        left: 16,
-        right: 16,
-        containLabel: true,
-      },
-      xAxis: {
-        type: 'category',
-        data: buckets.map((b) => b.shortLabel),
-        axisLabel: {
-          color: tokens.textMuted,
-          fontSize: isLarge ? 12 : 10,
-          fontWeight: 500,
-          interval: 0,
-        },
-        axisLine: { lineStyle: { color: tokens.borderSoft } },
-        axisTick: { show: false },
-      },
-      yAxis: {
-        type: 'value',
-        // Mesmo padrão visual do eixo Y do gráfico "Imóveis por Imobiliárias".
-        axisLabel: { color: tokens.textMuted, fontSize: 11 },
-        splitLine: { lineStyle: { type: 'dashed', color: tokens.borderSoft } },
-        // Contagens são inteiras: sem isso o eixo interpola 0,5 locação.
-        minInterval: 1,
+      legend: {
+        show: true,
+        type: 'scroll',
+        orient: 'horizontal',
+        left: 'center',
+        bottom: 0,
+        itemWidth: isLarge ? 14 : 10,
+        itemHeight: isLarge ? 14 : 10,
+        textStyle: { color: tokens.textSecondary, fontSize: isLarge ? 12 : 10 },
       },
       series: [
         {
-          type: 'bar',
-          data: buckets.map((b) => b.count),
-          barMaxWidth: isLarge ? 56 : 40,
+          type: 'pie',
+          radius: isLarge ? ['40%', '65%'] : ['45%', '68%'],
+          center: ['50%', '44%'],
+          avoidLabelOverlap: true,
           itemStyle: {
-            borderRadius: [10, 10, 0, 0],
-            color: (params: any) => tokens.chartSeries[params.dataIndex % tokens.chartSeries.length],
+            borderRadius: isLarge ? 8 : 4,
+            borderColor: tokens.bgSurface,
+            borderWidth: 2,
           },
           label: {
-            show: true,
-            position: 'top',
-            color: tokens.textPrimary,
+            show: isLarge,
+            position: 'outside',
+            formatter: '{b}: {d}%',
+            color: tokens.textSecondary,
             fontSize: isLarge ? 12 : 10,
-            fontWeight: 'bold',
           },
+          emphasis: {
+            label: { show: true, fontSize: isLarge ? 16 : 12, fontWeight: 'bold' },
+            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: tokens.overlay },
+          },
+          data: buckets.map((b, index) => ({
+            name: b.shortLabel,
+            value: b.count,
+            itemStyle: { color: tokens.chartSeries[index % tokens.chartSeries.length] },
+          })),
         },
       ],
     }),
@@ -205,7 +197,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
 
   return (
     <ChartCard
-      title="TEMPO DE PERMANÊNCIA DOS INQUILINOS POR FAIXA"
+      title="TEMPO DE LOCAÇÃO"
       subtitle={`${formatPeriodLabel(startDate, endDate)} • ${total} ${total === 1 ? 'locação' : 'locações'}`}
       detailData={detailData}
       detailColumns={detailColumns}

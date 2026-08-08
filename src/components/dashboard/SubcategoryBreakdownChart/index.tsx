@@ -15,10 +15,17 @@ import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/e
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
+interface SubcategoryYearValue {
+  year: number;
+  value: number;
+}
+
 interface SubcategoryItem {
   subcategoryId: string | null;
   name: string;
   value: number;
+  /** Detalhamento por ano (Tarefa 1.2 do guia de correções) — só preenchido quando o período cobre mais de um ano. */
+  byYear?: SubcategoryYearValue[];
 }
 
 interface SubcategoryBreakdownChartProps {
@@ -61,8 +68,14 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
           const result = await response.json();
           const list = Array.isArray(result?.data) ? result.data : [];
           if (!cancelled) {
-            setCategories(list.map((c: { id: string; name: string }) => ({ label: c.name, value: c.id })));
-            if (list.length > 0) setSelectedCategoryId(list[0].id);
+            // Ordem alfabética (Tarefa 1.2, Passo 4) — faz "Despesas Fixas" ser a
+            // seleção padrão quando existir, sem depender da ordem vinda da API.
+            const sorted = [...list].sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
+            setCategories(sorted.map((c: { id: string; name: string }) => ({ label: c.name, value: c.id })));
+            if (sorted.length > 0) {
+              const defaultCategory = sorted.find((c) => String(c.name).trim().toLowerCase() === 'despesas fixas') ?? sorted[0];
+              setSelectedCategoryId(defaultCategory.id);
+            }
           }
         }
       } catch (error) {
@@ -138,6 +151,21 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
       const name = subcat?.name || item.name || '';
       const val = subcat?.value ?? Number(item.value ?? 0);
       const pct = subcat?.percentage ?? 0;
+
+      // Múltiplos anos no período: mesma regra do gráfico de Categorias (Tarefa 1.2).
+      if (subcat?.byYear && subcat.byYear.length > 1) {
+        const yearItems = subcat.byYear.map((y: SubcategoryYearValue) => ({
+          label: String(y.year),
+          value: y.value,
+          color: item.color,
+          formattedValue: `${formatCurrency(y.value)} (${val > 0 ? Math.round((y.value / val) * 1000) / 10 : 0}%)`,
+        }));
+        return buildCustomTooltipHTML(name, [
+          ...yearItems,
+          { label: 'Total', value: val, color: item.color, formattedValue: `${formatCurrency(val)} (100%)` },
+        ]);
+      }
+
       return buildCustomTooltipHTML(name, [
         { label: 'Gasto', value: val, color: item.color, formattedValue: `${formatCurrency(val)} (${pct.toFixed(1)}%)` },
       ]);

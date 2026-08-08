@@ -110,6 +110,8 @@ export interface InstitutionOption extends SelectOption {
 /** Handle comum exposto pelas views (Grouped/Extrato/IncomeExpense) para a toolbar de exportação. */
 export interface ReportViewHandle {
   getTableElement: () => HTMLTableElement | null;
+  /** Bloco de resumo (Saldo Anterior/Total Receitas/Total Despesas/Saldo Final), fora da tabela — usado só na impressão. Views sem resumo (Grouped/Demonstrativo) podem omitir. */
+  getSummaryElement?: () => HTMLElement | null;
 }
 
 export interface ReportOptions {

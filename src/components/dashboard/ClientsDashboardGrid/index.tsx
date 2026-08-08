@@ -10,11 +10,11 @@ import TenantTenureChart from '@/components/dashboard/TenantTenureChart';
 import {
   COLS_OWNERS, COLS_TENANTS_BY_PROPERTY, COLS_PROPERTIES_PER_OWNER, COLS_AGENCIES, COLS_PROPERTIES_BY_AGENCY,
 } from '@/lib/columns';
-import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
-import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 
 // Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
-const WIDGET_LABELS: Record<string, string> = {
+// Exportados: o botão "Personalizar" mora no cabeçalho da seção (sections/index.tsx),
+// na mesma posição do Financeiro — não mais solto acima do grid.
+export const WIDGET_LABELS: Record<string, string> = {
   'widget-c1': 'Tempo de Permanência dos Inquilinos por Faixa',
   'widget-c2': 'Total de Proprietários',
   'widget-c3': 'Total de Inquilinos',
@@ -22,7 +22,7 @@ const WIDGET_LABELS: Record<string, string> = {
   'widget-c5': 'Total de Imobiliárias',
   'widget-c6': 'Imóveis por Imobiliárias',
 };
-const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
+export const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
 
 const NO_PROPERTY_GROUP = 'Sem imóvel vinculado';
 
@@ -81,6 +81,9 @@ interface ClientsDashboardGridProps {
   /** Período do filtro da aba, para os widgets que buscam os próprios dados. */
   startDate: string;
   endDate: string;
+  /** Controlado pelo cabeçalho da seção (mesma posição do botão "Personalizar"
+   * do Financeiro) — a grid só filtra o que renderiza, não é mais dona do estado. */
+  visibleWidgetIds: string[];
 }
 
 export default function ClientsDashboardGrid({
@@ -88,9 +91,9 @@ export default function ClientsDashboardGrid({
   metrics,
   startDate,
   endDate,
+  visibleWidgetIds,
 }: ClientsDashboardGridProps) {
   const get = useMetricGetter(metrics);
-  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility(resource, ALL_WIDGET_IDS);
 
   const tenantsByPropertyData = useMemo(
     () => flattenTenantsByProperty(get('tenantsTotal').data ?? []),
@@ -210,19 +213,10 @@ export default function ClientsDashboardGrid({
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-end">
-        <WidgetPersonalizer
-          widgets={ALL_WIDGET_IDS.map((id) => ({ id, label: WIDGET_LABELS[id] }))}
-          visibleWidgetIds={visibleWidgetIds}
-          onChange={setVisibleWidgetIds}
-        />
-      </div>
-      <DashboardWidgetGrid
-        resource={resource}
-        defaultLayout={DEFAULT_LAYOUT}
-        renderWidget={renderWidget}
-      />
-    </div>
+    <DashboardWidgetGrid
+      resource={resource}
+      defaultLayout={DEFAULT_LAYOUT}
+      renderWidget={renderWidget}
+    />
   );
 }

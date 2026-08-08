@@ -14,10 +14,17 @@ import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/e
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
+interface CategoryYearValue {
+  year: number;
+  value: number;
+}
+
 interface CategoryExpense {
   categoryId: string;
   name: string;
   value: number;
+  /** Detalhamento por ano (Tarefa 1.2 do guia de correções) — só vem preenchido quando o período selecionado cobre mais de um ano. */
+  byYear?: CategoryYearValue[];
 }
 
 interface ExpenseByCategoryChartProps {
@@ -97,6 +104,27 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
       const item = Array.isArray(params) ? params[0] : params;
       const cat = sortedPercentages[item.dataIndex];
       const name = cat?.name || item.name || '';
+
+      // Múltiplos anos no período: detalha valor por ano antes do total
+      // (Tarefa 1.2) — "Categoria: X | 2025: R$... (48%) | 2026: R$... (52%) | Total: R$... (100%)".
+      if (cat?.byYear && cat.byYear.length > 1) {
+        const yearItems = cat.byYear.map((y: CategoryYearValue) => ({
+          label: String(y.year),
+          value: y.value,
+          color: item.color,
+          formattedValue: `${formatCurrency(y.value)} (${cat.value > 0 ? Math.round((y.value / cat.value) * 10000) / 100 : 0}%)`,
+        }));
+        return buildCustomTooltipHTML(name, [
+          ...yearItems,
+          {
+            label: 'Total',
+            value: cat.value,
+            color: item.color,
+            formattedValue: `${formatCurrency(cat.value)} (100%)`,
+          },
+        ]);
+      }
+
       return buildCustomTooltipHTML(name, [
         {
           label: 'Categorias',

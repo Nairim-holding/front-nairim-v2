@@ -39,6 +39,13 @@ interface MapThemeColors {
 const LIGHT_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
+// Sede da empresa (Garça/SP) — usado como fallback de centro/zoom quando não
+// há nenhum imóvel com coordenadas no período (Tarefa 1.4 do guia de
+// correções): sem isso o mapa ficava preso no zoom 4 do Brasil inteiro, que na
+// prática lê como "mapa-mundi" em vez de mostrar a região de atuação.
+const GARCA_SP_CENTER: [number, number] = [-22.2106, -49.6561];
+const GARCA_SP_ZOOM = 14;
+
 // Componente auxiliar para controlar o Zoom e a Máscara
 function MapController({ 
   selectedLocation, 
@@ -64,6 +71,10 @@ function MapController({
       // Se não tem seleção, ajusta a câmera para caber TODOS os imóveis
       const bounds = L.latLngBounds(allLocations.map(p => [p.lat, p.lng]));
       map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      // Sem nenhum imóvel com coordenadas: cai na sede (Garça/SP) em vez de
+      // deixar a câmera presa no zoom inicial do Brasil inteiro.
+      map.setView(GARCA_SP_CENTER, GARCA_SP_ZOOM);
     }
   }, [selectedLocation, allLocations, map]);
 
@@ -196,9 +207,9 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
       </div>
 
       {/* --- MAPA --- */}
-      <MapContainer 
-        center={[-14.2350, -51.9253]} // Centro inicial Brasil
-        zoom={4} 
+      <MapContainer
+        center={GARCA_SP_CENTER} // Sede da empresa (Garça/SP) — MapController reajusta para os imóveis reais assim que `data` chega
+        zoom={GARCA_SP_ZOOM}
         style={{ width: "100%", height: "100%", backgroundColor: tokens.mapOcean }}
         zoomControl={false} // Vamos reposicionar se quiser, ou deixar padrão
       >

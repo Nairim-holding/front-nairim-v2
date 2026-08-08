@@ -23,6 +23,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
   ref
 ) {
   const tableRef = useRef<HTMLTableElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<ExtratoResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -31,6 +32,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
 
   useImperativeHandle(ref, () => ({
     getTableElement: () => tableRef.current,
+    getSummaryElement: () => summaryRef.current,
   }));
 
   useEffect(() => {
@@ -199,7 +201,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
       </div>
 
       {summary && (
-        <div className="bg-surface border border-ui-border-soft rounded-lg p-4 max-w-md ml-auto w-full text-sm space-y-1.5">
+        <div ref={summaryRef} className="bg-surface border border-ui-border-soft rounded-lg p-4 max-w-md ml-auto w-full text-sm space-y-1.5">
           <div className="flex justify-between">
             <span className="text-content-secondary">Saldo Anterior</span>
             <span className="font-medium text-content">{formatCurrency(summary.saldoAnterior)}</span>

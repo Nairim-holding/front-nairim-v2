@@ -1,4 +1,4 @@
-import type { ReportFiltersState, ReportRegime } from './types';
+import type { ReportFiltersState, ReportOptions, ReportRegime } from './types';
 
 /** Monta a querystring comum aos endpoints /financial-reports/*, seguindo o padrão filter[campo] (multi-seleção = chave repetida). */
 export function buildReportQuery(params: {
@@ -42,4 +42,27 @@ export function countActiveFilters(filters: ReportFiltersState): number {
   count += filters.subcategory_id.length;
   count += filters.center_id.length;
   return count;
+}
+
+/** Rótulos legíveis dos filtros ativos, para o cabeçalho de impressão (Tarefa 4.3: "Filtros: ..."). */
+export function describeActiveFilters(filters: ReportFiltersState, options: ReportOptions): string[] {
+  const labels: string[] = [];
+
+  if (filters.type === 'INCOME') labels.push('Tipo: Receita');
+  if (filters.type === 'EXPENSE') labels.push('Tipo: Despesa');
+  if (filters.status === 'PENDING') labels.push('Status: Pendente');
+  if (filters.status === 'COMPLETED') labels.push('Status: Concluído');
+
+  const nameOf = (list: { label: string; value: string }[], id: string) => list.find((o) => o.value === id)?.label ?? id;
+
+  filters.financial_institution_id.forEach((id) => labels.push(nameOf(options.institutions, id)));
+  filters.card_id.forEach((id) => labels.push(nameOf(options.cards, id)));
+  filters.category_id.forEach((id) => labels.push(nameOf([...options.incomeCategories, ...options.expenseCategories], id)));
+  filters.subcategory_id.forEach((id) => {
+    const allSubcategories = Object.values(options.subcategoriesByCategory).flat();
+    labels.push(nameOf(allSubcategories, id));
+  });
+  filters.center_id.forEach((id) => labels.push(nameOf(options.centers, id)));
+
+  return labels;
 }

@@ -94,11 +94,11 @@ export function ReportDetailHeaderRow({ sortField = null, sortDir = 'asc', onSor
   );
 }
 
-export function ReportDetailRows({ items }: { items: ReportItemRow[] }) {
+export function ReportDetailRows({ items, rowClassName = '' }: { items: ReportItemRow[]; rowClassName?: string }) {
   return (
     <>
       {items.map((item) => (
-        <tr key={item.id} className="text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle">
+        <tr key={item.id} className={`text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle ${rowClassName}`}>
           <td className="px-3 py-1.5">{item.description}</td>
           <td className="px-3 py-1.5">{formatDate(item.event_date)}</td>
           <td className="px-3 py-1.5">{formatDate(item.effective_date)}</td>

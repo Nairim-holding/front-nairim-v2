@@ -7,10 +7,10 @@ import { MetricResponse } from "@/types/types";
 import { MapCoordinate } from "@/lib/dashboard";
 import { getPeriodRange, CLEARED_PERIOD_START } from "@/utils/periodRange";
 import FinancialDashboardHeader from "@/components/dashboard/FinancialDashboardHeader";
-import FinancialDashboardGrid, { WIDGET_LABELS, ALL_WIDGET_IDS } from "@/components/dashboard/FinancialDashboardGrid";
+import FinancialDashboardGrid, { WIDGET_LABELS as FINANCIAL_WIDGET_LABELS, ALL_WIDGET_IDS as FINANCIAL_WIDGET_IDS } from "@/components/dashboard/FinancialDashboardGrid";
 import PeriodFilterHeader from "@/components/dashboard/PeriodFilter";
-import PortfolioDashboardGrid from "@/components/dashboard/PortfolioDashboardGrid";
-import ClientsDashboardGrid from "@/components/dashboard/ClientsDashboardGrid";
+import PortfolioDashboardGrid, { WIDGET_LABELS as PORTFOLIO_WIDGET_LABELS, ALL_WIDGET_IDS as PORTFOLIO_WIDGET_IDS } from "@/components/dashboard/PortfolioDashboardGrid";
+import ClientsDashboardGrid, { WIDGET_LABELS as CLIENTS_WIDGET_LABELS, ALL_WIDGET_IDS as CLIENTS_WIDGET_IDS } from "@/components/dashboard/ClientsDashboardGrid";
 import DynamicFilterModal from "@/components/filters/DynamicFilterModal";
 import WidgetPersonalizer from "@/components/dashboard/WidgetPersonalizer";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
@@ -118,7 +118,7 @@ export function FinancialSection({
   }, []);
 
   // Tarefa 10 (29/07/26): botão "Personalizar Gráficos" ao lado do Filtro.
-  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('financeiro-v5', ALL_WIDGET_IDS);
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('financeiro-v5', FINANCIAL_WIDGET_IDS);
 
   return (
     <SectionShell>
@@ -138,7 +138,7 @@ export function FinancialSection({
         </button>
         <div className="mt-1 shrink-0">
           <WidgetPersonalizer
-            widgets={ALL_WIDGET_IDS.map((id) => ({ id, label: WIDGET_LABELS[id] }))}
+            widgets={FINANCIAL_WIDGET_IDS.map((id) => ({ id, label: FINANCIAL_WIDGET_LABELS[id] }))}
             visibleWidgetIds={visibleWidgetIds}
             onChange={setVisibleWidgetIds}
           />
@@ -189,19 +189,34 @@ export function PortfolioSection({
   metrics: MetricResponse;
   onRangeChange: (startDate: string, endDate: string) => void;
 }) {
-  const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod } = useSectionPeriod(onRangeChange);
+  const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod, startDate, endDate } = useSectionPeriod(onRangeChange);
+
+  // Mesma posição do botão "Personalizar" do Financeiro (Tarefa: padronizar as
+  // 4 abas) — antes ficava solto num `flex justify-end` acima do grid, aqui.
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('imoveis-v3', PORTFOLIO_WIDGET_IDS);
 
   return (
     <SectionShell>
-      <PeriodFilterHeader
-        years={years}
-        selectedMonths={selectedMonths}
-        onYearsChange={setYears}
-        onMonthsChange={setSelectedMonths}
-        isCleared={isCleared}
-        onClear={clearPeriod}
-      />
-      <PortfolioDashboardGrid metrics={metrics} />
+      <div className="flex items-start gap-2 mb-1">
+        <div className="mt-1 shrink-0">
+          <WidgetPersonalizer
+            widgets={PORTFOLIO_WIDGET_IDS.map((id) => ({ id, label: PORTFOLIO_WIDGET_LABELS[id] }))}
+            visibleWidgetIds={visibleWidgetIds}
+            onChange={setVisibleWidgetIds}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <PeriodFilterHeader
+            years={years}
+            selectedMonths={selectedMonths}
+            onYearsChange={setYears}
+            onMonthsChange={setSelectedMonths}
+            isCleared={isCleared}
+            onClear={clearPeriod}
+          />
+        </div>
+      </div>
+      <PortfolioDashboardGrid metrics={metrics} startDate={startDate} endDate={endDate} visibleWidgetIds={visibleWidgetIds} />
     </SectionShell>
   );
 }
@@ -216,17 +231,30 @@ export function ClientsSection({
   const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod, startDate, endDate } =
     useSectionPeriod(onRangeChange);
 
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('clientes-v1', CLIENTS_WIDGET_IDS);
+
   return (
     <SectionShell>
-      <PeriodFilterHeader
-        years={years}
-        selectedMonths={selectedMonths}
-        onYearsChange={setYears}
-        onMonthsChange={setSelectedMonths}
-        isCleared={isCleared}
-        onClear={clearPeriod}
-      />
-      <ClientsDashboardGrid metrics={metrics} startDate={startDate} endDate={endDate} />
+      <div className="flex items-start gap-2 mb-1">
+        <div className="mt-1 shrink-0">
+          <WidgetPersonalizer
+            widgets={CLIENTS_WIDGET_IDS.map((id) => ({ id, label: CLIENTS_WIDGET_LABELS[id] }))}
+            visibleWidgetIds={visibleWidgetIds}
+            onChange={setVisibleWidgetIds}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <PeriodFilterHeader
+            years={years}
+            selectedMonths={selectedMonths}
+            onYearsChange={setYears}
+            onMonthsChange={setSelectedMonths}
+            isCleared={isCleared}
+            onClear={clearPeriod}
+          />
+        </div>
+      </div>
+      <ClientsDashboardGrid metrics={metrics} startDate={startDate} endDate={endDate} visibleWidgetIds={visibleWidgetIds} />
     </SectionShell>
   );
 }
@@ -242,6 +270,9 @@ export function MapSection({
 
   return (
     <SectionShell>
+      {/* Sem WidgetPersonalizer: o Mapa é um widget único, não uma grid
+          configurável — nada para "personalizar" aqui. O cartão de período
+          mantém a mesma moldura das demais abas para a régua visual bater. */}
       <PeriodFilterHeader
         years={years}
         selectedMonths={selectedMonths}

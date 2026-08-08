@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Calendar, Filter, Printer, FileSpreadsheet, FileText } from 'lucide-react';
+import { Calendar, Filter, Printer, FileSpreadsheet, FileText, X } from 'lucide-react';
 import CalendarPicker from '@/components/ui/CalendarPicker';
 import FiltersPanel from './FiltersPanel';
-import { buildDateShortcuts, formatDateDisplay } from '../_lib/dateShortcuts';
+import { buildDateShortcuts, formatDateDisplay, getClearedDateRange } from '../_lib/dateShortcuts';
 import { countActiveFilters } from '../_lib/buildReportQuery';
 import type { ReportFiltersState, ReportKind, ReportOptions, ReportRegime } from '../_lib/types';
 
@@ -44,7 +44,6 @@ export default function ReportsTopBar({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
-  const filtersRef = useRef<HTMLDivElement>(null);
 
   const shortcuts = useMemo(() => buildDateShortcuts(), []);
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
@@ -59,16 +58,10 @@ export default function ReportsTopBar({
     }
   }, [isCalendarOpen]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) setIsFiltersOpen(false);
-    };
-    if (isFiltersOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isFiltersOpen]);
-
+  // FiltersPanel agora é um modal centralizado com overlay próprio (mesma casca
+  // do DynamicFilterModal) — o overlay já fecha ao clicar fora, sem precisar de
+  // um listener de "clique fora" aqui (que fechava a cada clique dentro do
+  // próprio painel, já que ele deixou de estar aninhado neste wrapper).
   const isShortcutActive = (from: string, to: string) => dateRange.from === from && dateRange.to === to;
 
   return (
@@ -89,6 +82,16 @@ export default function ReportsTopBar({
               {s.label}
             </button>
           ))}
+          {/* Tarefa 4.2: considera todo o histórico de lançamentos, sem recorte de período. */}
+          <button
+            type="button"
+            onClick={() => onDateRangeChange(getClearedDateRange())}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-ui-border text-content-secondary bg-surface hover:bg-surface-subtle transition-colors"
+            title="Considerar todo o período de lançamentos"
+          >
+            <X size={12} />
+            Limpar
+          </button>
         </div>
 
         <div className="relative" ref={calendarRef}>
@@ -115,7 +118,7 @@ export default function ReportsTopBar({
           )}
         </div>
 
-        <div className="relative ml-auto" ref={filtersRef}>
+        <div className="relative ml-auto">
           <button
             type="button"
             onClick={() => setIsFiltersOpen((o) => !o)}

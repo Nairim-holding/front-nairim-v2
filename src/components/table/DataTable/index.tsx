@@ -1046,7 +1046,7 @@ export default function DynamicTableManager({
                 <button
                   type="button"
                   onClick={() => setIsColumnModalOpen(true)}
-                  className="p-2 hover:bg-surface-subtle rounded transition-colors"
+                  className="hidden sm:block p-2 hover:bg-surface-subtle rounded transition-colors"
                   title="Personalizar colunas"
                 >
                   <Settings2 size={20} color="var(--color-text-muted)" />

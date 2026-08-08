@@ -10,7 +10,8 @@ import { getThemeTokens } from '@/utils';
 
 const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
-/** Cortes do semáforo de consumo, em % da cota contratada. */
+/** Cortes do semáforo de consumo, em % da cota contratada (Tarefa 1.5 do guia de correções: verde 0-60%, amarelo 60-80%, vermelho 80-100%). */
+const SAFE_PERCENT = 60;
 const WARNING_PERCENT = 80;
 const CRITICAL_PERCENT = 100;
 
@@ -96,8 +97,8 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
   const detailColumns = useMemo(
     () => [
       { key: 'companyName', label: 'Empresa' },
-      { key: 'usedMb', label: 'Usado (MB)', format: (v: number) => formatMb(v), summable: true },
-      { key: 'quotaMb', label: 'Contratado (MB)', format: (v: number) => formatMb(v), summable: true },
+      { key: 'usedMb', label: 'Usado (Megabytes)', format: (v: number) => formatMb(v), summable: true },
+      { key: 'quotaMb', label: 'Contratado (Megabytes)', format: (v: number) => formatMb(v), summable: true },
       { key: 'percent', label: '% de uso', format: (v: number) => `${formatMb(v)}%` },
     ],
     []
@@ -105,6 +106,8 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
     backgroundColor: 'transparent',
+    animationDurationUpdate: 1000,
+    animationEasingUpdate: 'cubicOut',
     series: [
       {
         type: 'gauge',
@@ -115,23 +118,34 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
         endAngle: -30,
         radius: isLarge ? '82%' : '92%',
         center: ['50%', '58%'],
-        // Faixas de alerta: verde até 80% da cota, âmbar de 80% a 100%.
+        // Faixas de alerta: verde até 60%, âmbar de 60% a 80%, vermelho de 80% a 100% da cota.
         axisLine: {
           lineStyle: {
             width: isLarge ? 26 : 18,
             color: [
-              [WARNING_PERCENT / 100, COLOR_OK],
-              [1, COLOR_WARNING],
+              [SAFE_PERCENT / 100, COLOR_OK],
+              [WARNING_PERCENT / 100, COLOR_WARNING],
+              [1, COLOR_CRITICAL],
             ],
           },
         },
-        // Acima da cota o ponteiro satura no fim da escala; o valor real
-        // continua legível no texto central, em vermelho.
-        progress: { show: false },
+        // Preenchimento sólido até o valor atual, na cor do semáforo — efeito
+        // de "carga" além do ponteiro, mais legível à distância.
+        progress: {
+          show: true,
+          width: isLarge ? 26 : 18,
+          itemStyle: { color: gaugeColor },
+        },
         pointer: {
           itemStyle: { color: gaugeColor },
           width: isLarge ? 6 : 4,
           length: '62%',
+        },
+        anchor: {
+          show: true,
+          showAbove: true,
+          size: isLarge ? 20 : 14,
+          itemStyle: { color: gaugeColor, borderColor: tokens.bgSurface, borderWidth: 4 },
         },
         axisTick: {
           distance: isLarge ? -26 : -18,
@@ -155,7 +169,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
           color: gaugeColor,
           fontSize: isLarge ? 26 : 18,
           fontWeight: 'bold',
-          formatter: () => `${formatMb(usedMb)} / ${formatMb(quotaMb)} MB`,
+          formatter: () => `${formatMb(usedMb)} / ${formatMb(quotaMb)} Megabytes`,
         },
         title: {
           offsetCenter: [0, isLarge ? '64%' : '60%'],
@@ -172,7 +186,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
 
   return (
     <ChartCard
-      title="CONSUMO DE BANCO DE DADOS EM MB"
+      title="CONSUMO DE BANCO DE DADOS EM MEGABYTES"
       subtitle={current ? `${current.companyName} — ${formatMb(usedMb)} de ${formatMb(quotaMb)} MB contratados` : undefined}
       detailData={detailData}
       detailColumns={detailColumns}

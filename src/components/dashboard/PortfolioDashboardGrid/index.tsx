@@ -11,11 +11,11 @@ import {
   COLS_TOTAL_PROPERTIES, COLS_PENDING_DOCS, COLS_SALE_VALUE,
   COLS_AVAILABILITY_DONUT, COLS_TYPES_DONUT, COLS_OCCUPATION_GAUGE, COLS_VACANCY_GAUGE,
 } from '@/lib/columns';
-import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
-import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 
 // Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
-const WIDGET_LABELS: Record<string, string> = {
+// Exportados: o botão "Personalizar" mora no cabeçalho da seção (sections/index.tsx),
+// na mesma posição do Financeiro — não mais solto acima do grid.
+export const WIDGET_LABELS: Record<string, string> = {
   'widget-p1': 'Total de Imóveis',
   'widget-p2': 'Imóveis com Documentação Pendente',
   'widget-p3': 'Imóveis com Valor de Venda Definido',
@@ -25,13 +25,15 @@ const WIDGET_LABELS: Record<string, string> = {
   'widget-p7': 'Taxa de Vacância Física',
   'widget-p8': 'Consumo de Anexos',
   'widget-p9': 'Consumo de Banco de Dados',
+  'widget-p10': 'Tempo de Locação',
 };
-const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
+export const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
 
 const EChartsDonut = dynamic(() => import('@/components/charts/DonutChart'), { ssr: false });
 const EChartsGauge = dynamic(() => import('@/components/charts/GaugeChart'), { ssr: false });
 const StorageUsage = dynamic(() => import('@/components/dashboard/StorageUsageChart'), { ssr: false });
 const DatabaseUsage = dynamic(() => import('@/components/dashboard/DatabaseUsageChart'), { ssr: false });
+const TenantTenure = dynamic(() => import('@/components/dashboard/TenantTenureChart'), { ssr: false });
 
 /** NumericCard/EChartsDonut/EChartsGauge têm moldura e altura próprias; dentro
  * da célula do grid precisam preencher exatamente a célula. */
@@ -68,12 +70,20 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   // Consumo: anexos | banco de dados
   { i: 'widget-p8', x: 0, y: 19, w: 6, h: 8 },
   { i: 'widget-p9', x: 6, y: 19, w: 6, h: 8 },
+  // Tempo de Locação (pizza) — Tarefa 1.3 do guia de correções
+  { i: 'widget-p10', x: 0, y: 27, w: 6, h: 8 },
 ];
 
 interface PortfolioDashboardGridProps {
   resource?: string;
   /** Métricas da seção Imóveis, já buscadas com o período do filtro da aba. */
   metrics: MetricResponse | null;
+  /** Período do filtro da aba (Tarefa 1.3) — usado pelo widget de Tempo de Locação. */
+  startDate?: string;
+  endDate?: string;
+  /** Controlado pelo cabeçalho da seção (mesma posição do botão "Personalizar"
+   * do Financeiro) — a grid só filtra o que renderiza, não é mais dona do estado. */
+  visibleWidgetIds: string[];
 }
 
 /**
@@ -87,9 +97,11 @@ export default function PortfolioDashboardGrid({
   // layout salvo (mesma prática do 'financeiro-v5').
   resource = 'imoveis-v3',
   metrics,
+  startDate,
+  endDate,
+  visibleWidgetIds,
 }: PortfolioDashboardGridProps) {
   const get = useMetricGetter(metrics);
-  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility(resource, ALL_WIDGET_IDS);
 
   const vacancyData = useMemo(
     () => (get('vacancyRate').data ?? []).map((item: any) => ({ ...item, status: 'AVAILABLE', areaTotal: item.areaTotal ?? 0 })),
@@ -249,28 +261,22 @@ export default function PortfolioDashboardGrid({
         case 'widget-p9':
           return { body: <DatabaseUsage isDraggable />, framed: true };
 
+        case 'widget-p10':
+          return { body: <TenantTenure startDate={startDate} endDate={endDate} />, framed: true };
+
         default:
           return null;
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [metrics, availabilityDonutData, typesData, visibleWidgetIds]
+    [metrics, availabilityDonutData, typesData, visibleWidgetIds, startDate, endDate]
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-end">
-        <WidgetPersonalizer
-          widgets={ALL_WIDGET_IDS.map((id) => ({ id, label: WIDGET_LABELS[id] }))}
-          visibleWidgetIds={visibleWidgetIds}
-          onChange={setVisibleWidgetIds}
-        />
-      </div>
-      <DashboardWidgetGrid
-        resource={resource}
-        defaultLayout={DEFAULT_LAYOUT}
-        renderWidget={renderWidget}
-      />
-    </div>
+    <DashboardWidgetGrid
+      resource={resource}
+      defaultLayout={DEFAULT_LAYOUT}
+      renderWidget={renderWidget}
+    />
   );
 }

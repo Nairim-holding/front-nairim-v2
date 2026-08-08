@@ -10,7 +10,9 @@ import IncomeExpenseView from './_components/IncomeExpenseView';
 import DemonstrativoView from './_components/DemonstrativoView';
 import { useReportOptions } from './_lib/useReportOptions';
 import { getDefaultReportDateRange } from './_lib/dateShortcuts';
+import { describeActiveFilters } from './_lib/buildReportQuery';
 import { exportTableToExcel, exportTableToPDF, printReportElement } from './_lib/exportHelpers';
+import { useAuth } from '@/contexts/AuthContext';
 import { EMPTY_FILTERS } from './_lib/types';
 import type { ReportFiltersState, ReportGroupBy, ReportKind, ReportRegime, ReportViewHandle, SelectedReport } from './_lib/types';
 
@@ -40,6 +42,7 @@ const FLUXO_FILENAMES: Record<string, string> = {
 
 export default function RelatoriosPageContent() {
   const { options, isLoading: isLoadingOptions } = useReportOptions();
+  const { user } = useAuth();
 
   const [selected, setSelected] = useState<SelectedReport>({ section: 'despesas', item: 'description' });
   const [dateRange, setDateRange] = useState(() => getDefaultReportDateRange());
@@ -65,17 +68,31 @@ export default function RelatoriosPageContent() {
     return 'Demonstrativo';
   }, [selected]);
 
+  const printContext = useMemo(
+    () => ({
+      reportTitle,
+      dateRange,
+      filterLabels: describeActiveFilters(filters, options),
+      userName: user?.name ?? '—',
+    }),
+    [reportTitle, dateRange, filters, options, user]
+  );
+
   const handlePrint = useCallback(() => {
-    printReportElement(activeViewRef.current?.getTableElement() ?? null, reportTitle);
-  }, [reportTitle]);
+    printReportElement(
+      activeViewRef.current?.getTableElement() ?? null,
+      printContext,
+      activeViewRef.current?.getSummaryElement?.() ?? null
+    );
+  }, [printContext]);
 
   const handleExportExcel = useCallback(() => {
     exportTableToExcel(activeViewRef.current?.getTableElement() ?? null, filename);
   }, [filename]);
 
   const handleExportPDF = useCallback(() => {
-    exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, reportTitle);
-  }, [filename, reportTitle]);
+    exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, printContext);
+  }, [filename, printContext]);
 
   const hideTypeFilter = selected.section === 'despesas' || selected.section === 'receitas';
 

@@ -98,68 +98,124 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
     []
   );
 
-  const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
-    backgroundColor: 'transparent',
-    tooltip: getCustomEchartsTooltipConfig((params: TooltipParam | TooltipParam[]) => {
-      const item = Array.isArray(params) ? params[0] : params;
-      const group = sortedGroups[item.dataIndex];
-      const share = totalMegabytes > 0 ? Math.round(((group?.megabytes ?? 0) / totalMegabytes) * 1000) / 10 : 0;
-      return buildCustomTooltipHTML(group?.label ?? item.name ?? '', [
+  const buildOption = useCallback((isLarge: boolean): EChartsOption => {
+    // Escala do arco em cima do total ocupado (não do maior grupo isolado) —
+    // senão o ponteiro (que é o total) sempre estoura o próprio máximo.
+    // Arredonda para a próxima "dezena" acima para sobrar folga visual.
+    const rawMax = Math.max(totalMegabytes, 1);
+    const magnitude = 10 ** Math.floor(Math.log10(rawMax));
+    const maxMegabytes = Math.ceil((rawMax * 1.25) / magnitude) * magnitude;
+
+    // Cor conforme a posição do total dentro da própria escala (não há cota
+    // contratada aqui — é só uma indicação visual de "quanto do arco" está ocupado).
+    const usageRatio = totalMegabytes / maxMegabytes;
+    let gaugeColor = '#10B981'; // Verde
+    if (usageRatio > 0.8) gaugeColor = '#EF4444';
+    else if (usageRatio > 0.6) gaugeColor = '#F59E0B';
+
+    return {
+      backgroundColor: 'transparent',
+      animationDurationUpdate: 1000,
+      animationEasingUpdate: 'cubicOut',
+      series: [
         {
-          label: 'Espaço',
-          value: formatMegabytes(group?.megabytes ?? 0),
-          color: item.color,
-          formattedValue: `${formatMegabytes(group?.megabytes ?? 0)} (${share}%) · ${group?.files ?? 0} arquivo(s)`,
+          type: 'gauge',
+          min: 0,
+          max: maxMegabytes,
+          startAngle: 225,
+          endAngle: -45,
+          // Raio em pixels (não %) na tela ampliada: um container muito maior
+          // com raio percentual deixa o arco enorme e empurra o texto central
+          // (offsetCenter também é relativo ao raio) para fora do arco.
+          radius: isLarge ? 170 : '95%',
+          center: ['50%', '58%'],
+
+          // Fundo em arco neutro — a cor de destaque fica só no progress/ponteiro,
+          // que já reflete o nível de uso. Um arco tricolor fixo aqui competia
+          // visualmente com o preenchimento e sugeria uma cota que não existe.
+          axisLine: {
+            lineStyle: {
+              width: isLarge ? 32 : 24,
+              color: [[1, tokens.borderSoft]],
+            },
+          },
+
+          // Preenchimento da barra com gradiente
+          progress: {
+            show: true,
+            width: isLarge ? 32 : 24,
+            itemStyle: {
+              color: gaugeColor,
+              opacity: 0.95,
+              shadowColor: gaugeColor,
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowOffsetY: isLarge ? 8 : 6,
+            },
+          },
+
+          // Ponteiro elegante
+          pointer: {
+            itemStyle: {
+              color: gaugeColor,
+              shadowColor: gaugeColor,
+              shadowBlur: 8,
+            },
+            width: isLarge ? 7 : 5,
+            length: '70%',
+          },
+
+          // Âncora no centro
+          anchor: {
+            show: true,
+            showAbove: true,
+            size: isLarge ? 24 : 18,
+            itemStyle: {
+              color: gaugeColor,
+              borderColor: tokens.bgSurface,
+              borderWidth: isLarge ? 5 : 4,
+              shadowColor: gaugeColor,
+              shadowBlur: 12,
+            },
+          },
+
+          // Sem ticks/split lines/labels numéricos no arco: a escala é relativa
+          // (não há cota contratada), então marcações intermediárias só
+          // adicionariam ruído sem significado — o valor central já é o dado real.
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: false },
+
+          // Valor central grande, com a unidade já embutida (evita repetir "MB"
+          // duas vezes perto de números pequenos como "0,00 MB / 22,83 MB").
+          // offsetCenter em % é relativo ao raio do gauge — com raio fixo em
+          // pixels na tela ampliada, o mesmo percentual já mantém o texto
+          // dentro do arco em vez de vazar para fora dele.
+          detail: {
+            valueAnimation: true,
+            offsetCenter: [0, '18%'],
+            color: gaugeColor,
+            fontSize: isLarge ? 30 : 24,
+            fontWeight: 'bold',
+            formatter: () => formatMegabytes(totalMegabytes),
+          },
+
+          // Rótulo descritivo abaixo do valor, no lugar do "%" pouco intuitivo.
+          title: {
+            offsetCenter: [0, '34%'],
+            color: tokens.textMuted,
+            fontSize: isLarge ? 13 : 11,
+            fontWeight: 500,
+          },
+
+          data: [{
+            value: totalMegabytes,
+            name: 'Espaço utilizado',
+          }],
         },
-      ]);
-    }),
-    grid: {
-      top: 20,
-      bottom: 20,
-      left: 16,
-      // Espaço à direita para o rótulo em MB não ser cortado na ponta da barra.
-      right: isLarge ? 96 : 80,
-      containLabel: true,
-    },
-    xAxis: {
-      type: 'value',
-      show: false,
-    },
-    yAxis: {
-      type: 'category',
-      data: sortedGroups.map((group) => group.label),
-      axisLabel: {
-        color: tokens.textMuted,
-        fontSize: isLarge ? 12 : 11,
-        fontWeight: 500,
-      },
-      axisLine: { lineStyle: { color: tokens.borderSoft } },
-      axisTick: { show: false },
-    },
-    series: [
-      {
-        type: 'bar',
-        // Cor e rótulo por item (em vez de callbacks): o valor formatado em pt-BR
-        // já sai pronto daqui, sem precisar reformatar dentro do echarts.
-        data: sortedGroups.map((group, index) => ({
-          value: group.megabytes,
-          itemStyle: { color: tokens.chartSeries[index % tokens.chartSeries.length] },
-          label: { formatter: formatMegabytes(group.megabytes) },
-        })),
-        barMaxWidth: isLarge ? 40 : 28,
-        itemStyle: {
-          borderRadius: [0, 10, 10, 0],
-        },
-        label: {
-          show: true,
-          position: 'right',
-          color: tokens.textPrimary,
-          fontSize: isLarge ? 12 : 11,
-          fontWeight: 'bold',
-        },
-      },
-    ],
-  }), [sortedGroups, totalMegabytes, tokens]);
+      ],
+    };
+  }, [totalMegabytes, tokens]);
 
   const hasUsage = groups.some((group) => group.bytes > 0);
 
@@ -178,13 +234,36 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           </div>
         ) : (
           <div className="w-full h-full flex flex-col min-h-0">
-            <div className="flex-1 relative min-h-0 p-2">
+            <div className="flex-[2] relative min-h-0 p-2">
               <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
             </div>
-            <div className="shrink-0 px-4 py-2 border-t border-ui-border-soft flex items-baseline justify-between gap-2">
-              <span className="text-xs text-content-muted">Total</span>
-              <span className="text-sm font-semibold text-content">{formatMegabytes(totalMegabytes)}</span>
-            </div>
+            {sortedGroups.length > 0 && (
+              <div className="shrink-0 border-t border-ui-border-soft">
+                <div
+                  className="px-3 py-1.5 grid auto-rows-min gap-1.5"
+                  style={{ gridTemplateColumns: `repeat(${isFullscreen ? 4 : 2}, minmax(0, 1fr))` }}
+                >
+                  {sortedGroups.map((group, index) => {
+                    const percentage = totalMegabytes > 0 ? Math.round((group.megabytes / totalMegabytes) * 100) : 0;
+                    const color = tokens.chartSeries[index % tokens.chartSeries.length];
+                    return (
+                      <div key={group.key} className="flex items-center gap-1.5 min-w-0 py-0.5">
+                        <div
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}60` }}
+                        />
+                        <div className="min-w-0 leading-tight">
+                          <div className="text-[11px] text-content-muted truncate">{group.label}</div>
+                          <div className="text-xs font-semibold text-content truncate">
+                            {formatMegabytes(group.megabytes)} <span className="text-content-muted font-normal">· {percentage}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )
       )}

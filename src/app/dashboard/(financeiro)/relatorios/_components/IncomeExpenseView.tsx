@@ -27,7 +27,7 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
 
   const buildOption = (): EChartsOption => ({
     backgroundColor: 'transparent',
-    tooltip: getCustomEchartsTooltipConfig((params: any) => {
+    tooltip: getCustomEchartsTooltipConfig((params) => {
       const item = Array.isArray(params) ? params[0] : params;
       const g = chartData[item.dataIndex];
       return buildCustomTooltipHTML(g?.category ?? item.name ?? '', [
@@ -52,7 +52,7 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
         data: chartData.map((g) => g.total),
         barMaxWidth: 20,
         itemStyle: { borderRadius: [0, 6, 6, 0], color },
-        label: { show: true, position: 'right', formatter: (p: any) => formatCurrency(p.value), color: tokens.textPrimary, fontSize: 10 },
+        label: { show: true, position: 'right', formatter: (p) => formatCurrency(Number(p.value)), color: tokens.textPrimary, fontSize: 10 },
       },
     ],
   });
@@ -68,23 +68,50 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
   );
 }
 
+/**
+ * Cores de seção (Tarefa 4.5 do guia de correções): Receitas em verde,
+ * Despesas em laranja — tanto na tela quanto no HTML de impressão (mesmo
+ * elemento serve de fonte para `printReportElement`/`exportTableToPDF`).
+ */
+const SIDE_STYLES = {
+  income: {
+    headerBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    headerText: 'text-emerald-800 dark:text-emerald-300',
+    categoryBg: 'bg-emerald-50/60 dark:bg-emerald-950/20',
+    categoryText: 'text-emerald-900 dark:text-emerald-200',
+    subcategoryText: 'text-emerald-700/80 dark:text-emerald-400/80',
+  },
+  expense: {
+    headerBg: 'bg-orange-50 dark:bg-orange-950/40',
+    headerText: 'text-orange-800 dark:text-orange-300',
+    categoryBg: 'bg-orange-50/60 dark:bg-orange-950/20',
+    categoryText: 'text-orange-900 dark:text-orange-200',
+    subcategoryText: 'text-orange-700/80 dark:text-orange-400/80',
+  },
+} as const;
+
 function SideTable({
   side,
   label,
+  variant,
   reportKind,
   detailSortField,
   detailSortDir,
 }: {
   side: IncomeExpenseSide;
   label: string;
+  variant: keyof typeof SIDE_STYLES;
   reportKind: ReportKind;
   detailSortField: DetailSortField | null;
   detailSortDir: DetailSortDir;
 }) {
+  const style = SIDE_STYLES[variant];
+
   return (
     <>
-      <tr className="text-xs font-bold text-content-inverse bg-brand">
-        <td className="px-3 py-1.5" colSpan={11}>
+      {/* Espaçamento maior antes de cada seção (Receitas/Despesas) do que entre subcategorias dentro dela. */}
+      <tr className={`text-xs font-bold ${style.headerText} ${style.headerBg}`}>
+        <td className="px-3 py-2" colSpan={11} style={{ paddingTop: '14px' }}>
           {label} — {formatCurrency(side.total)}
         </td>
       </tr>
@@ -95,18 +122,21 @@ function SideTable({
       )}
       {reportKind === 'sintetico'
         ? side.groups.map((g) => (
-            <tr key={g.categoryId} className="text-sm text-content-secondary border-b border-ui-border-soft/60">
-              <td className="px-3 py-1.5" colSpan={10}>{g.category}</td>
-              <td className="px-3 py-1.5 text-right font-medium text-content">{formatCurrency(g.total)}</td>
+            <tr key={g.categoryId} className={`text-sm border-b border-ui-border-soft/60 ${style.categoryBg} ${style.categoryText}`}>
+              <td className="px-3 py-1.5" colSpan={10} style={{ paddingBottom: '8px' }}>{g.category}</td>
+              <td className="px-3 py-1.5 text-right font-medium" style={{ paddingBottom: '8px' }}>{formatCurrency(g.total)}</td>
             </tr>
           ))
         : side.groups.map((g) => (
             <Fragment key={g.categoryId}>
-              <tr className="text-sm font-semibold text-content bg-surface-subtle border-b border-ui-border-soft">
+              <tr className={`text-sm font-semibold border-b border-ui-border-soft ${style.categoryBg} ${style.categoryText}`}>
                 <td className="px-3 py-1.5" colSpan={10}>{g.category}</td>
                 <td className="px-3 py-1.5 text-right">{formatCurrency(g.total)}</td>
               </tr>
-              <ReportDetailRows items={sortDetailItems(g.items, detailSortField, detailSortDir)} />
+              <ReportDetailRows
+                items={sortDetailItems(g.items, detailSortField, detailSortDir)}
+                rowClassName={`${style.subcategoryText} pl-4`}
+              />
             </Fragment>
           ))}
     </>
@@ -119,6 +149,7 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
 ) {
   useTheme();
   const tableRef = useRef<HTMLTableElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<IncomeExpenseResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [detailSortField, setDetailSortField] = useState<DetailSortField | null>(null);
@@ -126,6 +157,7 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
 
   useImperativeHandle(ref, () => ({
     getTableElement: () => tableRef.current,
+    getSummaryElement: () => summaryRef.current,
   }));
 
   const handleDetailSort = (field: DetailSortField) => {
@@ -189,8 +221,8 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
           <MiniBarChart side={data.receitas} color="#10b981" />
         </div>
         <div className="bg-surface border border-ui-border-soft rounded-lg p-2">
-          <h3 className="text-xs font-semibold text-red-600 dark:text-red-400 px-2 pt-1 pb-1">Despesas</h3>
-          <MiniBarChart side={data.despesas} color="#ef4444" />
+          <h3 className="text-xs font-semibold text-orange-600 dark:text-orange-400 px-2 pt-1 pb-1">Despesas</h3>
+          <MiniBarChart side={data.despesas} color="#f97316" />
         </div>
       </div>
 
@@ -207,13 +239,13 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
             )}
           </thead>
           <tbody>
-            <SideTable side={data.receitas} label="Receitas" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
-            <SideTable side={data.despesas} label="Despesas" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
+            <SideTable side={data.receitas} label="Receitas" variant="income" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
+            <SideTable side={data.despesas} label="Despesas" variant="expense" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
           </tbody>
         </table>
       </div>
 
-      <div className="bg-surface border border-ui-border-soft rounded-lg p-4 max-w-md ml-auto w-full text-sm space-y-1.5">
+      <div ref={summaryRef} className="bg-surface border border-ui-border-soft rounded-lg p-4 max-w-md ml-auto w-full text-sm space-y-1.5">
         <div className="flex justify-between">
           <span className="text-content-secondary">Saldo Anterior</span>
           <span className="font-medium text-content">{formatCurrency(data.summary.saldoAnterior)}</span>
@@ -224,7 +256,7 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
         </div>
         <div className="flex justify-between">
           <span className="text-content-secondary">Total de Despesas no Período</span>
-          <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(data.summary.totalDespesas)}</span>
+          <span className="font-medium text-orange-600 dark:text-orange-400">{formatCurrency(data.summary.totalDespesas)}</span>
         </div>
         <div className="flex justify-between border-t border-ui-border-soft pt-1.5">
           <span className="text-content-secondary">Balanço no Período</span>
