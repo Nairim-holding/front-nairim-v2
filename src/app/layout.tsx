@@ -24,16 +24,24 @@ export async function generateMetadata(): Promise<Metadata> {
   const name = branding?.company_name ?? FALLBACK_NAME;
   const title = branding?.app_title ?? branding?.trade_name ?? name;
   const description = branding?.app_description ?? `Plataforma de gestão imobiliária — ${name}`;
-  const icon = branding?.favicon_url ?? '/favicon.svg';
+  const customIcon = branding?.favicon_url;
   const ogImage = branding?.og_image_url;
 
   return {
     title,
     description,
-    icons: {
-      icon,
-      apple: icon,
-    },
+    icons: customIcon
+      ? {
+          icon: customIcon,
+          apple: customIcon,
+        }
+      : {
+          icon: [
+            { url: '/favicon-dark.svg', media: '(prefers-color-scheme: light)' },
+            { url: '/favicon.svg', media: '(prefers-color-scheme: dark)' },
+          ],
+          apple: '/favicon-dark.svg',
+        },
     manifest: '/manifest.json',
     openGraph: {
       title,
