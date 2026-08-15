@@ -6,6 +6,7 @@ import { Power } from 'lucide-react';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
+import { setActiveUserAction } from '@/server/actions/user';
 import DynamicTableManager from '@/components/table/DataTable';
 
 interface AdministradoresTableProps {
@@ -33,23 +34,19 @@ export default function AdministradoresTable({ columns }: AdministradoresTablePr
         : `Deseja desativar "${item.name}"? Ele continua cadastrado, apenas marcado como inativo.`,
       async () => {
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_URL_API}/users/${item.id}/active`,
-            {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ is_active: willActivate }),
-            }
-          );
+          const result = await setActiveUserAction(item.id, willActivate);
 
-          const json = await res.json().catch(() => null);
-
-          if (!res.ok) {
-            showMessage(json?.message || `Erro ${res.status} ao alterar a situação`, 'error');
+          if (!result.ok) {
+            showMessage(result.error || `Erro ao alterar a situação`, 'error');
             return;
           }
 
-          showMessage(json?.message || 'Situação alterada com sucesso!', 'success');
+          showMessage(
+            result.data?.name
+              ? `Usuário ${result.data.name} ${willActivate ? 'ativado' : 'desativado'} com sucesso`
+              : 'Situação alterada com sucesso!',
+            'success'
+          );
           setTableKey((k) => k + 1);
         } catch (e: any) {
           showMessage(e?.message || 'Falha ao alterar a situação', 'error');

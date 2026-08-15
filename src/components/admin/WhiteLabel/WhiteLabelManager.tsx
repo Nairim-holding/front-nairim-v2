@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Image as ImageIcon, Palette, Moon, Sun, Eye, Loader2, Save } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts';
 import type { CompanyBranding } from '@/types/branding';
 import { buildBrandingCss } from '@/lib/brandingCss';
 import ColorInput from './ColorInput';
 import AssetUploader from './AssetUploader';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getMyBrandingAction, updateBrandingAction } from '@/server/actions/company';
+import type { BrandingAssetField } from '@/core/entities/company';
 
 type TabId = 'geral' | 'branding' | 'tema-light' | 'tema-dark' | 'preview';
 
@@ -94,32 +93,23 @@ function brandingToForm(b: CompanyBranding | null): FormState {
 }
 
 export default function WhiteLabelManager() {
-  const { token } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
 
-  const assetEndpoint = useCallback((name: string) => `/company/branding/${name}`, []);
+  const assetField = useCallback((name: string): BrandingAssetField => name as BrandingAssetField, []);
 
   const [activeTab, setActiveTab] = useState<TabId>('geral');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
-  const authHeaders = useMemo<Record<string, string>>(() => {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  }, [token]);
-
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!token) return;
       try {
-        const res = await fetch(`${API_URL}/company/branding/me`, { headers: authHeaders });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.message ?? `Erro ${res.status}`);
-        if (!cancelled) setForm(brandingToForm(json?.data ?? null));
+        const result = await getMyBrandingAction();
+        if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
+        if (!cancelled) setForm(brandingToForm(result.data as CompanyBranding | null));
       } catch (err: any) {
         if (!cancelled) showMessage(err?.message ?? 'Erro ao carregar configurações de marca', 'error');
       } finally {
@@ -129,7 +119,7 @@ export default function WhiteLabelManager() {
     load();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, []);
 
   const setField = useCallback((field: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -146,13 +136,8 @@ export default function WhiteLabelManager() {
       for (const field of COLOR_AND_TEXT_FIELDS) {
         payload[field] = form[field] || undefined;
       }
-      const res = await fetch(`${API_URL}/company/branding`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.message ?? `Erro ${res.status}`);
+      const result = await updateBrandingAction(payload);
+      if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
       showMessage('Identidade visual atualizada com sucesso!', 'success');
       router.refresh();
     } catch (err: any) {
@@ -160,7 +145,7 @@ export default function WhiteLabelManager() {
     } finally {
       setSaving(false);
     }
-  }, [form, authHeaders, showMessage, router]);
+  }, [form, showMessage, router]);
 
   // Monta um objeto compatível com CompanyBranding para gerar o preview ao vivo
   const previewBranding = useMemo<CompanyBranding>(() => ({
@@ -262,28 +247,28 @@ export default function WhiteLabelManager() {
             <AssetUploader
               label="Logo principal"
               hint="PNG, JPG, SVG ou WebP — até 5MB"
-              endpoint={assetEndpoint('logo')}
+              field={assetField('logo_url')}
               currentUrl={form.logo_url || null}
               onUploaded={handleAssetUploaded('logo_url')}
             />
             <AssetUploader
               label="Logo da sidebar"
               hint="Usado no menu lateral — opcional, usa o logo principal se vazio"
-              endpoint={assetEndpoint('logo-sidebar')}
+              field={assetField('logo_sidebar_url')}
               currentUrl={form.logo_sidebar_url || null}
               onUploaded={handleAssetUploaded('logo_sidebar_url')}
             />
             <AssetUploader
               label="Logo modo escuro"
               hint="Exibido quando o tema escuro está ativo"
-              endpoint={assetEndpoint('logo-dark')}
+              field={assetField('logo_dark_url')}
               currentUrl={form.logo_dark_url || null}
               onUploaded={handleAssetUploaded('logo_dark_url')}
             />
             <AssetUploader
               label="Favicon"
               hint="Ícone exibido na aba do navegador — até 5MB"
-              endpoint={assetEndpoint('favicon')}
+              field={assetField('favicon_url')}
               currentUrl={form.favicon_url || null}
               onUploaded={handleAssetUploaded('favicon_url')}
               previewClassName="w-16 h-16"
@@ -291,7 +276,7 @@ export default function WhiteLabelManager() {
             <AssetUploader
               label="Imagem OG / redes sociais"
               hint="Exibida ao compartilhar links — recomendado 1200x630px, até 10MB"
-              endpoint={assetEndpoint('og-image')}
+              field={assetField('og_image_url')}
               currentUrl={form.og_image_url || null}
               onUploaded={handleAssetUploaded('og_image_url')}
               previewClassName="w-48 h-28"

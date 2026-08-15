@@ -6,6 +6,7 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter } from 'next/navigation';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
+import { createPropertyTypeAction } from '@/server/actions/property-type';
 import { Home, FileText, Tag } from 'lucide-react';
 
 export default function CadastrarTipoImovelPage() {
@@ -24,30 +25,13 @@ export default function CadastrarTipoImovelPage() {
 
       console.log('📊 Dados formatados:', formattedData);
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/property-types`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await createPropertyTypeAction(formattedData);
 
-      const responseText = await response.text();
-      console.log('📥 Resposta:', response.status, responseText);
-
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error('Resposta inválida do servidor');
-      }
-
-      if (!response.ok) {
-        if (response.status === 409) {
+      if (!result.ok) {
+        if (result.status === 409) {
           throw new Error('Tipo de imóvel já existe');
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       return result;

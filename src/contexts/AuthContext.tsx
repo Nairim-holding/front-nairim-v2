@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { getTokenExpiryMs } from '@/utils/jwt';
+import { refreshSessionAction, logoutAction } from '@/server/actions/auth';
 
 // ─── Configuração de sessão (segurança) ─────────────────────────────────────
 // A credencial (authToken) é gravada como COOKIE DE SESSÃO (sem max-age/expires),
@@ -33,7 +34,7 @@ interface User {
   role: string;
   company_id: string;
   company_slug?: string;
-  created_at?: string;
+  created_at?: string | Date;
 }
 
 interface AuthState {
@@ -74,6 +75,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigation = useRouter();
 
   const logout = useCallback(() => {
+    // Limpa a sessão no servidor (Server Action) e no cliente.
+    logoutAction().catch(() => {
+      console.warn('[AuthContext] Falha ao limpar sessão no servidor.');
+    });
+
     document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
     sessionStorage.removeItem('userData');
@@ -136,30 +142,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           markActivity();
 
           const userData = sessionStorage.getItem('userData');
+          const user = userData ? JSON.parse(userData) : null;
 
-          if (!userData) {
-            // Cookie existe mas sessionStorage vazio (nova aba, F5, browser reaberto).
-            // Decodifica o payload do JWT para restaurar os dados do usuário sem forçar logout.
-            try {
-              const payload = JSON.parse(atob(token.split('.')[1]));
-              const restoredUser = {
-                id: payload.id,
-                name: payload.name,
-                email: payload.email,
-                role: payload.role,
-                company_id: payload.company_id,
-                company_slug: payload.company_slug ?? '',
-              };
-              sessionStorage.setItem('userData', JSON.stringify(restoredUser));
-              setAuthState({ user: restoredUser, token, isAuthenticated: true, isLoading: false });
-              console.log('[AuthContext] Sessão restaurada do token JWT.');
-            } catch {
-              logout();
-            }
+          // O token (cookie) é sempre a fonte da verdade do tenant ativo — o
+          // CompanySwitcher grava um token novo com company_id atualizado, mas
+          // duas abas da mesma sessão de navegador compartilham o MESMO cookie
+          // (path=/) e sessionStorage é por-aba: uma aba que não passou pelo
+          // fluxo de troca ainda tem o `userData` da empresa anterior em cache.
+          // Sem esta checagem, o app confiava cegamente nesse cache e mostrava
+          // dados da empresa errada mesmo com o cookie já correto.
+          let payload: any = null;
+          try {
+            payload = JSON.parse(atob(token.split('.')[1]));
+          } catch {
+            logout();
             return;
           }
 
-          const user = JSON.parse(userData);
+          if (!user || user.company_id !== payload.company_id) {
+            const restoredUser = {
+              id: payload.id,
+              name: payload.name,
+              email: payload.email,
+              role: payload.role,
+              company_id: payload.company_id,
+              company_slug: payload.company_slug ?? '',
+            };
+            sessionStorage.setItem('userData', JSON.stringify(restoredUser));
+            setAuthState({ user: restoredUser, token, isAuthenticated: true, isLoading: false });
+            console.log('[AuthContext] Sessão restaurada/ressincronizada a partir do token JWT.');
+            return;
+          }
 
           setAuthState({
             user,
@@ -222,21 +235,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
       try {
-        const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-        const response = await fetch(`${API_URL}/auth/refresh-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
-        const result = await response.json();
+        const result = await refreshSessionAction();
 
-        if (!response.ok || !result?.data?.token) {
-          throw new Error(result?.message || 'Falha ao renovar token');
+        if (!result.ok) {
+          throw new Error(result.message || 'Falha ao renovar token');
         }
 
         if (cancelled) return;
 
-        const newToken = result.data.token as string;
+        const newToken = result.token;
         // Mantém cookie de SESSÃO (sem max-age) também na renovação.
         document.cookie = `authToken=${newToken}; path=/; SameSite=Lax`;
         setAuthState(prev => ({ ...prev, token: newToken }));

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Upload, Trash2, UserRound } from 'lucide-react';
+import { uploadUserPhotoAction } from '@/server/actions/user';
 
 interface UserPhotoFieldProps {
   /** URL salva, ou o File escolhido enquanto o usuário ainda não existe. */
@@ -68,19 +69,14 @@ export default function UserPhotoField({
       const body = new FormData();
       body.append('file', file);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL_API}/users/${userId}/photo`,
-        { method: 'POST', body }
-      );
+      const result = await uploadUserPhotoAction(userId, body);
 
-      const json = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        setError(json?.message || `Erro ${res.status} ao enviar a foto`);
+      if (!result.ok) {
+        setError(result.error || `Erro ao enviar a foto`);
         return;
       }
 
-      onChange(json?.data?.photo_url ?? null);
+      onChange(result.data?.photo_url ?? null);
     } catch (e: any) {
       setError(e?.message || 'Falha ao enviar a foto');
     } finally {

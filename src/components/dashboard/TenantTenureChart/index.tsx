@@ -5,13 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
+import { getTenantTenureDistributionAction } from '@/server/actions/dashboard-usage';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface TenureBucket {
   key: string;
@@ -69,14 +67,11 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
 
     (async () => {
       try {
-        const response = await authFetch(
-          `${API_URL}/dashboard/tenant-tenure?startDate=${startDate}&endDate=${endDate}`
-        );
-        if (response.ok) {
-          const result = await response.json();
+        const result = await getTenantTenureDistributionAction(startDate, endDate);
+        if (result.ok) {
           if (!cancelled) {
-            setBuckets(Array.isArray(result.data?.buckets) ? result.data.buckets : []);
-            setLeases(Array.isArray(result.data?.leases) ? result.data.leases : []);
+            setBuckets(Array.isArray(result.data.buckets) ? result.data.buckets : []);
+            setLeases(Array.isArray(result.data.leases) ? result.data.leases : []);
           }
         }
       } catch (error) {

@@ -2,31 +2,25 @@ import Filter from "@/components/filters/PropertyFilter";
 import Footer from "@/components/layout/AppFooter";
 import Header from "@/components/layout/AppHeader";
 import ImoveisList from "@/components/domain/properties/PropertyList";
-import CarrosselDinamico from "@/components/layout/HeroImage"; 
+import CarrosselDinamico from "@/components/layout/HeroImage";
+import { getPublicPropertiesData } from "@/server/queries/public";
+import type { PublicProperty } from "@/core/entities/public-property";
 
-const API_URL = process.env.NEXT_PUBLIC_URL_API;
 const SLUG = 'nairim';
+
+// Equivalente ao `next: { revalidate: 300 }` que o fetch antigo usava (ISR).
+export const revalidate = 300;
 
 async function getImoveisDestaque() {
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+    const result = await getPublicPropertiesData(SLUG, { limit: 20 });
+    const rawList: PublicProperty[] = result.items ?? [];
 
-    const res = await fetch(`${API_URL}/public/${SLUG}/properties?limit=20`, {
-      next: { revalidate: 300 }, // cache por 5 min (ISR)
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return [];
-
-    const result = await res.json();
-    const rawList: any[] = result.data?.items ?? result.data ?? [];
-
-    const toSlide = (imovel: any, disponivel: boolean) => {
+    const toSlide = (imovel: PublicProperty, disponivel: boolean) => {
       const destaque =
-        imovel.documents?.find((doc: any) => doc.is_featured && doc.file_path) ||
-        imovel.documents?.find((doc: any) => doc.file_path);
-      if (!destaque) return null;
+        imovel.documents?.find((doc) => doc.is_featured && doc.file_path) ||
+        imovel.documents?.find((doc) => doc.file_path);
+      if (!destaque || !destaque.file_path) return null;
 
       const desc = (imovel.type?.description ?? "").toLowerCase();
       let tipo = "imoveis";
@@ -43,22 +37,21 @@ async function getImoveisDestaque() {
       };
     };
 
-    const isAvailable = (i: any) => {
+    const isAvailable = (i: PublicProperty) => {
       const valStatus = (i.values?.[0]?.status ?? "").toUpperCase();
-      const propStatus = (i.status ?? "").toUpperCase();
-      return valStatus === "AVAILABLE" || (valStatus === "" && propStatus === "ACTIVE");
+      return valStatus === "AVAILABLE";
     };
 
     const disponiveis = rawList
       .filter(isAvailable)
-      .map((i: any) => toSlide(i, true))
+      .map((i) => toSlide(i, true))
       .filter((i): i is NonNullable<typeof i> => i !== null);
 
     if (disponiveis.length > 0) return disponiveis;
 
     // Fallback: mostra indisponíveis com badge
     return rawList
-      .map((i: any) => toSlide(i, false))
+      .map((i) => toSlide(i, false))
       .filter((i): i is NonNullable<typeof i> => i !== null);
 
   } catch (error) {

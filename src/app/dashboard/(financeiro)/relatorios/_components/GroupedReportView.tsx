@@ -7,13 +7,11 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/utils/formatters';
 import { ReportDetailHeaderRow, ReportDetailRows, sortDetailItems, type DetailSortField, type DetailSortDir } from './ReportDetailTable';
-import { buildReportQuery } from '../_lib/buildReportQuery';
+import { buildReportActionParams } from '../_lib/buildReportQuery';
+import { getGroupedReportAction } from '@/server/actions/financial-report';
 import type { GroupedReportResponse, ReportFiltersState, ReportGroupBy, ReportKind, ReportRegime, ReportViewHandle } from '../_lib/types';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface GroupedReportViewProps {
   title: string;
@@ -55,12 +53,14 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
 
     (async () => {
       try {
-        const qs = buildReportQuery({ from: dateRange.from, to: dateRange.to, regime, filters, typeOverride });
-        qs.set('groupBy', groupBy);
-        const res = await authFetch(`${API_URL}/financial-reports/grouped?${qs.toString()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setData(json.data ?? json);
+        const raw = buildReportActionParams({ from: dateRange.from, to: dateRange.to, regime, filters, typeOverride });
+        raw.groupBy = groupBy;
+        const result = await getGroupedReportAction(raw);
+        if (!result.ok) throw new Error(result.error);
+        // A action serializa `event_date`/`effective_date: Date` para string no
+        // round-trip servidor→cliente (JSON não tem tipo Date) — mesmo shape
+        // que o fetch cru antigo já entregava, refletido em GroupedReportResponse.
+        if (!cancelled) setData(result.data as unknown as GroupedReportResponse);
       } catch (error) {
         console.error('[GroupedReportView] Erro ao carregar relatório:', error);
         if (!cancelled) setData(null);

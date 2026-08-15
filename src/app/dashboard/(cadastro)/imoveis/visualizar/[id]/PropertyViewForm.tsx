@@ -4,6 +4,7 @@ import { useMemo, useCallback } from 'react';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, type SelectOption } from '../../_lib/propertySteps';
 import { transformPropertyData } from '../../_lib/propertyTransform';
+import { getPropertyByIdAction } from '@/server/actions/property';
 
 interface Props {
   id: string;
@@ -45,6 +46,7 @@ export default function PropertyViewForm({ id, propertyData, ownerOptions, typeO
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getPropertyByIdAction}
       onSubmit={noop}
       onSubmitSuccess={noop}
       onFieldChange={noop}

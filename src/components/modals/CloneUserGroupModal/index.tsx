@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { cloneUserGroupAction } from '@/server/actions/user-group';
 
 interface CloneUserGroupModalProps {
   /** Grupo de origem — suas diretivas serão copiadas para o novo grupo. */
@@ -68,27 +69,23 @@ export default function CloneUserGroupModal({
     setError(null);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL_API}/user-groups/${source.id}/clone`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ description: description.trim() }),
-        }
-      );
+      const result = await cloneUserGroupAction(source.id, { description: description.trim() });
 
-      const result = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        if (res.status === 409) {
+      if (!result.ok) {
+        if (result.status === 409) {
           setError('Já existe um grupo de usuário com essa descrição');
         } else {
-          setError(result?.message || `Erro ${res.status} ao clonar o grupo`);
+          setError(result.error || 'Erro ao clonar o grupo');
         }
         return;
       }
 
-      onCloned(result?.message || 'Grupo clonado com sucesso!');
+      const { clonedPermissions } = result.data;
+      onCloned(
+        clonedPermissions > 0
+          ? `Grupo clonado com sucesso! ${clonedPermissions} diretiva(s) copiada(s).`
+          : 'Grupo clonado com sucesso!'
+      );
       onClose();
     } catch (e: any) {
       setError(e?.message || 'Falha de conexão ao clonar o grupo');

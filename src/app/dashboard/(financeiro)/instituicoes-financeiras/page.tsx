@@ -8,10 +8,15 @@ import { usePopupContext } from '@/contexts/PopupContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import Toggle from '@/components/ui/Toggle';
 import type { FormStep } from '@/types/types';
+import {
+  listFinancialInstitutionsAction,
+  deleteFinancialInstitutionAction,
+  createFinancialInstitutionAction,
+  updateFinancialInstitutionAction,
+  getFinancialInstitutionByIdAction,
+} from '@/server/actions/financial-institution';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 
@@ -100,10 +105,9 @@ export default function InstituicoesFinanceirasPage() {
   const fetchInstitutions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/financial-institution?limit=1000`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setInstitutions(data?.data ?? data ?? []);
+      const result = await listFinancialInstitutionsAction({ limit: 100 });
+      if (!result.ok) throw new Error(result.error);
+      setInstitutions(result.data?.data ?? []);
     } catch {
       showMessage('Erro ao carregar as instituições financeiras.', 'error');
     } finally {
@@ -150,10 +154,9 @@ export default function InstituicoesFinanceirasPage() {
         `Tem certeza que deseja excluir "${name}"?`,
         async () => {
           try {
-            const res = await fetch(`${API_URL}/financial-institution/${id}`, { method: 'DELETE' });
+            const res = await deleteFinancialInstitutionAction(id);
             if (!res.ok) {
-              const result = await res.json().catch(() => ({}));
-              throw new Error(result.message ?? 'Erro ao excluir Instituição.');
+              throw new Error(res.error || 'Erro ao excluir Instituição.');
             }
             showMessage('Excluída com sucesso!', 'success');
             if (selectedId === id) closeForm();
@@ -290,6 +293,19 @@ export default function InstituicoesFinanceirasPage() {
                   steps={FORM_STEPS}
                   transformData={transformDataForLoad}
                   transformResponse={transformPayloadForSave}
+                  fetchResource={getFinancialInstitutionByIdAction}
+                  onSubmit={async (values) => {
+                    const payload = transformPayloadForSave(values);
+                    if (formMode === 'CREATE') {
+                      const result = await createFinancialInstitutionAction(payload);
+                      if (!result.ok) throw new Error(result.error || 'Erro ao criar Instituição.');
+                      return result.data;
+                    }
+                    if (!selectedId) throw new Error('ID é obrigatório');
+                    const result = await updateFinancialInstitutionAction(selectedId, payload);
+                    if (!result.ok) throw new Error(result.error || 'Erro ao atualizar Instituição.');
+                    return result.data;
+                  }}
                   onSubmitSuccess={() => {
                     showMessage(`Instituição ${formMode === 'CREATE' ? 'criada' : 'atualizada'} com sucesso!`, 'success');
                     closeForm();

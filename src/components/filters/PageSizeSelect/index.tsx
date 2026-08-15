@@ -1,6 +1,8 @@
 'use client';
 
-const PAGE_SIZE_OPTIONS = [30, 50, 100, 150] as const;
+// Teto de 100 é imposto pelos validadores Zod das Server Actions
+// (`.max(100)`) em todas as telas que usam este seletor — 150 sempre falhava.
+const PAGE_SIZE_OPTIONS = [30, 50, 100] as const;
 
 interface SelectLimitProps {
   limit: number;

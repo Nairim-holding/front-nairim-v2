@@ -3,17 +3,16 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { ImagePlus } from 'lucide-react';
-import { useUploadSSE } from '@/hooks/useUploadSSE';
-import UploadProgressOverlay from '@/components/feedback/UploadProgress/UploadProgressOverlay';
-import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { uploadOwnBrandingAssetAction, uploadCompanyBrandingAssetAction } from '@/server/actions/company';
+import type { BrandingAssetField } from '@/core/entities/company';
 
 interface AssetUploaderProps {
   label: string;
   hint?: string;
-  endpoint: string;
+  field: BrandingAssetField;
+  /** Quando informado, administra o branding de OUTRA empresa (admin). */
+  companyId?: string;
   currentUrl: string | null;
   onUploaded: (url: string) => void;
   previewClassName?: string;
@@ -22,14 +21,13 @@ interface AssetUploaderProps {
 export default function AssetUploader({
   label,
   hint,
-  endpoint,
+  field,
+  companyId,
   currentUrl,
   onUploaded,
   previewClassName = 'w-40 h-24',
 }: AssetUploaderProps) {
-  const { token } = useAuth();
   const { showMessage } = useMessageContext();
-  const { state, uploadAndTrack } = useUploadSSE();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File | undefined) => {
@@ -37,15 +35,12 @@ export default function AssetUploader({
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const result = await uploadAndTrack<{ url: string }>({
-        url: `${API_URL}${endpoint}`,
-        method: 'POST',
-        body: fd,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        compressImages: false,
-      });
-      if (result?.url) {
-        onUploaded(result.url);
+      const result = companyId
+        ? await uploadCompanyBrandingAssetAction(companyId, fd, field)
+        : await uploadOwnBrandingAssetAction(fd, field);
+      if (!result.ok) throw new Error(result.error || `Erro ao enviar ${label.toLowerCase()}`);
+      if (result.data?.url) {
+        onUploaded(result.data.url);
         showMessage(`${label} atualizado com sucesso!`, 'success');
       }
     } catch (err: any) {
@@ -88,7 +83,6 @@ export default function AssetUploader({
           onChange={e => handleFile(e.target.files?.[0])}
         />
       </div>
-      <UploadProgressOverlay state={state} label={`Enviando ${label.toLowerCase()}...`} />
     </div>
   );
 }

@@ -7,10 +7,48 @@ import InlineEditableTable from '@/components/table/InlineEditableTable';
 import TransferDestinationModal from '@/components/domain/financial/TransferDestinationModal';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
-import { authFetch } from '@/utils/authFetch';
 import { isQuickCreateSentinel, extractQuickCreateName } from '@/components/ui/QuickCreateAutocomplete';
 
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import {
+  listFinancialTransactionsAction,
+  createFinancialTransactionAction,
+  updateFinancialTransactionAction,
+  deleteFinancialTransactionAction,
+  createTransferAction,
+  getTransactionFiltersAction,
+  createInstallmentsAction,
+  createRecurrenceAction,
+} from '@/server/actions/financial-transaction';
+import {
+  listCategoriesAction,
+  quickCreateFinancialCategoryAction,
+} from '@/server/actions/financial-category';
+import {
+  listSubcategoriesAction,
+  quickCreateFinancialSubcategoryAction,
+} from '@/server/actions/financial-subcategory';
+import {
+  listFinancialInstitutionsAction,
+  quickCreateFinancialInstitutionAction,
+} from '@/server/actions/financial-institution';
+import {
+  listCardsAction,
+  quickCreateFinancialCardAction,
+} from '@/server/actions/financial-card';
+import {
+  listCentersAction,
+  quickCreateFinancialCenterAction,
+} from '@/server/actions/financial-center';
+import {
+  listSuppliersAction,
+  quickCreateFinancialSupplierAction,
+} from '@/server/actions/financial-supplier';
+import {
+  getInvoiceAction,
+  updateInvoiceStatusAction,
+} from '@/server/actions/financial-invoice';
+import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/server/actions/user-preferences';
+import { describeActionError } from '@/shared/actions/action-result';
 
 interface SelectOption {
   label: string;
@@ -144,23 +182,30 @@ export default function LancamentosPage() {
   const fetchOptions = useCallback(async () => {
     try {
       const [catRes, subRes, instRes, cardRes, centRes, supRes] = await Promise.all([
-        fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-institution?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-card?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-center?limit=1000&filter[is_active]=true`),
-        fetch(`${API_URL}/financial-supplier?limit=1000`),
+        listCategoriesAction({ limit: 100 }),
+        listSubcategoriesAction({ limit: 100 }),
+        listFinancialInstitutionsAction({ limit: 100 }),
+        listCardsAction({ limit: 100 }),
+        listCentersAction({ limit: 100 }),
+        listSuppliersAction({ limit: 100 }),
       ]);
-      const [cats, subs, insts, cards, cents, sups] = await Promise.all([
-        catRes.json(), subRes.json(), instRes.json(), cardRes.json(), centRes.json(), supRes.json(),
-      ]);
-      
-      const allCategories = (cats?.data ?? cats ?? []);
+      const unwrap = (res: any) => {
+        if (!res?.ok) throw new Error(res?.error ?? 'Erro ao carregar opções');
+        return res.data?.data ?? res.data ?? [];
+      };
+      const cats = unwrap(catRes);
+      const subs = unwrap(subRes);
+      const insts = unwrap(instRes);
+      const cards = unwrap(cardRes);
+      const cents = unwrap(centRes);
+      const sups = unwrap(supRes);
+
+      const allCategories = cats;
       const incomeCategories = allCategories.filter((cat: { type: string }) => cat.type === 'INCOME');
       const expenseCategories = allCategories.filter((cat: { type: string }) => cat.type === 'EXPENSE');
       
       const subcategoriesByCategory: { [categoryId: string]: SelectOption[] } = {};
-      (subs?.data ?? subs ?? []).forEach((sub: { id: string; name: string; category_id: string }) => {
+      (subs).forEach((sub: { id: string; name: string; category_id: string }) => {
         if (!subcategoriesByCategory[sub.category_id]) {
           subcategoriesByCategory[sub.category_id] = [];
         }
@@ -189,35 +234,30 @@ export default function LancamentosPage() {
 
   const fetchColumnPreferences = useCallback(async () => {
     try {
-      const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=financial-transaction`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.data) {
-          if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
-            const orderedColumns: ColumnDef[] = [];
-            const remainingColumns = [...LANCAMENTOS_COLUMNS];
+      const result = await getColumnPreferencesAction('financial-transaction');
+      if (result.ok && result.data) {
+        if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
+          const orderedColumns: ColumnDef[] = [];
+          const remainingColumns = [...LANCAMENTOS_COLUMNS];
 
-            result.data.columnOrder.forEach((field: string) => {
-              const colIndex = remainingColumns.findIndex(c => c.field === field);
-              if (colIndex >= 0) {
-                orderedColumns.push(remainingColumns[colIndex]);
-                remainingColumns.splice(colIndex, 1);
-              }
-            });
+          result.data.columnOrder.forEach((field: string) => {
+            const colIndex = remainingColumns.findIndex(c => c.field === field);
+            if (colIndex >= 0) {
+              orderedColumns.push(remainingColumns[colIndex]);
+              remainingColumns.splice(colIndex, 1);
+            }
+          });
 
-            setColumns([...orderedColumns, ...remainingColumns]);
-          }
-
-          if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
-            setColumnWidths(result.data.columnWidths);
-          }
-
-          if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
-            setVisibleColumns(result.data.visibleColumns);
-          }
+          setColumns([...orderedColumns, ...remainingColumns]);
         }
-      } else if (response.status === 401) {
-        console.warn('[LancamentosPage] Usuário não autenticado ao carregar preferências');
+
+        if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
+          setColumnWidths(result.data.columnWidths);
+        }
+
+        if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
+          setVisibleColumns(result.data.visibleColumns);
+        }
       }
     } catch (error) {
       console.error('[LancamentosPage] Erro ao carregar preferências:', error);
@@ -244,25 +284,14 @@ export default function LancamentosPage() {
             ...(visible && { visibleColumns: visible }),
           };
           console.log('[LancamentosPage] Enviando preferências:', body);
-          const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-          });
+          const result = await saveColumnPreferencesAction(body);
 
-          console.log('[LancamentosPage] Resposta do servidor:', response.status, response.statusText);
-
-          if (response.status === 401) {
-            throw new Error('Usuário não autenticado (401)');
+          if (!result.ok) {
+            if (result.status === 401) {
+              throw new Error('Usuário não autenticado (401)');
+            }
+            throw new Error(result.error || `Erro ${result.status}`);
           }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[LancamentosPage] Erro no corpo da resposta:', errorText);
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const result = await response.json();
-          console.log('[LancamentosPage] Resposta JSON:', result);
 
           showMessage('Preferências de colunas salvas com sucesso', 'success', 2000);
           return true;
@@ -326,18 +355,15 @@ export default function LancamentosPage() {
       const amount = typeof resolved.amount === 'number' ? resolved.amount : 0;
       const type = amount >= 0 ? 'INCOME' : 'EXPENSE';
       
-      const res = await authFetch(`${API_URL}/financial-category/quick-create`, {
-        method: 'POST',
-        body: JSON.stringify({ name, type }),
-      });
+      const res = await quickCreateFinancialCategoryAction({ name, type });
       if (res.ok) {
-        const result = await res.json();
-        resolved.category_id = result.data.id;
+        const result = res.data;
+        resolved.category_id = result.id;
         // Atualiza opções locais
         setOptions(prev => ({
           ...prev,
-          categories: [...prev.categories, result.data],
-          [type === 'INCOME' ? 'incomeCategories' : 'expenseCategories']: [...(type === 'INCOME' ? prev.incomeCategories : prev.expenseCategories), { label: name, value: result.data.id }]
+          categories: [...prev.categories, result as any],
+          [type === 'INCOME' ? 'incomeCategories' : 'expenseCategories']: [...(type === 'INCOME' ? prev.incomeCategories : prev.expenseCategories), { label: name, value: result.id }]
         }));
       }
     }
@@ -346,17 +372,14 @@ export default function LancamentosPage() {
     if (isQuickCreateSentinel(resolved.subcategory_id)) {
       const name = extractQuickCreateName(resolved.subcategory_id);
       if (resolved.category_id && !isQuickCreateSentinel(resolved.category_id)) {
-        const res = await authFetch(`${API_URL}/financial-subcategory/quick-create`, {
-          method: 'POST',
-          body: JSON.stringify({ name, category_id: resolved.category_id }),
-        });
+        const res = await quickCreateFinancialSubcategoryAction({ name, category_id: resolved.category_id });
         if (res.ok) {
-          const result = await res.json();
-          resolved.subcategory_id = result.data.id;
+          const result = res.data;
+          resolved.subcategory_id = result.id;
           setOptions(prev => {
             const subs = { ...prev.subcategories };
             if (!subs[resolved.category_id]) subs[resolved.category_id] = [];
-            subs[resolved.category_id].push({ label: name, value: result.data.id });
+            subs[resolved.category_id].push({ label: name, value: result.id });
             return { ...prev, subcategories: subs };
           });
         }
@@ -366,16 +389,13 @@ export default function LancamentosPage() {
     // 3. Resolve Institution
     if (isQuickCreateSentinel(resolved.financial_institution_id)) {
       const name = extractQuickCreateName(resolved.financial_institution_id);
-      const res = await authFetch(`${API_URL}/financial-institution/quick-create`, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      });
+      const res = await quickCreateFinancialInstitutionAction({ name });
       if (res.ok) {
-        const result = await res.json();
-        resolved.financial_institution_id = result.data.id;
+        const result = res.data;
+        resolved.financial_institution_id = result.id;
         setOptions(prev => ({
           ...prev,
-          institutions: [...prev.institutions, { label: name, value: result.data.id }]
+          institutions: [...prev.institutions, { label: name, value: result.id }]
         }));
       }
     }
@@ -383,16 +403,13 @@ export default function LancamentosPage() {
     // 4. Resolve Card
     if (isQuickCreateSentinel(resolved.card_id)) {
       const name = extractQuickCreateName(resolved.card_id);
-      const res = await authFetch(`${API_URL}/financial-card/quick-create`, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      });
+      const res = await quickCreateFinancialCardAction({ name });
       if (res.ok) {
-        const result = await res.json();
-        resolved.card_id = result.data.id;
+        const result = res.data;
+        resolved.card_id = result.id;
         setOptions(prev => ({
           ...prev,
-          cards: [...prev.cards, { label: name, value: result.data.id }]
+          cards: [...prev.cards, { label: name, value: result.id }]
         }));
       }
     }
@@ -410,16 +427,13 @@ export default function LancamentosPage() {
         if (amount >= 0) type = 'INCOME';
       }
       
-      const res = await authFetch(`${API_URL}/financial-center/quick-create`, {
-        method: 'POST',
-        body: JSON.stringify({ name, type }),
-      });
+      const res = await quickCreateFinancialCenterAction({ name, type });
       if (res.ok) {
-        const result = await res.json();
-        resolved.center_id = result.data.id;
+        const result = res.data;
+        resolved.center_id = result.id;
         setOptions(prev => ({
           ...prev,
-          centers: [...prev.centers, { label: name, value: result.data.id, type }]
+          centers: [...prev.centers, { label: name, value: result.id, type }]
         }));
       }
     }
@@ -427,20 +441,16 @@ export default function LancamentosPage() {
     // 6. Resolve Supplier
     if (isQuickCreateSentinel(resolved.supplier_id)) {
       const name = extractQuickCreateName(resolved.supplier_id);
-      const res = await authFetch(`${API_URL}/financial-supplier/quick-create`, {
-        method: 'POST',
-        body: JSON.stringify({ legal_name: name }),
-      });
+      const res = await quickCreateFinancialSupplierAction({ legal_name: name });
       if (res.ok) {
-        const result = await res.json();
-        resolved.supplier_id = result.data.id;
+        const result = res.data;
+        resolved.supplier_id = result.id;
         setOptions(prev => ({
           ...prev,
-          suppliers: [...prev.suppliers, { label: name, value: result.data.id }]
+          suppliers: [...prev.suppliers, { label: name, value: result.id }]
         }));
       } else {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro ao criar fornecedor');
+        throw new Error(res.error || 'Erro ao criar fornecedor');
       }
     }
 
@@ -449,16 +459,8 @@ export default function LancamentosPage() {
 
   const handleRowSave = useCallback(async (id: string, data: Record<string, unknown>) => {
     const resolved = await resolveQuickCreates(data);
-    const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(resolved),
-    });
-
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      throw new Error(result.message ?? 'Erro ao atualizar lançamento.');
-    }
+    const result = await updateFinancialTransactionAction(id, resolved);
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao atualizar lançamento.');
   }, [resolveQuickCreates]);
 
   const handleRowCreate = useCallback(async (data: Record<string, unknown>) => {
@@ -489,31 +491,20 @@ export default function LancamentosPage() {
           throw new Error('Transferência cancelada.');
         }
 
-        const response = await fetch(`${API_URL}/financial-transaction/transfer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...resolved,
-            destination_institution_id: transferChoice.destinationId,
-            destination_center_id: transferChoice.destinationCenterId,
-          }),
+        const transferCreated = await createTransferAction({
+          ...resolved,
+          destination_institution_id: transferChoice.destinationId,
+          destination_center_id: transferChoice.destinationCenterId,
         });
-        if (!response.ok) {
-          const result = await response.json().catch(() => ({}));
-          throw new Error(result.message ?? 'Erro ao criar transferência.');
+        if (!transferCreated.ok) {
+          throw new Error(transferCreated.error ?? 'Erro ao criar transferência.');
         }
         return;
       }
 
-      const response = await fetch(`${API_URL}/financial-transaction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(resolved),
-      });
-
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message ?? 'Erro ao criar lançamento.');
+      const created = await createFinancialTransactionAction(resolved);
+      if (!created.ok) {
+        throw new Error(created.error ?? 'Erro ao criar lançamento.');
       }
     } catch (error) {
       console.error(error);
@@ -523,13 +514,9 @@ export default function LancamentosPage() {
 
   const handleRowDelete = useCallback(async (id: string) => {
     try {
-      const response = await fetch(`${API_URL}/financial-transaction/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message ?? 'Erro ao excluir lançamento.');
+      const result = await deleteFinancialTransactionAction(id);
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Erro ao excluir lançamento.');
       }
     } catch (error) {
       console.error(error);
@@ -569,20 +556,94 @@ export default function LancamentosPage() {
       status: item.status,
     };
 
-    const response = await fetch(`${API_URL}/financial-transaction`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      throw new Error(result.message ?? 'Erro ao duplicar lançamento.');
+    const result = await createFinancialTransactionAction(payload);
+    if (!result.ok) {
+      throw new Error(result.error ?? 'Erro ao duplicar lançamento.');
     }
 
-    const json = await response.json();
-    return json.data || json;
+    return result.data;
   }, [transferCategoryIds]);
+
+  // Converte o estado da tabela (`{page, limit, search, sort, filters}`) para o
+// formato de query-string aceito pelas actions/query de listagem.
+const stateToRawListParams = (state: any): Record<string, unknown> => {
+    const raw: Record<string, unknown> = {
+      page: state.page,
+      limit: state.limit,
+    };
+    if (state.search) raw.search = state.search;
+    Object.entries(state.sort || {}).forEach(([key, value]) => {
+      if (value === 'asc' || value === 'desc') raw[`sort[${key}]`] = value;
+    });
+    Object.entries(state.filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      raw[key] = value;
+    });
+    return raw;
+  };
+
+  // Fonte de dados da grid via Server Action (substitui o endpoint HTTP). O
+  // fetcher recebe o estado da tabela e devolve o mesmo shape `PaginatedTransactions`
+  // que o backend retornava.
+  const dataFetcher = useCallback(async (state: any) => {
+    const result = await listFinancialTransactionsAction(stateToRawListParams(state));
+    if (!result.ok) {
+      throw new Error(describeActionError(result, 'Erro ao carregar lançamentos.'));
+    }
+    return result.data;
+  }, []);
+
+  const filtersFetcher = useCallback(async (applied?: Record<string, any>) => {
+    const result = await getTransactionFiltersAction(applied ?? {});
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
+    return result.data;
+  }, []);
+
+  // Criação em massa via action (Parcelado/Recorrente/Simples) — substitui os
+  // endpoints `/financial-transaction/installments|recurrence|` chamados pelo
+  // modal do InlineEditableTable. Devolve a quantidade criada.
+  const bulkCreateHandler = useCallback(async (kind: 'installments' | 'recurrence' | 'single', payload: Record<string, any>) => {
+    switch (kind) {
+      case 'installments': {
+        const result = await createInstallmentsAction(payload);
+        if (!result.ok) throw new Error(result.error ?? 'Erro ao criar parcelas.');
+        return result.data?.data?.installments?.length ?? 1;
+      }
+      case 'recurrence': {
+        const result = await createRecurrenceAction(payload);
+        if (!result.ok) throw new Error(result.error ?? 'Erro ao criar recorrência.');
+        return result.data?.data?.generated ?? 1;
+      }
+      default: {
+        const result = await createFinancialTransactionAction(payload);
+        if (!result.ok) throw new Error(result.error ?? 'Erro ao criar lançamento.');
+        return 1;
+      }
+    }
+  }, []);
+
+  // Faturas de cartão via Server Action (substitui o fetch /financial-invoice).
+  const handleInvoiceSearch = useCallback(async (cardId: string, month: number, year: number) => {
+    const result = await getInvoiceAction({ cardId, month, year });
+    if (!result.ok) {
+      if (result.status === 404) return null;
+      throw new Error(result.error ?? 'Erro ao buscar fatura.');
+    }
+    return result.data;
+  }, []);
+
+  const handleInvoiceUpdateStatus = useCallback(
+    async (invoiceId: string, status: string, data: { institution_id?: string; effective_date?: string }) => {
+      const result = await updateInvoiceStatusAction(invoiceId, { status, ...data });
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Erro ao atualizar fatura.');
+      }
+      const count = result.data?.updated_transactions ?? 0;
+      const plural = count === 1 ? 'lançamento atualizado' : 'lançamentos atualizados';
+      showMessage(`Status atualizado para ${status} — ${count} ${plural}`, 'success');
+    },
+    [showMessage],
+  );
 
   if (isLoadingOptions || isLoadingColumns) {
     return (
@@ -604,7 +665,7 @@ export default function LancamentosPage() {
         enableCreate
         enableDelete
         summaryPanel
-        defaultLimit={150}
+        defaultLimit={100}
         formOptions={options}
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}
@@ -618,6 +679,11 @@ export default function LancamentosPage() {
         visibleColumns={visibleColumns}
         onVisibilityChange={handleVisibilityChange}
         onAppliedFiltersChange={handleAppliedFiltersChange}
+        dataFetcher={dataFetcher}
+        filtersFetcher={filtersFetcher}
+        bulkCreateHandler={bulkCreateHandler}
+        onInvoiceSearch={handleInvoiceSearch}
+        onInvoiceUpdateStatus={handleInvoiceUpdateStatus}
       />
 
       {transferModal && (

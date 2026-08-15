@@ -4,13 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getFinancialInstitutionBalanceSummaryAction } from '@/server/actions/financial-institution';
 
 interface AccountBalance {
   institutionId: string;
@@ -30,12 +28,9 @@ export default function AccountBalanceChart() {
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/financial-institution/balance-summary`);
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled && Array.isArray(result.data)) {
-            setAccounts(result.data);
-          }
+        const result = await getFinancialInstitutionBalanceSummaryAction();
+        if (!cancelled && result.ok && Array.isArray(result.data)) {
+          setAccounts(result.data);
         }
       } catch (error) {
         console.error('[AccountBalanceChart] Erro ao carregar saldo por conta:', error);

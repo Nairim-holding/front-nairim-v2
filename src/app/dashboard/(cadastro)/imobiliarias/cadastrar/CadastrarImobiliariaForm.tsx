@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { createAgencyAction } from '@/server/actions/agency';
 import type { SelectOption } from '../_lib/agencyFinancialOptions';
 import {
   Building2, MapPin, Phone, FileText,
@@ -112,22 +113,13 @@ export default function CadastrarImobiliariaForm({ categoryOptions, subcategorie
         })) || []
       };
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const url = `${API_URL}/agencies`;
+      const result = await createAgencyAction(formattedData);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409 && result.message?.includes('CNPJ')) {
+      if (!result.ok) {
+        if (result.status === 409 && result.error?.includes('CNPJ')) {
           throw new Error('CNPJ já cadastrado para outra imobiliária');
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       return result;

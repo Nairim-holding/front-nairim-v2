@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
-import { useFilters } from "@/contexts/filter-context";
+import { useFilters, type PropertyFiltersState } from "@/contexts/filter-context";
+import {
+  getPublicPropertiesAction,
+  getPublicPropertyTypesAction,
+} from "@/server/actions/public";
 
 // ─── Type icon helper ─────────────────────────────────────────────────────────
 
@@ -45,16 +49,36 @@ export default function PropertyFilter() {
 
   // Busca todos os tipos cadastrados no endpoint /property-types
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
     const slug = 'nairim';
 
-    fetch(`${API_URL}/public/${slug}/property-types`)
-      .then((r) => r.json())
-      .then((res) => {
-        // Envelope: { data: { items: [] } } ou array direto
-        const raw = res?.data?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
+    const deriveFromProperties = async () => {
+      try {
+        const result = await getPublicPropertiesAction(slug, { limit: 100 });
+        if (!result.ok || !Array.isArray(result.data?.items)) throw new Error("empty");
+        const seen = new Set<string>();
+        const types: PropertyTypeOption[] = [];
+        result.data.items.forEach((p) => {
+          const id = p.type?.id;
+          const desc = p.type?.description;
+          if (!id || seen.has(id)) return;
+          seen.add(id);
+          types.push({ value: id, label: desc ?? id, icon: typeIcon(desc ?? "") });
+        });
+        if (types.length > 0) setPropertyTypes(types);
+      } catch {
+        setPropertyTypes([
+          { value: "casa",        label: "Casa",        icon: "mingcute:home-2-line"     },
+          { value: "apartamento", label: "Apartamento", icon: "mingcute:building-2-line" },
+        ]);
+      }
+    };
+
+    getPublicPropertyTypesAction(slug)
+      .then((result) => {
+        if (!result.ok) throw new Error("empty");
+        const raw = result.data?.items ?? [];
         if (!raw.length) throw new Error("empty");
-        const types: PropertyTypeOption[] = raw.map((t: any) => ({
+        const types: PropertyTypeOption[] = raw.map((t) => ({
           value: t.id,
           label: t.description ?? t.id,
           icon: typeIcon(t.description ?? ""),
@@ -63,27 +87,7 @@ export default function PropertyFilter() {
       })
       .catch(() => {
         // Fallback: deriva dos imóveis disponíveis
-        const base = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
-        const s = 'nairim';
-        fetch(`${base}/public/${s}/properties?limit=100`)
-          .then((r) => r.json())
-          .then((res) => {
-            const items: any[] = res?.data?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
-            const seen = new Set<string>();
-            const types: PropertyTypeOption[] = [];
-            items.forEach((p) => {
-              const id = p.type?.id;
-              const desc = p.type?.description;
-              if (!id || seen.has(id)) return;
-              seen.add(id);
-              types.push({ value: id, label: desc ?? id, icon: typeIcon(desc ?? "") });
-            });
-            if (types.length > 0) setPropertyTypes(types);
-          })
-          .catch(() => setPropertyTypes([
-            { value: "casa",        label: "Casa",        icon: "mingcute:home-2-line"     },
-            { value: "apartamento", label: "Apartamento", icon: "mingcute:building-2-line" },
-          ]));
+        deriveFromProperties();
       });
   }, []);
 
@@ -131,7 +135,7 @@ export default function PropertyFilter() {
     setFilters({ ...filters, [field]: formatCurrencyInput(raw) });
   };
 
-  const handleFilterChange = (field: keyof typeof filters, value: any) => {
+  const handleFilterChange = <K extends keyof PropertyFiltersState>(field: K, value: PropertyFiltersState[K]) => {
     setFilters({ ...filters, [field]: value });
   };
 
@@ -413,7 +417,7 @@ export default function PropertyFilter() {
 
                   {filteredTypes.length === 0 && typeSearch && (
                     <p className="col-span-2 text-sm text-content-muted text-center py-3">
-                      Nenhum tipo encontrado para "{typeSearch}"
+                      Nenhum tipo encontrado para &quot;{typeSearch}&quot;
                     </p>
                   )}
                 </div>

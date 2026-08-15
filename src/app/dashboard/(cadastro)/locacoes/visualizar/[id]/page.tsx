@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
-import { authFetch } from '@/utils/authFetch';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
+import { permanentlyDeleteLeaseAction, getLeaseByIdAction } from '@/server/actions/lease';
+import { listPropertiesAction } from '@/server/actions/property';
+import { listTenantsAction } from '@/server/actions/tenant';
 import {
   FileText, Calendar, DollarSign, User, Building,
   Home, File, Percent, Calculator, Hash, AlertCircle, CreditCard, Shield, Users, Trash2
@@ -43,12 +45,9 @@ export default function VisualizarLocacaoPage() {
       'Esta ação remove a locação E todos os lançamentos financeiros vinculados a ela. Não pode ser desfeita. Deseja continuar?',
       async () => {
         try {
-          const res = await authFetch(`${process.env.NEXT_PUBLIC_URL_API}/leases/${id}/permanent`, {
-            method: 'DELETE',
-          });
-          if (!res.ok) {
-            const data = await res.json().catch(() => null);
-            throw new Error(data?.message || 'Erro ao excluir locação');
+          const result = await permanentlyDeleteLeaseAction(id);
+          if (!result.ok) {
+            throw new Error(result.error || 'Erro ao excluir locação');
           }
           showMessage('Locação excluída definitivamente com sucesso!', 'success');
           router.push('/dashboard/locacoes');
@@ -64,19 +63,16 @@ export default function VisualizarLocacaoPage() {
     const fetchData = async () => {
       try {
         const [propertiesRes, tenantsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=50`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
+          listPropertiesAction({ limit: 50 }),
+          listTenantsAction({ limit: 100 }),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) {
           throw new Error('Erro ao buscar dados');
         }
 
-        const propertiesData = await propertiesRes.json();
-        const tenantsData = await tenantsRes.json();
-
-        setProperties(propertiesData.data || propertiesData || []);
-        setTenants(tenantsData.data || tenantsData || []);
+        setProperties(propertiesRes.data?.data || propertiesRes.data || []);
+        setTenants(tenantsRes.data?.data || tenantsRes.data || []);
       } catch (_error) {
         showMessage('Erro ao carregar dados iniciais', 'error');
       } finally {
@@ -666,6 +662,7 @@ export default function VisualizarLocacaoPage() {
         mode="view"
         id={id}
         steps={steps}
+        fetchResource={getLeaseByIdAction}
         onSubmit={handleSubmit}
         onFieldChange={handleFieldChange}
         transformData={transformData}

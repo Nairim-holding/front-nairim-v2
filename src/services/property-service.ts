@@ -1,52 +1,31 @@
 /**
- * Serviço de imóveis — comunicação com a API REST de propriedades.
+ * Serviço de imóveis da vitrine — agora via Server Actions.
  *
- * Utilizado no lado do cliente (componentes com "use client").
- * Para busca server-side, use os Server Actions ou Route Handlers.
+ * Substitui as chamadas `fetch()` ao `/public/:slug/*` do Express
+ * (property-service.ts anterior usava `NEXT_PUBLIC_URL_API`). O tenant é
+ * resolvido no servidor a partir do slug; não há JWT nem CORS no cliente.
+ *
+ * @slugs uso em Client Components ("use client"): o módulo abaixo apenas
+ * invoca as Server Actions declaradas em @/server/actions/public.
  */
 
-import type { Property, PropertyFilters, PaginatedResponse } from '@/types';
-
-// Em client components o browser usa o proxy local (/api/backend) para evitar CORS.
-// Em server components o Node.js chama o backend direto (sem CORS).
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? 'https://nairim.com.br/backend';
+import { getPublicPropertiesAction, getPublicPropertyByIdAction } from "@/server/actions/public";
+import type { Property, PropertyFilters, PaginatedResponse } from "@/types";
 
 const SLUG = 'nairim';
-const PUB = `/public/${SLUG}`;
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function buildQueryString(params: Record<string, unknown>): string {
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      qs.append(key, String(value));
-    }
-  });
-  return qs.toString();
+function toError(result: { ok: false; error: string }): Error {
+  return new Error(result.error);
 }
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  console.log("Chamando URL:", `${API_URL}${path}`);
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`[${res.status}] ${path}: ${text}`);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-// ─── Service ─────────────────────────────────────────────────────────────────
 
 export const propertyService = {
-  getAll(filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> {
-    const qs = buildQueryString(filters as Record<string, unknown>);
-    return apiFetch<PaginatedResponse<Property>>(`${PUB}/properties?${qs}`);
+  async getAll(filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> {
+    const result = await getPublicPropertiesAction(SLUG, filters as unknown as Record<string, unknown>);
+    if (!result.ok) throw toError(result);
+    // Retorna o envelope { items, meta } — compatível com o que PropertyList/
+    // ApartmentRentals/HouseRentals esperam (`response.data?` / `response.items`).
+    // (items são PublicProperty — shape da vitrine, não o Property full do CRUD.)
+    return { ...(result.data as unknown as PaginatedResponse<Property>), success: true };
   },
 
   /** @alias getAll — mantido para compatibilidade com imports existentes */
@@ -54,15 +33,9 @@ export const propertyService = {
     return this.getAll(filters);
   },
 
-  getById(id: string): Promise<Property> {
-    return apiFetch<Property>(`${PUB}/properties/${id}`);
-  },
-
-  getDocuments(propertyId: string): Promise<Property['documents']> {
-    return apiFetch(`${PUB}/properties/${propertyId}/documents`);
-  },
-
-  getTypes(): Promise<Array<{ id: string; name: string; description: string }>> {
-    return apiFetch(`${PUB}/property-types`);
+  async getById(id: string): Promise<Property | null> {
+    const result = await getPublicPropertyByIdAction(SLUG, id);
+    if (!result.ok) throw toError(result);
+    return result.data as unknown as Property;
   },
 };

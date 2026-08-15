@@ -29,7 +29,8 @@ import {
   Briefcase,
   FileClock,
   FileBarChart2,
-  SearchCheck
+  SearchCheck,
+  TrendingUp
 } from "lucide-react";
 import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
@@ -37,6 +38,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { resourceForHref } from "@/utils/permissionResource";
 import { useTheme } from "@/contexts/ThemeContext";
+import type { LucideIcon } from "lucide-react";
+
+/**
+ * Formato comum dos itens de submenu — `disabled` é opcional porque só o
+ * item "ROI" (Tarefa 3.1: sem rota funcional ainda) o usa; anotar os 3
+ * arrays de submenu com este tipo evita que o TypeScript infira 3 tipos de
+ * objeto distintos (um por menu) e rejeite o acesso a `.disabled` no `.map()`
+ * unificado do JSX, que itera sobre `item.submenu` sem saber de qual menu veio.
+ */
+interface SubmenuItem {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  resource?: string;
+  disabled?: boolean;
+}
 
 export default function Aside() {
   const [openAside, setOpenAside] = useState(false);
@@ -110,7 +127,7 @@ export default function Aside() {
         href: "#",
         icon: PlusCircle,
         label: "Cadastrar",
-        submenu: [
+        submenu: ([
           { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador", resource: resourceForHref("/dashboard/administradores") },
           { href: "/dashboard/grupos-usuario", icon: Users, label: "Grupo de Usuário", resource: resourceForHref("/dashboard/grupos-usuario") },
           ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresa", resource: resourceForHref("/dashboard/empresas") }] : []),
@@ -119,14 +136,14 @@ export default function Aside() {
           { href: "/dashboard/inquilinos", icon: UserCheck, label: "Inquilinos", resource: resourceForHref("/dashboard/inquilinos") },
           { href: "/dashboard/proprietarios", icon: UserCircle, label: "Proprietários", resource: resourceForHref("/dashboard/proprietarios") },
           { href: "/dashboard/tipo-imovel", icon: Tag, label: "Tipo Imóvel", resource: resourceForHref("/dashboard/tipo-imovel") },
-        ].filter((sub) => can(sub.resource, 'view')),
+        ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
       {
         href: "#",
         icon: PiggyBank,
         label: "Financeiro",
-        submenu: [
+        submenu: ([
           { href: "/dashboard/instituicoes-financeiras", icon: Landmark, label: "Instituições Financeiras", resource: resourceForHref("/dashboard/instituicoes-financeiras") },
           { href: "/dashboard/categorias", icon: ChartColumnStacked, label: "Categorias/Subcategorias", resource: resourceForHref("/dashboard/categorias") },
           { href: "/dashboard/cartoes", icon: CreditCard, label: "Cartões de Crédito", resource: resourceForHref("/dashboard/cartoes") },
@@ -135,11 +152,23 @@ export default function Aside() {
           { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
           { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
           { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios") },
-          { href: "/dashboard/financeiro-auditoria", icon: SearchCheck, label: "Auditoria", resource: resourceForHref("/dashboard/financeiro-auditoria") },
-        ].filter((sub) => can(sub.resource, 'view')),
+        ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações", resource: resourceForHref("/dashboard/configuracoes") },
-      { href: "/dashboard/auditoria", icon: FileClock, label: "Auditoria", resource: resourceForHref("/dashboard/auditoria") },
+      {
+        href: "#",
+        icon: FileClock,
+        label: "Auditoria",
+        // Reorganização do menu (Tarefa 3.1): IPTU (antes dentro de Financeiro)
+        // e Logs (antes item de topo isolado) agora vivem sob um único menu
+        // Auditoria. ROI ainda não existe como tela (Tarefa 3.4 é só proposta
+        // técnica) — fica visível e desabilitado até a implementação real.
+        submenu: ([
+          { href: "/dashboard/financeiro-auditoria", icon: SearchCheck, label: "IPTU", resource: resourceForHref("/dashboard/financeiro-auditoria") },
+          { href: "#", icon: TrendingUp, label: "ROI", disabled: true },
+          { href: "/dashboard/auditoria", icon: FileClock, label: "Logs", resource: resourceForHref("/dashboard/auditoria") },
+        ] as SubmenuItem[]).filter((sub) => sub.disabled === true || can(sub.resource, 'view')),
+      },
     ];
 
     return raw.filter((item) => (item.submenu ? item.submenu.length > 0 : can(item.resource, 'view')));
@@ -226,22 +255,34 @@ export default function Aside() {
                               <ul className="space-y-1">
                                 {item.submenu.map((subItem) => (
                                   <li key={subItem.label}>
-                                    <Link
-                                      href={subItem.href}
-                                      onClick={() => {
-                                        setActiveItem(subItem.href);
-                                        setOpenAside(false);
-                                        setOpenSubmenu(null);
-                                      }}
-                                      className={`flex items-center p-3 rounded text-sm transition-colors ${
-                                        activeItem === subItem.href
-                                          ? "bg-surface-subtle text-content"
-                                          : "text-content-secondary hover:bg-surface-subtle hover:text-content"
-                                      }`}
-                                    >
-                                      <subItem.icon size={18} className="mr-3" />
-                                      {subItem.label}
-                                    </Link>
+                                    {subItem.disabled ? (
+                                      // Item "em breve" (ex.: ROI — Tarefa 3.1): sem rota funcional ainda, não navega.
+                                      <span
+                                        title="Em breve"
+                                        className="flex items-center p-3 rounded text-sm text-content-muted opacity-50 cursor-not-allowed"
+                                      >
+                                        <subItem.icon size={18} className="mr-3" />
+                                        {subItem.label}
+                                        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
+                                      </span>
+                                    ) : (
+                                      <Link
+                                        href={subItem.href}
+                                        onClick={() => {
+                                          setActiveItem(subItem.href);
+                                          setOpenAside(false);
+                                          setOpenSubmenu(null);
+                                        }}
+                                        className={`flex items-center p-3 rounded text-sm transition-colors ${
+                                          activeItem === subItem.href
+                                            ? "bg-surface-subtle text-content"
+                                            : "text-content-secondary hover:bg-surface-subtle hover:text-content"
+                                        }`}
+                                      >
+                                        <subItem.icon size={18} className="mr-3" />
+                                        {subItem.label}
+                                      </Link>
+                                    )}
                                   </li>
                                 ))}
                               </ul>

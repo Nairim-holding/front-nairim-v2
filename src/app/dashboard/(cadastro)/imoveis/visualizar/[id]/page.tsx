@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { fetchPropertySelectOptions, fetchProperty } from '../../_lib/propertyTransform';
+import { fetchPropertySelectOptions, fetchProperty } from '../../_lib/propertyData';
 import PropertyViewForm from './PropertyViewForm';
 
 interface Props {

@@ -4,12 +4,12 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
-import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip } from "lucide-react";
+import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { normalizeResourceKey } from "@/utils/permissionResource";
-import { authFetch } from "@/utils/authFetch";
 import SkeletonTable from "../TableSkeleton";
 import DynamicFilterModal from "../../filters/DynamicFilterModal";
 import SearchInput from "../../filters/SearchInput";
@@ -21,6 +21,8 @@ import Input from "../../ui/Input";
 import { formatCurrency, formatDate, formatDateTime, formatCPFCNPJ, formatRG, formatGender, formatPhone, formatCEP, formatStatus } from "@/utils/displayFormatters";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
+import { TABLE_DATA_SOURCES } from "../tableDataSources";
+import { getColumnPreferencesAction, saveColumnPreferencesAction } from "@/server/actions/user-preferences";
 import { ColumnDef } from "@/types/types";
 import ModalSelectTypeOwner from "@/components/modals/OwnerTypeModal";
 import { useRouter } from "next/navigation";
@@ -49,6 +51,19 @@ interface DynamicTableManagerProps {
    * Opcional: sem ela a célula de ações continua exatamente como antes.
    */
   rowActions?: RowAction[];
+  /**
+   * Fonte de filtros alternativa (Server Action). Quando presente, a tabela
+   * busca os filtros por este fetcher em vez do endpoint `/${resource}/filters`.
+   */
+  filtersFetcher?: (appliedFilters?: Record<string, any>) => Promise<any>;
+  /** Botão de exportar para Excel na toolbar (Tarefa 5.1 do guia de correções) — desligado por padrão para não alterar telas existentes. */
+  enableExcelExport?: boolean;
+  /**
+   * Campos do backend a esconder do modal de Filtro (Tarefa 5.4 do guia de
+   * correções) — ex.: remover "Período" de Logs de Auditoria, que passou a
+   * ser controlado só pela busca/atalho da tela inicial.
+   */
+  excludeFilterFields?: string[];
 }
 
 export interface RowAction {
@@ -80,6 +95,9 @@ export default function DynamicTableManager({
   hideActionButtons = false,
   onSortChange,
   rowActions,
+  filtersFetcher,
+  enableExcelExport = false,
+  excludeFilterFields,
 }: DynamicTableManagerProps) {
   const { can } = usePermissions();
   const permResource = normalizeResourceKey(resource);
@@ -133,49 +151,38 @@ export default function DynamicTableManager({
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
 
-  const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-
   // Carregar preferências de colunas do servidor
   const fetchColumnPreferences = useCallback(async () => {
     try {
-      const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=${resource}`);
-      console.log(columns, response);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.data) {
-          if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
-            setColumnWidths(result.data.columnWidths);
-            columnWidthsRef.current = result.data.columnWidths;
-          }
+      const result = await getColumnPreferencesAction(resource);
+      if (result.ok) {
+        if (result.data.columnWidths && typeof result.data.columnWidths === 'object') {
+          setColumnWidths(result.data.columnWidths);
+          columnWidthsRef.current = result.data.columnWidths;
+        }
 
-          if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
-            setVisibleColumns(result.data.visibleColumns);
-          }
+        if (result.data.visibleColumns && Array.isArray(result.data.visibleColumns) && result.data.visibleColumns.length > 0) {
+          setVisibleColumns(result.data.visibleColumns);
+        }
 
-          if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
-            setColumnOrder(result.data.columnOrder);
-            const orderedColumns: ColumnDef[] = [];
-            const remainingColumns = [...columns];
+        if (result.data.columnOrder && Array.isArray(result.data.columnOrder)) {
+          setColumnOrder(result.data.columnOrder);
+          const orderedColumns: ColumnDef[] = [];
+          const remainingColumns = [...columns];
 
-            result.data.columnOrder.forEach((field: string) => {
-              const colIndex = remainingColumns.findIndex(c => c.field === field);
-              if (colIndex >= 0) {
-                orderedColumns.push(remainingColumns[colIndex]);
-                remainingColumns.splice(colIndex, 1);
-              }
-            });
+          result.data.columnOrder.forEach((field: string) => {
+            const colIndex = remainingColumns.findIndex(c => c.field === field);
+            if (colIndex >= 0) {
+              orderedColumns.push(remainingColumns[colIndex]);
+              remainingColumns.splice(colIndex, 1);
+            }
+          });
 
-            setDisplayColumns([...orderedColumns, ...remainingColumns]);
-          } else {
-            // Sem columnOrder salvo: usa as colunas atuais (inclui dinâmicas como vencimento*)
-            setDisplayColumns(columns);
-          }
+          setDisplayColumns([...orderedColumns, ...remainingColumns]);
         } else {
+          // Sem columnOrder salvo: usa as colunas atuais (inclui dinâmicas como vencimento*)
           setDisplayColumns(columns);
         }
-      } else if (response.status === 401) {
-        console.warn('[DataTable] Usuário não autenticado ao carregar preferências');
-        setDisplayColumns(columns);
       } else {
         setDisplayColumns(columns);
       }
@@ -205,24 +212,11 @@ export default function DynamicTableManager({
             columnWidths: widths,
             ...(visibleCols && visibleCols.length > 0 && { visibleColumns: visibleCols }),
           };
-          const response = await authFetch(`${API_URL}/user-preferences/column-order`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-          });
+          const result = await saveColumnPreferencesAction(body);
 
-          console.log('[DataTable] Resposta do servidor:', response.status, response.statusText);
-
-          if (response.status === 401) {
-            throw new Error('Usuário não autenticado (401)');
+          if (!result.ok) {
+            throw new Error(result.error);
           }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[DataTable] Erro no corpo da resposta:', errorText);
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const result = await response.json();
 
           showMessage('Preferências de colunas salvas com sucesso', 'success', 2000);
           return true;
@@ -257,11 +251,15 @@ export default function DynamicTableManager({
 
   const useLocalMode = !!localData;
 
+  // Fonte de dados via Server Action (registro central) quando o recurso está
+  // mapeado; o fetcher da página (dataFetcher) tem prioridade sobre o registro.
+  const resourceSource = TABLE_DATA_SOURCES[resource];
+
   const {
     filters: dynamicFilters,
     searchFields,
     isLoading: isLoadingFilters
-  } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
+  } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher ?? resourceSource?.filters);
   const { 
     state = { page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: defaultFilters },
     data = null,
@@ -280,7 +278,7 @@ export default function DynamicTableManager({
     search: "",
     sort: defaultSort,
     filters: defaultFilters
-  });
+  }, resourceSource?.list);
 
   const dataColumns = useMemo(() => {
     return displayColumns.filter(col => col.field !== "actions" && col.type !== "custom");
@@ -495,7 +493,80 @@ export default function DynamicTableManager({
     return String(value);
   }, []);
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  /**
+   * Exporta para Excel todos os registros que batem com a busca/filtros
+   * atuais (não só a página visível) — Tarefa 5.1 do guia de correções.
+   * Usa `formatValue`/`nestedField` (sempre string) em vez de `getCellValue`
+   * (que mistura JSX para colunas com badge), então cobre bem colunas de
+   * texto/data/nested — o mesmo tipo de coluna usado em Auditoria/Logs.
+   */
+  const handleExportExcel = useCallback(async () => {
+    if (!meta || meta.total === 0) {
+      showMessage('Não há dados para exportar', 'error');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const exportLimit = 100;
+      const totalPages = Math.max(1, Math.ceil(meta.total / exportLimit));
+      const allItems: any[] = [];
+
+      for (let p = 1; p <= totalPages; p++) {
+        if (!resourceSource?.list) {
+          throw new Error('Recurso não rastreado por Server Action — exportação indisponível');
+        }
+
+        const res = await resourceSource.list({
+          page: p,
+          limit: exportLimit,
+          search: state.search,
+          sort: state.sort,
+          filters: state.filters,
+        });
+        const pageItems = Array.isArray(res.data) ? res.data : Array.isArray(res.items) ? res.items : [];
+        allItems.push(...pageItems);
+      }
+
+      const rows = allItems.map((item: any) => {
+        const row: Record<string, string> = {};
+        visibleDataColumns.forEach((col) => {
+          const raw = col.nestedField ? getNestedValue(item, col.nestedField) : item[col.field];
+          row[col.label] = formatValue(raw, col);
+        });
+        return row;
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
+      XLSX.writeFile(workbook, `${resource}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('[DataTable] Erro ao exportar Excel:', error);
+      showMessage('Erro ao exportar para Excel. Tente novamente.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [meta, state, resource, visibleDataColumns, getNestedValue, formatValue, title, showMessage]);
+
   const getCellValue = useCallback((item: any, column: ColumnDef) => {
+    // Colunas técnicas de Logs de Auditoria (Tarefa 5.2 do guia de correções):
+    // IP em fonte monoespaçada para diferenciar de texto comum, e o registro
+    // afetado (UUID) truncado com tooltip do valor completo — nenhum dos dois
+    // é removido (têm valor de rastreabilidade), só ficam mais discretos/legíveis.
+    if (resource === 'audit-logs' && column.field === 'ip' && item.ip) {
+      return <span className="font-mono text-xs text-content-secondary">{item.ip}</span>;
+    }
+    if (resource === 'audit-logs' && column.field === 'record_id' && item.record_id) {
+      return (
+        <span className="font-mono text-xs text-content-muted" title={item.record_id}>
+          {String(item.record_id).slice(0, 8)}…
+        </span>
+      );
+    }
+
     if (column.field === "is_active") {
       const isActive = item[column.field];
       return (
@@ -818,18 +889,16 @@ export default function DynamicTableManager({
 
           for (const id of selectedCheckboxes) {
             try {
-              const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`, {
-                method: 'DELETE',
-              });
-              
-              if (response.ok) {
-                successCount++;
-              } else {
-                errorCount++;
-                const data = await response.json().catch(() => null);
-                if (data && data.message) {
-                  lastErrorMessage = data.message;
+              if (resourceSource?.delete) {
+                const result = await resourceSource.delete(id);
+                if (result.ok) {
+                  successCount++;
+                } else {
+                  errorCount++;
+                  if (result.error) lastErrorMessage = result.error;
                 }
+              } else {
+                throw new Error(`Exclusão não rastreada por Server Action para o recurso ${resource}`);
               }
             } catch {
               errorCount++;
@@ -853,7 +922,7 @@ export default function DynamicTableManager({
       },
       () => {}
     );
-  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title, items, useLocalMode, onDelete]);
+  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resource, title, items, useLocalMode, onDelete, resourceSource]);
 
   const handleConfirmCancelLeases = useCallback(async () => {
     try {
@@ -869,19 +938,19 @@ export default function DynamicTableManager({
             ? Number(String(cancelLeaseData.other_cancellation_amounts).replace(/\D/g, '')) / 100 
             : null;
 
-          const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/leases/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          if (resourceSource?.cancelLease) {
+            const result = await resourceSource.cancelLease(id, {
               status: 'CANCELED',
               canceled_at: cancelLeaseData.canceled_at,
               cancellation_justification: cancelLeaseData.cancellation_justification || null,
               cancellation_penalty: parsedPenalty,
               other_cancellation_amounts: parsedOther
-            })
-          });
-          if (response.ok) successCount++;
-          else errorCount++;
+            });
+            if (result.ok) successCount++;
+            else errorCount++;
+          } else {
+            throw new Error(`Cancelamento de locação não rastreado por Server Action`);
+          }
         } catch {
           errorCount++;
         }
@@ -903,7 +972,7 @@ export default function DynamicTableManager({
     } catch {
       showMessage("Erro ao cancelar locação.", "error");
     }
-  }, [cancelLeaseData, selectedCheckboxes, showMessage, refreshData]);
+  }, [cancelLeaseData, selectedCheckboxes, showMessage, refreshData, resourceSource]);
 
   // Exclusão DEFINITIVA (hard delete + cascata dos lançamentos financeiros).
   // Diferente do "Confirmar" acima, que apenas cancela (soft).
@@ -917,13 +986,16 @@ export default function DynamicTableManager({
         let lastError = '';
         for (const id of selectedCheckboxes) {
           try {
-            const response = await fetch(`${API_URL}/leases/${id}/permanent`, { method: 'DELETE' });
-            if (response.ok) {
-              successCount++;
+            if (resourceSource?.permanentDelete) {
+              const result = await resourceSource.permanentDelete(id);
+              if (result.ok) {
+                successCount++;
+              } else {
+                errorCount++;
+                if (result.error) lastError = result.error;
+              }
             } else {
-              errorCount++;
-              const data = await response.json().catch(() => null);
-              if (data?.message) lastError = data.message;
+              throw new Error(`Exclusão definitiva de locação não rastreada por Server Action`);
             }
           } catch {
             errorCount++;
@@ -940,7 +1012,7 @@ export default function DynamicTableManager({
       },
       () => {}
     );
-  }, [selectedCheckboxes, showMessage, showPopup, refreshData, API_URL]);
+  }, [selectedCheckboxes, showMessage, showPopup, refreshData, resourceSource]);
 
   const handleApplyFilter = useCallback((filters: Record<string, any>) => {
     setAppliedFilters(filters);
@@ -1051,6 +1123,17 @@ export default function DynamicTableManager({
                 >
                   <Settings2 size={20} color="var(--color-text-muted)" />
                 </button>
+                {enableExcelExport && (
+                  <button
+                    type="button"
+                    onClick={handleExportExcel}
+                    disabled={isExporting}
+                    className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Exportar para Excel"
+                  >
+                    <FileSpreadsheet size={20} className={isExporting ? 'animate-pulse' : ''} color="var(--color-text-muted)" />
+                  </button>
+                )}
                 <div className="relative">
                   <button
                     type="button"
@@ -1088,7 +1171,7 @@ export default function DynamicTableManager({
               onApply={handleApplyFilter}
               onClear={handleClearFilters}
               title={title}
-              filters={dynamicFilters}
+              filters={excludeFilterFields ? dynamicFilters.filter((f) => !excludeFilterFields.includes(f.field)) : dynamicFilters}
               initialValues={appliedFilters}
               columns={4}
             />

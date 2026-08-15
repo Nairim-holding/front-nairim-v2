@@ -2,9 +2,9 @@
 
 import { Fragment, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Plus, Minus, AlertTriangle } from 'lucide-react';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { buildReportQuery } from '../_lib/buildReportQuery';
+import { buildReportActionParams } from '../_lib/buildReportQuery';
+import { getDemonstrativoReportAction } from '@/server/actions/financial-report';
 import type { ReportFiltersState, ReportGroupRow, ReportItemRow, ReportRegime, ReportViewHandle } from '../_lib/types';
 
 const STATUS_LABEL: Record<string, string> = { PENDING: 'Pendente', COMPLETED: 'Concluído' };
@@ -42,8 +42,6 @@ function DfcItemRow({ item }: { item: ReportItemRow }) {
     </tr>
   );
 }
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 type DfcGroupBy = 'day' | 'subcategory';
 type DfcLineKind = 'line' | 'subtotal' | 'final';
@@ -95,12 +93,13 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
 
     (async () => {
       try {
-        const qs = buildReportQuery({ from: dateRange.from, to: dateRange.to, regime, filters });
-        qs.set('groupBy', groupBy);
-        const res = await authFetch(`${API_URL}/financial-reports/demonstrativo?${qs.toString()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setData(json.data ?? json);
+        const raw = buildReportActionParams({ from: dateRange.from, to: dateRange.to, regime, filters });
+        raw.groupBy = groupBy;
+        const result = await getDemonstrativoReportAction(raw);
+        if (!result.ok) throw new Error(result.error);
+        // A action serializa `event_date`/`effective_date: Date` para string no
+        // round-trip servidor→cliente — mesmo shape que DfcResponse já espera.
+        if (!cancelled) setData(result.data as unknown as DfcResponse);
       } catch (error) {
         console.error('[DemonstrativoView] Erro ao carregar demonstrativo:', error);
         if (!cancelled) setData(null);

@@ -31,6 +31,43 @@ export function buildReportQuery(params: {
   return qs;
 }
 
+/**
+ * Mesmo shape de `buildReportQuery`, mas como `raw` (objeto plano) para as
+ * Server Actions dos relatórios (`server/actions/financial-report.ts`), que
+ * recebem `Record<string, unknown>` em vez de querystring. Chaves
+ * `filter[campo]` repetidas viram array — `parseReportParams` no servidor já
+ * aceita ambos os formatos (array ou string única).
+ */
+export function buildReportActionParams(params: {
+  from: string;
+  to: string;
+  regime: ReportRegime;
+  filters: ReportFiltersState;
+  typeOverride?: 'INCOME' | 'EXPENSE';
+}): Record<string, unknown> {
+  const raw: Record<string, unknown> = {
+    startDate: params.from,
+    endDate: params.to,
+    regime: params.regime,
+  };
+
+  const effectiveType = params.typeOverride ?? (params.filters.type !== 'all' ? params.filters.type : undefined);
+  if (effectiveType) raw.type = effectiveType;
+
+  if (params.filters.status !== 'all') raw.status = params.filters.status;
+
+  const setMulti = (field: string, values: string[]) => {
+    if (values.length > 0) raw[`filter[${field}]`] = values;
+  };
+  setMulti('financial_institution_id', params.filters.financial_institution_id);
+  setMulti('card_id', params.filters.card_id);
+  setMulti('category_id', params.filters.category_id);
+  setMulti('subcategory_id', params.filters.subcategory_id);
+  setMulti('center_id', params.filters.center_id);
+
+  return raw;
+}
+
 export function countActiveFilters(filters: ReportFiltersState): number {
   let count = 0;
   if (filters.type !== 'all') count += 1;

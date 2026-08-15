@@ -30,6 +30,13 @@ interface DynamicFormManagerProps {
   onSubmit?: (data: any) => Promise<any>;
   onFieldChange?: (fieldName: string, value: any) => Promise<any>;
   onFormValuesChange?: (values: any) => void;
+  /**
+   * Quando informado, carrega o registro no modo edit/view por esta função
+   * (uma Server Action de leitura) em vez do fetch HTTP interno
+   * `${NEXT_PUBLIC_URL_API}/${resource}/${id}`. Retrocompatível — módulos
+   * ainda não migrados continuam com o fetch padrão (prop omitida).
+   */
+  fetchResource?: (id: string) => Promise<any>;
   completedSteps?: number[];
   onStepComplete?: (stepIndex: number, values: Record<string, any>) => void | Record<string, any>;
   canNavigateToStep?: (targetStep: number, currentStep: number, data: any) => boolean;
@@ -123,10 +130,10 @@ export default function DynamicFormManager({
   onSubmitSuccess,
   onCancel,
   transformData,
-  transformResponse,
   onSubmit,
   onFieldChange,
   onFormValuesChange,
+  fetchResource,
   completedSteps: externalCompletedSteps,
   onStepComplete,
   canNavigateToStep: externalCanNavigateToStep,
@@ -378,38 +385,15 @@ export default function DynamicFormManager({
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`);
-          
-          if (!response.ok) {
-            throw new Error('Erro ao buscar dados');
+          if (!fetchResource) {
+            throw new Error('fetchResource ausente — recurso não rastreado por Server Action');
           }
 
-          const data = await response.json();
-          const apiData = data.data || data;
+          const response = await fetchResource(id);
+          if (!response) throw new Error('Erro ao buscar dados');
+          const apiData = response?.data ?? response;
           const formData = transformData ? transformData(apiData) : apiData;
-          const updatedValues: Record<string, any> = {};
-          
-          const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
-          
-          allFields.forEach(field => {
-            const value = formData[field.field];
-            if (value !== undefined && value !== null) {
-              updatedValues[field.field] = value;
-            }
-          });
-          
-          setFormValues((prev: Record<string, any>) => {
-            const merged = { ...prev, ...updatedValues };
-            // Snapshot dos valores carregados para detecção de dirty state.
-            setInitialSnapshot(merged);
-            return merged;
-          });
-
-          if (steps && !externalCompletedSteps) {
-            const allStepsCompleted = steps.map((_, index) => index);
-            setInternalCompletedSteps(allStepsCompleted);
-          }
-
+          applyLoadedData(formData);
         } catch (error) {
           showMessage(`Erro ao carregar ${title.toLowerCase()}.`, 'error');
           router.push(basePath);
@@ -418,9 +402,34 @@ export default function DynamicFormManager({
         }
       };
 
+      const applyLoadedData = (formData: Record<string, any>) => {
+        const updatedValues: Record<string, any> = {};
+
+        const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
+
+        allFields.forEach(field => {
+          const value = formData[field.field];
+          if (value !== undefined && value !== null) {
+            updatedValues[field.field] = value;
+          }
+        });
+
+        setFormValues((prev: Record<string, any>) => {
+          const merged = { ...prev, ...updatedValues };
+          // Snapshot dos valores carregados para detecção de dirty state.
+          setInitialSnapshot(merged);
+          return merged;
+        });
+
+        if (steps && !externalCompletedSteps) {
+          const allStepsCompleted = steps.map((_, index) => index);
+          setInternalCompletedSteps(allStepsCompleted);
+        }
+      };
+
       fetchData();
     }
-  }, [mode, id, resource, router, showMessage, title, basePath, transformData, steps, fields, externalCompletedSteps]);
+  }, [mode, id, resource, router, showMessage, title, basePath, transformData, steps, fields, externalCompletedSteps, fetchResource]);
 
   const validateField = (field: FormFieldDef, value: any): string | null => {
     if (isViewMode) return null;
@@ -661,44 +670,8 @@ export default function DynamicFormManager({
           return;
         }
       } else {
-        // Fallback: tentar salvar direto na API
-        const url = mode === 'create'
-          ? `${process.env.NEXT_PUBLIC_URL_API}/${resource}`
-          : `${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`;
-
-        const method = mode === 'create' ? 'POST' : 'PUT';
-        const dataToSend = transformResponse ? transformResponse(formValues) : formValues;
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dataToSend),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Erro ao ${mode === 'create' ? 'cadastrar' : 'atualizar'}`);
-        }
-
-        const result = await response.json();
-        
-        // Atualizar snapshot após salvar
-        setInitialSnapshot(formValues);
-        
-        // Se for modo create, agora temos um ID
-        if (mode === 'create' && result?.data?.id) {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('mode');
-          url.pathname = url.pathname.replace('/cadastrar', `/editar/${result.data.id}`);
-          window.history.replaceState({}, '', url.toString());
-        }
-        
-        // Prosseguir para próxima etapa
-        if (handleNextStep()) {
-          return;
-        }
+        // Fallback removido — o salvamento é sempre feito via Server Action (onSubmit).
+        throw new Error('DynamicForm: onSubmit ausente — salvamento requer Server Action');
       }
     } catch (error: any) {
       showMessage(error.message || `Erro ao salvar ${title.toLowerCase()}.`, 'error');
@@ -763,28 +736,8 @@ export default function DynamicFormManager({
         const result = await onSubmit(formValues);
         finalizeSuccess(result?.data || result);
       } else {
-        const url = mode === 'create'
-          ? `${process.env.NEXT_PUBLIC_URL_API}/${resource}`
-          : `${process.env.NEXT_PUBLIC_URL_API}/${resource}/${id}`;
-
-        const method = mode === 'create' ? 'POST' : 'PUT';
-        const dataToSend = transformResponse ? transformResponse(formValues) : formValues;
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dataToSend),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Erro ao ${mode === 'create' ? 'cadastrar' : 'atualizar'}`);
-        }
-
-        const result = await response.json();
-        finalizeSuccess(result?.data || result);
+        // Fallback removido — o salvamento é sempre feito via Server Action (onSubmit).
+        throw new Error('DynamicForm: onSubmit ausente — salvamento requer Server Action');
       }
     } catch (error: any) {
       showMessage(error.message || `Erro ao salvar ${title.toLowerCase()}.`, 'error');

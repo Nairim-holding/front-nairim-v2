@@ -44,3 +44,8 @@ next-env.d.ts
 /*.png
 /*.jpg
 /*.jpeg
+
+# scratch/temp scripts (session debugging, not part of the codebase)
+/.tmp-e2e/
+*.tmp.ts
+e2e-results.json

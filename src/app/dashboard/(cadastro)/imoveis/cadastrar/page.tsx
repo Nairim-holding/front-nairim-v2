@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { fetchPropertySelectOptions } from '../_lib/propertyTransform';
+import { fetchPropertySelectOptions } from '../_lib/propertyData';
 import PropertyCreateForm from './PropertyCreateForm';
 
 export default async function CadastrarImovelPage() {

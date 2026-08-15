@@ -8,14 +8,22 @@ import "leaflet/dist/leaflet.css";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getThemeTokens } from "@/utils";
 
-// Ícone personalizado para os marcadores (Pin Roxo)
+// Ícone personalizado dos marcadores (Pin Roxo), embutido como SVG inline em
+// vez de PNG hospedado em CDN externo (Tarefa 1.4 do guia de correções): os
+// pins não apareciam porque o ícone antigo dependia de raw.githubusercontent.com
+// e cdnjs.cloudflare.com — se esses hosts estiverem bloqueados (rede
+// corporativa, CSP, offline), o Leaflet posiciona o marcador normalmente mas a
+// imagem do pin fica invisível, sem nenhum erro no console. Um data URI SVG
+// não depende de nenhuma requisição de rede.
+const PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
+  <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.5"/>
+  <circle cx="12.5" cy="12.5" r="5.5" fill="#ffffff"/>
+</svg>`;
 const customIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconUrl: `data:image/svg+xml;base64,${typeof window !== "undefined" ? window.btoa(PIN_SVG) : Buffer.from(PIN_SVG).toString("base64")}`,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41],
 });
 
 interface MapCoordinate {

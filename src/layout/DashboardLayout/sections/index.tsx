@@ -15,6 +15,7 @@ import DynamicFilterModal from "@/components/filters/DynamicFilterModal";
 import WidgetPersonalizer from "@/components/dashboard/WidgetPersonalizer";
 import { useDynamicFilters } from "@/hooks/useDynamicFilters";
 import { useWidgetVisibility } from "@/hooks/useWidgetVisibility";
+import { getTransactionFiltersAction } from "@/server/actions/financial-transaction";
 
 export const SkeletonLoader = ({ height = "h-[240px]" }: { height?: string }) => (
   <div className={`bg-surface rounded-lg p-4 border border-ui-border-strong shadow-chart w-full cursor-pointer transition-all duration-300 flex flex-col justify-between animate-pulse ${height}`}>
@@ -105,7 +106,15 @@ export function FinancialSection({
   // Planejado, % por Categoria, Detalhamento por Subcategoria).
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters);
+  const filtersFetcher = useCallback(async (applied?: Record<string, unknown>) => {
+    const result = await getTransactionFiltersAction(applied ?? {});
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
+    return {
+      ...result.data,
+      filters: (result.data.filters ?? []).map((f) => ({ ...f, description: f.description ?? '' })),
+    };
+  }, []);
+  const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters, filtersFetcher);
   const activeFilterCount = Object.keys(appliedFilters).length;
 
   const handleApplyFilters = useCallback((f: Record<string, unknown>) => {

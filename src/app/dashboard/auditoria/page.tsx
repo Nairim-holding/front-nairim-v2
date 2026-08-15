@@ -13,8 +13,8 @@ const COLUMNS: ColumnDef[] = [
   { field: 'created_at', label: 'Data/Hora',   sortParam: 'created_at', type: 'date', formatter: 'datetime' },
   { field: 'action_label', label: 'Ação',      sortParam: 'action',     type: 'text' },
   { field: 'table_label',  label: 'Tabela',    sortParam: 'table_name', type: 'text' },
-  { field: 'record_id', label: 'Valor Lógico', type: 'text' },
-  { field: 'ip',         label: 'IP',          type: 'text' },
+  { field: 'record_id', label: 'Registro',    type: 'text' },
+  { field: 'ip',         label: 'IP de Origem', type: 'text' },
 ];
 
 export default function AuditoriaPage() {

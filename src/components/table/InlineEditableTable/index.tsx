@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip } from "lucide-react";
+import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
@@ -18,6 +18,8 @@ import ColumnCustomizer from "../ColumnCustomizer";
 import ParceladoRecorrenteModal from "@/components/modals/ParceladoRecorrenteModal";
 import InvoiceModal from "@/components/modals/InvoiceModal";
 import TransactionAttachmentsModal from "@/components/domain/financial/TransactionAttachmentsModal";
+import { getTransactionDocumentsAction } from "@/server/actions/financial-transaction";
+import type { TransactionDocument } from "@/core/entities/financial-transaction";
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
 import { maskMoney, formatCurrencyRealtime } from "@/utils/masks";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
@@ -520,10 +522,108 @@ interface InlineEditableTableProps {
    * reaproveitada aqui para o modal de Parcelado/Recorrente.
    */
   resolveQuickCreates?: (data: Record<string, any>) => Promise<Record<string, any>>;
+  /**
+   * Fonte de dados alternativa (Server Action). Quando presente, a tabela busca
+   * os registros por este fetcher em vez do endpoint `${NEXT_PUBLIC_URL_API}/${resource}`.
+   */
+  dataFetcher?: (state: any) => Promise<any>;
+  /**
+   * Fonte de filtros alternativa (Server Action). Quando presente, a tabela
+   * busca os filtros por este fetcher em vez do endpoint `/${resource}/filters`.
+   */
+  filtersFetcher?: (appliedFilters?: Record<string, any>) => Promise<any>;
+  /**
+   * Criação em massa (Parcelado/Recorrente) via Server Action. Reaça o
+   * comportamento dos endpoints `/financial-transaction/installments` e
+   * `/financial-transaction/recurrence`. Devolve o número de registros criados.
+   */
+  bulkCreateHandler?: (kind: 'installments' | 'recurrence' | 'single', payload: any) => Promise<number>;
+  /**
+   * Busca de fatura de cartao via Server Action. Quando presente substituem o
+   * `fetch` HTTP do `InvoiceModal`. `null` sinaliza fatura inexistente.
+   */
+  onInvoiceSearch?: (cardId: string, month: number, year: number) => Promise<any | null>;
+  /**
+   * Atualiza o status de uma fatura via Server Action. Substitui o `fetch` HTTP
+   * do `InvoiceModal` quando presente.
+   */
+  onInvoiceUpdateStatus?: (
+    invoiceId: string,
+    status: string,
+    data: { institution_id?: string; effective_date?: string },
+  ) => Promise<void>;
 }
 
 interface EditingRow {
   id: string; data: any; isEditing: boolean; isNew: boolean; isSaving: boolean; errors: Record<string, string>;
+}
+
+/**
+ * Preview de anexos ao passar o mouse sobre o clipe na grid de Lançamentos
+ * (Tarefa 2.3 do guia de correções) — busca os documentos sob demanda (só ao
+ * primeiro hover, com cache local por lançamento) e mostra miniatura/nome de
+ * cada um num popover, sem precisar abrir o modal completo.
+ */
+function AttachmentHoverPreview({ transactionId, children }: { transactionId: string; children: React.ReactNode }) {
+  const [isHovering, setIsHovering] = useState(false);
+  const [documents, setDocuments] = useState<TransactionDocument[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchIfNeeded = useCallback(() => {
+    if (documents !== null || isLoading) return;
+    setIsLoading(true);
+    getTransactionDocumentsAction(transactionId)
+      .then((result) => setDocuments(result.ok && Array.isArray(result.data) ? result.data : []))
+      .catch(() => setDocuments([]))
+      .finally(() => setIsLoading(false));
+  }, [transactionId, documents, isLoading]);
+
+  const handleEnter = () => {
+    hoverTimer.current = setTimeout(() => {
+      setIsHovering(true);
+      fetchIfNeeded();
+    }, 250);
+  };
+
+  const handleLeave = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    setIsHovering(false);
+  };
+
+  return (
+    <span className="relative inline-flex" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+      {isHovering && (
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-surface border border-ui-border-soft rounded-lg shadow-xl p-2 pointer-events-none">
+          {isLoading ? (
+            <p className="text-xs text-content-muted text-center py-2">Carregando...</p>
+          ) : !documents || documents.length === 0 ? (
+            <p className="text-xs text-content-muted text-center py-2">Sem anexos.</p>
+          ) : (
+            <div className="flex flex-col gap-1.5 max-h-64 overflow-hidden">
+              {documents.slice(0, 4).map((doc) => (
+                <div key={doc.id} className="flex items-center gap-2">
+                  {doc.file_type.startsWith('image/') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={doc.file_path} alt="" className="w-8 h-8 object-cover rounded shrink-0 border border-ui-border-soft" />
+                  ) : (
+                    <span className="w-8 h-8 flex items-center justify-center rounded bg-surface-subtle shrink-0">
+                      <FileText size={14} className="text-content-muted" />
+                    </span>
+                  )}
+                  <span className="text-xs text-content truncate">{doc.description || 'Anexo'}</span>
+                </div>
+              ))}
+              {documents.length > 4 && (
+                <p className="text-[11px] text-content-muted text-center pt-0.5">+{documents.length - 4} anexo(s)</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </span>
+  );
 }
 
 export default function InlineEditableTable({
@@ -532,6 +632,11 @@ export default function InlineEditableTable({
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
   onAppliedFiltersChange,
   resolveQuickCreates,
+  dataFetcher,
+  filtersFetcher,
+  bulkCreateHandler,
+  onInvoiceSearch,
+  onInvoiceUpdateStatus,
 }: InlineEditableTableProps) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
@@ -574,7 +679,7 @@ export default function InlineEditableTable({
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   
-  const { filters: dynamicFilters, searchFields, isLoading: isLoadingFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters);
+  const { filters: dynamicFilters, searchFields, isLoading: isLoadingFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher);
 
   useEffect(() => {
     onAppliedFiltersChange?.(appliedFilters);
@@ -590,7 +695,7 @@ export default function InlineEditableTable({
     patchRow
   } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
-  });
+  }, dataFetcher);
 
   const dataColumns = useMemo(() => columns.filter(col => col.field !== "actions" && col.type !== "custom"), [columns]);
 
@@ -949,7 +1054,14 @@ export default function InlineEditableTable({
     }
 
     const val = item[field] || getNestedValue(item, field);
-    return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
+    // `Date` é `typeof 'object'` mas não tem `.name`/`.description` (isso é só
+    // para desembrulhar objetos de relação, ex.: category/card) — sem esta
+    // guarda, event_date/effective_date viravam `undefined` e a célula caía
+    // no "-" mesmo com o valor presente.
+    const isPlainDate = val instanceof Date;
+    return typeof val === 'object' && val !== null && !Array.isArray(val) && !isPlainDate
+      ? formatCellValue(val?.name || val?.description, column)
+      : formatCellValue(val, column);
   }, [formatCellValue, getNestedValue, formOptions]);
 
   // Versão "texto puro" de getCellValue, usada na exportação para Excel
@@ -973,7 +1085,14 @@ export default function InlineEditableTable({
     if (field === 'description') return item[field] || '';
 
     const val = item[field] || getNestedValue(item, field);
-    return typeof val === 'object' && !Array.isArray(val) ? formatCellValue(val?.name || val?.description, column) : formatCellValue(val, column);
+    // `Date` é `typeof 'object'` mas não tem `.name`/`.description` (isso é só
+    // para desembrulhar objetos de relação, ex.: category/card) — sem esta
+    // guarda, event_date/effective_date viravam `undefined` e a célula caía
+    // no "-" mesmo com o valor presente.
+    const isPlainDate = val instanceof Date;
+    return typeof val === 'object' && val !== null && !Array.isArray(val) && !isPlainDate
+      ? formatCellValue(val?.name || val?.description, column)
+      : formatCellValue(val, column);
   }, [formatCellValue, getNestedValue, formOptions]);
 
   const visibleDataColumns = useMemo(() => {
@@ -1005,7 +1124,15 @@ export default function InlineEditableTable({
     const item = isNew ? {} : (isObject ? idOrItem : items.find((i: any) => i.id === id));
     if (!item && !isNew) return;
 
-    const safeDateInput = (val: any) => val ? String(val).split('T')[0] : '';
+    // `val` pode chegar como objeto `Date` (RSC resolve `event_date`/
+    // `effective_date` para `Date` real) ou string ISO — `String(date)` gera
+    // "Sun Aug 04 2026 ..." (sem "T"), o que deixava o <input type="date">
+    // vazio. `toISOString()` normaliza os dois casos antes de fatiar.
+    const safeDateInput = (val: any) => {
+      if (!val) return '';
+      const iso = val instanceof Date ? val.toISOString() : String(val);
+      return iso.split('T')[0];
+    };
     const safeId = (val: any) => val ? String(val) : '';
 
     let foundSubcategoryId = safeId(item.subcategory_id || item.subcategory?.id);
@@ -1255,9 +1382,18 @@ export default function InlineEditableTable({
           params.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
         });
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resource}?${params.toString()}`);
-        if (!res.ok) throw new Error(`Erro ${res.status} ao buscar dados para exportação`);
-        const json = await res.json();
+        let json: any;
+        if (dataFetcher) {
+          json = await dataFetcher({
+            page: p,
+            limit: exportLimit,
+            search: state.search,
+            sort: state.sort || {},
+            filters: state.filters || {},
+          });
+        } else {
+          throw new Error('Exportação requer dataFetcher (Server Action) — recurso não rastreado');
+        }
         const pageItems = Array.isArray(json.data) ? json.data : Array.isArray(json.items) ? json.items : [];
         allItems.push(...pageItems);
       }
@@ -1321,7 +1457,7 @@ export default function InlineEditableTable({
     } finally {
       setIsExporting(false);
     }
-  }, [meta, state, resource, activeTab, visibleDataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage]);
+  }, [meta, state, resource, activeTab, visibleDataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage, dataFetcher]);
 
   const renderEditableCell = useCallback((item: any, column: ColumnDef, row?: EditingRow) => {
     if (!row?.isEditing) return getCellValue(item, column);
@@ -1396,7 +1532,7 @@ export default function InlineEditableTable({
           />
         );
       case 'event_date': case 'effective_date': {
-        const safeDate = val ? String(val).split('T')[0] : '';
+        const safeDate = val ? (val instanceof Date ? val.toISOString() : String(val)).split('T')[0] : '';
         const isEventDateField = column.field === 'event_date';
         return renderWrapper(
           <input
@@ -1748,14 +1884,22 @@ export default function InlineEditableTable({
                       <>
                         <button onClick={() => startEditingRow(item.id)} className="p-1 hover:bg-surface-subtle rounded text-brand"><Edit2 size={16} /></button>
                         {resource === 'financial-transaction' && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setAttachmentsModalRowId(item.id); }}
-                            title="Anexo"
-                            className={`p-1 rounded transition-colors ${item._attachmentsCount ? 'text-brand hover:bg-brand/10' : 'text-content-muted hover:text-content-secondary hover:bg-surface-subtle'}`}
-                          >
-                            <Paperclip size={16} />
-                          </button>
+                          (() => {
+                            const attachmentButton = (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setAttachmentsModalRowId(item.id); }}
+                                title={item._attachmentsCount ? `Contém ${item._attachmentsCount} arquivo${item._attachmentsCount === 1 ? '' : 's'} anexado${item._attachmentsCount === 1 ? '' : 's'}` : 'Anexo'}
+                                className={`p-1 rounded transition-colors ${item._attachmentsCount ? 'text-blue-500 hover:bg-blue-50' : 'text-content-muted hover:text-content-secondary hover:bg-surface-subtle'}`}
+                              >
+                                <Paperclip size={16} />
+                              </button>
+                            );
+                            // Preview no hover (Tarefa 2.3) só quando há anexos — sem popover vazio para lançamentos sem clipe azul.
+                            return item._attachmentsCount
+                              ? <AttachmentHoverPreview transactionId={item.id}>{attachmentButton}</AttachmentHoverPreview>
+                              : attachmentButton;
+                          })()
                         )}
                       </>
                     )}
@@ -1804,8 +1948,6 @@ export default function InlineEditableTable({
         }}
         onSubmit={async (rawData) => {
           try {
-            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-
             let data = rawData;
             if (resolveQuickCreates) {
               // Sinal do valor conforme o tipo — mesma heurística usada pelo
@@ -1836,7 +1978,7 @@ export default function InlineEditableTable({
             }
 
             // Determinar qual endpoint usar
-            let endpoint = '';
+            let kind: 'installments' | 'recurrence' | 'single' = 'single';
             let payload: any = {};
             
             if (data.transactionType === 'INCOME') {
@@ -1845,7 +1987,7 @@ export default function InlineEditableTable({
               if (numInstallments > 1) {
                 // Receita parcelada - criar múltiplas receitas
                 const installmentAmount = parseCurrencyFromPTBR(data.amount);
-                endpoint = '/financial-transaction/installments';
+                kind = 'installments';
                 payload = {
                   transaction_type: 'INCOME',
                   institution_id: data.institution || null,  // ✅ Enviar null se vazio
@@ -1862,7 +2004,7 @@ export default function InlineEditableTable({
                 };
               } else {
                 // Receita: cria lançamento simples (1 parcela)
-                endpoint = '/financial-transaction';
+                kind = 'single';
                 payload = {
                   category_id: data.category,
                   subcategory_id: data.subcategory || null,
@@ -1880,7 +2022,7 @@ export default function InlineEditableTable({
               // Despesa parcelada - amount é o valor DA PARCELA
               const installmentAmount = parseCurrencyFromPTBR(data.amount);
               const numInstallments = parseInt(data.numInstallments);
-              endpoint = '/financial-transaction/installments';
+              kind = 'installments';
               payload = {
                 transaction_type: 'EXPENSE',
                 institution_id: data.institution,
@@ -1900,7 +2042,7 @@ export default function InlineEditableTable({
               // Despesa recorrente (modelo único infinito): cria config + gera
               // 5 anos de lançamentos conforme a periodicidade ("Se Repete").
               const recurringAmount = parseCurrencyFromPTBR(data.amount);
-              endpoint = '/financial-transaction/recurrence';
+              kind = 'recurrence';
               payload = {
                 transaction_type: 'EXPENSE',
                 frequency: data.frequency || 'MONTHLY',
@@ -1917,7 +2059,7 @@ export default function InlineEditableTable({
               };
             } else {
               // Despesa simples (avulsa)
-              endpoint = '/financial-transaction';
+              kind = 'single';
               payload = {
                 category_id: data.category,
                 subcategory_id: data.subcategory || null,
@@ -1935,20 +2077,13 @@ export default function InlineEditableTable({
             
             // Debug: log do payload
             console.log('Payload enviado:', JSON.stringify(payload, null, 2));
-            
-            const response = await fetch(`${API_URL}${endpoint}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            });
-            
-            if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
-              throw new Error(error.message || 'Erro ao criar lançamento');
+
+            let count: number;
+            if (bulkCreateHandler) {
+              count = await bulkCreateHandler(kind, payload);
+            } else {
+              throw new Error('Criação em lote requer bulkCreateHandler (Server Action)');
             }
-            
-            const result = await response.json();
-            const count = result.data?.installments?.length || result.data?.occurrences?.length || 1;
             
             showMessage(`${count} lançamento(s) criado(s) com sucesso!`, 'success');
             refreshData();
@@ -1972,26 +2107,15 @@ export default function InlineEditableTable({
         institutions={formOptions.institutions || []}
         onSearchInvoice={async (cardId, month, year) => {
           try {
-            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-            console.log(`🔍 Buscando fatura: cardId=${cardId}, month=${month}, year=${year}`);
-            const response = await fetch(
-              `${API_URL}/financial-invoice?cardId=${cardId}&month=${month}&year=${year}`
-            );
-            console.log(`📡 Response status: ${response.status}`);
-            
-            if (response.status === 404) {
-              showMessage('Fatura não encontrada para este cartão/mês', 'info');
-              return null;
+            if (onInvoiceSearch) {
+              const invoice = await onInvoiceSearch(cardId, month, year);
+              if (invoice === null) {
+                showMessage('Fatura não encontrada para este cartão/mês', 'info');
+              }
+              return invoice;
             }
-            
-            if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
-              showMessage(error.message || 'Erro ao buscar fatura', 'error');
-              return null;
-            }
-            const result = await response.json();
-            console.log('✅ Fatura encontrada:', result.data);
-            return result.data || null;
+
+            throw new Error('Busca de fatura requer onInvoiceSearch (Server Action)');
           } catch (error) {
             console.error('❌ Error fetching invoice:', error);
             showMessage('Erro de conexão ao buscar fatura', 'error');
@@ -2000,23 +2124,12 @@ export default function InlineEditableTable({
         }}
         onUpdateStatus={async (invoiceId, status, data) => {
           try {
-            const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-            const payload = { status, ...data };
-            console.log('📤 Enviando PUT /status:', payload);
-            const response = await fetch(`${API_URL}/financial-invoice/${invoiceId}/status`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            });
-            console.log('📡 Response status:', response.status);
-            if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
-              console.log('❌ Erro do backend:', error);
-              throw new Error(error.error || error.message || 'Erro ao atualizar fatura');
+            if (onInvoiceUpdateStatus) {
+              await onInvoiceUpdateStatus(invoiceId, status, data);
+              return;
             }
-            // O backend informa quantos lançamentos da fatura foram atualizados.
-            const result = await response.json().catch(() => ({}));
-            showMessage(result.message || 'Fatura atualizada com sucesso!', 'success');
+
+            throw new Error('Atualização de fatura requer onInvoiceUpdateStatus (Server Action)');
           } catch (error) {
             console.error('Error updating invoice:', error);
             showMessage(error instanceof Error ? error.message : 'Erro ao atualizar fatura', 'error');

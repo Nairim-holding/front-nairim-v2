@@ -7,10 +7,7 @@ import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../_lib/propertySteps';
 import { buildPropertyFormData } from '../_lib/propertyTransform';
-import { useUploadSSE } from '@/hooks/useUploadSSE';
-import UploadProgressOverlay from '@/components/feedback/UploadProgress/UploadProgressOverlay';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API;
+import { createUnifiedPropertyAction } from '@/server/actions/property';
 
 interface Props {
   ownerOptions: SelectOption[];
@@ -25,13 +22,12 @@ interface Props {
 }
 
 export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { showMessage } = useMessageContext();
   const router = useRouter();
 
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isManualAddress, setIsManualAddress] = useState(false);
-  const { state: uploadState, uploadAndTrack } = useUploadSSE();
 
   const steps = useMemo(
     () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, isManualAddress }),
@@ -94,17 +90,15 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = useCallback(async (data: any) => {
     const fd = buildPropertyFormData(data, user?.id ?? '');
-
-    // uploadAndTrack lida com 201 legado e 202+SSE de forma transparente.
-    // Só resolve quando o backend confirma a conclusão (legado ou SSE `completed`).
-    const result = await uploadAndTrack({
-      url: `${API_URL}/properties/create-unified`,
-      method: 'POST',
-      body: fd,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const result = await createUnifiedPropertyAction(fd);
+    if (!result.ok) {
+      if (result.status === 400 && result.errors) {
+        throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
+      }
+      throw new Error(result.error ?? `Erro ${result.status}`);
+    }
     return result;
-  }, [user?.id, token, uploadAndTrack]);
+  }, [user?.id]);
 
   const onSubmitSuccess = useCallback(() => {
     showMessage('Imóvel criado com sucesso!', 'success');
@@ -139,7 +133,6 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
         onStepComplete={handleStepComplete}
         canNavigateToStep={canNavigateToStep}
       />
-      <UploadProgressOverlay state={uploadState} label="Salvando imóvel..." />
     </>
   );
 }

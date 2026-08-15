@@ -4,12 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
 import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
 import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
-import { authFetch } from '@/utils/authFetch';
+import { getPlanningDashboardAction } from '@/server/actions/planning';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
-import { appendFilterParams } from '@/hooks/useMonthlySummary';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface SubcategoryDashboard {
   id?: string;
@@ -47,14 +44,10 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
 
     (async () => {
       try {
-        const params = new URLSearchParams({ startDate, endDate });
-        appendFilterParams(params, filters);
-        const response = await authFetch(`${API_URL}/planning/dashboard?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled && Array.isArray(result.data?.expenses)) {
-            setCategories(result.data.expenses);
-          }
+        const params: Record<string, unknown> = { startDate, endDate, ...(filters ?? {}) };
+        const result = await getPlanningDashboardAction(params);
+        if (!cancelled && result.ok && Array.isArray(result.data?.expenses)) {
+          setCategories(result.data.expenses);
         }
       } catch (error) {
         console.error('[RealizedVsPlannedChart] Erro ao carregar planejamento:', error);

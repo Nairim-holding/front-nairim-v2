@@ -1,9 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { authFetch } from '@/utils/authFetch';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/server/actions/user-preferences';
 
 /**
  * Personalizar quais gráficos aparecem em cada Ambiente (Tarefa 10, 29/07/26).
@@ -25,13 +23,12 @@ export function useWidgetVisibility(tabResource: string, allWidgetIds: string[])
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/user-preferences/column-order?resource=${resource}`);
-        if (response.status === 404) {
-          if (!cancelled) setVisibleWidgetIdsState(allWidgetIds);
-          return;
-        }
-        const json = await response.json();
-        const saved = Array.isArray(json?.data?.visibleColumns) ? json.data.visibleColumns : null;
+        const result = await getColumnPreferencesAction(resource);
+        // `[]` é o default de "nenhuma preferência salva" (mesmo sentinel usado
+        // para colunas de tabela) — aqui significa "mostrar tudo", não "usuário
+        // escondeu todos os widgets". Só respeita uma seleção não-vazia.
+        const savedIds = result.ok ? result.data?.visibleColumns : null;
+        const saved = Array.isArray(savedIds) && savedIds.length > 0 ? savedIds : null;
         if (!cancelled) setVisibleWidgetIdsState(saved ?? allWidgetIds);
       } catch (error) {
         console.error('[useWidgetVisibility] Erro ao carregar preferência de gráficos:', error);
@@ -50,9 +47,11 @@ export function useWidgetVisibility(tabResource: string, allWidgetIds: string[])
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      authFetch(`${API_URL}/user-preferences/column-order`, {
-        method: 'POST',
-        body: JSON.stringify({ resource, columnOrder: [], columnWidths: {}, visibleColumns: ids }),
+      saveColumnPreferencesAction({
+        resource,
+        columnOrder: [],
+        columnWidths: {},
+        visibleColumns: ids,
       }).catch((error) => console.error('[useWidgetVisibility] Erro ao salvar preferência de gráficos:', error));
     }, 500);
   }, [resource]);

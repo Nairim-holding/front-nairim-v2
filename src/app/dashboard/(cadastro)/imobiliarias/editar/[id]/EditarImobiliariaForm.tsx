@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { updateAgencyAction, getAgencyByIdAction } from '@/server/actions/agency';
 import type { SelectOption } from '../../_lib/agencyFinancialOptions';
 import {
   Building2, MapPin, Phone, FileText,
@@ -124,20 +125,13 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
         })) || []
       };
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/agencies/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await updateAgencyAction(id, formattedData);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409 && result.message?.includes('CNPJ')) {
+      if (!result.ok) {
+        if (result.status === 409 && result.error?.includes('CNPJ')) {
           throw new Error('CNPJ já cadastrado para outra imobiliária');
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       return result;
@@ -318,6 +312,7 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
       mode="edit"
       id={id}
       steps={steps}
+      fetchResource={getAgencyByIdAction}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
       onFieldChange={handleFieldChange}

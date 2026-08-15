@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Pure utilities — no JSX, safe to import from both Server and Client Components
 
-// Lê a env dentro de uma função (não no top-level). No Turbopack, NEXT_PUBLIC_*
-// no top-level de módulo compartilhado server/client pode ficar undefined no
-// server build, causando "Failed to parse URL" nos fetches SSR.
-function getApiUrl(): string {
-  return process.env.NEXT_PUBLIC_URL_API ?? '';
-}
+import { formatLocalDate } from '@/shared/utils/date-utils';
 
 // ─── Parsers ─────────────────────────────────────────────────────────────────
 
@@ -113,8 +108,6 @@ export function buildSubcategoryOptions(subcategories: any[], categories: any[] 
   });
 }
 
-// ─── API fetchers (server-side) ───────────────────────────────────────────────
-
 export interface PropertySelectOptions {
   ownerOptions: { label: string; value: string }[];
   typeOptions: { label: string; value: string }[];
@@ -127,60 +120,7 @@ export interface PropertySelectOptions {
   subcategoriesRaw: { id: string; name: string; category_id: string }[];
 }
 
-function authHeaders(token?: string): HeadersInit | undefined {
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
-}
-
-export async function fetchPropertySelectOptions(token?: string): Promise<PropertySelectOptions> {
-  const API_URL = getApiUrl();
-  const headers = authHeaders(token);
-  const [ownersRes, typesRes, agenciesRes, creditCentersRes, debitCentersRes, categoriesRes, subcategoriesRes] = await Promise.all([
-    fetch(`${API_URL}/owners`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/property-types`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/agencies`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/financial-center?limit=1000&filter[type]=INCOME`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/financial-center?limit=1000&filter[type]=EXPENSE`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
-    fetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`, { cache: 'no-store', headers }),
-  ]);
-
-  const [owners, types, agencies, creditCenters, debitCenters, categories, subcategories] = await Promise.all([
-    ownersRes.json(),
-    typesRes.json(),
-    agenciesRes.json(),
-    creditCentersRes.ok ? creditCentersRes.json() : Promise.resolve({ data: [] }),
-    debitCentersRes.ok ? debitCentersRes.json() : Promise.resolve({ data: [] }),
-    categoriesRes.ok ? categoriesRes.json() : Promise.resolve({ data: [] }),
-    subcategoriesRes.ok ? subcategoriesRes.json() : Promise.resolve({ data: [] }),
-  ]);
-
-  // Mantém apenas categorias do USUÁRIO — remove as criadas pelo sistema (is_system).
-  const categoryList = (categories.data || []).filter((c: any) => !c.is_system);
-  const userCategoryIds = new Set(categoryList.map((c: any) => c.id));
-  const subcategoryList = (subcategories.data || []).filter((s: any) => userCategoryIds.has(s.category_id));
-
-  return {
-    ownerOptions: buildOwnerOptions(owners.data || []),
-    typeOptions: buildTypeOptions(types.data || []),
-    agencyOptions: buildAgencyOptions(agencies.data || []),
-    centerOptions: buildCenterOptions(creditCenters.data || []),
-    creditCenterOptions: buildCenterOptions(creditCenters.data || []),
-    debitCenterOptions: buildCenterOptions(debitCenters.data || []),
-    categoryOptions: buildCategoryOptions(categoryList),
-    subcategoryOptions: buildSubcategoryOptions(subcategoryList, categoryList),
-    subcategoriesRaw: subcategoryList.map((s: any) => ({ id: s.id, name: s.name, category_id: s.category_id })),
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function fetchProperty(id: string, token?: string): Promise<any> {
-  const API_URL = getApiUrl();
-  const res = await fetch(`${API_URL}/properties/${id}`, { cache: 'no-store', headers: authHeaders(token) });
-  if (!res.ok) throw new Error(`Erro ${res.status} ao buscar imóvel`);
-  const json = await res.json();
-  if (!json.success || !json.data) throw new Error(json.message || 'Erro ao carregar imóvel');
-  return json.data;
-}
+// ─── Data transformer ─────────────────────────────────────────────────────────
 
 // ─── Data transformer ─────────────────────────────────────────────────────────
 
@@ -241,13 +181,13 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     latitude:   address.latitude ?? '',
     longitude:  address.longitude ?? '',
 
-    purchase_date:  values.purchase_date ? values.purchase_date.split('T')[0] : '',
+    purchase_date:  values.purchase_date ? formatLocalDate(values.purchase_date) : '',
     purchase_value: formatMoney(values.purchase_value ?? ''),
     rental_value:   formatMoney(values.rental_value ?? ''),
     condo_fee:      formatMoney(values.condo_fee ?? ''),
     property_tax:   formatMoney(values.property_tax ?? ''),
     status:         values.status ?? 'AVAILABLE',
-    sale_date:      values.sale_date ? values.sale_date.split('T')[0] : '',
+    sale_date:      values.sale_date ? formatLocalDate(values.sale_date) : '',
     values_notes:   values.notes ?? '',
     sale_value:     formatMoney(values.sale_value ?? ''),
     extra_charges:  formatMoney(values.extra_charges ?? ''),

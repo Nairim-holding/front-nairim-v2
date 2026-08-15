@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import * as echarts from "echarts";
 import DataModal from "../DataModal";
 import { MetricDataItem } from "@/types/types";
@@ -229,13 +230,19 @@ export default function EChartsBar({
         </div>
 
         <div className="relative flex-1 w-full min-h-[220px] cursor-pointer" onClick={() => setIsFullscreenModalOpen(true)}>
-          <div ref={chartRef} className="w-full h-full absolute inset-0" />
+          {data.length === 0 ? (
+            <div className="w-full h-full absolute inset-0 flex items-center justify-center text-content-muted text-sm">
+              Sem dados no período
+            </div>
+          ) : (
+            <div ref={chartRef} className="w-full h-full absolute inset-0" />
+          )}
         </div>
       </div>
 
       <DataModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle} data={modalData} columns={detailColumns} />
 
-      {isFullscreenModalOpen && (
+      {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4" onClick={() => setIsFullscreenModalOpen(false)}>
           <div className="bg-surface rounded-xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-ui-border-soft gap-3 sm:gap-0">
@@ -256,10 +263,17 @@ export default function EChartsBar({
               </div>
             </div>
             <div className="flex-1 p-4 sm:p-6 md:p-8 relative bg-surface-subtle">
-              <div ref={fullscreenChartRef} className="w-full h-full absolute inset-0" />
+              {data.length === 0 ? (
+                <div className="w-full h-full flex items-center justify-center text-content-muted">
+                  Sem dados no período selecionado
+                </div>
+              ) : (
+                <div ref={fullscreenChartRef} className="w-full h-full absolute inset-0" />
+              )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

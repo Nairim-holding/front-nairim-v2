@@ -32,7 +32,14 @@ export function middleware(request: NextRequest) {
     const segment = slugDashboardMatch[1];
     if (!RESERVED_SEGMENTS.has(segment)) {
       if (!token) return NextResponse.redirect(new URL('/login', request.url));
-      return NextResponse.next();
+      // `/:slug/dashboard*` reescreve para a MESMA rota interna `/dashboard`
+      // independente do slug — sem isto, qualquer cache HTTP intermediário
+      // (browser, proxy) poderia servir a resposta de uma empresa para a URL
+      // de outra, já que a chave de cache não distingue os dois `pathname`s
+      // reescritos.
+      const response = NextResponse.next();
+      response.headers.set('Cache-Control', 'no-store, must-revalidate');
+      return response;
     }
   }
 

@@ -1,7 +1,6 @@
-import { authFetch } from '@/utils/authFetch';
 import { formatDateDisplay } from './dateShortcuts';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getMyBrandingAction } from '@/server/actions/company';
+import { listAgenciesAction } from '@/server/actions/agency';
 
 export interface ReportPrintHeaderData {
   companyName: string;
@@ -32,15 +31,14 @@ interface AgencyResponse {
 export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderData | null> {
   try {
     const [agencyRes, brandingRes] = await Promise.all([
-      authFetch(`${API_URL}/agencies?limit=1`),
-      authFetch(`${API_URL}/company/branding`),
+      listAgenciesAction({ limit: 1 }),
+      getMyBrandingAction(),
     ]);
 
-    const agencyJson = await agencyRes.json().catch(() => ({}));
-    const brandingJson = await brandingRes.json().catch(() => ({}));
-
-    const agency: AgencyResponse | undefined = Array.isArray(agencyJson?.data) ? agencyJson.data[0] : undefined;
-    const branding = brandingJson?.data;
+    const agencyJson = agencyRes.ok ? (agencyRes.data as { data?: unknown }) : {};
+    const rawAgency = Array.isArray(agencyJson?.data) ? agencyJson.data[0] : undefined;
+    const agency: AgencyResponse | undefined = rawAgency as AgencyResponse | undefined;
+    const branding = brandingRes.ok ? brandingRes.data : null;
 
     const address = agency?.addresses?.[0]?.address;
     const addressLine = address
@@ -48,15 +46,20 @@ export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderDat
       : null;
 
     const contact = agency?.contacts?.[0];
+    const brandingInfo = branding as {
+      trade_name?: string;
+      company_name?: string;
+      logo_url?: string | null;
+    } | null;
 
     return {
-      companyName: branding?.trade_name || branding?.company_name || agency?.trade_name || 'Empresa',
+      companyName: brandingInfo?.trade_name || brandingInfo?.company_name || agency?.trade_name || 'Empresa',
       legalName: agency?.legal_name ?? null,
       cnpj: agency?.cnpj ?? null,
       phone: contact?.phone ?? null,
       email: contact?.email ?? null,
       address: addressLine,
-      logoUrl: branding?.logo_url ?? null,
+      logoUrl: brandingInfo?.logo_url ?? null,
     };
   } catch (error) {
     console.error('[reportPrintHeader] Erro ao carregar dados da empresa:', error);

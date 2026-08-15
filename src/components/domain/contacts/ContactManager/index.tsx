@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Search, User, Phone, Mail, Smartphone, X, Edit2, Loader2, Check } from 'lucide-react';
 import { maskPhone } from '@/utils/masks';
+import { getOwnerContactSuggestionsAction } from '@/server/actions/owner';
+import { getTenantContactSuggestionsAction } from '@/server/actions/tenant';
+import { getAgencyContactSuggestionsAction } from '@/server/actions/agency';
 
 interface Contact {
   id?: string;
@@ -53,12 +56,14 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   const fetchContacts = useCallback(async (search: string = '') => {
     setIsLoadingList(true);
     try {
-      const query = search ? `?search=${search}` : '';
-      const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/${resourceType}/suggestions/contacts${query}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setAvailableContacts(data.data);
+      let result;
+      if (resourceType === 'owners') result = await getOwnerContactSuggestionsAction(search);
+      else if (resourceType === 'tenants') result = await getTenantContactSuggestionsAction(search);
+      else if (resourceType === 'agencies') result = await getAgencyContactSuggestionsAction(search);
+      else return;
+
+      if (result.ok) {
+        setAvailableContacts((result.data || []) as Contact[]);
       }
     } catch (error) {
       console.error(error);

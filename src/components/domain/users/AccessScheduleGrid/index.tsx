@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import Checkbox from '@/components/ui/Checkbox';
+import { getUserScheduleAction } from '@/server/actions/user';
 
 export interface AccessScheduleRow {
   day_of_week: number; // 0=Domingo ... 6=Sábado (Date.getDay())
@@ -77,13 +78,9 @@ export default function AccessScheduleGrid({
 
     (async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_URL_API}/users/${userId}/schedule`,
-          { cache: 'no-store' }
-        );
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) onChange(json.data ?? []);
+        const result = await getUserScheduleAction(userId);
+        if (!result.ok) throw new Error(result.error || `Erro ao carregar a jornada`);
+        if (!cancelled) onChange(result.data ?? []);
       } catch (e: any) {
         if (!cancelled) setError(e.message || 'Falha ao carregar a jornada');
       } finally {

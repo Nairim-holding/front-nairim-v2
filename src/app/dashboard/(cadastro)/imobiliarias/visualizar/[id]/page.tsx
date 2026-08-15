@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
@@ -10,15 +10,18 @@ import {
   Hash, Globe, Building, MapPin as MapPinIcon, CheckCircle
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { getAgencyByIdAction } from '@/server/actions/agency';
 
 export default function VisualizarImobiliariaPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const transformData = (apiData: any) => {
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     const address = apiData.addresses?.[0]?.address || {};
-    
+
     return {
       trade_name: apiData.trade_name || '',
       legal_name: apiData.legal_name || '',
@@ -35,13 +38,13 @@ export default function VisualizarImobiliariaPage() {
       country: address.country || 'Brasil',
       complement: address.complement || '',
       contacts: apiData.contacts?.map((c: any) => ({
-        contact: c.contact?.contact || c.contact || '', 
+        contact: c.contact?.contact || c.contact || '',
         phone: c.contact?.phone || c.phone || '',
         cellphone: c.contact?.cellphone || c.cellphone || '',
         email: c.contact?.email || c.email || '',
       })) || []
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -144,6 +147,7 @@ export default function VisualizarImobiliariaPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getAgencyByIdAction}
       transformData={transformData}
     />
   );

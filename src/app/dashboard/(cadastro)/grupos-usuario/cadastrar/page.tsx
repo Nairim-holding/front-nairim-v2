@@ -8,6 +8,7 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import PermissionMatrix from '@/components/domain/userGroups/PermissionMatrix';
 import { FormStep } from '@/types/types';
 import { Users, Tag, ShieldCheck } from 'lucide-react';
+import { createUserGroupAction, upsertUserGroupPermissionsAction } from '@/server/actions/user-group';
 
 /** Converte o estado da matriz no payload de PUT /user-groups/:id/permissions */
 function toPermissionsPayload(state: any) {
@@ -30,45 +31,26 @@ export default function CadastrarGrupoUsuarioPage() {
 
   const handleSubmit = async (data: any) => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-
       // 1. Cria o grupo
-      const response = await fetch(`${API_URL}/user-groups`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: data.description }),
-      });
+      const result = await createUserGroupAction({ description: data.description });
 
-      const responseText = await response.text();
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch {
-        throw new Error('Resposta inválida do servidor');
-      }
-
-      if (!response.ok) {
-        if (response.status === 409) {
+      if (!result.ok) {
+        if (result.status === 409) {
           throw new Error('Grupo de usuário já existe');
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || 'Erro ao criar grupo de usuário');
       }
 
       // 2. Com o id em mãos, grava as diretivas de acesso
-      const groupId = result?.data?.id;
+      const groupId = result.data.id;
       const permissions = toPermissionsPayload(data.permissions);
 
       if (groupId && permissions.length > 0) {
-        const permRes = await fetch(`${API_URL}/user-groups/${groupId}/permissions`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ permissions }),
-        });
+        const permResult = await upsertUserGroupPermissionsAction(groupId, { permissions });
 
-        if (!permRes.ok) {
+        if (!permResult.ok) {
           // O grupo foi criado; avisa que só as diretivas falharam
-          const permText = await permRes.text();
-          console.error('❌ Falha ao salvar diretivas:', permText);
+          console.error('❌ Falha ao salvar diretivas:', permResult.error);
           throw new Error(
             'Grupo criado, mas as diretivas de acesso não foram salvas. Edite o grupo para configurá-las.'
           );

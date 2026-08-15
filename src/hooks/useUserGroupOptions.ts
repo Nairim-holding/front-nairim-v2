@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import type { Option } from '@/types/types';
+import { listUserGroupsAction } from '@/server/actions/user-group';
 
 /**
  * Opções de Grupo de Usuário para o select do cadastro de administrador.
@@ -15,20 +15,13 @@ export function useUserGroupOptions() {
 
     (async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_URL_API}/user-groups?limit=100&sort[description]=asc`,
-          { cache: 'no-store' }
-        );
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-
-        const json = await res.json();
-        // A listagem responde { data, count, totalPages, currentPage }
-        const rows: any[] = json?.data ?? json?.data?.items ?? [];
+        const result = await listUserGroupsAction({ limit: '100', 'sort[description]': 'asc' });
+        if (!result.ok) throw new Error(result.error);
 
         if (!cancelled) {
           setOptions([
             { label: 'Sem grupo', value: '' },
-            ...rows.map((g) => ({ label: g.description, value: g.id })),
+            ...result.data.data.map((g) => ({ label: g.description, value: g.id })),
           ]);
         }
       } catch (error) {

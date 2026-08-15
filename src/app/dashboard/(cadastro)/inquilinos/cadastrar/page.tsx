@@ -7,6 +7,7 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { createTenantAction, getNextTenantInternalCodeAction } from '@/server/actions/tenant';
 import {
   User, MapPin, FileText, Hash,
   Briefcase, Heart, Globe, Phone,
@@ -51,16 +52,9 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
   useEffect(() => {
     const fetchNextInternalCode = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_URL_API;
-        const response = await fetch(`${API_URL}/tenants/next-internal-code`);
-
-        if (response.ok) {
-          const data = await response.json();
-          const nextCode = data?.data?.next_internal_code;
-          setGeneratedInternalCode(nextCode ? String(nextCode) : '1');
-        } else {
-          setGeneratedInternalCode('1');
-        }
+        const result = await getNextTenantInternalCodeAction();
+        const nextCode = result.ok ? result.data?.next_internal_code : undefined;
+        setGeneratedInternalCode(nextCode ? String(nextCode) : '1');
       } catch (error) {
         console.error('Erro ao buscar próximo código interno:', error);
         setGeneratedInternalCode('1');
@@ -169,27 +163,20 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
         formattedData.cpf = null;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/tenants`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await createTenantAction(formattedData);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          if (result.message?.includes('CPF')) throw new Error('CPF já cadastrado');
-          if (result.message?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
-          if (result.message?.includes('internal_code') || result.message?.includes('Código Interno')) {
+      if (!result.ok) {
+        if (result.status === 409) {
+          if (result.error?.includes('CPF')) throw new Error('CPF já cadastrado');
+          if (result.error?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
+          if (result.error?.includes('internal_code') || result.error?.includes('Código Interno')) {
             throw new Error('Código Interno já está em uso por outro inquilino');
           }
         }
-        if (response.status === 400 && result.errors) {
-            throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
+        if (result.status === 400 && result.errors) {
+          throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       return result;

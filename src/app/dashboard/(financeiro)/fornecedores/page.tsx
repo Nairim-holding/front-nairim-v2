@@ -15,6 +15,13 @@ import {
   MapPin, Phone, FileText, Hash,
   Building as BuildingIcon, Globe, MapPin as MapPinIcon, User
 } from 'lucide-react';
+import {
+  listSuppliersAction,
+  deleteFinancialSupplierAction,
+  createFinancialSupplierAction,
+  updateFinancialSupplierAction,
+  getSupplierByIdAction,
+} from '@/server/actions/financial-supplier';
 
 type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 
@@ -37,13 +44,11 @@ export default function FornecedoresPage() {
   // Estado para armazenar o código interno gerado automaticamente
   const [generatedInternalCode, setGeneratedInternalCode] = useState<string>('');
 
-  const baseURL = process.env.NEXT_PUBLIC_URL_API;
-
   const fetchData = async () => {
     try {
-      const res = await fetch(`${baseURL}/financial-supplier?limit=1000`);
-      const data = await res.json();
-      setSuppliers(data?.data || data || []);
+      const result = await listSuppliersAction({ limit: 100 });
+      if (!result.ok) throw new Error(result.error);
+      setSuppliers(result.data?.data || result.data || []);
     } catch {
       showMessage("Erro ao carregar os contatos.", "error");
     } finally {
@@ -61,17 +66,16 @@ export default function FornecedoresPage() {
     const fetchLastSupplier = async () => {
       try {
         // Buscar todos os fornecedores ordenados por código interno descendente
-        const response = await fetch(`${baseURL}/financial-supplier`);
-        
+        const response = await listSuppliersAction({});
+
         if (response.ok) {
-          const data = await response.json();
-          const suppliersList = data.data || data || [];
+          const suppliersList = response.data?.data || response.data || [];
 
           if (Array.isArray(suppliersList) && suppliersList.length > 0) {
             const numericCodes = suppliersList
               .map((s: any) => parseInt(s.internal_code, 10))
               .filter((n: number) => !isNaN(n));
-            
+
             if (numericCodes.length > 0) {
               const maxCode = Math.max(...numericCodes);
               setGeneratedInternalCode(String(maxCode + 1));
@@ -91,7 +95,7 @@ export default function FornecedoresPage() {
     if (formMode === 'CREATE') {
       fetchLastSupplier();
     }
-  }, [formMode, baseURL]);
+  }, [formMode]);
 
   const normalizeText = (text: string) => 
     text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
@@ -140,10 +144,9 @@ export default function FornecedoresPage() {
       `Tem certeza que deseja excluir "${name}"?`,
       async () => {
         try {
-          const res = await fetch(`${baseURL}/financial-supplier/${id}`, { method: 'DELETE' });
-          if (!res.ok) {
-            const result = await res.json().catch(() => ({}));
-            throw new Error(result.message || `Erro ao excluir Contato.`);
+          const result = await deleteFinancialSupplierAction(id);
+          if (!result.ok) {
+            throw new Error(result.error || `Erro ao excluir Contato.`);
           }
           
           showMessage("Excluído com sucesso!", "success");
@@ -481,6 +484,19 @@ export default function FornecedoresPage() {
                       onFieldChange={handleFieldChange}
                       transformData={transformDataForLoad}
                       transformResponse={transformDataForSubmit}
+                      fetchResource={getSupplierByIdAction}
+                      onSubmit={async (values) => {
+                        const payload = transformDataForSubmit(values);
+                        if (formMode === 'CREATE') {
+                          const result = await createFinancialSupplierAction(payload);
+                          if (!result.ok) throw new Error(result.error || 'Erro ao criar Contato.');
+                          return result.data;
+                        }
+                        if (!selectedId) throw new Error('ID é obrigatório');
+                        const result = await updateFinancialSupplierAction(selectedId, payload);
+                        if (!result.ok) throw new Error(result.error || 'Erro ao atualizar Contato.');
+                        return result.data;
+                      }}
                       onSubmitSuccess={() => {
                         showMessage(`Contato ${formMode === 'CREATE' ? 'criado' : 'atualizado'} com sucesso!`, 'success');
                         closeForm();

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import DynamicForm from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { useParams, useRouter } from 'next/navigation';
@@ -33,6 +33,8 @@ import {
   profilePayload,
   schedulePayload,
 } from '../../_lib/fields';
+import { getUserByIdAction, updateUserAction, setUserScheduleAction } from '@/server/actions/user';
+import { formatLocalDate } from '@/shared/utils/date-utils';
 
 export default function EditarAdministradorPage() {
   const params = useParams();
@@ -202,12 +204,16 @@ export default function EditarAdministradorPage() {
     [id, isSuperAdmin, userGroupOptions]
   );
 
-  const transformData = (apiResponse: any) => {
+  // `useCallback`: está nas dependências do useEffect de fetch do DynamicForm
+  // — sem memoizar, uma função nova a cada render reexecutava o fetch em
+  // loop (mais visível logo após salvar, durante os re-renders da navegação
+  // de volta), empilhando toasts de erro.
+  const transformData = useCallback((apiResponse: any) => {
     const userData = apiResponse.data || apiResponse;
     return {
       name: userData.name || '',
       email: userData.email || '',
-      birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : '',
+      birth_date: userData.birth_date ? formatLocalDate(userData.birth_date) : '',
       gender: userData.gender || 'MALE',
       password: '', // Inicia sempre vazio
       password_confirm: '',
@@ -215,7 +221,7 @@ export default function EditarAdministradorPage() {
       ...profileFormValues(userData),
       ...(isSuperAdmin && { role: userData.role || 'ADMIN' }),
     };
-  };
+  }, [isSuperAdmin]);
 
   const transformPayload = (data: any) => {
     // `photo` sobe pela rota própria; `access_schedules` vai por PUT .../schedule;
@@ -244,16 +250,28 @@ export default function EditarAdministradorPage() {
     return payload;
   };
 
+  const handleSubmit = async (data: any) => {
+    const payload = transformPayload(data);
+    const result = await updateUserAction(id, payload);
+
+    if (!result.ok) {
+      if (result.status === 409) throw new Error('E-mail já cadastrado para outro usuário');
+      throw new Error(result.error || 'Erro ao atualizar administrador');
+    }
+
+    return result;
+  };
+
   const onSubmitSuccess = async () => {
     const pending = pendingScheduleRef.current;
 
     if (pending) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_URL_API}/users/${id}/schedule`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(schedulePayload(pending)),
-        });
+        const { schedules } = schedulePayload(pending);
+        const scheduleResult = await setUserScheduleAction(id, schedules);
+        if (!scheduleResult.ok) {
+          console.error('Dados salvos, mas a jornada não foi gravada:', scheduleResult.error);
+        }
       } catch (e) {
         console.error('Dados salvos, mas a jornada não foi gravada:', e);
       } finally {
@@ -273,8 +291,9 @@ export default function EditarAdministradorPage() {
       mode="edit"
       id={id}
       steps={steps}
+      fetchResource={getUserByIdAction}
       transformData={transformData}
-      transformResponse={transformPayload}
+      onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
     />
   );

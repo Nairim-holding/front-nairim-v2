@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+import { FilterType, DashboardData, getDefaultDateRange } from "@/lib/dashboard";
+import { getDashboardSectionData } from "@/server/queries/dashboard";
+import DashboardContent from "@/components/domain/dashboard/DashboardClient";
 
 export const metadata: Metadata = { title: 'Dashboard' };
-import { fetchSection, FilterType, DashboardData } from "@/lib/dashboard";
-import DashboardContent from "@/components/domain/dashboard/DashboardClient";
 
 interface PageProps {
   searchParams: Promise<{ startDate?: string; endDate?: string }>;
@@ -12,15 +12,15 @@ interface PageProps {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
-  const { startDate, endDate } = params;
-
-  const cookieStore = await cookies();
-  const token = cookieStore.get("authToken")?.value;
+  const defaults = getDefaultDateRange();
+  const startDate = params.startDate ?? defaults.start;
+  const endDate   = params.endDate   ?? defaults.end;
 
   let initialFinancial: DashboardData["financial"] = null;
 
   try {
-    initialFinancial = await fetchSection("financial", { startDate, endDate, token });
+    initialFinancial =
+      (await getDashboardSectionData("financial", { startDate, endDate })) as DashboardData["financial"];
   } catch (err) {
     console.error("[SSR] Erro ao pré-carregar financial:", err);
   }

@@ -4,11 +4,14 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useMessageContext } from '@/contexts/MessageContext';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrencyRealtime } from '@/utils/masks';
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from '@/utils/displayFormatters';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getCancellationPreviewAction, cancelLeaseAction } from '@/server/actions/lease';
+import { listCategoriesAction } from '@/server/actions/financial-category';
+import { listSubcategoriesAction } from '@/server/actions/financial-subcategory';
+import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
+import { listCentersAction } from '@/server/actions/financial-center';
+import { listSuppliersAction } from '@/server/actions/financial-supplier';
 
 interface Option {
   label: string;
@@ -115,13 +118,11 @@ export default function LeaseCancellationModal({
     setDateError('');
     setLoadingPreview(true);
     try {
-      const res = await authFetch(`${API_URL}/leases/${leaseId}/cancellation-preview?date=${date}`);
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.message || 'Erro ao carregar os lançamentos do período.');
+      const result = await getCancellationPreviewAction(leaseId, date);
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao carregar os lançamentos do período.');
       }
-      const json = await res.json();
-      const txs: PreviewTransaction[] = json.data?.transactions ?? [];
+      const txs = (result.data?.transactions ?? []) as PreviewTransaction[];
       setTransactions(txs);
       // Pendentes marcados; concluídos desmarcados por padrão (proteção).
       setSelectedIds(new Set(txs.filter((t) => t.status !== 'COMPLETED').map((t) => t.id)));
@@ -145,32 +146,35 @@ export default function LeaseCancellationModal({
     if (optionsLoaded) return;
     try {
       const [catRes, subRes, instRes, centRes, supRes] = await Promise.all([
-        authFetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`),
-        authFetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`),
-        authFetch(`${API_URL}/financial-institution?limit=1000`),
-        authFetch(`${API_URL}/financial-center?limit=1000&filter[is_active]=true`),
-        authFetch(`${API_URL}/financial-supplier?limit=1000`),
-      ]);
-      const [cats, subs, insts, cents, sups] = await Promise.all([
-        catRes.json(), subRes.json(), instRes.json(), centRes.json(), supRes.json(),
+        listCategoriesAction({ limit: 100, 'filter[is_active]': 'true' }),
+        listSubcategoriesAction({ limit: 100, 'filter[is_active]': 'true' }),
+        listFinancialInstitutionsAction({ limit: 100 }),
+        listCentersAction({ limit: 100, 'filter[is_active]': 'true' }),
+        listSuppliersAction({ limit: 100 }),
       ]);
 
-      const allCats = cats?.data ?? cats ?? [];
+      const cats = catRes.ok ? (catRes.data?.data || catRes.data || []) : [];
+      const subs = subRes.ok ? (subRes.data?.data || subRes.data || []) : [];
+      const insts = instRes.ok ? (instRes.data?.data || instRes.data || []) : [];
+      const cents = centRes.ok ? (centRes.data?.data || centRes.data || []) : [];
+      const sups = supRes.ok ? (supRes.data?.data || supRes.data || []) : [];
+
+      const allCats = cats;
       setIncomeCategories(
         allCats.filter((c: any) => c.type === 'INCOME').map((c: any) => ({ label: c.name, value: c.id })),
       );
       const subMap: Record<string, Option[]> = {};
-      (subs?.data ?? subs ?? []).forEach((s: any) => {
+      (subs ?? []).forEach((s: any) => {
         if (!subMap[s.category_id]) subMap[s.category_id] = [];
         subMap[s.category_id].push({ label: s.name, value: s.id });
       });
       setSubcategoriesByCat(subMap);
-      setInstitutions((insts?.data ?? insts ?? []).map((i: any) => ({ label: i.name, value: i.id })));
+      setInstitutions((insts ?? []).map((i: any) => ({ label: i.name, value: i.id })));
       setIncomeCenters(
-        (cents?.data ?? cents ?? []).filter((c: any) => c.type === 'INCOME').map((c: any) => ({ label: c.name, value: c.id })),
+        (cents ?? []).filter((c: any) => c.type === 'INCOME').map((c: any) => ({ label: c.name, value: c.id })),
       );
       setSuppliers(
-        (sups?.data ?? sups ?? []).map((s: any) => ({ label: s.legal_name || s.name || 'Sem nome', value: s.id })),
+        (sups ?? []).map((s: any) => ({ label: s.legal_name || s.name || 'Sem nome', value: s.id })),
       );
       setOptionsLoaded(true);
     } catch {
@@ -211,13 +215,9 @@ export default function LeaseCancellationModal({
           description: `Encargo de cancelamento - Contrato ${contractNumber ?? ''}`.trim(),
         };
       }
-      const res = await authFetch(`${API_URL}/leases/${leaseId}/cancel`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.message || 'Erro ao cancelar a locação.');
+      const result = await cancelLeaseAction(leaseId, body);
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao cancelar a locação.');
       }
       showMessage('Locação cancelada com sucesso.', 'success');
       onCancelled();

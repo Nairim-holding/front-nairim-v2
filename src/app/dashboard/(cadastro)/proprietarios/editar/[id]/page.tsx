@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { updateOwnerAction, getOwnerByIdAction } from '@/server/actions/owner';
 import {
   User, MapPin, Phone, FileText, Hash,
   Briefcase, Heart, Globe,
@@ -130,23 +131,16 @@ export default function EditarProprietarioPage() {
         formattedData.cpf = null;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/owners/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await updateOwnerAction(id, formattedData);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 400 && result.errors) throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
-        if (response.status === 409) {
-          if (result.message?.includes('CPF')) throw new Error('CPF já cadastrado');
-          if (result.message?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
-          if (result.message?.includes('internal_code')) throw new Error('Código Interno já está em uso por outro proprietário');
+      if (!result.ok) {
+        if (result.status === 400 && result.errors) throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
+        if (result.status === 409) {
+          if (result.error?.includes('CPF')) throw new Error('CPF já cadastrado');
+          if (result.error?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
+          if (result.error?.includes('internal_code')) throw new Error('Código Interno já está em uso por outro proprietário');
         }
-        throw new Error(result.message || 'Erro ao atualizar');
+        throw new Error(result.error || 'Erro ao atualizar');
       }
 
       return result;
@@ -336,6 +330,7 @@ export default function EditarProprietarioPage() {
       mode="edit"
       id={id}
       steps={steps}
+      fetchResource={getOwnerByIdAction}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
       onFieldChange={handleFieldChange}

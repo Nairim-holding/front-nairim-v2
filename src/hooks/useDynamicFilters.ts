@@ -19,12 +19,12 @@ export interface DynamicFilter {
 }
 
 export interface FilterOperators {
-  string: string[];
-  number: string[];
-  date: string[];
-  boolean: string[];
-  enum: string[];
-  select: string[]; // ADICIONADO
+  string?: string[];
+  number?: string[];
+  date?: string[];
+  boolean?: string[];
+  enum?: string[];
+  select?: string[]; // ADICIONADO
 }
 
 export interface DynamicFiltersResponse {
@@ -34,7 +34,11 @@ export interface DynamicFiltersResponse {
   searchFields: string[];
 }
 
-export const useDynamicFilters = (endpoint: string, appliedFilters?: Record<string, any>) => {
+export const useDynamicFilters = (
+  endpoint: string,
+  appliedFilters?: Record<string, any>,
+  fetcher?: (appliedFilters?: Record<string, any>) => Promise<DynamicFiltersResponse>,
+) => {
   const [filters, setFilters] = useState<DynamicFilter[]>([]);
   const [operators, setOperators] = useState<FilterOperators | null>(null);
   const [searchFields, setSearchFields] = useState<string[]>([]);
@@ -44,69 +48,28 @@ export const useDynamicFilters = (endpoint: string, appliedFilters?: Record<stri
   const fetchFilters = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
-    try {
-      // Enviar filtros atuais para o endpoint para obter opções contextuais
-      const params = new URLSearchParams();
-      
-      if (appliedFilters && Object.keys(appliedFilters).length > 0) {
-        console.log('📤 Sending applied filters to backend:', appliedFilters);
-        
-        Object.entries(appliedFilters).forEach(([key, value]) => {
-          if (value === undefined || value === null || value === '') return;
 
-          // Filtros multi-seleção: chave repetida, igual ao formato aceito pelo endpoint de listagem
-          if (Array.isArray(value)) {
-            value.forEach(v => params.append(key, String(v)));
-          }
-          // Para objetos como date ranges
-          else if (typeof value === 'object' && value.from && value.to) {
-            // Enviar como JSON string para o backend parsear
-            params.append(key, JSON.stringify(value));
-          }
-          // Para valores simples
-          else if (typeof value === 'string') {
-            params.append(key, value);
-          }
-        });
+    try {
+      if (!fetcher) {
+        throw new Error('useDynamicFilters: fetcher ausente — filtros requerem Server Action');
       }
-      
-      const url = `${process.env.NEXT_PUBLIC_URL_API}${endpoint}${
-        params.toString() ? `?${params.toString()}` : ''
-      }`;
-      
-      console.log('🔄 Fetching contextual filters from:', url);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('Erro ao carregar filtros');
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Filtrar campos indesejados (id e role) se for usuários
-        const isUsersEndpoint = endpoint.includes('users');
-        const filteredFilters = (data.data.filters || []).filter((filter: DynamicFilter) => 
-          isUsersEndpoint 
-            ? filter.field !== 'id' && filter.field !== 'role'
-            : true
-        );
-    
-        setFilters(filteredFilters);
-        setOperators(data.data.operators || null);
-        setSearchFields(data.data.searchFields || []);
-      } else {
-        throw new Error(data.message || 'Erro ao carregar filtros');
-      }
+      const result = await fetcher(appliedFilters);
+      const isUsersEndpoint = endpoint.includes('users');
+      const filteredFilters = (result.filters || []).filter((filter: DynamicFilter) =>
+        isUsersEndpoint ? filter.field !== 'id' && filter.field !== 'role' : true,
+      );
+
+      setFilters(filteredFilters);
+      setOperators(result.operators || null);
+      setSearchFields(result.searchFields || []);
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       console.error('❌ Erro ao carregar filtros:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [endpoint, appliedFilters]);
+  }, [endpoint, appliedFilters, fetcher]);
 
   useEffect(() => {
     fetchFilters();

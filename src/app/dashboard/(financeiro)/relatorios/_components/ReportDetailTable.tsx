@@ -22,8 +22,13 @@ export type DetailSortField =
 
 export type DetailSortDir = 'asc' | 'desc';
 
+/**
+ * Ordem de colunas padronizada com a tela de Lançamentos Financeiros (Tarefa
+ * 4.3-F do guia de correções): Data evento, Data efetiva, Categoria,
+ * Subcategoria, Instituição, Cartão, Contato, Descrição, Centro, Valor,
+ * Status — antes Descrição vinha primeiro e Status antes de Valor.
+ */
 const DETAIL_COLUMNS: { field: DetailSortField; label: string; align?: 'right' }[] = [
-  { field: 'description', label: 'Descrição' },
   { field: 'event_date', label: 'Data Evento' },
   { field: 'effective_date', label: 'Data Efetiva' },
   { field: 'category', label: 'Categoria' },
@@ -31,9 +36,10 @@ const DETAIL_COLUMNS: { field: DetailSortField; label: string; align?: 'right' }
   { field: 'institution', label: 'Instituição' },
   { field: 'card', label: 'Cartão' },
   { field: 'contact', label: 'Contato' },
+  { field: 'description', label: 'Descrição' },
   { field: 'center', label: 'Centro' },
-  { field: 'status', label: 'Status' },
   { field: 'amount', label: 'Valor', align: 'right' },
+  { field: 'status', label: 'Status' },
 ];
 
 function detailValueOf(item: ReportItemRow, field: DetailSortField): string | number {
@@ -99,7 +105,6 @@ export function ReportDetailRows({ items, rowClassName = '' }: { items: ReportIt
     <>
       {items.map((item) => (
         <tr key={item.id} className={`text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle ${rowClassName}`}>
-          <td className="px-3 py-1.5">{item.description}</td>
           <td className="px-3 py-1.5">{formatDate(item.event_date)}</td>
           <td className="px-3 py-1.5">{formatDate(item.effective_date)}</td>
           <td className="px-3 py-1.5">{item.category?.name ?? '-'}</td>
@@ -107,9 +112,10 @@ export function ReportDetailRows({ items, rowClassName = '' }: { items: ReportIt
           <td className="px-3 py-1.5">{item.financialInstitution?.name ?? '-'}</td>
           <td className="px-3 py-1.5">{item.card?.name ?? '-'}</td>
           <td className="px-3 py-1.5">{item.supplier?.name ?? '-'}</td>
+          <td className="px-3 py-1.5">{item.description}</td>
           <td className="px-3 py-1.5">{item.center?.name ?? '-'}</td>
-          <td className="px-3 py-1.5">{STATUS_LABEL[item.status] ?? item.status}</td>
           <td className="px-3 py-1.5 text-right font-medium text-content">{formatCurrency(item.amount)}</td>
+          <td className="px-3 py-1.5">{STATUS_LABEL[item.status] ?? item.status}</td>
         </tr>
       ))}
     </>

@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUploadSSE } from '@/hooks/useUploadSSE';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import LeaseCancellationModal from '@/components/domain/leases/LeaseCancellationModal';
@@ -14,6 +13,11 @@ import {
   FileText, Calendar, DollarSign, User, Building,
   Home, File as FileIcon, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload
 } from 'lucide-react';
+import { updateLeaseAction, getLeaseByIdAction, updateLeaseDocumentsAction } from '@/server/actions/lease';
+import { listPropertiesAction, getPropertyByIdAction } from '@/server/actions/property';
+import { listTenantsAction } from '@/server/actions/tenant';
+import { listAgenciesAction } from '@/server/actions/agency';
+import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
 
 // Extrai um nome de arquivo legível do caminho salvo (remove diretórios e o
 // prefixo de timestamp gerado no upload). Espelha o padrão de Imóveis.
@@ -64,8 +68,7 @@ export default function EditarLocacaoPage() {
   const id = params.id as string;
   
   const { showMessage } = useMessageContext();
-  const { user, token } = useAuth();
-  const { uploadAndTrack } = useUploadSSE();
+  const { user } = useAuth();
   const router = useRouter();
 
   // Documentos originais (mídias) carregados da API — usados para calcular quais
@@ -88,25 +91,20 @@ export default function EditarLocacaoPage() {
     const fetchData = async () => {
       try {
         const [propertiesRes, tenantsRes, agenciesRes, institutionsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=50`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/agencies?limit=1000`),
+          listPropertiesAction({ limit: 50 }),
+          listTenantsAction({ limit: 100 }),
+          listAgenciesAction({ limit: 100 }),
           // Só instituições ativas — mesmo critério do filtro de Lançamentos.
           // A instituição já vinculada à locação é reinserida abaixo, mesmo inativa.
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000&filter[is_active]=true`),
+          listFinancialInstitutionsAction({ limit: 100, 'filter[is_active]': 'true' }),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
 
-        const propertiesData = await propertiesRes.json();
-        const tenantsData = await tenantsRes.json();
-        const agenciesData = agenciesRes.ok ? await agenciesRes.json() : { data: [] };
-        const institutionsData = institutionsRes.ok ? await institutionsRes.json() : { data: [] };
-
-        setProperties(propertiesData.data || propertiesData || []);
-        setTenants(tenantsData.data || tenantsData || []);
-        setAgencies(agenciesData.data || agenciesData || []);
-        setInstitutions(institutionsData.data || institutionsData || []);
+        setProperties(propertiesRes.data?.data || propertiesRes.data || []);
+        setTenants(tenantsRes.data?.data || tenantsRes.data || []);
+        setAgencies(agenciesRes.ok ? (agenciesRes.data?.data || agenciesRes.data || []) : []);
+        setInstitutions(institutionsRes.ok ? (institutionsRes.data?.data || institutionsRes.data || []) : []);
       } catch (error) {
         showMessage('Erro ao carregar dados', 'error');
       } finally {
@@ -120,11 +118,10 @@ export default function EditarLocacaoPage() {
     if (fieldName === 'property_id' && value) {
       try {
         showMessage('Carregando dados do imóvel...', 'info');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties/${value}`);
-        if (!response.ok) throw new Error('Erro ao buscar dados do imóvel');
+        const result = await getPropertyByIdAction(value);
+        if (!result.ok) throw new Error('Erro ao buscar dados do imóvel');
 
-        const result = await response.json();
-        const property = result.data || result;
+        const property = result.data as any;
         const propertyValues = property.values?.[0] || {};
         
         const propertyAgency = property.agency_id ? agencies.find((a) => a.id === property.agency_id) : null;
@@ -264,28 +261,19 @@ export default function EditarLocacaoPage() {
         formattedData.cancellation_justification = data.cancellation_justification || null;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/leases/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await updateLeaseAction(id, formattedData);
 
-      const responseText = await response.text();
-      let result;
-      try { result = JSON.parse(responseText); } catch (e) { throw new Error('Resposta inválida do servidor'); }
-
-      if (!response.ok) {
-        if (response.status === 400 && result.errors) {
-          const validationErrors = Object.entries(result.errors).map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`).join('; ');
+      if (!result.ok) {
+        if (result.status === 400 && (result as any).errors) {
+          const validationErrors = Object.entries((result as any).errors).map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`).join('; ');
           throw new Error(`Erros de validação: ${validationErrors}`);
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       // Sincroniza as mídias da locação (arquivos novos + remoções), reaproveitando
-      // o mesmo mecanismo de upload de Imóveis (useUploadSSE → multipart). Só dispara
-      // quando há mudança. Falha aqui não invalida a locação já salva.
+      // o mesmo mecanismo da edição de Imóveis (updateLeaseDocumentsAction → multipart).
+      // Só dispara quando há mudança. Falha aqui não invalida a locação já salva.
       const currentDocs: any[] = Array.isArray(data.arquivosLocacao) ? data.arquivosLocacao : [];
       const newFiles = currentDocs.filter((f: any) => f instanceof globalThis.File) as File[];
       const keptIds = new Set(
@@ -302,13 +290,7 @@ export default function EditarLocacaoPage() {
           if (removedIds.length > 0) fd.append('removedDocuments', JSON.stringify(removedIds));
           fd.append('userId', user?.id ?? '');
 
-          await uploadAndTrack({
-            url: `${API_URL}/leases/${id}/documents`,
-            method: 'PUT',
-            body: fd,
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-            compressImages: false,
-          });
+          await updateLeaseDocumentsAction(id, fd);
         } catch (mediaError: any) {
           showMessage(
             `Locação salva, mas houve erro ao sincronizar os arquivos: ${mediaError?.message ?? 'falha no upload'}`,
@@ -336,7 +318,7 @@ export default function EditarLocacaoPage() {
 
     originalDocumentsRef.current = Array.isArray(apiData.documents) ? apiData.documents : [];
 
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString: string | Date) => {
       if (!dateString) return '';
       return new Date(dateString).toISOString().split('T')[0];
     };
@@ -381,11 +363,11 @@ export default function EditarLocacaoPage() {
       cancellation_justification: apiData.cancellation_justification || '',
       
       property_tax_cash: apiData.property_tax_cash ? formatMoney(apiData.property_tax_cash) : '',
-      property_tax_cash_due_date: apiData.property_tax_cash_due_date ? apiData.property_tax_cash_due_date.split('T')[0] : '',
+      property_tax_cash_due_date: apiData.property_tax_cash_due_date ? formatDate(apiData.property_tax_cash_due_date) : '',
       property_tax_first_installment: apiData.property_tax_first_installment ? formatMoney(apiData.property_tax_first_installment) : '',
-      property_tax_first_installment_due_date: apiData.property_tax_first_installment_due_date ? apiData.property_tax_first_installment_due_date.split('T')[0] : '',
+      property_tax_first_installment_due_date: apiData.property_tax_first_installment_due_date ? formatDate(apiData.property_tax_first_installment_due_date) : '',
       property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
-      property_tax_second_installment_due_date: apiData.property_tax_second_installment_due_date ? apiData.property_tax_second_installment_due_date.split('T')[0] : '',
+      property_tax_second_installment_due_date: apiData.property_tax_second_installment_due_date ? formatDate(apiData.property_tax_second_installment_due_date) : '',
       iptu_installments_count: apiData.iptu_installments_count !== null && apiData.iptu_installments_count !== undefined
         ? String(apiData.iptu_installments_count)
         : '',
@@ -810,6 +792,7 @@ export default function EditarLocacaoPage() {
         mode="edit"
         id={id}
         steps={steps}
+        fetchResource={getLeaseByIdAction}
         onSubmit={handleSubmit}
         onSubmitSuccess={onSubmitSuccess}
         onFieldChange={handleFieldChange}

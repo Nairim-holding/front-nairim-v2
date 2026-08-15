@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { getTokenMaxAgeSeconds } from '@/utils/jwt';
+import { listCompaniesAction, switchCompanyAction } from '@/server/actions/company';
 import Image from 'next/image';
 
 interface Company {
@@ -76,14 +77,12 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
   const [currentSlug, setCurrentSlug] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Busca a lista de empresas — endpoint /companies retorna formato flat { data: [...], count }
+  // Busca a lista de empresas — listaCompaniesAction retorna formato flat { data: [...], count }
   const fetchCompanies = useCallback(() => {
-    const API = process.env.NEXT_PUBLIC_URL_API ?? '';
-    fetch(`${API}/companies?limit=100`)
-      .then(r => r.json())
-      .then(j => {
-        // Formato flat: { data: [...], count, totalPages, currentPage }
-        const list = Array.isArray(j.data) ? j.data : [];
+    listCompaniesAction({ limit: 100 })
+      .then(r => {
+        if (!r.ok) { setCompanies([]); return; }
+        const list = Array.isArray(r.data?.data) ? (r.data.data as unknown as Company[]) : [];
         setCompanies(list);
       })
       .catch(() => {});
@@ -118,31 +117,25 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
     document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=7200`;
 
     try {
-      const API = process.env.NEXT_PUBLIC_URL_API ?? '';
-      const res = await fetch(`${API}/company/switch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug }),
-      });
+      const result = await switchCompanyAction(slug);
+      if (!result.ok) throw new Error(result.error ?? 'Erro ao trocar empresa');
 
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.message ?? 'Erro ao trocar empresa');
+      const { token, user } = result.data;
 
-      const { token, user } = json.data;
-
-      // Re-grava o cookie de slug com o max-age real do novo token (o cookie
-      // otimista acima foi setado com um valor provisório antes do token existir)
+      // O cookie de slug foi reescrito no servidor com o max-age do novo token
       const maxAge = getTokenMaxAgeSeconds(token, 12 * 60 * 60);
       document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=${maxAge}`;
 
       // Atualiza sessão com novo JWT (novo company_id)
       login(token, user);
 
-      // Redireciona com slug na URL para identificar a empresa visualmente
-      router.push(`/${slug}/dashboard`);
-      router.refresh();
-
-      showMessage(`Empresa alterada para ${label}`, 'success');
+      // Hard navigation (não router.push/refresh): troca de tenant precisa de
+      // uma requisição 100% nova ao servidor. O App Router cacheia segmentos
+      // de rota no client (Router Cache) sem saber que o cookie de sessão
+      // mudou — router.push podia reaproveitar payload da empresa anterior,
+      // "misturando" dados entre tenants até alguma interação forçar refetch.
+      window.location.href = `/${slug}/dashboard`;
+      return;
     } catch (err) {
       console.error('[CompanySwitcher] Erro ao trocar empresa:', err);
       // Reverte se falhar
@@ -172,11 +165,13 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
     <div ref={containerRef} className="relative mb-3 w-full">
       <button
         onClick={() => {
-          setDropdownOpen(v => {
-            const next = !v;
-            if (next) fetchCompanies();
-            return next;
-          });
+          // Não chamar fetchCompanies (setState) dentro do updater de
+          // setDropdownOpen — React pode invocar esse callback durante a
+          // renderização, causando "Cannot update a component while
+          // rendering a different component".
+          const next = !dropdownOpen;
+          setDropdownOpen(next);
+          if (next) fetchCompanies();
         }}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-ui-border-soft transition-colors duration-200"
       >

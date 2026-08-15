@@ -1,10 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { authFetch } from '@/utils/authFetch';
 import { useMessageContext } from '@/contexts';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getDashboardLayoutAction, saveDashboardLayoutAction } from '@/server/actions/user-preferences';
 
 export interface DashboardLayoutItem {
   i: string;
@@ -32,15 +30,10 @@ export function useDashboardLayout(resource: string, defaultLayout: DashboardLay
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/user-preferences/dashboard-layout?resource=${resource}`);
-        if (response.ok) {
-          const result = await response.json();
+        const result = await getDashboardLayoutAction(resource);
+        if (result.ok) {
           const saved = result.data?.layout;
           if (!cancelled) {
-            // Sem layout salvo, volta ao default. Antes o state anterior era
-            // mantido: ao trocar de `resource` (o bump de versão que aplica um
-            // novo arranjo padrão), o grid continuava exibindo o layout do
-            // resource antigo, e a nova versão parecia não ter efeito.
             setLayout(Array.isArray(saved) && saved.length > 0 ? saved : defaultLayoutRef.current);
           }
         }
@@ -67,12 +60,8 @@ export function useDashboardLayout(resource: string, defaultLayout: DashboardLay
 
       const attemptSave = async (): Promise<void> => {
         try {
-          const response = await authFetch(`${API_URL}/user-preferences/dashboard-layout`, {
-            method: 'POST',
-            body: JSON.stringify({ resource, layout: newLayout }),
-          });
-
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const result = await saveDashboardLayoutAction({ resource, layout: newLayout });
+          if (!result.ok) throw new Error(result.error || `Falha ao salvar layout`);
         } catch (error) {
           attempt++;
           if (attempt < MAX_RETRIES) {

@@ -1,0 +1,131 @@
+'use server';
+
+import { authUseCases } from '@/infra/factories/auth-factory';
+import {
+  loginSchema,
+  changePasswordSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from '@/shared/validators/auth';
+import { type ActionResult, runAction, actionFail } from '@/shared/actions/action-result';
+import {
+  setSessionCookie,
+  clearSessionCookie,
+  getSessionToken,
+  requireSession,
+  getRequestIp,
+} from '@/infra/auth/session';
+import { loginRateLimiter } from '@/infra/security/login-rate-limiter';
+import { InvalidCredentialsError } from '@/core/errors/domain-errors';
+import type { LoginActionResult, RefreshActionResult } from './auth-types';
+
+/**
+ * Server Actions de autenticação (SSR) — substituem os endpoints `/auth/*` do
+ * Express. Os casos de uso (core) são os mesmos; aqui muda só a apresentação:
+ * em vez de handlers HTTP, funções `'use server'` que gravam o cookie de sessão
+ * no servidor via next/headers.
+ *
+ * Camada: server (apresentação). Runtime Node (herdado do core/infra).
+ * Origem: api-nairim-v2/src/routes/auth.ts + AuthController + authRateLimit.
+ */
+
+/**
+ * Autentica e grava o cookie de sessão no servidor.
+ * Preserva o rate limit por (email:ip): 5 falhas → bloqueio de 5 min.
+ * Origem: POST /auth/login.
+ */
+export async function loginAction(input: { email: string; password: string }): Promise<LoginActionResult> {
+  const parsed = loginSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'Erro de validação' };
+  }
+
+  const ip = await getRequestIp();
+  const emailKey = parsed.data.email.toLowerCase().trim();
+
+  const blockedMessage = loginRateLimiter.checkBlocked(emailKey, ip);
+  if (blockedMessage) return { ok: false, message: blockedMessage };
+
+  try {
+    const result = await authUseCases.login.execute(parsed.data);
+    loginRateLimiter.reset(emailKey, ip);
+    await setSessionCookie(result.token, result.user.company_slug || undefined);
+    return { ok: true, token: result.token, user: result.user, slug: result.user.company_slug };
+  } catch (err) {
+    if (err instanceof InvalidCredentialsError) {
+      loginRateLimiter.registerFailure(emailKey, ip);
+      return { ok: false, message: 'Email ou senha incorretos', rateLimit: loginRateLimiter.getStatus(emailKey, ip) };
+    }
+    const failed = actionFail(err);
+    return { ok: false, message: failed.error };
+  }
+}
+
+/**
+ * Renova o JWT de sessão (grace period de 5 min) e regrava o cookie.
+ * Lê o token atual do cookie. Origem: POST /auth/refresh-token.
+ */
+export async function refreshSessionAction(): Promise<RefreshActionResult> {
+  const current = await getSessionToken();
+  if (!current) return { ok: false, message: 'Sessão ausente' };
+  try {
+    const { token } = await authUseCases.refreshToken.execute(current);
+    await setSessionCookie(token);
+    return { ok: true, token };
+  } catch (err) {
+    return { ok: false, message: actionFail(err).error };
+  }
+}
+
+/**
+ * Logout — apaga o cookie de sessão no servidor.
+ * Origem: POST /auth/logout (stateless).
+ */
+export async function logoutAction(): Promise<ActionResult<null>> {
+  return runAction(async () => {
+    await clearSessionCookie();
+    return null;
+  });
+}
+
+/**
+ * Troca a senha do usuário informado, validando a senha atual.
+ * Exige sessão válida (mais forte que o backend, que só exigia Bearer presente).
+ * Origem: POST /auth/change-password/:id.
+ */
+export async function changePasswordAction(
+  userId: string,
+  input: { oldPassword: string; newPassword: string },
+): Promise<ActionResult<null>> {
+  return runAction(async () => {
+    await requireSession();
+    const data = changePasswordSchema.parse(input);
+    await authUseCases.changePassword.execute({ userId, ...data });
+    return null;
+  });
+}
+
+/**
+ * Solicita redefinição de senha (resposta genérica; e-mail não é enviado — ver
+ * CHANGELOG). Origem: POST /auth/request-password-reset.
+ */
+export async function requestPasswordResetAction(email: string): Promise<ActionResult<{ message: string }>> {
+  return runAction(async () => {
+    const { email: parsed } = requestPasswordResetSchema.parse({ email });
+    const result = await authUseCases.requestPasswordReset.execute(parsed);
+    return { message: result.message };
+  });
+}
+
+/**
+ * Redefine a senha via token de reset. Origem: POST /auth/reset-password.
+ */
+export async function resetPasswordAction(
+  input: { token: string; newPassword: string },
+): Promise<ActionResult<{ message: string }>> {
+  return runAction(async () => {
+    const data = resetPasswordSchema.parse(input);
+    const result = await authUseCases.resetPassword.execute(data.token, data.newPassword);
+    return { message: result.message };
+  });
+}

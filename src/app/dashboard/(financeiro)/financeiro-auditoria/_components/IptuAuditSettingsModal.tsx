@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { X, Settings } from 'lucide-react';
 import Select, { type Option } from '@/components/ui/Select';
-import { authFetch } from '@/utils/authFetch';
 import { useMessageContext } from '@/contexts/MessageContext';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { listCategoriesAction } from '@/server/actions/financial-category';
+import { listSubcategoriesAction } from '@/server/actions/financial-subcategory';
+import { getIptuAuditSettingsAction, saveIptuAuditSettingsAction } from '@/server/actions/iptu-audit';
 
 interface CategoryOption {
   id: string;
@@ -50,22 +50,18 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
 
     (async () => {
       try {
-        const [catRes, subRes, settingsRes] = await Promise.all([
-          authFetch(`${API_URL}/financial-category?limit=1000&filter[is_active]=true`),
-          authFetch(`${API_URL}/financial-subcategory?limit=1000&filter[is_active]=true`),
-          authFetch(`${API_URL}/financial-audit/iptu/settings`),
-        ]);
-
-        const [catJson, subJson, settingsJson] = await Promise.all([
-          catRes.json(), subRes.json(), settingsRes.json(),
+        const [catResult, subResult, settingsResult] = await Promise.all([
+          listCategoriesAction({ limit: 100, 'filter[is_active]': 'true' }),
+          listSubcategoriesAction({ limit: 100, 'filter[is_active]': 'true' }),
+          getIptuAuditSettingsAction(),
         ]);
 
         if (cancelled) return;
 
-        setCategories(Array.isArray(catJson?.data) ? catJson.data : []);
-        setSubcategories(Array.isArray(subJson?.data) ? subJson.data : []);
+        setCategories(catResult.ok && Array.isArray(catResult.data?.data) ? (catResult.data.data as unknown as CategoryOption[]) : []);
+        setSubcategories(subResult.ok && Array.isArray(subResult.data?.data) ? (subResult.data.data as unknown as SubcategoryOption[]) : []);
 
-        const settings = settingsJson?.data;
+        const settings = settingsResult.ok ? settingsResult.data : null;
         if (settings) {
           setIncomeCategoryId(settings.income_category_id ?? '');
           setIncomeSubcategoryId(settings.income_subcategory_id ?? '');
@@ -126,15 +122,8 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
         expense_subcategory_id: expenseSubcategoryId || null,
       };
 
-      const response = await authFetch(`${API_URL}/financial-audit/iptu/settings`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message ?? 'Erro ao salvar configuração.');
-      }
+      const result = await saveIptuAuditSettingsAction({ ...payload });
+      if (!result.ok) throw new Error(result.error ?? 'Erro ao salvar configuração.');
 
       showMessage('Configuração da Auditoria de IPTU salva com sucesso', 'success', 2500);
       onSaved(payload);

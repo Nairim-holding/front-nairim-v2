@@ -8,6 +8,7 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
 import { OwnerType } from '@/types/owner';
+import { createOwnerAction, listOwnersAction } from '@/server/actions/owner';
 import {
   User, MapPin, Phone, FileText, Hash,
   Briefcase, Heart, Globe,
@@ -49,22 +50,16 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
   useEffect(() => {
     const fetchLastOwner = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_URL_API;
-        const response = await fetch(`${API_URL}/owners`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data && data.data.length > 0) {
-            const lastCode = data.data[0].internal_code;
-            const codeNumber = parseInt(lastCode, 10);
-            
-            if (!isNaN(codeNumber)) {
-              setGeneratedInternalCode(String(codeNumber + 1));
-            } else {
-              setGeneratedInternalCode(lastCode);
-            }
+        const result = await listOwnersAction({ limit: 1 });
+
+        if (result.ok && result.data && result.data.data.length > 0) {
+          const lastCode = result.data.data[0].internal_code;
+          const codeNumber = parseInt(lastCode, 10);
+
+          if (!isNaN(codeNumber)) {
+            setGeneratedInternalCode(String(codeNumber + 1));
           } else {
-            setGeneratedInternalCode('1');
+            setGeneratedInternalCode(lastCode);
           }
         } else {
           setGeneratedInternalCode('1');
@@ -172,27 +167,18 @@ export default function CadastrarProprietarioPage({ searchParams }: Props) {
         formattedData.cpf = null;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/owners`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await createOwnerAction(formattedData);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 400 && result.errors) {
+      if (!result.ok) {
+        if (result.status === 400 && result.errors) {
           throw new Error(`Erro de validação: ${result.errors.join(', ')}`);
         }
-        if (response.status === 409) {
-          if (result.message?.includes('CPF')) throw new Error('CPF já cadastrado');
-          if (result.message?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
-          if (result.message?.includes('internal_code')) throw new Error('Código Interno já está em uso por outro proprietário');
+        if (result.status === 409) {
+          if (result.error?.includes('CPF')) throw new Error('CPF já cadastrado');
+          if (result.error?.includes('CNPJ')) throw new Error('CNPJ já cadastrado');
+          if (result.error?.includes('internal_code')) throw new Error('Código Interno já está em uso por outro proprietário');
         }
-        throw new Error(result.message || 'Erro no servidor');
+        throw new Error(result.error || 'Erro no servidor');
       }
 
       return result;

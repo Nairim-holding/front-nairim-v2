@@ -2,11 +2,12 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useRouter } from 'next/navigation';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
+import { updatePropertyTypeAction, getPropertyTypeByIdAction } from '@/server/actions/property-type';
 import { Home, Tag } from 'lucide-react';
 
 export default function EditarTipoImovelPage() {
@@ -28,30 +29,13 @@ export default function EditarTipoImovelPage() {
 
       console.log('📊 Dados formatados para edição:', formattedData);
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/property-types/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await updatePropertyTypeAction(id, formattedData);
 
-      const responseText = await response.text();
-      console.log('📥 Resposta da edição:', response.status, responseText);
-
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error('Resposta inválida do servidor');
-      }
-
-      if (!response.ok) {
-        if (response.status === 409) {
+      if (!result.ok) {
+        if (result.status === 409) {
           throw new Error('Tipo de imóvel já existe');
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       return result;
@@ -62,19 +46,18 @@ export default function EditarTipoImovelPage() {
     }
   };
 
-  // Transformar dados da API para o formulário (CORRIGIDO)
-  const transformData = (apiData: any) => {
-    console.log('🔄 Transformando dados da API (tipo de imóvel):', apiData);
-    
+  // Transformar dados da API para o formulário.
+  // `useCallback` é obrigatório aqui: está nas dependências do useEffect de
+  // fetch do DynamicForm — sem memoizar, uma função nova a cada render
+  // (disparado por showMessage/setLoading) reexecutava o fetch em loop,
+  // inclusive durante a navegação pós-submit, empilhando toasts de erro.
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
-    
-    // A API retorna o objeto diretamente, não tem "data.data"
     const data = apiData.data || apiData;
-    
     return {
       description: data.description || '',
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -113,6 +96,7 @@ export default function EditarTipoImovelPage() {
       mode="edit"
       id={id}
       steps={steps}
+      fetchResource={getPropertyTypeByIdAction}
       onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
       transformData={transformData}

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { getMyPermissionsAction } from '@/server/actions/permission';
 
 interface PermissionsState {
   /** true = sem restrição (SUPER_ADMIN, ou ADMIN sem grupo atribuído). */
@@ -32,7 +33,7 @@ export const usePermissions = () => {
 export function PermissionsProvider({ children }: { children: ReactNode }) {
   const { token, isAuthenticated } = useAuth();
 
-  // null = ainda não resolvido (logo após login, fetch em andamento, ou
+  // null = ainda não resolvido (logo após login, action em andamento, ou
   // deslogado — nesse caso não importa, nada autenticado renderiza a UI).
   const [resolved, setResolved] = useState<PermissionsState | null>(null);
 
@@ -43,21 +44,17 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-        const response = await fetch(`${API_URL}/permissions/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) return;
-        const result = await response.json();
+        const result = await getMyPermissionsAction();
         if (cancelled) return;
+        if (!result.ok) return; // mesma semântica de "!response.ok" — mantém o estado otimista.
 
         setResolved({
-          unrestricted: result?.data?.unrestricted !== false,
-          resources: result?.data?.resources ?? {},
+          unrestricted: result.data.unrestricted !== false,
+          resources: result.data.resources ?? {},
         });
       } catch (error) {
         console.error('[PermissionsContext] Falha ao carregar permissões:', error);
-        // Falha de rede: mantém o estado otimista em vez de travar a navegação.
+        // Falha inesperada: mantém o estado otimista em vez de travar a navegação.
       }
     })();
 

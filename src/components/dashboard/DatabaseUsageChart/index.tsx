@@ -4,13 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
+import { getDatabaseUsageAction } from '@/server/actions/dashboard-usage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
-
-/** Cortes do semáforo de consumo, em % da cota contratada (Tarefa 1.5 do guia de correções: verde 0-60%, amarelo 60-80%, vermelho 80-100%). */
 const SAFE_PERCENT = 60;
 const WARNING_PERCENT = 80;
 const CRITICAL_PERCENT = 100;
@@ -58,12 +55,11 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/dashboard/database`);
-        if (response.ok) {
-          const result = await response.json();
+        const result = await getDatabaseUsageAction();
+        if (result.ok) {
           if (!cancelled) {
-            setCurrent(result.data?.current ?? null);
-            setCompanies(Array.isArray(result.data?.companies) ? result.data.companies : []);
+            setCurrent(result.data.current ?? null);
+            setCompanies(Array.isArray(result.data.companies) ? result.data.companies : []);
           }
         }
       } catch (error) {

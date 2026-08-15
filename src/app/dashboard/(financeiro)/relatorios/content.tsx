@@ -128,7 +128,7 @@ export default function RelatoriosPageContent() {
                 groupColumnLabel={DESPESAS_LABELS[selected.item as ReportGroupBy].groupColumnLabel}
                 groupBy={selected.item as ReportGroupBy}
                 typeOverride="EXPENSE"
-                accentColor="#ef4444"
+                accentColor="#f97316"
                 dateRange={dateRange}
                 regime={regime}
                 reportKind={reportKind}

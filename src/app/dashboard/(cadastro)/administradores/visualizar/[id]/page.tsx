@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DynamicForm from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { useParams } from 'next/navigation';
@@ -18,6 +18,8 @@ import {
   Power,
 } from 'lucide-react';
 import { photoField, contactFields, accessScheduleField } from '../../_lib/fields';
+import { getUserByIdAction } from '@/server/actions/user';
+import { formatLocalDate } from '@/shared/utils/date-utils';
 
 const ROLE_LABEL: Record<string, string> = {
   DEFAULT: 'Padrão',
@@ -80,7 +82,9 @@ export default function VisualizarAdministradorPage() {
     [id]
   );
 
-  const transformData = (apiResponse: any) => {
+  // `useCallback`: mesma razão de administradores/editar — evita o loop de
+  // refetch/toasts de erro causado por identidade nova a cada render.
+  const transformData = useCallback((apiResponse: any) => {
     const userData = apiResponse.data || apiResponse;
 
     const janela = userData.has_time_restriction === true ? 'Sim' : 'Não';
@@ -88,7 +92,7 @@ export default function VisualizarAdministradorPage() {
     return {
       name: userData.name || '',
       email: userData.email || '',
-      birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : '',
+      birth_date: userData.birth_date ? formatLocalDate(userData.birth_date) : '',
       gender_label: GENDER_LABEL[userData.gender] || '—',
       photo: userData.photo_url || null,
 
@@ -105,10 +109,10 @@ export default function VisualizarAdministradorPage() {
 
       created_by_name: userData.creator?.name || '—',
       updated_by_name: userData.updater?.name || '—',
-      created_at: userData.created_at ? userData.created_at.split('T')[0] : '',
-      updated_at: userData.updated_at ? userData.updated_at.split('T')[0] : '',
+      created_at: userData.created_at ? formatLocalDate(userData.created_at) : '',
+      updated_at: userData.updated_at ? formatLocalDate(userData.updated_at) : '',
     };
-  };
+  }, []);
 
   return (
     <DynamicForm
@@ -118,6 +122,7 @@ export default function VisualizarAdministradorPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getUserByIdAction}
       transformData={transformData}
     />
   );

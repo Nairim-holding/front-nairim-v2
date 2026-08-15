@@ -2,30 +2,27 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { Home, Tag, Calendar, Clock } from 'lucide-react';
+import { getPropertyTypeByIdAction } from '@/server/actions/property-type';
 
 export default function VisualizarTipoImovelPage() {
   const params = useParams();
   const id = params.id as string;
 
-  // Transformar dados da API para o formulário (CORRIGIDO)
-  const transformData = (apiData: any) => {
-    console.log('🔄 Transformando dados da API (tipo de imóvel):', apiData);
-    
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
-    
-    // A API retorna o objeto diretamente, não tem "data.data"
     const data = apiData.data || apiData;
-    
     return {
       description: data.description || '',
       created_at: data.created_at || '',
       updated_at: data.updated_at || '',
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -54,6 +51,7 @@ export default function VisualizarTipoImovelPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getPropertyTypeByIdAction}
       transformData={transformData}
     />
   );

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetricResponse } from "@/types/types";
+import { getDashboardSectionAction } from "@/server/actions/dashboard";
 
 export type FilterType = "financial" | "portfolio" | "clients" | "map";
 
@@ -17,13 +18,6 @@ export interface DashboardData {
   [key: string]: MetricResponse | MapCoordinate[] | null;
 }
 
-const ENDPOINT_MAP: Record<FilterType, string> = {
-  financial: "/dashboard/financial",
-  portfolio: "/dashboard/portfolio",
-  clients:   "/dashboard/clients",
-  map:       "/dashboard/map",
-};
-
 /** Mês corrente — o mesmo default do filtro de período das abas (Tarefa 5.3/6.1,
  * 29/07/26). Precisa ficar em sincronia com o default de useSectionPeriod: os
  * dois alimentam o mesmo primeiro carregamento (fetch inicial aqui, cabeçalho
@@ -35,6 +29,11 @@ export function getDefaultDateRange(): { start: string; end: string } {
   return { start: fmt(new Date(now.getFullYear(), now.getMonth(), 1)), end: fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0)) };
 }
 
+/**
+ * Busca os dados de uma seção do dashboard via Server Action
+ * (`getDashboardSectionAction`), sem `fetch`/token — a guarda e o tenant rodam
+ * no servidor (withTenant). Origem: DashboardController do backend.
+ */
 export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
   section: FilterType,
   options: {
@@ -44,43 +43,22 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
     token?: string;
   } = {}
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_URL_API;
-  if (!baseUrl) throw new Error("NEXT_PUBLIC_URL_API não configurada");
-
   const defaults = getDefaultDateRange();
   const start = options.startDate ?? defaults.start;
   const end   = options.endDate   ?? defaults.end;
 
-  const url = `${baseUrl}${ENDPOINT_MAP[section]}?startDate=${start}&endDate=${end}`;
+  const result = await getDashboardSectionAction(section, start, end);
 
-  const authHeaders: Record<string, string> = {};
-  if (options.token) {
-    authHeaders["Authorization"] = `Bearer ${options.token}`;
-  }
-
-  const res = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-      ...authHeaders,
-    },
-    ...options.fetchOptions,
-  });
-
-  if (!res.ok) {
+  if (!result.ok) {
     // `status` permite o chamador distinguir "sem permissão" (403) de falhas
-    // reais (500, rede) e mostrar uma mensagem amigável em vez do status cru.
-    const error = new Error(`Erro ao carregar ${section}: ${res.status}`) as Error & { status?: number };
-    error.status = res.status;
+    // reais (500, validação) e mostrar uma mensagem amigável em vez do status cru.
+    const error = new Error(result.error) as Error & { status?: number };
+    error.status = result.status;
     throw error;
   }
 
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message ?? `Erro na resposta da API (${section})`);
-
   if (section === "map") {
-    const raw: any[] = json.data?.coordinates ?? (Array.isArray(json.data) ? json.data : []);
+    const raw: any[] = (result.data as { coordinates?: any[] })?.coordinates ?? [];
     return raw.map((g) => ({
       lat:  Number(g.lat  ?? 0),
       lng:  Number(g.lng  ?? 0),
@@ -88,5 +66,5 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
     })) as T;
   }
 
-  return json.data as T;
+  return result.data as T;
 }

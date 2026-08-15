@@ -9,10 +9,16 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import Toggle from '@/components/ui/Toggle';
 import { maskMoney } from '@/utils/masks';
 import type { FormStep } from '@/types/types';
+import {
+  listCardsAction,
+  deleteFinancialCardAction,
+  createFinancialCardAction,
+  updateFinancialCardAction,
+  getCardByIdAction,
+} from '@/server/actions/financial-card';
+import { describeActionError } from '@/shared/actions/action-result';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 
@@ -117,10 +123,9 @@ export default function CartoesPage() {
   const fetchCards = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/financial-card?limit=1000`);
-      if (!res.ok) throw new Error('Erro ao carregar os cartões.');
-      const data = await res.json();
-      setCards(data?.data ?? data ?? []);
+      const result = await listCardsAction({ limit: 100 });
+      if (!result.ok) throw new Error(result.error);
+      setCards(result.data?.data ?? []);
     } catch {
       showMessage('Erro ao carregar os cartões.', 'error');
     } finally {
@@ -162,10 +167,9 @@ export default function CartoesPage() {
         `Tem certeza que deseja excluir o cartão "${name}"?`,
         async () => {
           try {
-            const res = await fetch(`${API_URL}/financial-card/${id}`, { method: 'DELETE' });
-            if (!res.ok) {
-              const result = await res.json().catch(() => ({}));
-              throw new Error(result.message ?? 'Erro ao excluir Cartão.');
+            const result = await deleteFinancialCardAction(id);
+            if (!result.ok) {
+              throw new Error(result.error ?? 'Erro ao excluir Cartão.');
             }
             showMessage('Excluído com sucesso!', 'success');
             if (selectedId === id) closeForm();
@@ -312,6 +316,19 @@ export default function CartoesPage() {
                   steps={FORM_STEPS}
                   transformData={transformDataForLoad}
                   transformResponse={transformPayloadForSave}
+                  fetchResource={getCardByIdAction}
+                  onSubmit={async (values) => {
+                    const payload = transformPayloadForSave(values);
+                    if (formMode === 'CREATE') {
+                      const result = await createFinancialCardAction(payload);
+                      if (!result.ok) throw new Error(describeActionError(result, 'Erro ao criar Cartão.'));
+                      return result.data;
+                    }
+                    if (!selectedId) throw new Error('ID é obrigatório');
+                    const result = await updateFinancialCardAction(selectedId, payload);
+                    if (!result.ok) throw new Error(describeActionError(result, 'Erro ao atualizar Cartão.'));
+                    return result.data;
+                  }}
                   onSubmitSuccess={() => {
                     showMessage(`Cartão ${formMode === 'CREATE' ? 'criado' : 'atualizado'} com sucesso!`, 'success');
                     closeForm();

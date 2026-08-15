@@ -1,9 +1,8 @@
 'use client';
 
 import { use, useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
-import { useAuth } from '@/contexts/AuthContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
 import AssetUploader from '@/components/admin/WhiteLabel/AssetUploader';
@@ -13,8 +12,7 @@ import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
 import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye, Database } from 'lucide-react';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getCompanyByIdAction, updateCompanyAction, checkSlugAction } from '@/server/actions/company';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -93,9 +91,9 @@ interface Props {
 
 export default function EditarEmpresaPage({ params }: Props) {
   const { id } = use(params);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { showMessage } = useMessageContext();
-  const { token } = useAuth();
   const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
   const [initialSlug, setInitialSlug] = useState<string | null>(null);
   const defaultStep = searchParams?.get('new') === 'true' ? 2 : 0;
@@ -104,19 +102,16 @@ export default function EditarEmpresaPage({ params }: Props) {
   useEffect(() => {
     async function fetchCompany() {
       try {
-        const res = await fetch(`${API_URL}/companies/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await res.json();
-        if (json.data?.slug) {
-          setInitialSlug(json.data.slug);
+        const result = await getCompanyByIdAction(id);
+        if (result.ok && result.data?.slug) {
+          setInitialSlug(result.data.slug);
         }
       } catch {
         // Silencioso
       }
     }
-    if (token && id) fetchCompany();
-  }, [token, id]);
+    if (id) fetchCompany();
+  }, [id]);
 
   const checkSlugUnique = useCallback(async (slug: string) => {
     if (!slug || slug.length < 2) return;
@@ -125,11 +120,8 @@ export default function EditarEmpresaPage({ params }: Props) {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/companies/check-slug/${slug.toLowerCase().trim()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (!json.data?.available) {
+      const result = await checkSlugAction(slug.toLowerCase().trim());
+      if (!result.ok || !result.data?.available) {
         setSlugCheckError('Esta slug já está em uso');
       } else {
         setSlugCheckError(null);
@@ -137,7 +129,7 @@ export default function EditarEmpresaPage({ params }: Props) {
     } catch {
       setSlugCheckError(null);
     }
-  }, [token, initialSlug]);
+  }, [initialSlug]);
 
   const generateSlug = useCallback((name: string): string => {
     return name
@@ -274,7 +266,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'custom',
           className: 'col-span-1',
           render: (value, _fv, onChange) => (
-            <AssetUploader label="Logo principal" hint="PNG, JPG, SVG ou WebP — até 5MB" endpoint={`/company/branding/logo`} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
+            <AssetUploader label="Logo principal" hint="PNG, JPG, SVG ou WebP — até 5MB" field="logo_url" companyId={id} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
           ),
         },
         {
@@ -283,7 +275,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'custom',
           className: 'col-span-1',
           render: (value, _fv, onChange) => (
-            <AssetUploader label="Logo da sidebar" hint="Usado no menu lateral — opcional, usa o logo principal se vazio" endpoint={`/company/branding/logo-sidebar`} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
+            <AssetUploader label="Logo da sidebar" hint="Usado no menu lateral — opcional, usa o logo principal se vazio" field="logo_sidebar_url" companyId={id} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
           ),
         },
         {
@@ -292,7 +284,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'custom',
           className: 'col-span-1',
           render: (value, _fv, onChange) => (
-            <AssetUploader label="Logo modo escuro" hint="Exibido quando o tema escuro está ativo" endpoint={`/company/branding/logo-dark`} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
+            <AssetUploader label="Logo modo escuro" hint="Exibido quando o tema escuro está ativo" field="logo_dark_url" companyId={id} currentUrl={value || null} onUploaded={url => onChange?.(url)} />
           ),
         },
         {
@@ -301,7 +293,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'custom',
           className: 'col-span-1',
           render: (value, _fv, onChange) => (
-            <AssetUploader label="Favicon" hint="Ícone exibido na aba do navegador — até 5MB" endpoint={`/company/branding/favicon`} currentUrl={value || null} onUploaded={url => onChange?.(url)} previewClassName="w-16 h-16" />
+            <AssetUploader label="Favicon" hint="Ícone exibido na aba do navegador — até 5MB" field="favicon_url" companyId={id} currentUrl={value || null} onUploaded={url => onChange?.(url)} previewClassName="w-16 h-16" />
           ),
         },
         {
@@ -310,7 +302,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'custom',
           className: 'col-span-1',
           render: (value, _fv, onChange) => (
-            <AssetUploader label="Imagem OG / redes sociais" hint="Exibida ao compartilhar links — recomendado 1200x630px, até 10MB" endpoint={`/company/branding/og-image`} currentUrl={value || null} onUploaded={url => onChange?.(url)} previewClassName="w-48 h-28" />
+            <AssetUploader label="Imagem OG / redes sociais" hint="Exibida ao compartilhar links — recomendado 1200x630px, até 10MB" field="og_image_url" companyId={id} currentUrl={value || null} onUploaded={url => onChange?.(url)} previewClassName="w-48 h-28" />
           ),
         },
       ],
@@ -339,7 +331,9 @@ export default function EditarEmpresaPage({ params }: Props) {
     },
   ], [checkSlugUnique, slugCheckError]);
 
-  function transformData(d: Record<string, unknown>) {
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((d: Record<string, unknown>) => {
     const branding = d?.branding && typeof d.branding === 'object'
       ? d.branding as Record<string, unknown>
       : {};
@@ -355,7 +349,7 @@ export default function EditarEmpresaPage({ params }: Props) {
       result[key] = branding?.[key] ?? '';
     }
     return result;
-  }
+  }, []);
 
   async function handleSubmit(data: Record<string, unknown>) {
     const payload: Record<string, unknown> = {
@@ -372,14 +366,9 @@ export default function EditarEmpresaPage({ params }: Props) {
       if (data[key]) payload[key] = data[key];
     }
 
-    const res = await fetch(`${API_URL}/companies/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message ?? `Erro ${res.status}`);
-    return json;
+    const result = await updateCompanyAction(id, payload);
+    if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
+    return result;
   }
 
   return (
@@ -391,10 +380,14 @@ export default function EditarEmpresaPage({ params }: Props) {
         mode="edit"
         id={id}
         steps={steps}
+        fetchResource={getCompanyByIdAction}
         onSubmit={handleSubmit}
         onFieldChange={handleFieldChange}
         onStepComplete={handleStepComplete}
-        onSubmitSuccess={() => showMessage('Empresa atualizada com sucesso!', 'success')}
+        onSubmitSuccess={() => {
+          showMessage('Empresa atualizada com sucesso!', 'success');
+          router.push('/dashboard/empresas');
+        }}
         transformData={transformData}
         defaultStep={defaultStep}
       />

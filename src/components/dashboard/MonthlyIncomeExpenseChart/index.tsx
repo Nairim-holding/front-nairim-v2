@@ -50,18 +50,20 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
     [years, byYear]
   );
 
+  // Eixo X sempre exibe mês/ano, independente de 1 ou vários anos selecionados
+  // (Tarefa 1.1 do guia de correções) — antes só mostrava o mês com 1 ano.
   const xAxisLabels = useMemo(
-    () => flatMonths.map((m) => (years.length > 1 ? `${MONTH_LABELS[m.month - 1]}/${m.year}` : MONTH_LABELS[m.month - 1])),
-    [flatMonths, years.length]
+    () => flatMonths.map((m) => `${MONTH_LABELS[m.month - 1]}/${m.year}`),
+    [flatMonths]
   );
 
   const detailData = useMemo(
     () => flatMonths.map((m) => ({
-      month: years.length > 1 ? `${MONTH_LABELS_FULL[m.month - 1]}/${m.year}` : MONTH_LABELS_FULL[m.month - 1],
+      month: `${MONTH_LABELS_FULL[m.month - 1]}/${m.year}`,
       income: m.income,
       expense: m.expense,
     })),
-    [flatMonths, years.length]
+    [flatMonths]
   );
 
   const detailColumns = useMemo(

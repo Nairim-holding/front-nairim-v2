@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { useAuth } from "@/contexts";
 import { resourceForPathname } from "@/utils/permissionResource";
 import Section from "../PageSection";
 import ForbiddenNotice from "./ForbiddenNotice";
@@ -17,6 +18,7 @@ import ForbiddenNotice from "./ForbiddenNotice";
 export default function PermissionGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { can } = usePermissions();
+  const { user } = useAuth();
   const resource = resourceForPathname(pathname);
 
   if (resource && !can(resource, 'view')) {
@@ -27,5 +29,10 @@ export default function PermissionGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  // `key` no company_id força o React a desmontar/remontar toda a árvore de
+  // páginas ao trocar de empresa (CompanySwitcher muda o token sem navegar
+  // para uma rota diferente) — sem isso, hooks com estado client-side
+  // (useOptimizedTableData, caches locais, etc.) continuavam com os dados da
+  // empresa anterior até alguma interação forçar um novo fetch.
+  return <div key={user?.company_id ?? 'anon'}>{children}</div>;
 }

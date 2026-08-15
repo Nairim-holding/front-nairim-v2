@@ -6,6 +6,7 @@ import { useMemo, useCallback } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { getTenantByIdAction } from '@/server/actions/tenant';
 import {
   User, MapPin, FileText, Hash,
   Briefcase, Heart, Phone, User as UserIcon,
@@ -205,6 +206,7 @@ export default function VisualizarInquilinoPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getTenantByIdAction}
       transformData={transformData}
     />
   );

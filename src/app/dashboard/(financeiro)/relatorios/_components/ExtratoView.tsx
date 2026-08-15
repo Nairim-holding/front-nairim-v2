@@ -2,12 +2,10 @@
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ChevronUp, ChevronDown, Search } from 'lucide-react';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { buildReportQuery } from '../_lib/buildReportQuery';
+import { buildReportActionParams } from '../_lib/buildReportQuery';
+import { getExtratoReportAction } from '@/server/actions/financial-report';
 import type { ExtratoResponse, ReportFiltersState, ReportRegime, ReportViewHandle } from '../_lib/types';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface ExtratoViewProps {
   dateRange: { from: string; to: string };
@@ -41,11 +39,12 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
 
     (async () => {
       try {
-        const qs = buildReportQuery({ from: dateRange.from, to: dateRange.to, regime, filters });
-        const res = await authFetch(`${API_URL}/financial-reports/extrato?${qs.toString()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setData(json.data ?? json);
+        const raw = buildReportActionParams({ from: dateRange.from, to: dateRange.to, regime, filters });
+        const result = await getExtratoReportAction(raw);
+        if (!result.ok) throw new Error(result.error);
+        // A action serializa `event_date`/`effective_date: Date` para string no
+        // round-trip servidor→cliente — mesmo shape que ExtratoResponse já espera.
+        if (!cancelled) setData(result.data as unknown as ExtratoResponse);
       } catch (error) {
         console.error('[ExtratoView] Erro ao carregar extrato:', error);
         if (!cancelled) setData(null);
@@ -109,12 +108,16 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
       sortDir === 'asc' ? <ChevronUp size={12} className="inline ml-1" /> : <ChevronDown size={12} className="inline ml-1" />
     ) : null;
 
+  // Ordem de colunas padronizada com Lançamentos Financeiros (Tarefa 4.3-F),
+  // restrita às colunas que o Extrato de fato usa: Data (efetiva) > Categoria
+  // > Subcategoria > Contato > Descrição > Centro > Crédito/Débito/Saldo (o
+  // Extrato não tem Instituição/Cartão/Status — não se aplicam a este relatório).
   const columns: { field: SortField; label: string; align?: 'right' }[] = [
     { field: 'date', label: 'Data' },
-    { field: 'description', label: 'Descrição' },
-    { field: 'contact', label: 'Contato' },
     { field: 'category', label: 'Categoria' },
     { field: 'subcategory', label: 'Subcategoria' },
+    { field: 'contact', label: 'Contato' },
+    { field: 'description', label: 'Descrição' },
     { field: 'center', label: 'Centro' },
     { field: 'credit', label: 'Crédito', align: 'right' },
     { field: 'debit', label: 'Débito', align: 'right' },
@@ -180,15 +183,16 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
             {sortedItems.map((item) => (
               <tr key={item.id} className="text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle">
                 <td className="px-3 py-1.5 whitespace-nowrap">{formatDate(item.effective_date)}</td>
-                <td className="px-3 py-1.5">{item.description}</td>
-                <td className="px-3 py-1.5">{item.supplier?.name ?? '-'}</td>
                 <td className="px-3 py-1.5">{item.category?.name ?? '-'}</td>
                 <td className="px-3 py-1.5">{item.subcategory?.name ?? '-'}</td>
+                <td className="px-3 py-1.5">{item.supplier?.name ?? '-'}</td>
+                <td className="px-3 py-1.5">{item.description}</td>
                 <td className="px-3 py-1.5">{item.center?.name ?? '-'}</td>
                 <td className="px-3 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
                   {item.credit > 0 ? formatCurrency(item.credit) : ''}
                 </td>
-                <td className="px-3 py-1.5 text-right text-red-600 dark:text-red-400">
+                {/* Débito = Despesa: laranja, mesma paleta de IncomeExpenseView (Tarefa 4.5 do guia de correções) — antes vermelho, cor reservada aqui para saldo negativo. */}
+                <td className="px-3 py-1.5 text-right text-orange-600 dark:text-orange-400">
                   {item.debit > 0 ? formatCurrency(item.debit) : ''}
                 </td>
                 <td className={`px-3 py-1.5 text-right font-medium ${item.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
@@ -212,7 +216,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
           </div>
           <div className="flex justify-between">
             <span className="text-content-secondary">Total de Despesas no Período</span>
-            <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(summary.totalDespesas)}</span>
+            <span className="font-medium text-orange-600 dark:text-orange-400">{formatCurrency(summary.totalDespesas)}</span>
           </div>
           <div className="flex justify-between border-t border-ui-border-soft pt-1.5">
             <span className="text-content-secondary">Balanço no Período</span>

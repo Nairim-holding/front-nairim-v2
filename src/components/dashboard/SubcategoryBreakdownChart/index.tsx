@@ -5,15 +5,13 @@ import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import Select, { type Option } from '@/components/ui/Select';
-import { authFetch } from '@/utils/authFetch';
+import { getSubcategoryBreakdownAction } from '@/server/actions/financial-transaction';
+import { listCategoriesAction } from '@/server/actions/financial-category';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { getPeriodRange } from '@/utils/periodRange';
-import { appendFilterParams } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface SubcategoryYearValue {
   year: number;
@@ -61,21 +59,20 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
 
     (async () => {
       try {
-        const response = await authFetch(
-          `${API_URL}/financial-category?limit=1000&filter[is_active]=true&filter[type]=EXPENSE`
-        );
-        if (response.ok) {
-          const result = await response.json();
-          const list = Array.isArray(result?.data) ? result.data : [];
-          if (!cancelled) {
-            // Ordem alfabética (Tarefa 1.2, Passo 4) — faz "Despesas Fixas" ser a
-            // seleção padrão quando existir, sem depender da ordem vinda da API.
-            const sorted = [...list].sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
-            setCategories(sorted.map((c: { id: string; name: string }) => ({ label: c.name, value: c.id })));
-            if (sorted.length > 0) {
-              const defaultCategory = sorted.find((c) => String(c.name).trim().toLowerCase() === 'despesas fixas') ?? sorted[0];
-              setSelectedCategoryId(defaultCategory.id);
-            }
+        const result = await listCategoriesAction({
+          limit: 100,
+          'filter[is_active]': true,
+          'filter[type]': 'EXPENSE',
+        });
+        if (!cancelled && result.ok) {
+          const list = Array.isArray(result.data.data) ? result.data.data : [];
+          // Ordem alfabética (Tarefa 1.2, Passo 4) — faz "Despesas Fixas" ser a
+          // seleção padrão quando existir, sem depender da ordem vinda da API.
+          const sorted = [...list].sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
+          setCategories(sorted.map((c) => ({ label: c.name, value: c.id })));
+          if (sorted.length > 0) {
+            const defaultCategory = sorted.find((c) => String(c.name).trim().toLowerCase() === 'despesas fixas') ?? sorted[0];
+            setSelectedCategoryId(defaultCategory.id);
           }
         }
       } catch (error) {
@@ -97,16 +94,16 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
 
     (async () => {
       try {
-        const params = new URLSearchParams({ categoryId: selectedCategoryId, startDate, endDate });
-        appendFilterParams(params, filters);
-        const response = await authFetch(`${API_URL}/financial-transaction/subcategory-breakdown?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled) {
-            setCategoryName(result.data?.categoryName ?? '');
-            setTotal(Number(result.data?.total ?? 0));
-            setSubcategories(Array.isArray(result.data?.subcategories) ? result.data.subcategories : []);
-          }
+        const result = await getSubcategoryBreakdownAction({
+          categoryId: selectedCategoryId,
+          startDate,
+          endDate,
+          ...(filters ?? {}),
+        });
+        if (!cancelled && result.ok) {
+          setCategoryName(result.data.categoryName ?? '');
+          setTotal(Number(result.data.total ?? 0));
+          setSubcategories(Array.isArray(result.data.subcategories) ? result.data.subcategories : []);
         }
       } catch (error) {
         console.error('[SubcategoryBreakdownChart] Erro ao carregar detalhamento:', error);

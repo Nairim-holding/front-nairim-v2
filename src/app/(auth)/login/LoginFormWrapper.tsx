@@ -8,7 +8,7 @@ import { useRateLimit } from '@/hooks/useRateLimit';
 import { LoginForm } from '@/components/auth/Form';
 import { RateLimitWarning } from '@/components/auth/RateLimitWarning';
 import { RateLimitBlocked } from '@/components/auth/RateLimitBlocked';
-import { ApiResponse } from '@/types/types';
+import { loginAction } from '@/server/actions/auth';
 
 interface LoginFormWrapperProps {
   companySlug?: string;
@@ -54,44 +54,38 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL_API}/auth/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const data = await loginAction({ email, password });
 
-      const data: any = await response.json();
-
-      if (!response.ok || !data.success) {
-        // If we have backend rate limit status, use it
-        if (data.data?.failedAttempts !== undefined) {
-          // Use backend status directly
-          const { failedAttempts: backendAttempts, isBlocked: backendIsBlocked, blockedUntilSeconds, shouldWarnAboutBlockage: backendShouldWarn, blockDurationMinutes: backendBlockDurationMinutes } = data.data;
-          // Update frontend state to match backend
-          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds, backendShouldWarn, backendBlockDurationMinutes);
+      if (!data.ok) {
+        // Se temos status de rate limit da action, usamos
+        if (data.rateLimit) {
+          const {
+            failedAttempts: backendAttempts,
+            isBlocked: backendIsBlocked,
+            blockedUntilSeconds,
+            shouldWarnAboutBlockage: backendShouldWarn,
+            blockDurationMinutes: backendBlockDurationMinutes,
+          } = data.rateLimit;
+          // Atualiza estado do front para refletir o backend
+          updateFromBackendStatus(backendAttempts, backendIsBlocked, blockedUntilSeconds ?? undefined, backendShouldWarn, backendBlockDurationMinutes);
         } else {
-          // Fallback to frontend counting if backend doesn't provide status
+          // Fallback para contagem local se a action não devolver status
           incrementFailedAttempts();
         }
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        throw new Error(data.message || 'Erro ao tentar fazer login. Verifique suas credenciais.');
       }
 
-      // Successful login - reset failed attempts
+      // Login bem-sucedido - reseta tentativas falhas
       resetAttempts();
 
       // Slug da empresa: vem da URL /[slug]/login ou da resposta do login
-      const slug = companySlug ?? data.data.user.company_slug ?? '';
+      const slug = companySlug ?? data.slug ?? data.user.company_slug ?? '';
       if (slug) {
-        const maxAge = getTokenMaxAgeSeconds(data.data.token, 12 * 60 * 60);
+        const maxAge = getTokenMaxAgeSeconds(data.token, 12 * 60 * 60);
         document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=${maxAge}`;
       }
 
-      login(data.data.token, data.data.user);
+      login(data.token, data.user);
 
       navigation.push(slug ? `/${slug}/dashboard` : '/dashboard');
     } catch (err: unknown) {

@@ -2,10 +2,11 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import ContactManager from '@/components/domain/contacts/ContactManager';
 import { FormStep } from '@/types/types';
+import { getOwnerByIdAction } from '@/server/actions/owner';
 import {
   User, MapPin, Phone, FileText, Hash,
   Briefcase, Heart, Globe,
@@ -17,7 +18,9 @@ export default function VisualizarProprietarioPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const transformData = (apiData: any) => {
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     
     const address = apiData.addresses?.[0]?.address || {};
@@ -46,7 +49,7 @@ export default function VisualizarProprietarioPage() {
         email: c.contact?.email || c.email || '',
       })) || []
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -168,6 +171,7 @@ export default function VisualizarProprietarioPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getOwnerByIdAction}
       transformData={transformData}
     />
   );

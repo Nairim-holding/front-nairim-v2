@@ -7,6 +7,7 @@ import DynamicForm from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useUserGroupOptions } from '@/hooks/useUserGroupOptions';
+import { createUserAction, uploadUserPhotoAction, setUserScheduleAction } from '@/server/actions/user';
 import {
   User,
   UserIcon,
@@ -192,12 +193,22 @@ export default function CadastrarAdministradorPage() {
     };
   };
 
+  const handleSubmit = async (data: any) => {
+    const payload = transformResponse(data);
+    const result = await createUserAction(payload);
+
+    if (!result.ok) {
+      if (result.status === 409) throw new Error('E-mail já cadastrado');
+      throw new Error(result.error || 'Erro ao criar administrador');
+    }
+
+    return result;
+  };
+
   const onSubmitSuccess = async (result: any) => {
     // O DynamicForm já desembrulha a resposta antes de chamar onSubmitSuccess
     // (finalizeSuccess passa `result.data` do envelope da API) — aqui `result`
-    // É o usuário criado, não o envelope inteiro. `result.data.id` nunca existia,
-    // então createdId ficava sempre undefined e a função retornava sem
-    // enviar foto/jornada nem mostrar feedback.
+    // É o usuário criado, não o envelope inteiro.
     const createdId = result?.id;
     if (!createdId) return;
 
@@ -208,10 +219,10 @@ export default function CadastrarAdministradorPage() {
       try {
         const body = new FormData();
         body.append('file', pendingPhoto);
-        await fetch(`${process.env.NEXT_PUBLIC_URL_API}/users/${createdId}/photo`, {
-          method: 'POST',
-          body,
-        });
+        const photoResult = await uploadUserPhotoAction(createdId, body);
+        if (!photoResult.ok) {
+          console.error('Usuário criado, mas a foto não foi enviada:', photoResult.error);
+        }
       } catch (e) {
         // O usuário já foi criado; a foto pode ser enviada depois pela edição
         console.error('Usuário criado, mas a foto não foi enviada:', e);
@@ -222,11 +233,11 @@ export default function CadastrarAdministradorPage() {
 
     if (pendingSchedule) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_URL_API}/users/${createdId}/schedule`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(schedulePayload(pendingSchedule)),
-        });
+        const { schedules } = schedulePayload(pendingSchedule);
+        const scheduleResult = await setUserScheduleAction(createdId, schedules);
+        if (!scheduleResult.ok) {
+          console.error('Usuário criado, mas a jornada não foi salva:', scheduleResult.error);
+        }
       } catch (e) {
         console.error('Usuário criado, mas a jornada não foi salva:', e);
       } finally {
@@ -246,7 +257,7 @@ export default function CadastrarAdministradorPage() {
       mode="create"
       draftKey="form:users:create"
       steps={steps}
-      transformResponse={transformResponse}
+      onSubmit={handleSubmit}
       onSubmitSuccess={onSubmitSuccess}
     />
   );

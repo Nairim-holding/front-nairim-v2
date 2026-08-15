@@ -4,15 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
+import { getPlanningDashboardAction } from '@/server/actions/planning';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
-import { appendFilterParams } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface SubcategoryDashboard {
   id?: string;
@@ -25,6 +22,26 @@ interface CategoryDashboard {
   name: string;
   realized_amount: number;
   subcategories?: SubcategoryDashboard[];
+}
+
+/** Anos inteiros cobertos por [startDate, endDate] (ISO), em ordem crescente. */
+function yearsInRange(startDate: string, endDate: string): number[] {
+  const startYear = new Date(`${startDate}T00:00:00`).getFullYear();
+  const endYear = new Date(`${endDate}T00:00:00`).getFullYear();
+  if (Number.isNaN(startYear) || Number.isNaN(endYear)) return [];
+  const years: number[] = [];
+  for (let y = startYear; y <= endYear; y += 1) years.push(y);
+  return years;
+}
+
+/** [startDate, endDate] do recorte de um ano específico dentro do range original — evita vazar meses de fora do filtro quando o ano é parcial na ponta. */
+function clampYearRange(year: number, startDate: string, endDate: string): { startDate: string; endDate: string } {
+  const yearStart = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+  return {
+    startDate: yearStart > startDate ? yearStart : startDate,
+    endDate: yearEnd < endDate ? yearEnd : endDate,
+  };
 }
 
 interface PlanningSubcategoryBarChartProps {
@@ -52,24 +69,47 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
   const endDate = endDateProp ?? fallback.endDate;
   const filterKey = JSON.stringify(filters ?? {});
 
+  const years = useMemo(() => yearsInRange(startDate, endDate), [startDate, endDate]);
+  const isMultiYear = years.length > 1;
+
+  // Com 1 ano: mesma chamada única de sempre. Com >1 ano (Tarefa 1.2): uma
+  // chamada por ano (mesmo padrão de useMonthlySummaryMulti), indexada por ano,
+  // para a legenda poder discriminar valor por ano + total ao invés de só o
+  // acumulado do período inteiro.
   const [categories, setCategories] = useState<CategoryDashboard[]>([]);
+  const [categoriesByYear, setCategoriesByYear] = useState<Record<number, CategoryDashboard[]>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
+    const key = type === 'INCOME' ? 'incomes' : 'expenses';
 
     (async () => {
       try {
-        const params = new URLSearchParams({ startDate, endDate });
-        appendFilterParams(params, filters);
-        const response = await authFetch(`${API_URL}/planning/dashboard?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          const key = type === 'INCOME' ? 'incomes' : 'expenses';
-          if (!cancelled && Array.isArray(result.data?.[key])) {
+        if (!isMultiYear) {
+          const params: Record<string, unknown> = { startDate, endDate, ...(filters ?? {}) };
+          const result = await getPlanningDashboardAction(params);
+          if (!cancelled && result.ok && Array.isArray(result.data?.[key])) {
             setCategories(result.data[key]);
+            setCategoriesByYear({});
           }
+          return;
+        }
+
+        const results = await Promise.all(
+          years.map(async (year) => {
+            const range = clampYearRange(year, startDate, endDate);
+            const params: Record<string, unknown> = { ...range, ...(filters ?? {}) };
+            const result = await getPlanningDashboardAction(params);
+            return { year, list: result.ok && Array.isArray(result.data?.[key]) ? result.data[key] : [] };
+          })
+        );
+        if (!cancelled) {
+          const map: Record<number, CategoryDashboard[]> = {};
+          for (const { year, list } of results) map[year] = list;
+          setCategoriesByYear(map);
+          setCategories([]);
         }
       } catch (error) {
         console.error('[PlanningSubcategoryBarChart] Erro ao carregar dados:', error);
@@ -82,28 +122,48 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, startDate, endDate, filterKey]);
+  }, [type, startDate, endDate, filterKey, isMultiYear, years.join(',')]);
 
   // Primeira linha é o total global da aba (Total de Receitas/Despesas) — não é
   // uma subcategoria em si, mesmo tratamento que RealizedVsPlannedChart já dá.
-  const items = useMemo(() => {
-    const list: { name: string; value: number }[] = [];
-    const validCategories = categories.filter(
-      (c) => c.id !== `${type.toLowerCase()}s-global` && !c.name.toLowerCase().startsWith('total de')
-    );
+  const isGlobalTotalRow = (c: CategoryDashboard) =>
+    c.id === `${type.toLowerCase()}s-global` || c.name.toLowerCase().startsWith('total de');
 
-    for (const cat of validCategories) {
+  function flattenSubcategories(list: CategoryDashboard[]): { name: string; value: number }[] {
+    const out: { name: string; value: number }[] = [];
+    for (const cat of list.filter((c) => !isGlobalTotalRow(c))) {
       if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
         for (const sub of cat.subcategories) {
-          if (sub.realized_amount > 0) list.push({ name: sub.name, value: sub.realized_amount });
+          if (sub.realized_amount > 0) out.push({ name: sub.name, value: sub.realized_amount });
         }
       } else if (cat.realized_amount > 0) {
-        list.push({ name: cat.name, value: cat.realized_amount });
+        out.push({ name: cat.name, value: cat.realized_amount });
       }
     }
+    return out;
+  }
 
-    return list.sort((a, b) => b.value - a.value);
-  }, [categories, type]);
+  const items = useMemo(() => {
+    if (!isMultiYear) return flattenSubcategories(categories).sort((a, b) => b.value - a.value);
+
+    // Total por subcategoria somando todos os anos — é o que dita a altura da
+    // barra e a ordenação; o detalhamento por ano só aparece no tooltip.
+    const totals = new Map<string, number>();
+    for (const year of years) {
+      for (const { name, value } of flattenSubcategories(categoriesByYear[year] ?? [])) {
+        totals.set(name, (totals.get(name) ?? 0) + value);
+      }
+    }
+    return [...totals.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, categoriesByYear, isMultiYear, years.join(',')]);
+
+  /** Valor da subcategoria `name` no `year`, ou 0 se não houve lançamento. */
+  const valueForYear = useCallback(
+    (name: string, year: number) => flattenSubcategories(categoriesByYear[year] ?? []).find((i) => i.name === name)?.value ?? 0,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [categoriesByYear]
+  );
 
   const periodLabel = formatPeriodLabel(startDate, endDate);
 
@@ -121,8 +181,32 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
     tooltip: getCustomEchartsTooltipConfig((params: any) => {
       const item = Array.isArray(params) ? params[0] : params;
       const entry = items[item.dataIndex];
-      return buildCustomTooltipHTML(entry?.name ?? item.name ?? '', [
-        { label: type === 'INCOME' ? 'Receita' : 'Despesa', value: entry?.value ?? Number(item.value ?? 0), color: item.color },
+      const name = entry?.name ?? item.name ?? '';
+      const total = entry?.value ?? Number(item.value ?? 0);
+      const sideLabel = type === 'INCOME' ? 'Receita' : 'Despesa';
+
+      // Múltiplos anos (Tarefa 1.2): uma linha por ano + linha de total, cada
+      // uma com o percentual sobre o total da subcategoria — em vez de só o
+      // acumulado do período inteiro.
+      if (isMultiYear) {
+        const pct = (value: number) => (total > 0 ? `${((value / total) * 100).toFixed(2).replace('.', ',')}%` : '0,00%');
+        const yearRows = years.map((year) => {
+          const value = valueForYear(name, year);
+          return {
+            label: `${name} - ${year}`,
+            value,
+            color: item.color,
+            formattedValue: `${formatCurrency(value)} (${pct(value)})`,
+          };
+        });
+        return buildCustomTooltipHTML(name, [
+          ...yearRows,
+          { label: `Total ${name}`, value: total, color: item.color, formattedValue: `${formatCurrency(total)} (${pct(total)})` },
+        ]);
+      }
+
+      return buildCustomTooltipHTML(name, [
+        { label: sideLabel, value: total, color: item.color },
       ]);
     }),
     grid: {
@@ -168,7 +252,8 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
         },
       },
     ],
-  }), [items, tokens, type]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [items, tokens, type, isMultiYear, years.join(','), valueForYear]);
 
   return (
     <ChartCard

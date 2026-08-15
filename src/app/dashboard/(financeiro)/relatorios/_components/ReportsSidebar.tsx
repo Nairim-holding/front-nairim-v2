@@ -141,7 +141,7 @@ export default function ReportsSidebar({ selected, onSelect }: ReportsSidebarPro
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 custom-scrollbar">
-        {renderSection('Despesas', DESPESAS_ITEMS, 'despesas', 'text-red-500 border-red-400/40')}
+        {renderSection('Despesas', DESPESAS_ITEMS, 'despesas', 'text-orange-500 border-orange-400/40')}
         {renderSection('Receitas', RECEITAS_ITEMS, 'receitas', 'text-emerald-500 border-emerald-400/40')}
         {renderSection('Fluxo de Caixa', FLUXO_ITEMS, 'fluxo', 'text-brand border-brand/30')}
       </nav>

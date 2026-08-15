@@ -1,24 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Paperclip, Upload, Trash2, Download, FileText, Image as ImageIcon } from 'lucide-react';
-import { authFetch } from '@/utils/authFetch';
+import { X, Paperclip, Upload, Trash2, Download, FileText, Image as ImageIcon, Eye } from 'lucide-react';
+import {
+  deleteTransactionDocumentAction,
+  getTransactionDocumentsAction,
+  uploadTransactionDocumentsAction,
+} from '@/server/actions/financial-transaction';
+import type { TransactionDocument } from '@/core/entities/financial-transaction';
 import { useMessageContext } from '@/contexts/MessageContext';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 /** Mesmo limite do backend (DocumentService.MAX_TRANSACTION_ATTACHMENTS) — Tarefa 2 do guia de correções. */
 export const MAX_ATTACHMENTS = 5;
 const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const ALLOWED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png';
-
-interface TransactionDocument {
-  id: string;
-  file_path: string;
-  file_type: string;
-  description: string | null;
-  created_at: string;
-}
 
 interface TransactionAttachmentsModalProps {
   transactionId: string;
@@ -27,11 +22,11 @@ interface TransactionAttachmentsModalProps {
   onCountChange?: (count: number) => void;
 }
 
-function formatDateTime(iso: string): string {
+function formatDateTime(iso: string | Date): string {
   try {
     return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   } catch {
-    return iso;
+    return String(iso);
   }
 }
 
@@ -45,14 +40,14 @@ export default function TransactionAttachmentsModal({ transactionId, onClose, on
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<TransactionDocument | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await authFetch(`${API_URL}/financial-transaction/${transactionId}/documents`);
-      if (response.ok) {
-        const result = await response.json();
+      const result = await getTransactionDocumentsAction(transactionId);
+      if (result.ok) {
         const list = Array.isArray(result.data) ? result.data : [];
         setDocuments(list);
         onCountChange?.(list.length);
@@ -92,14 +87,10 @@ export default function TransactionAttachmentsModal({ transactionId, onClose, on
       const formData = new FormData();
       fileArray.forEach((file) => formData.append('attachments', file));
 
-      const response = await authFetch(`${API_URL}/financial-transaction/${transactionId}/documents`, {
-        method: 'POST',
-        body: formData,
-      });
+      const result = await uploadTransactionDocumentsAction(transactionId, formData);
 
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message ?? 'Erro ao enviar anexos.');
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Erro ao enviar anexos.');
       }
 
       showMessage('Anexo(s) enviado(s) com sucesso', 'success', 2500);
@@ -115,12 +106,9 @@ export default function TransactionAttachmentsModal({ transactionId, onClose, on
   const handleDelete = useCallback(async (documentId: string) => {
     setDeletingId(documentId);
     try {
-      const response = await authFetch(`${API_URL}/financial-transaction/${transactionId}/documents/${documentId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message ?? 'Erro ao excluir anexo.');
+      const result = await deleteTransactionDocumentAction(transactionId, documentId);
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Erro ao excluir anexo.');
       }
       showMessage('Anexo excluído com sucesso', 'success', 2000);
       await fetchDocuments();
@@ -163,6 +151,14 @@ export default function TransactionAttachmentsModal({ transactionId, onClose, on
                     </p>
                     <p className="text-[11px] text-content-muted">{formatDateTime(doc.created_at)}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc(doc)}
+                    title="Visualizar"
+                    className="p-1.5 rounded-lg text-content-muted hover:text-brand hover:bg-surface-subtle transition-colors shrink-0"
+                  >
+                    <Eye size={16} />
+                  </button>
                   <a
                     href={doc.file_path}
                     target="_blank"
@@ -210,6 +206,51 @@ export default function TransactionAttachmentsModal({ transactionId, onClose, on
           </p>
         </div>
       </div>
+
+      {previewDoc && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-6"
+          onClick={() => setPreviewDoc(null)}
+        >
+          <div
+            className="bg-surface rounded-2xl shadow-xl border border-ui-border-soft w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-ui-border-soft shrink-0">
+              <p className="text-sm font-semibold text-content truncate" title={previewDoc.description ?? ''}>
+                {previewDoc.description || 'Anexo'}
+              </p>
+              <div className="flex items-center gap-1 shrink-0">
+                <a
+                  href={previewDoc.file_path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Baixar"
+                  className="p-1.5 rounded-lg text-content-muted hover:text-brand hover:bg-surface-subtle transition-colors"
+                >
+                  <Download size={16} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  title="Fechar"
+                  className="p-1.5 rounded-lg text-content-muted hover:text-content hover:bg-surface-subtle transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-[300px] bg-surface-subtle flex items-center justify-center overflow-auto">
+              {previewDoc.file_type.startsWith('image/') ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewDoc.file_path} alt={previewDoc.description ?? 'Anexo'} className="max-w-full max-h-[75vh] object-contain" />
+              ) : (
+                <iframe src={previewDoc.file_path} title={previewDoc.description ?? 'Anexo'} className="w-full h-[75vh] border-0" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

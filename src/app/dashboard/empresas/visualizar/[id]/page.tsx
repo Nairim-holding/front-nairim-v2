@@ -1,21 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Loader2, Building2, Globe, ToggleLeft } from 'lucide-react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
-import { useAuth } from '@/contexts/AuthContext';
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getCompanyByIdAction } from '@/server/actions/company';
 
 export default function VisualizarEmpresaPage() {
   const params = useParams();
   const id = params.id as string;
-  const { token } = useAuth();
 
   const [branding, setBranding] = useState<CompanyBranding | null>(null);
   const [companyName, setCompanyName] = useState('');
@@ -24,16 +21,13 @@ export default function VisualizarEmpresaPage() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!token || !id) return;
+      if (!id) return;
       try {
-        const res = await fetch(`${API_URL}/companies/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.message ?? `Erro ${res.status}`);
+        const result = await getCompanyByIdAction(id);
+        if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
         if (!cancelled) {
-          setBranding(json?.data?.branding ?? null);
-          setCompanyName(json?.data?.name ?? '');
+          setBranding((result.data?.branding as CompanyBranding | null) ?? null);
+          setCompanyName(result.data?.name ?? '');
         }
       } catch {
         // Silencioso — a seção de Identificação abaixo já trata erros de carregamento.
@@ -43,7 +37,7 @@ export default function VisualizarEmpresaPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [token, id]);
+  }, [id]);
 
   const steps: FormStep[] = useMemo(() => [
     {
@@ -78,6 +72,14 @@ export default function VisualizarEmpresaPage() {
     },
   ], []);
 
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((d: any) => ({
+    name: d?.name ?? '',
+    slug: d?.slug ?? '',
+    is_active: d?.is_active ?? true,
+  }), []);
+
   return (
     <SuperAdminOnly>
       {/* [&>section]:min-h-0 evita o vão em branco causado pelo min-h-screen do
@@ -90,11 +92,8 @@ export default function VisualizarEmpresaPage() {
           mode="view"
           id={id}
           steps={steps}
-          transformData={(d) => ({
-            name: d?.name ?? '',
-            slug: d?.slug ?? '',
-            is_active: d?.is_active ?? true,
-          })}
+          fetchResource={getCompanyByIdAction}
+          transformData={transformData}
         />
 
         <div className="bg-surface border border-ui-border rounded-xl p-5 flex flex-col gap-4">

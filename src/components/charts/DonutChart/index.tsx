@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import * as echarts from "echarts";
 import DataModal from "../DataModal";
 import { MetricDataItem } from "@/types/types";
@@ -334,8 +335,8 @@ export default function EChartsDonut({
       />
 
       {/* Modal Fullscreen do Gráfico */}
-      {isFullscreenModalOpen && (
-        <div 
+      {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4"
           onClick={() => setIsFullscreenModalOpen(false)}
         >
@@ -381,7 +382,8 @@ export default function EChartsDonut({
               <div ref={fullscreenChartRef} className="w-full h-full absolute inset-0" />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -4,15 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
+import { getExpenseByCategoryAction } from '@/server/actions/financial-transaction';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
-import { appendFilterParams } from '@/hooks/useMonthlySummary';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface CategoryYearValue {
   year: number;
@@ -51,15 +48,10 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
 
     (async () => {
       try {
-        const params = new URLSearchParams({ startDate, endDate });
-        appendFilterParams(params, filters);
-        const response = await authFetch(`${API_URL}/financial-transaction/expense-by-category?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled) {
-            setTotalIncome(Number(result.data?.totalIncome ?? 0));
-            setCategories(Array.isArray(result.data?.categories) ? result.data.categories : []);
-          }
+        const result = await getExpenseByCategoryAction({ startDate, endDate, ...(filters ?? {}) });
+        if (!cancelled && result.ok) {
+          setTotalIncome(Number(result.data.totalIncome ?? 0));
+          setCategories(Array.isArray(result.data.categories) ? result.data.categories : []);
         }
       } catch (error) {
         console.error('[ExpenseByCategoryChart] Erro ao carregar despesas por categoria:', error);

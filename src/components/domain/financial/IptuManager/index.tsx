@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Plus, X, Check, Landmark, DollarSign, ListOrdered, Info, Copy } from 'lucide-react';
 import { maskMoney } from '@/utils/masks';
 import { parseMoney } from '@/app/dashboard/(cadastro)/imoveis/_lib/propertyTransform';
 import DynamicTableManager from '@/components/table/DataTable';
+import { getIptuPropertyFiltersAction } from '@/server/actions/iptu-property';
 import { ColumnDef } from '@/types/types';
 import { usePopupContext } from '@/contexts/PopupContext';
 
@@ -476,6 +477,13 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
     });
   }, [tableData, sortConfig]);
 
+  // Filtros dinâmicos via Server Action (substitui GET /iptu-property/filters).
+  const filtersFetcher = useCallback(async (applied?: Record<string, any>) => {
+    const result = await getIptuPropertyFiltersAction(applied ?? {});
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
+    return result.data;
+  }, []);
+
   return (
     <div className="w-full space-y-6">
       {activeLease && (
@@ -513,6 +521,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
             handleRemove(originalIndex);
           }}
           onSortChange={setSortConfig}
+          filtersFetcher={filtersFetcher}
         />
       </div>
 

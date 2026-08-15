@@ -11,7 +11,10 @@ import CalendarPicker from '@/components/ui/CalendarPicker';
 import DynamicFilterModal from '@/components/filters/DynamicFilterModal';
 import { useDynamicFilters } from '@/hooks/useDynamicFilters';
 import { useMessageContext } from '@/contexts';
-import { authFetch } from '@/utils/authFetch';
+import { getPlanningDashboardAction,
+  upsertPlanningAction,
+} from '@/server/actions/planning';
+import { listFinancialTransactionsAction, getTransactionFiltersAction } from '@/server/actions/financial-transaction';
 import PlanningTable, { type PlanningTableHandle, type RealizedDetailParams } from '@/components/planejamento/PlanningTable';
 import PlanningEditModal from '@/components/planejamento/PlanningEditModal';
 import DataModal from '@/components/charts/DataModal';
@@ -41,8 +44,6 @@ interface RealizedTransactionRow {
   supplier?: { legal_name?: string } | null;
   status: string;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 const SHORTCUTS = [
   { label: 'Últimos 3 meses', months: 3 },
@@ -88,7 +89,15 @@ export default function PlanningPageContent() {
   // Tarefa 13 (29/07/26): botão Filtro, mesmo componente/endpoint de Lançamentos.
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters);
+  const filtersFetcher = useCallback(async (applied?: Record<string, unknown>) => {
+    const result = await getTransactionFiltersAction(applied ?? {});
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
+    return {
+      ...result.data,
+      filters: (result.data.filters ?? []).map((f) => ({ ...f, description: f.description ?? '' })),
+    };
+  }, []);
+  const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters, filtersFetcher);
   const activeFilterCount = Object.keys(appliedFilters).length;
 
   const handleApplyFilters = useCallback((f: Record<string, unknown>) => {
@@ -116,16 +125,29 @@ export default function PlanningPageContent() {
       const from = `${params.year}-${monthStr}-01`;
       const to = `${params.year}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
 
-      const qs = new URLSearchParams({
+      const qs: Record<string, unknown> = {
         subcategory_id: params.subcategoryId,
         status: 'COMPLETED',
         effective_date: JSON.stringify({ from, to }),
         limit: '200',
-      });
-      const res = await authFetch(`${API_URL}/financial-transaction?${qs}`);
-      if (!res.ok) throw new Error('Falha ao carregar os lançamentos');
-      const json = await res.json();
-      setRealizedTransactions(Array.isArray(json.data) ? json.data : []);
+      };
+      const result = await listFinancialTransactionsAction(qs);
+      if (!result.ok) throw new Error(result.error ?? 'Falha ao carregar os lançamentos');
+      const rows = result.data?.data ?? [];
+      setRealizedTransactions(
+        rows.map((tx) => ({
+          id: tx.id,
+          effective_date:
+            tx.effective_date instanceof Date
+              ? tx.effective_date.toISOString().slice(0, 10)
+              : String(tx.effective_date),
+          description: tx.description,
+          amount: Number(tx.amount),
+          financial_institution: (tx.financial_institution as RealizedTransactionRow['financial_institution']) ?? null,
+          supplier: (tx.supplier as RealizedTransactionRow['supplier']) ?? null,
+          status: tx.status,
+        })),
+      );
     } catch (e) {
       showMessage(e instanceof Error ? e.message : 'Erro ao carregar os lançamentos', 'error');
     } finally {
@@ -156,31 +178,18 @@ export default function PlanningPageContent() {
 
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, unknown> = {
         startDate: dateRange.from,
         endDate: dateRange.to,
-      });
-      Object.entries(appliedFilters).forEach(([key, value]) => {
-        if (value === undefined || value === null || value === '') return;
-        if (Array.isArray(value)) value.forEach((v) => params.append(key, String(v)));
-        else params.append(key, String(value));
-      });
+        ...appliedFilters,
+      };
 
-      const urlFinal = `${API_URL}/planning/dashboard?${params}`;
-      console.log(`\n📤 URL: GET ${urlFinal}`);
-
-      const res = await authFetch(urlFinal);
-
-      console.log(`\n📥 Status: ${res.status} ${res.statusText}`);
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`❌ Erro HTTP:`, errorText);
-        throw new Error(`API Error ${res.status}: ${errorText || 'Falha ao carregar dados'}`);
+      const result = await getPlanningDashboardAction(params);
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Falha ao carregar dados');
       }
 
-      const json = await res.json();
-      const responseData = json.data ?? json;
+      const responseData = result.data;
 
       console.log('\n📊 DADOS RECEBIDOS:');
       console.log('─────────────────────────────────────────────────────────────');
@@ -299,32 +308,20 @@ export default function PlanningPageContent() {
       console.log('─────────────────────────────────────────────────────────────');
       console.log(JSON.stringify(payload, null, 2));
       console.log('─────────────────────────────────────────────────────────────');
-      console.log(`URL: POST ${API_URL}/planning`);
-      console.log(`Content-Type: application/json`);
-      console.log(`Authorization: Bearer [TOKEN]`);
 
-      const res = await authFetch(`${API_URL}/planning`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      const res = await upsertPlanningAction(payload);
 
       console.log('\n📥 [INLINE SAVE] RESPOSTA RECEBIDA:');
       console.log('─────────────────────────────────────────────────────────────');
-      console.log(`Status HTTP: ${res.status} ${res.statusText}`);
-      console.log(`Headers:`, {
-        'content-type': res.headers.get('content-type'),
-        'content-length': res.headers.get('content-length'),
-      });
 
       if (!res.ok) {
-        const errorBody = await res.text();
-        console.log(`❌ Erro na resposta:`, errorBody);
-        throw new Error(`Falha ao salvar: HTTP ${res.status} - ${errorBody}`);
+        console.log(`❌ Erro na resposta:`, res.error);
+        throw new Error(`Falha ao salvar: ${res.error}`);
       }
 
-      const responseData = await res.json();
-      console.log('\n✅ Resposta JSON:');
-      console.log(JSON.stringify(responseData, null, 2));
+      const responseData = res;
+      console.log('\n✅ Resposta OK:');
+      console.log(JSON.stringify(responseData.data, null, 2));
       console.log('─────────────────────────────────────────────────────────────');
 
       if (responseData.data) {

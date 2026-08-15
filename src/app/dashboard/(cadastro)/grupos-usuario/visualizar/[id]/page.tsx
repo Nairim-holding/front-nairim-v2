@@ -2,18 +2,21 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import PermissionMatrix from '@/components/domain/userGroups/PermissionMatrix';
 import AuditFooter from '@/components/domain/userGroups/AuditFooter';
 import { FormStep } from '@/types/types';
 import { Users, Tag, ShieldCheck } from 'lucide-react';
+import { getUserGroupByIdAction } from '@/server/actions/user-group';
 
 export default function VisualizarGrupoUsuarioPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const transformData = (apiData: any) => {
+  // `useCallback`: está nas dependências do useEffect de fetch do
+  // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
+  const transformData = useCallback((apiData: any) => {
     if (!apiData) return {};
     const data = apiData.data || apiData;
 
@@ -24,7 +27,7 @@ export default function VisualizarGrupoUsuarioPage() {
       updated_by_name: data.updater?.name || null,
       updated_at: data.updated_at || null,
     };
-  };
+  }, []);
 
   const steps: FormStep[] = useMemo(
     () => [
@@ -85,6 +88,7 @@ export default function VisualizarGrupoUsuarioPage() {
       mode="view"
       id={id}
       steps={steps}
+      fetchResource={getUserGroupByIdAction}
       transformData={transformData}
     />
   );

@@ -5,6 +5,18 @@ import Section from '@/components/layout/PageSection';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
 import MultiColumnManager from '@/components/form/MultiColumnManager';
+import {
+  listCategoriesAction,
+  createFinancialCategoryAction,
+  updateFinancialCategoryAction,
+  deleteFinancialCategoryAction,
+} from '@/server/actions/financial-category';
+import {
+  listSubcategoriesAction,
+  createFinancialSubcategoryAction,
+  updateFinancialSubcategoryAction,
+  deleteFinancialSubcategoryAction,
+} from '@/server/actions/financial-subcategory';
 
 const DFC_GROUP_OPTIONS = [
   { value: '', label: 'Não classificada' },
@@ -15,8 +27,6 @@ const DFC_GROUP_OPTIONS = [
 ];
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 type TransactionType = 'EXPENSE' | 'INCOME';
 
@@ -36,13 +46,14 @@ export default function CategoriasPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [catRes, subRes] = await Promise.all([
-        fetch(`${API_URL}/financial-category?limit=1000`),
-        fetch(`${API_URL}/financial-subcategory?limit=1000`),
+      const [catResult, subResult] = await Promise.all([
+        listCategoriesAction({ limit: 100 }),
+        listSubcategoriesAction({ limit: 100 }),
       ]);
-      const [catData, subData] = await Promise.all([catRes.json(), subRes.json()]);
-      setCategories(catData?.data ?? catData ?? []);
-      setSubcategories(subData?.data ?? subData ?? []);
+      if (!catResult.ok) throw new Error(catResult.error);
+      if (!subResult.ok) throw new Error(subResult.error);
+      setCategories(catResult.data?.data ?? []);
+      setSubcategories(subResult.data?.data ?? []);
     } catch {
       showMessage('Erro ao carregar os dados.', 'error');
     } finally {
@@ -65,47 +76,32 @@ export default function CategoriasPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveParent = useCallback(async (data: any, mode: 'CREATE' | 'EDIT') => {
-    const url = mode === 'CREATE'
-      ? `${API_URL}/financial-category`
-      : `${API_URL}/financial-category/${data.id}`;
     const payload = mode === 'CREATE' ? { ...data, type: transactionType } : data;
+    const result =
+      mode === 'CREATE'
+        ? await createFinancialCategoryAction(payload)
+        : await updateFinancialCategoryAction(data.id, payload);
 
-    const res = await fetch(url, {
-      method: mode === 'CREATE' ? 'POST' : 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const result = await res.json();
-      throw new Error(result.message ?? 'Erro ao salvar Categoria.');
-    }
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao salvar Categoria.');
 
     showMessage('Categoria salva com sucesso!', 'success');
-    const newRecord = await res.json();
     await fetchData();
-    return newRecord;
+    return result.data;
   }, [transactionType, showMessage, fetchData]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveChild = useCallback(async (data: any, parentId: string, mode: 'CREATE' | 'EDIT') => {
-    const url = mode === 'CREATE'
-      ? `${API_URL}/financial-subcategory`
-      : `${API_URL}/financial-subcategory/${data.id}`;
+    const payload = { ...data, category_id: parentId };
+    const result =
+      mode === 'CREATE'
+        ? await createFinancialSubcategoryAction(payload)
+        : await updateFinancialSubcategoryAction(data.id, payload);
 
-    const res = await fetch(url, {
-      method: mode === 'CREATE' ? 'POST' : 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, category_id: parentId }),
-    });
-
-    if (!res.ok) {
-      const result = await res.json();
-      throw new Error(result.message ?? 'Erro ao salvar Subcategoria.');
-    }
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao salvar Subcategoria.');
 
     showMessage('Subcategoria salva com sucesso!', 'success');
     await fetchData();
+    return result.data;
   }, [showMessage, fetchData]);
 
   const handleDeleteParent = useCallback(
@@ -116,10 +112,9 @@ export default function CategoriasPage() {
           `Tem certeza que deseja excluir "${name}"?`,
           async () => {
             try {
-              const res = await fetch(`${API_URL}/financial-category/${id}`, { method: 'DELETE' });
-              if (!res.ok) {
-                const result = await res.json().catch(() => ({}));
-                throw new Error(result.message ?? 'Erro ao excluir Categoria.');
+              const result = await deleteFinancialCategoryAction(id);
+              if (!result.ok) {
+                throw new Error(result.error ?? 'Erro ao excluir Categoria.');
               }
               showMessage('Excluída com sucesso!', 'success');
               await fetchData();
@@ -143,10 +138,9 @@ export default function CategoriasPage() {
           `Tem certeza que deseja excluir "${name}"?`,
           async () => {
             try {
-              const res = await fetch(`${API_URL}/financial-subcategory/${id}`, { method: 'DELETE' });
-              if (!res.ok) {
-                const result = await res.json().catch(() => ({}));
-                throw new Error(result.message ?? 'Erro ao excluir Subcategoria.');
+              const result = await deleteFinancialSubcategoryAction(id);
+              if (!result.ok) {
+                throw new Error(result.error ?? 'Erro ao excluir Subcategoria.');
               }
               showMessage('Excluída com sucesso!', 'success');
               await fetchData();

@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { fetchSection, getDefaultDateRange, FilterType, DashboardData } from "@/lib/dashboard";
-import { useAuth } from "@/contexts";
 import ForbiddenNotice from "@/components/layout/PermissionGate/ForbiddenNotice";
 
 interface DashboardContentProps {
@@ -22,7 +21,6 @@ interface DashboardContentProps {
  */
 export default function DashboardContent({ initialMetrics, initialFilter }: DashboardContentProps) {
   const searchParams = useSearchParams();
-  const { token } = useAuth();
 
   const [filter, setFilter]   = useState<FilterType>(initialFilter);
   const [metrics, setMetrics] = useState<DashboardData>(initialMetrics);
@@ -67,7 +65,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
 
       try {
         const { startDate, endDate } = getDateRange();
-        const data = await fetchSection(section, { startDate, endDate, token: token ?? undefined });
+        const data = await fetchSection(section, { startDate, endDate });
 
         setMetrics(prev => ({ ...prev, [section]: data as any }));
         fetchedRef.current.add(section);
@@ -80,9 +78,7 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
         setFilter(section);
       }
     },
-    // `token` importa: sem ele na lista, um token que chega depois da montagem
-    // deixaria este callback preso ao valor antigo (fetch sem Authorization).
-    [getDateRange, token]
+    [getDateRange]
   );
 
   // ─── Re-fetch everything when the date range changes ─────────────────────
@@ -111,13 +107,13 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
   const handleSectionRangeChange = useCallback(
     async (section: FilterType, startDate: string, endDate: string) => {
       try {
-        const data = await fetchSection(section, { startDate, endDate, token: token ?? undefined });
+        const data = await fetchSection(section, { startDate, endDate });
         setMetrics(prev => ({ ...prev, [section]: data as any }));
       } catch (err: any) {
         console.error(`[Client] Erro ao atualizar período de ${section}:`, err);
       }
     },
-    [token]
+    []
   );
 
   // ─── Error / empty state ──────────────────────────────────────────────────

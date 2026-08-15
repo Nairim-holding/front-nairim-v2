@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUploadSSE } from '@/hooks/useUploadSSE';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
@@ -13,6 +12,11 @@ import {
   FileText, Calendar, DollarSign, User, Building,
   Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users, Upload
 } from 'lucide-react';
+import { createLeaseAction, updateLeaseDocumentsAction } from '@/server/actions/lease';
+import { listPropertiesAction, getPropertyByIdAction } from '@/server/actions/property';
+import { listTenantsAction } from '@/server/actions/tenant';
+import { listAgenciesAction } from '@/server/actions/agency';
+import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
 
 const parseMoney = (value: string | number) => {
   if (!value && value !== 0) return 0;
@@ -40,8 +44,7 @@ const formatMoney = (value: number) => {
 
 export default function CadastrarLocacaoPage() {
   const { showMessage } = useMessageContext();
-  const { user, token } = useAuth();
-  const { uploadAndTrack } = useUploadSSE();
+  const { user } = useAuth();
   const router = useRouter();
   
   const [properties, setProperties] = useState<any[]>([]);
@@ -63,24 +66,19 @@ export default function CadastrarLocacaoPage() {
     const fetchData = async () => {
       try {
         const [propertiesRes, tenantsRes, agenciesRes, institutionsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties?limit=100`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/tenants`),
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/agencies?limit=1000`),
+          listPropertiesAction({ limit: 100 }),
+          listTenantsAction({ limit: 100 }),
+          listAgenciesAction({ limit: 100 }),
           // Só instituições ativas — mesmo critério do filtro de Lançamentos.
-          fetch(`${process.env.NEXT_PUBLIC_URL_API}/financial-institution?limit=1000&filter[is_active]=true`),
+          listFinancialInstitutionsAction({ limit: 100, 'filter[is_active]': 'true' }),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
 
-        const propertiesData = await propertiesRes.json();
-        const tenantsData = await tenantsRes.json();
-        const agenciesData = agenciesRes.ok ? await agenciesRes.json() : { data: [] };
-        const institutionsData = institutionsRes.ok ? await institutionsRes.json() : { data: [] };
-
-        setProperties(propertiesData.data || propertiesData || []);
-        setTenants(tenantsData.data || tenantsData || []);
-        setAgencies(agenciesData.data || agenciesData || []);
-        setInstitutions(institutionsData.data || institutionsData || []);
+        setProperties(propertiesRes.data?.data || propertiesRes.data || []);
+        setTenants(tenantsRes.data?.data || tenantsRes.data || []);
+        setAgencies(agenciesRes.ok ? (agenciesRes.data?.data || agenciesRes.data || []) : []);
+        setInstitutions(institutionsRes.ok ? (institutionsRes.data?.data || institutionsRes.data || []) : []);
       } catch (error) {
         showMessage('Erro ao carregar dados', 'error');
       } finally {
@@ -94,11 +92,10 @@ export default function CadastrarLocacaoPage() {
     if (fieldName === 'property_id' && value) {
       try {
         showMessage('Carregando dados do imóvel...', 'info');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/properties/${value}`);
-        if (!response.ok) throw new Error('Erro ao buscar dados do imóvel');
+        const result = await getPropertyByIdAction(value);
+        if (!result.ok) throw new Error('Erro ao buscar dados do imóvel');
 
-        const result = await response.json();
-        const property = result.data || result;
+        const property = result.data as any;
         const propertyValues = property.values?.[0] || {};
         
         const propertyAgency = property.agency_id ? agencies.find((a) => a.id === property.agency_id) : null;
@@ -242,28 +239,19 @@ export default function CadastrarLocacaoPage() {
         guarantors: data.guarantors || null,
       };
 
-      const API_URL = process.env.NEXT_PUBLIC_URL_API;
-      const response = await fetch(`${API_URL}/leases`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formattedData),
-      });
+      const result = await createLeaseAction(formattedData);
 
-      const responseText = await response.text();
-      let result;
-      try { result = JSON.parse(responseText); } catch (e) { throw new Error('Resposta inválida do servidor'); }
-
-      if (!response.ok) {
-        if (response.status === 400 && result.errors) {
-          const validationErrors = Object.entries(result.errors).map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`).join('; ');
+      if (!result.ok) {
+        if (result.status === 400 && (result as any).errors) {
+          const validationErrors = Object.entries((result as any).errors).map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`).join('; ');
           throw new Error(`Erros de validação: ${validationErrors}`);
         }
-        throw new Error(result.message || `Erro ${response.status}`);
+        throw new Error(result.error || `Erro ${result.status}`);
       }
 
       // Envia as mídias anexadas na aba Mídias para a locação recém-criada,
-      // reaproveitando o mesmo endpoint/mecanismo da edição (PUT /leases/:id/documents
-      // via useUploadSSE). Falha aqui não invalida a locação já salva.
+      // reaproveitando o mesmo mecanismo da edição (updateLeaseDocumentsAction).
+      // Falha aqui não invalida a locação já salva.
       const createdLeaseId = result?.data?.id;
       const newFiles = (Array.isArray(data.arquivosLocacao) ? data.arquivosLocacao : [])
         .filter((f: any) => f instanceof globalThis.File) as File[];
@@ -274,13 +262,7 @@ export default function CadastrarLocacaoPage() {
           newFiles.forEach((file) => fd.append('arquivosLocacao', file, file.name));
           fd.append('userId', user?.id ?? '');
 
-          await uploadAndTrack({
-            url: `${API_URL}/leases/${createdLeaseId}/documents`,
-            method: 'PUT',
-            body: fd,
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-            compressImages: false,
-          });
+          await updateLeaseDocumentsAction(createdLeaseId, fd);
         } catch (mediaError: any) {
           showMessage(
             `Locação criada, mas houve erro ao enviar os arquivos: ${mediaError?.message ?? 'falha no upload'}`,

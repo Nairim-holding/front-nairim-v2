@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { fetchAgencyFinancialOptions } from '../../_lib/agencyFinancialOptions';
 import EditarImobiliariaForm from './EditarImobiliariaForm';
 
@@ -8,8 +7,7 @@ interface Props {
 
 export default async function EditarImobiliariaPage({ params }: Props) {
   const { id } = await params;
-  const token = (await cookies()).get('authToken')?.value;
-  const { categoryOptions, subcategoriesRaw } = await fetchAgencyFinancialOptions(token);
+  const { categoryOptions, subcategoriesRaw } = await fetchAgencyFinancialOptions();
 
   return <EditarImobiliariaForm id={id} categoryOptions={categoryOptions} subcategoriesRaw={subcategoriesRaw} />;
 }

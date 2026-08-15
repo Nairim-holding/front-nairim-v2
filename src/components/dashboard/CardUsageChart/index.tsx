@@ -4,12 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
 import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
 import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
-import { appendFilterParams } from '@/hooks/useMonthlySummary';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { getCardUsageSummaryAction } from '@/server/actions/financial-card';
 
 interface CardUsage {
   cardId: string;
@@ -49,14 +46,29 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
 
     (async () => {
       try {
-        const params = new URLSearchParams({ startDate, endDate });
-        appendFilterParams(params, filters);
-        const response = await authFetch(`${API_URL}/financial-card/usage?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled && Array.isArray(result.data)) {
-            setCards(result.data);
-          }
+        // Os filtros do grid (chave repetida = múltipla seleção) são convertidos
+        // para arrays, mesma convenção do schema da action de uso de cartões.
+        const filterArray = (key: string): string[] | undefined => {
+          const v = (filters ?? {})[key];
+          if (v === undefined || v === null || v === '') return undefined;
+          const arr = Array.isArray(v) ? v : [v];
+          return arr.length ? arr.map(String) : undefined;
+        };
+
+        const result = await getCardUsageSummaryAction({
+          startDate,
+          endDate,
+          category_id: filterArray('category_id'),
+          subcategory_id: filterArray('subcategory_id'),
+          financial_institution_id: filterArray('financial_institution_id'),
+          card_id: filterArray('card_id'),
+          center_id: filterArray('center_id'),
+          supplier_id: filterArray('supplier_id'),
+          description: filterArray('description'),
+        });
+
+        if (!cancelled && result.ok && Array.isArray(result.data)) {
+          setCards(result.data);
         }
       } catch (error) {
         console.error('[CardUsageChart] Erro ao carregar uso dos cartões:', error);

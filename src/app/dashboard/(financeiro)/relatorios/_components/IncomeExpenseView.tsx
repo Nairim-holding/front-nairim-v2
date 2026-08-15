@@ -6,13 +6,11 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-import { authFetch } from '@/utils/authFetch';
 import { formatCurrency } from '@/utils/formatters';
 import { ReportDetailHeaderRow, ReportDetailRows, sortDetailItems, type DetailSortField, type DetailSortDir } from './ReportDetailTable';
-import { buildReportQuery } from '../_lib/buildReportQuery';
+import { buildReportActionParams } from '../_lib/buildReportQuery';
+import { getIncomeExpenseReportAction } from '@/server/actions/financial-report';
 import type { IncomeExpenseResponse, IncomeExpenseSide, ReportFiltersState, ReportKind, ReportRegime, ReportViewHandle } from '../_lib/types';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface IncomeExpenseViewProps {
   dateRange: { from: string; to: string };
@@ -177,11 +175,12 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
 
     (async () => {
       try {
-        const qs = buildReportQuery({ from: dateRange.from, to: dateRange.to, regime, filters });
-        const res = await authFetch(`${API_URL}/financial-reports/income-expense?${qs.toString()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setData(json.data ?? json);
+        const raw = buildReportActionParams({ from: dateRange.from, to: dateRange.to, regime, filters });
+        const result = await getIncomeExpenseReportAction(raw);
+        if (!result.ok) throw new Error(result.error);
+        // A action serializa `event_date`/`effective_date: Date` para string no
+        // round-trip servidor→cliente — mesmo shape que IncomeExpenseResponse já espera.
+        if (!cancelled) setData(result.data as unknown as IncomeExpenseResponse);
       } catch (error) {
         console.error('[IncomeExpenseView] Erro ao carregar receitas/despesas:', error);
         if (!cancelled) setData(null);

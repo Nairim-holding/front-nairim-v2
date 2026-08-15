@@ -10,8 +10,7 @@ import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
 import { Building2, Globe, Type, Sun, Moon, Database } from 'lucide-react';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import { createCompanyAction, checkSlugAction } from '@/server/actions/company';
 
 const COLOR_FIELDS: { key: string; label: string; defaultValue: string }[] = [
   { key: 'primary_color', label: 'Cor primária', defaultValue: '#8b5cf6' },
@@ -90,11 +89,8 @@ export default function CadastrarEmpresaPage() {
   const checkSlugUnique = useCallback(async (slug: string) => {
     if (!slug || slug.length < 2) return;
     try {
-      const res = await fetch(`${API_URL}/companies/check-slug/${slug.toLowerCase().trim()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (!json.data?.available) {
+      const result = await checkSlugAction(slug.toLowerCase().trim());
+      if (!result.ok || !result.data?.available) {
         setSlugCheckError('Esta slug já está em uso');
       } else {
         setSlugCheckError(null);
@@ -102,7 +98,7 @@ export default function CadastrarEmpresaPage() {
     } catch {
       setSlugCheckError(null);
     }
-  }, [token]);
+  }, []);
 
   const generateSlug = useCallback((name: string): string => {
     return name
@@ -269,14 +265,9 @@ export default function CadastrarEmpresaPage() {
       if (data[key]) payload[key] = data[key];
     }
 
-    const res = await fetch(`${API_URL}/companies`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message ?? `Erro ${res.status}`);
-    return json;
+    const result = await createCompanyAction(payload);
+    if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
+    return result;
   }
 
   return (

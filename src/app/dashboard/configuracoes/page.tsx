@@ -5,9 +5,12 @@ import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle, 
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
-import { authFetch } from '@/utils/authFetch';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
+import {
+  downloadAutoBackupAction,
+  exportBackupAction,
+  listAutoBackupsAction,
+  restoreBackupAction,
+} from '@/server/actions/backup';
 
 const isAdminRole = (role?: string) =>
   !!role && role.toLowerCase().includes('admin');
@@ -46,10 +49,9 @@ export default function ConfiguracoesPage() {
   const loadAutoBackups = useCallback(async () => {
     if (!isAdmin) return;
     try {
-      const res = await authFetch(`${API_URL}/backup/auto`);
-      if (!res.ok) return;
-      const j = await res.json().catch(() => ({}));
-      setAutoBackups(Array.isArray(j.data) ? j.data : []);
+      const result = await listAutoBackupsAction();
+      if (!result.ok) return;
+      setAutoBackups(result.data ?? []);
     } catch {
       /* silencioso: lista opcional */
     }
@@ -61,12 +63,11 @@ export default function ConfiguracoesPage() {
 
   const handleDownloadAutoBackup = async (name: string) => {
     try {
-      const res = await authFetch(`${API_URL}/backup/auto/${encodeURIComponent(name)}`);
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.message || 'Erro ao baixar o backup automático.');
-      }
-      const blob = await res.blob();
+      const result = await downloadAutoBackupAction(name);
+      if (!result.ok) throw new Error(result.error ?? 'Erro ao baixar o backup automático.');
+      const file = result.data;
+      if (!file) throw new Error('Backup automático não encontrado.');
+      const blob = new Blob([file.content], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -83,17 +84,11 @@ export default function ConfiguracoesPage() {
   const handleBackup = async () => {
     setGenerating(true);
     try {
-      const res = await authFetch(`${API_URL}/backup/export`);
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.message || 'Erro ao gerar o backup.');
-      }
+      const result = await exportBackupAction();
+      if (!result.ok) throw new Error(result.error ?? 'Erro ao gerar o backup.');
 
-      const disposition = res.headers.get('Content-Disposition') || '';
-      const match = disposition.match(/filename="?([^"]+)"?/);
-      const filename = match?.[1] || `backup-nairim-${new Date().toISOString().slice(0, 10)}.json`;
-
-      const blob = await res.blob();
+      const filename = result.data.filename;
+      const blob = new Blob([JSON.stringify(result.data.payload)], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -142,24 +137,15 @@ export default function ConfiguracoesPage() {
 
     setRestoring(true);
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('confirmationName', confirmationName);
+      const backupJson = await selectedFile.text();
 
-      // Usar authFetch com FormData (não define Content-Type, deixa navegador fazer)
-      const res = await authFetch(`${API_URL}/backup/restore`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          // NÃO definir Content-Type: multipart/form-data — deixa o navegador fazer
-          // Remover qualquer Content-Type que authFetch possa ter adicionado
-        },
+      const result = await restoreBackupAction({
+        backupJson,
+        confirmationName,
       });
 
-      const j = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(j.message || 'Erro ao restaurar backup');
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Erro ao restaurar backup');
       }
 
       showMessage('✅ Restauração concluída com sucesso! Recarregando...', 'success');

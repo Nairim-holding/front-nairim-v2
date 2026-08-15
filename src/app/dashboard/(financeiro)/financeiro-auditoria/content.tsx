@@ -4,13 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Calendar, Settings, RefreshCw } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
-import { authFetch } from '@/utils/authFetch';
+import { getIptuAuditAction } from '@/server/actions/iptu-audit';
 import { useMessageContext } from '@/contexts/MessageContext';
 import IptuAuditSettingsModal from './_components/IptuAuditSettingsModal';
 import IptuAuditTable, { type IptuAuditRow } from './_components/IptuAuditTable';
 import IptuAuditChart from './_components/IptuAuditChart';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -54,12 +52,12 @@ export default function AuditoriaIptuContent() {
   const fetchAudit = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({ startDate: dateRange.from, endDate: dateRange.to });
-      const response = await authFetch(`${API_URL}/financial-audit/iptu?${params}`);
-      const result = await response.json().catch(() => ({}));
+      const result = await getIptuAuditAction({ startDate: dateRange.from, endDate: dateRange.to });
 
-      if (!response.ok) {
-        // Configuração ainda não definida — não é erro, é o primeiro uso.
+      if (!result.ok) {
+        // Configuração ainda não definida (400 "Configure as categorias...")
+        // — não é erro, é o primeiro uso. Um erro real (500/403) também cai
+        // aqui, igual ao comportamento original do fetch cru.
         setHasSettings(false);
         setRows([]);
         setTotals({ income: 0, expense: 0, balance: 0 });

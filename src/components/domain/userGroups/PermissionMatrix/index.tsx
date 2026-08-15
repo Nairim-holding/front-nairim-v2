@@ -4,6 +4,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Search, CheckSquare, Square } from 'lucide-react';
 import Checkbox from '@/components/ui/Checkbox';
+import { getResourceCatalogAction, getGroupPermissionsAction } from '@/server/actions/user-group';
 
 /** Ações na ordem em que aparecem como colunas. */
 const ACTIONS = [
@@ -66,12 +67,9 @@ export default function PermissionMatrix({
 
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_URL_API}/user-groups/resources`, {
-          cache: 'no-store',
-        });
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setCatalog(json.data ?? []);
+        const result = await getResourceCatalogAction();
+        if (!result.ok) throw new Error(result.error);
+        if (!cancelled) setCatalog(result.data as unknown as ResourceCatalogItem[]);
       } catch (e: any) {
         if (!cancelled) setError(e.message || 'Falha ao carregar recursos');
       } finally {
@@ -92,15 +90,11 @@ export default function PermissionMatrix({
 
     (async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_URL_API}/user-groups/${groupId}/permissions`,
-          { cache: 'no-store' }
-        );
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-        const json = await res.json();
+        const result = await getGroupPermissionsAction(groupId);
+        if (!result.ok) throw new Error(result.error);
 
         const seeded: PermissionState = {};
-        for (const row of json.data ?? []) {
+        for (const row of result.data) {
           const { resource, ...flags } = row;
           seeded[resource] = flags;
         }

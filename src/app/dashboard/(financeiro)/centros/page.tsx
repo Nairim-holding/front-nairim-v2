@@ -5,10 +5,14 @@ import Section from '@/components/layout/PageSection';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
 import MultiColumnManager from '@/components/form/MultiColumnManager';
+import {
+  listCentersAction,
+  createFinancialCenterAction,
+  updateFinancialCenterAction,
+  deleteFinancialCenterAction,
+} from '@/server/actions/financial-center';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 type TransactionType = 'EXPENSE' | 'INCOME';
 
@@ -27,10 +31,9 @@ export default function CentrosPage() {
   const fetchCenters = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/financial-center?limit=1000`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setCenters(data?.data ?? data ?? []);
+      const result = await listCentersAction({ limit: 100 });
+      if (!result.ok) throw new Error(result.error);
+      setCenters(result.data?.data ?? []);
     } catch {
       showMessage('Erro ao carregar os dados.', 'error');
     } finally {
@@ -53,26 +56,17 @@ export default function CentrosPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveParent = useCallback(async (data: any, mode: 'CREATE' | 'EDIT') => {
-    const url = mode === 'CREATE'
-      ? `${API_URL}/financial-center`
-      : `${API_URL}/financial-center/${data.id}`;
     const payload = mode === 'CREATE' ? { ...data, type: transactionType } : data;
+    const result =
+      mode === 'CREATE'
+        ? await createFinancialCenterAction(payload)
+        : await updateFinancialCenterAction(data.id, payload);
 
-    const res = await fetch(url, {
-      method: mode === 'CREATE' ? 'POST' : 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const result = await res.json();
-      throw new Error(result.message ?? 'Erro ao salvar Centro.');
-    }
+    if (!result.ok) throw new Error(result.error ?? 'Erro ao salvar Centro.');
 
     showMessage('Centro salvo com sucesso!', 'success');
-    const newRecord = await res.json();
     await fetchCenters();
-    return newRecord;
+    return result.data;
   }, [transactionType, showMessage, fetchCenters]);
 
   const handleDeleteParent = useCallback(
@@ -83,10 +77,9 @@ export default function CentrosPage() {
           `Tem certeza que deseja excluir "${name}"?`,
           async () => {
             try {
-              const res = await fetch(`${API_URL}/financial-center/${id}`, { method: 'DELETE' });
-              if (!res.ok) {
-                const result = await res.json().catch(() => ({}));
-                throw new Error(result.message ?? 'Erro ao excluir Centro.');
+              const result = await deleteFinancialCenterAction(id);
+              if (!result.ok) {
+                throw new Error(result.error ?? 'Erro ao excluir Centro.');
               }
               showMessage('Excluído com sucesso!', 'success');
               await fetchCenters();

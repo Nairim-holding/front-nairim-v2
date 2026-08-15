@@ -14,91 +14,23 @@ interface TableState {
 
 export const useOptimizedTableData = (
   resource: string, 
-  initialState: TableState
+  initialState: TableState,
+  fetcher?: (state: TableState) => Promise<any>
 ) => {
   const [state, setState] = useState<TableState>(initialState);
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const buildQueryString = useCallback((currentState: TableState) => {
-  const params = new URLSearchParams();
-  
-  params.append('page', currentState.page.toString());
-  params.append('limit', currentState.limit.toString());
-  
-  if (currentState.search) {
-    params.append('search', currentState.search);
-  }
-  
-  // Enviar ordenação - usar o formato sort[field]=direction
-  if (Object.keys(currentState.sort).length > 0) {
-    console.log('🔄 Estado de ordenação atual:', currentState.sort);
-    
-    Object.entries(currentState.sort).forEach(([key, value]) => {
-      if (value && (value === 'asc' || value === 'desc')) {
-        // Remover prefixo "sort_" se existir
-        const cleanKey = key.replace(/^sort_/, '');
-        params.append(`sort[${cleanKey}]`, value);
-        console.log(`🔄 Enviando ordenação: sort[${cleanKey}]=${value}`);
-      }
-    });
-  } else {
-    // Ordenação padrão
-    params.append('sort[created_at]', 'desc');
-    console.log('🔄 Enviando ordenação padrão: sort[created_at]=desc');
-  }
-  
-  // Enviar filtros
-  if (Object.keys(currentState.filters).length > 0) {
-    Object.entries(currentState.filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-          params.append(key, value.toString());
-        }
-        else if (Array.isArray(value)) {
-          value.forEach(v => params.append(key, v.toString()));
-        }
-        else if (typeof value === 'object') {
-          params.append(key, JSON.stringify(value));
-        }
-      }
-    });
-  }
-  
-  const queryString = params.toString();
-  console.log(`🔗 Query string gerada: ${queryString}`);
-  return queryString;
-}, [resource]);
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const queryString = buildQueryString(state);
-      const url = `${process.env.NEXT_PUBLIC_URL_API}/${resource}?${queryString}`;
-      
-      console.log(`📡 Buscando dados de: ${url}`);
-      
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        cache: 'no-store'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      if (!fetcher) {
+        throw new Error(`useOptimizedTableData: fetcher ausente para ${resource} — dados requerem Server Action`);
       }
-      
-      const result = await response.json();
-      console.log(`✅ Dados recebidos de ${resource}:`, {
-        total: result.count || result.total || 0,
-        items: result.data ? result.data.length : result.items ? result.items.length : 0,
-        sort: state.sort
-      });
-      
+      const result = await fetcher(state);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -106,7 +38,7 @@ const buildQueryString = useCallback((currentState: TableState) => {
     } finally {
       setIsLoading(false);
     }
-  }, [state, resource, buildQueryString]);
+  }, [state, resource, fetcher]);
 
   useEffect(() => {
     fetchData();

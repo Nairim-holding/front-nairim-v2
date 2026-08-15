@@ -4,12 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
-import { authFetch } from '@/utils/authFetch';
+import { getStorageUsageAction } from '@/server/actions/dashboard-usage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 interface StorageGroup {
   key: string;
@@ -51,13 +49,12 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
 
     (async () => {
       try {
-        const response = await authFetch(`${API_URL}/dashboard/storage`);
-        if (response.ok) {
-          const result = await response.json();
+        const result = await getStorageUsageAction();
+        if (result.ok) {
           if (!cancelled) {
-            setGroups(Array.isArray(result.data?.groups) ? result.data.groups : []);
-            setTotalMegabytes(Number(result.data?.totalMegabytes ?? 0));
-            setTotalFiles(Number(result.data?.totalFiles ?? 0));
+            setGroups(Array.isArray(result.data.groups) ? result.data.groups : []);
+            setTotalMegabytes(Number(result.data.totalMegabytes ?? 0));
+            setTotalFiles(Number(result.data.totalFiles ?? 0));
           }
         }
       } catch (error) {
@@ -126,8 +123,10 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           endAngle: -45,
           // Raio em pixels (não %) na tela ampliada: um container muito maior
           // com raio percentual deixa o arco enorme e empurra o texto central
-          // (offsetCenter também é relativo ao raio) para fora do arco.
-          radius: isLarge ? 170 : '95%',
+          // (offsetCenter também é relativo ao raio) para fora do arco. Reduzido
+          // frente ao valor anterior para abrir espaço às marcações de escala
+          // (axisLabel) que agora ficam ao redor do arco.
+          radius: isLarge ? 150 : '82%',
           center: ['50%', '58%'],
 
           // Fundo em arco neutro — a cor de destaque fica só no progress/ponteiro,
@@ -179,12 +178,26 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
             },
           },
 
-          // Sem ticks/split lines/labels numéricos no arco: a escala é relativa
-          // (não há cota contratada), então marcações intermediárias só
-          // adicionariam ruído sem significado — o valor central já é o dado real.
-          axisTick: { show: false },
-          splitLine: { show: false },
-          axisLabel: { show: false },
+          // Marcações de escala (Tarefa 1.5 do guia de correções): mesmo padrão
+          // visual do DatabaseUsageChart — mesmo sem cota contratada aqui, os
+          // valores ao redor do arco (0 até o teto calculado) dão uma
+          // referência de grandeza para o valor central, em vez de um arco "mudo".
+          axisTick: {
+            distance: isLarge ? -26 : -18,
+            length: isLarge ? 7 : 5,
+            lineStyle: { color: tokens.textMuted, width: 1 },
+          },
+          splitLine: {
+            distance: isLarge ? -26 : -18,
+            length: isLarge ? 14 : 10,
+            lineStyle: { color: tokens.textMuted, width: 2 },
+          },
+          axisLabel: {
+            distance: isLarge ? 30 : 22,
+            color: tokens.textMuted,
+            fontSize: isLarge ? 11 : 9,
+            formatter: (value: number) => formatMegabytes(value).replace(',00', ''),
+          },
 
           // Valor central grande, com a unidade já embutida (evita repetir "MB"
           // duas vezes perto de números pequenos como "0,00 MB / 22,83 MB").

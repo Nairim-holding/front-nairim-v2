@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@iconify/react'],
+    // Upload de restauração de backup muda Server Actions até 50 MB (igual ao
+    // multer `fileSize: 50MB` do POST /backup/restore).
+    serverActions: { bodySizeLimit: '50mb' },
   },
   images: {
     remotePatterns: [

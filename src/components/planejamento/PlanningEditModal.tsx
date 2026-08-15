@@ -4,12 +4,10 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useMessageContext } from '@/contexts';
-import { authFetch } from '@/utils/authFetch';
+import { upsertPlanningAction, deletePlanningAction } from '@/server/actions/planning';
 import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
 import { maskMoney, formatCurrencyRealtime } from '@/utils/masks';
 import type { DashboardItem, CategoryDashboard } from './types';
-
-const API_URL = process.env.NEXT_PUBLIC_URL_API ?? '';
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -136,14 +134,10 @@ export default function PlanningEditModal({ item, onClose, onSaved }: Props) {
         });
       }
 
-      const res = await authFetch(`${API_URL}/planning`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      const res = await upsertPlanningAction(payload);
 
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Erro ao salvar');
+        throw new Error(res.error ?? 'Erro ao salvar');
       }
 
       showMessage('Planejamento salvo com sucesso', 'success');
@@ -162,13 +156,10 @@ export default function PlanningEditModal({ item, onClose, onSaved }: Props) {
 
     setIsDeleting(true);
     try {
-      const res = await authFetch(`${API_URL}/planning/${planningId}`, {
-        method: 'DELETE',
-      });
+      const res = await deletePlanningAction(planningId);
 
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Erro ao remover');
+        throw new Error(res.error ?? 'Erro ao remover');
       }
       showMessage('Planejamento removido com sucesso', 'success');
       onSaved();

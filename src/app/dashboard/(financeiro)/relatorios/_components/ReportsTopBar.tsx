@@ -64,6 +64,14 @@ export default function ReportsTopBar({
   // próprio painel, já que ele deixou de estar aninhado neste wrapper).
   const isShortcutActive = (from: string, to: string) => dateRange.from === from && dateRange.to === to;
 
+  // Tarefa 4.2: os endpoints de relatório exigem startDate/endDate (ver
+  // dateShortcuts.ts), então "Limpar" não pode esvaziar o período como em
+  // Lançamentos — usa o maior intervalo aceito pela API. Para o botão ainda
+  // *parecer* limpo (como em Lançamentos), exibe o rótulo genérico "Período"
+  // sempre que o intervalo atual for exatamente esse "todo o histórico".
+  const clearedRange = useMemo(() => getClearedDateRange(), []);
+  const isCleared = isShortcutActive(clearedRange.from, clearedRange.to);
+
   return (
     <div className="border-b border-ui-border-soft bg-surface shrink-0">
       <div className="flex flex-wrap items-center gap-3 px-4 py-2.5">
@@ -101,8 +109,8 @@ export default function ReportsTopBar({
             className="flex items-center gap-2 border border-ui-border rounded-lg px-3 py-1.5 text-xs text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
           >
             <Calendar size={14} className="text-content-secondary" />
-            <span className="font-medium whitespace-nowrap">
-              {formatDateDisplay(dateRange.from)} — {formatDateDisplay(dateRange.to)}
+            <span className={`font-medium whitespace-nowrap ${isCleared ? 'text-content-muted' : ''}`}>
+              {isCleared ? 'Período' : `${formatDateDisplay(dateRange.from)} — ${formatDateDisplay(dateRange.to)}`}
             </span>
           </button>
           {isCalendarOpen && (
