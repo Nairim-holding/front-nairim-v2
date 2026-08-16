@@ -19,6 +19,9 @@ services:
       - .env
     volumes:
       - ./.env:/app/.env
+    depends_on:
+      - postgres
+      - minio
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -31,6 +34,62 @@ services:
     networks:
       - default
       - traefik-public
+
+  # ==========================================
+  # POSTGRES - Banco principal (migrado de api-nairim-v2)
+  # Mesmo volume de dados de antes, só passou a ser gerenciado por este
+  # compose. Nada foi apagado/recriado — ver runbook de migração.
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: nairim-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: nairim
+      POSTGRES_PASSWORD: nairim
+      POSTGRES_DB: nairim_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+      - nairim-internal
+
+  # ==========================================
+  # MINIO - CDN / Armazenamento de imagens self-hosted (S3 compatível)
+  # Migrado de api-nairim-v2. Mesma pasta de dados de antes (mover
+  # fisicamente ./minio-data para cá faz parte do runbook de migração).
+  # ==========================================
+  minio:
+    image: minio/minio:latest
+    container_name: nairim-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./minio-data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      # Rota da API/CDN (porta 9000) — onde as imagens ficam públicas
+      - "traefik.http.routers.minio-api.rule=Host(`cdn.nairim.com.br`)"
+      - "traefik.http.routers.minio-api.entrypoints=websecure"
+      - "traefik.http.routers.minio-api.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+      # Rota do Console/Painel administrativo (porta 9001)
+      - "traefik.http.routers.minio-console.rule=Host(`cdn-painel.nairim.com.br`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+    networks:
+      - traefik-public
+      - default
+      - nairim-internal
 
   # ==========================================
   # FRONTEND - TESTE
@@ -50,6 +109,9 @@ services:
       - PORT=3000
     env_file:
       - .env.test
+    depends_on:
+      - postgres-test-2
+      - minio
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -64,6 +126,25 @@ services:
     networks:
       - default
       - traefik-public
+
+  # ==========================================
+  # POSTGRES - Banco de teste-2 (migrado de api-nairim-v2)
+  # ==========================================
+  postgres-test-2:
+    image: postgres:16-alpine
+    container_name: nairim-postgres-test-2
+    restart: always
+    environment:
+      POSTGRES_USER: nairim
+      POSTGRES_PASSWORD: nairim
+      POSTGRES_DB: nairim_test2_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_test2_data:/var/lib/postgresql/data
+    networks:
+      - default
+      - nairim-internal
 
   # ==========================================
   # FRONTEND - HOMOLOGAÇÃO (TERCEIRO AMBIENTE)
@@ -83,6 +164,9 @@ services:
       - PORT=3000
     env_file:
       - .env.homolog
+    depends_on:
+      - postgres-homolog
+      - minio
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -99,7 +183,43 @@ services:
       - default
       - traefik-public
 
+  # ==========================================
+  # POSTGRES - Banco de homologação (migrado de api-nairim-v2)
+  # ==========================================
+  postgres-homolog:
+    image: postgres:16-alpine
+    container_name: nairim-postgres-homolog
+    restart: always
+    environment:
+      POSTGRES_USER: nairim
+      POSTGRES_PASSWORD: nairim
+      POSTGRES_DB: nairim_homolog_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_homolog_data:/var/lib/postgresql/data
+    networks:
+      - default
+      - nairim-internal
+
 networks:
-  default: 
+  default:
   traefik-public:
     external: true
+  nairim-internal:
+    external: true
+
+volumes:
+  # Todos reaproveitam os volumes Docker já existentes (criados
+  # originalmente pelo compose do api-nairim-v2) — não criam volume
+  # novo/vazio. Antes do primeiro `docker compose up` de cada ambiente,
+  # troque o REPLACE_WITH_... correspondente pelo nome real (ver runbook).
+  postgres_data:
+    external: true
+    name: REPLACE_WITH_ACTUAL_POSTGRES_VOLUME_NAME
+  postgres_test2_data:
+    external: true
+    name: api-nairim-v2_postgres_test2_data
+  postgres_homolog_data:
+    external: true
+    name: REPLACE_WITH_ACTUAL_POSTGRES_HOMOLOG_VOLUME_NAME
