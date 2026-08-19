@@ -540,15 +540,28 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
   async getGeolocation(startDate: Date, endDate: Date): Promise<GeolocationResponse> {
     const properties = await prisma.property.findMany({
-      where: { created_at: { gte: startDate, lte: endDate }, deleted_at: null },
+      where: { deleted_at: null },
       include: {
         addresses: { where: { deleted_at: null }, include: { address: true } },
+        values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
+        leases: {
+          where: {
+            deleted_at: null,
+            status: { not: 'CANCELED' },
+            start_date: { lte: endDate },
+            end_date: { gte: startDate },
+          },
+          take: 1,
+        },
       },
     });
 
     const coordinates = properties
-      .flatMap((p) =>
-        p.addresses.map((a) => {
+      .flatMap((p) => {
+        const isLeased = p.leases.length > 0 || p.values[0]?.status === 'OCCUPIED';
+        const statusLabel = isLeased ? 'Locado' : 'Disponível';
+
+        return p.addresses.map((a) => {
           const lat = a.address.latitude;
           const lng = a.address.longitude;
 
@@ -556,13 +569,15 @@ export class PrismaDashboardRepository implements DashboardRepository {
             return {
               lat,
               lng,
-              info: `${p.title} (${a.address.city}/${a.address.state})`,
+              info: `${p.title} (${statusLabel}) - ${a.address.city}/${a.address.state}`,
+              isLeased,
+              status: (isLeased ? 'OCCUPIED' : 'AVAILABLE') as 'OCCUPIED' | 'AVAILABLE',
             };
           }
           return null;
-        }),
-      )
-      .filter((coord): coord is { lat: number; lng: number; info: string } => coord !== null);
+        });
+      })
+      .filter((coord): coord is { lat: number; lng: number; info: string; isLeased: boolean; status: 'OCCUPIED' | 'AVAILABLE' } => coord !== null);
 
     return { coordinates };
   }

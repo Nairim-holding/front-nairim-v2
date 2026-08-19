@@ -538,25 +538,32 @@ export default function LancamentosPage() {
   };
 
   const handleRowDuplicate = useCallback(async (item: any) => {
-    if (transferCategoryIds.has(String(item.category_id))) {
+    const categoryId = item.category_id || item.category?.id;
+    if (categoryId && transferCategoryIds.has(String(categoryId))) {
       return { skipped: true };
     }
 
-    const payload = {
-      event_date: item.event_date ?? null,
-      effective_date: item.effective_date ?? null,
-      category_id: item.category_id ?? null,
-      subcategory_id: item.subcategory_id ?? null,
-      financial_institution_id: item.financial_institution_id ?? null,
-      card_id: item.card_id ?? null,
-      center_id: item.center_id ?? null,
-      supplier_id: item.supplier_id ?? null,
-      description: buildCloneDescription(item.description),
-      amount: item.amount,
-      status: item.status,
+    const safeDateInput = (val: any) => {
+      if (!val) return null;
+      const iso = val instanceof Date ? val.toISOString() : String(val);
+      return iso.split('T')[0];
     };
 
-    const result = await createFinancialTransactionAction(payload);
+    const payload = {
+      event_date: safeDateInput(item.event_date),
+      effective_date: safeDateInput(item.effective_date),
+      category_id: categoryId ? String(categoryId) : null,
+      subcategory_id: (item.subcategory_id || item.subcategory?.id) ? String(item.subcategory_id || item.subcategory?.id) : null,
+      financial_institution_id: (item.financial_institution_id || item.financial_institution?.id || item.institution?.id) ? String(item.financial_institution_id || item.financial_institution?.id || item.institution?.id) : null,
+      card_id: (item.card_id || item.card?.id) ? String(item.card_id || item.card?.id) : null,
+      center_id: (item.center_id || item.center?.id) ? String(item.center_id || item.center?.id) : null,
+      supplier_id: (item.supplier_id || item.supplier?.id) ? String(item.supplier_id || item.supplier?.id) : null,
+      description: buildCloneDescription(item.description),
+      amount: typeof item.amount === 'number' ? item.amount : Number(String(item.amount ?? 0).replace(/[^\d.-]/g, '')),
+      status: item.status || 'PENDING',
+    };
+
+    const result = await createFinancialTransactionAction(payload as any);
     if (!result.ok) {
       throw new Error(result.error ?? 'Erro ao duplicar lançamento.');
     }
@@ -665,7 +672,7 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
         enableCreate
         enableDelete
         summaryPanel
-        defaultLimit={100}
+        defaultLimit={150}
         formOptions={options}
         onRowSave={handleRowSave}
         onRowCreate={handleRowCreate}

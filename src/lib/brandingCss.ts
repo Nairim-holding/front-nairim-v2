@@ -43,7 +43,7 @@ function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' |
 
   if (primary) {
     lines.push(`  --color-brand: ${primary};`);
-    lines.push(`  --color-brand-logo: ${mode === 'dark' ? '#ffffff' : primary};`);
+    lines.push(`  --color-brand-logo-raw: ${mode === 'dark' ? '#ffffff' : primary};`);
   }
   if (secondary) lines.push(`  --color-brand-hover: ${secondary};`);
 

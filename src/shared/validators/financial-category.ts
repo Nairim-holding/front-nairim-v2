@@ -39,7 +39,7 @@ export const updateFinancialCategorySchema = z.object({
 });
 
 export const listFinancialCategoriesQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(30),
+  limit: z.coerce.number().int().min(1).max(150).default(150),
   page: z.coerce.number().int().min(1).default(1),
   search: z.string().optional(),
   includeInactive: z.union([z.boolean(), z.string()]).optional().transform((v) => v === true || v === 'true'),

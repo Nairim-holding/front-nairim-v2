@@ -16,4 +16,10 @@ export const iptuAuditSettingsSchema = z.object({
 export const iptuAuditQuerySchema = z.object({
   startDate: z.string().min(1, 'startDate e endDate são obrigatórios'),
   endDate: z.string().min(1, 'startDate e endDate são obrigatórios'),
+  /** Filtro de imóveis da tela — ausente/vazio significa "todos". */
+  propertyIds: z
+    .union([z.array(z.string()), z.string()])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]))
+    .pipe(z.array(z.string().trim().min(1)).optional()),
 });

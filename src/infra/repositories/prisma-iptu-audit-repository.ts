@@ -2,6 +2,7 @@ import prisma from '@/infra/database/prisma';
 import type { IptuAuditRepository } from '@/core/repositories/iptu-audit-repository';
 import type {
   IptuAuditParams,
+  IptuAuditPeriodPoint,
   IptuAuditReport,
   IptuAuditRow,
   IptuAuditSettings,
@@ -15,10 +16,12 @@ import { ValidationError } from '@/core/errors/domain-errors';
  * Porte de api-nairim-v2/src/services/AuditService.ts.
  * Tenant-scoped: `IptuAuditSettings` está em TENANT_MODELS.
  *
- * O vínculo lançamento → imóvel é sempre via `lease_id` (Transaction não tem
- * property_id próprio) — tanto a restituição gerada automaticamente
- * (LeaseFinanceService) quanto o IPTU pago manualmente devem estar associados
- * a uma locação para entrar na auditoria.
+ * Vínculo lançamento → imóvel (Tarefa 4.1): `Transaction` não tem
+ * `property_id`, então a ligação é feita por `lease_id` (restituição gerada
+ * pelo LeaseFinanceService) OU pelo centro do lançamento, casando com o
+ * `center_id`/`debit_center_id` do imóvel. Antes só o `lease_id` valia, e o
+ * IPTU pago manualmente — que não tem locação — ficava fora da apuração;
+ * daí o "só considera um ou dois imóveis" relatado pelo cliente.
  *
  * Camada: infra.
  */
@@ -65,6 +68,52 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
     const end = parseLocalDate(params.endDate);
     end.setHours(23, 59, 59, 999);
 
+    // 1. Busca TODOS os imóveis ativos do tenant para garantir apuração completa
+    const allProperties = await prisma.property.findMany({
+      where: { deleted_at: null },
+      select: {
+        id: true,
+        title: true,
+        center_id: true,
+        debit_center_id: true,
+        addresses: {
+          where: { deleted_at: null },
+          select: { address: { select: { street: true, number: true, city: true, state: true } } },
+        },
+      },
+      orderBy: { title: 'asc' },
+    });
+
+    // Lista completa para o filtro da tela — não sofre o recorte do próprio filtro.
+    const availableProperties = allProperties.map((p) => ({ id: p.id, title: p.title }));
+
+    // Filtro de imóveis da tela: vazio/ausente = todos.
+    const selectedIds = (params.propertyIds ?? []).filter((id) => typeof id === 'string' && id.trim() !== '');
+    const hasPropertyFilter = selectedIds.length > 0;
+    const selectedSet = new Set(selectedIds);
+    const consideredProperties = hasPropertyFilter
+      ? allProperties.filter((p) => selectedSet.has(p.id))
+      : allProperties;
+
+    const rowsByProperty = new Map<string, IptuAuditRow>();
+    const centerToPropertyId = new Map<string, string>();
+
+    for (const p of consideredProperties) {
+      const addr = p.addresses[0]?.address;
+      const addressStr = addr ? `${addr.street}, ${addr.number} - ${addr.city}/${addr.state}` : null;
+      rowsByProperty.set(p.id, {
+        propertyId: p.id,
+        propertyTitle: p.title,
+        address: addressStr,
+        income: 0,
+        expense: 0,
+        balance: 0,
+        transactions: [],
+      });
+      if (p.center_id) centerToPropertyId.set(p.center_id, p.id);
+      if (p.debit_center_id) centerToPropertyId.set(p.debit_center_id, p.id);
+    }
+
     const buildSideWhere = (categoryId: string | null, subcategoryId: string | null) => {
       if (!categoryId) return null;
       const where: Record<string, unknown> = {
@@ -72,7 +121,6 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
         NOT: { is_transfer: true },
         event_date: { gte: start, lte: end },
         category_id: categoryId,
-        lease_id: { not: null },
       };
       if (subcategoryId) where.subcategory_id = subcategoryId;
       return where;
@@ -86,6 +134,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       description: true,
       amount: true,
       event_date: true,
+      center_id: true,
       lease: { select: { property: { select: { id: true, title: true } } } },
     } as const;
 
@@ -94,47 +143,24 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       expenseWhere ? prisma.transaction.findMany({ where: expenseWhere, select }) : Promise.resolve([]),
     ]);
 
-    const rowsByProperty = new Map<string, IptuAuditRow>();
-
-    const ensureRow = (propertyId: string, propertyTitle: string): IptuAuditRow => {
-      let row = rowsByProperty.get(propertyId);
-      if (!row) {
-        row = { propertyId, propertyTitle, address: null, income: 0, expense: 0, balance: 0, transactions: [] };
-        rowsByProperty.set(propertyId, row);
-      }
-      return row;
-    };
-
     for (const t of incomeTxns) {
-      const property = t.lease?.property;
-      if (!property) continue;
-      const row = ensureRow(property.id, property.title);
+      const propId = t.lease?.property?.id || (t.center_id ? centerToPropertyId.get(t.center_id) : null);
+      if (!propId) continue;
+      const row = rowsByProperty.get(propId);
+      if (!row) continue;
       const amount = Number(t.amount);
       row.income += amount;
       row.transactions.push({ id: t.id, description: t.description, amount, date: t.event_date.toISOString().slice(0, 10), type: 'INCOME' });
     }
 
     for (const t of expenseTxns) {
-      const property = t.lease?.property;
-      if (!property) continue;
-      const row = ensureRow(property.id, property.title);
+      const propId = t.lease?.property?.id || (t.center_id ? centerToPropertyId.get(t.center_id) : null);
+      if (!propId) continue;
+      const row = rowsByProperty.get(propId);
+      if (!row) continue;
       const amount = Number(t.amount);
       row.expense += amount;
       row.transactions.push({ id: t.id, description: t.description, amount, date: t.event_date.toISOString().slice(0, 10), type: 'EXPENSE' });
-    }
-
-    const propertyIds = Array.from(rowsByProperty.keys());
-    if (propertyIds.length > 0) {
-      const addresses = await prisma.propertyAddress.findMany({
-        where: { property_id: { in: propertyIds }, deleted_at: null },
-        select: { property_id: true, address: { select: { street: true, number: true, city: true, state: true } } },
-      });
-      const addressByProperty = new Map(
-        addresses.map((a) => [a.property_id, `${a.address.street}, ${a.address.number} - ${a.address.city}/${a.address.state}`]),
-      );
-      for (const row of rowsByProperty.values()) {
-        row.address = addressByProperty.get(row.propertyId) ?? null;
-      }
     }
 
     const rows = Array.from(rowsByProperty.values())
@@ -143,15 +169,69 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
         row.transactions.sort((a, b) => a.date.localeCompare(b.date));
         return row;
       })
-      .sort((a, b) => a.propertyTitle.localeCompare(b.propertyTitle));
+      // Imóvel sem nenhum lançamento de IPTU no período só aparece quando o
+      // usuário o escolheu explicitamente no filtro — caso contrário a tabela
+      // encheria de linhas zeradas de todo o portfólio.
+      .filter((row) => hasPropertyFilter || row.income !== 0 || row.expense !== 0)
+      .sort((a, b) => a.propertyTitle.localeCompare(b.propertyTitle, 'pt-BR'));
 
     const totals = rows.reduce(
       (acc, row) => ({ income: acc.income + row.income, expense: acc.expense + row.expense, balance: acc.balance + row.balance }),
       { income: 0, expense: 0, balance: 0 },
     );
 
-    return { rows, totals };
+    const { monthly, yearly } = buildPeriodSeries(rows);
+
+    return { rows, totals, monthly, yearly, availableProperties };
   }
+}
+
+const MONTH_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+/**
+ * Comparativo pagamento do IPTU pela empresa (despesa) x restituição pelos
+ * inquilinos (receita), por mês e por ano — é o que revela se os repasses
+ * estão corretos ou se há prejuízo (Tarefa 4.1).
+ */
+function buildPeriodSeries(rows: IptuAuditRow[]): {
+  monthly: IptuAuditPeriodPoint[];
+  yearly: IptuAuditPeriodPoint[];
+} {
+  const monthMap = new Map<string, IptuAuditPeriodPoint>();
+  const yearMap = new Map<string, IptuAuditPeriodPoint>();
+
+  const bump = (
+    map: Map<string, IptuAuditPeriodPoint>,
+    key: string,
+    label: string,
+    type: 'INCOME' | 'EXPENSE',
+    amount: number,
+  ) => {
+    let point = map.get(key);
+    if (!point) {
+      point = { key, label, income: 0, expense: 0, balance: 0 };
+      map.set(key, point);
+    }
+    if (type === 'INCOME') point.income += amount;
+    else point.expense += amount;
+    point.balance = point.income - point.expense;
+  };
+
+  for (const row of rows) {
+    for (const t of row.transactions) {
+      const [year, month] = t.date.split('-');
+      const monthIndex = Number(month) - 1;
+      bump(monthMap, `${year}-${month}`, `${MONTH_ABBR[monthIndex] ?? month}/${year}`, t.type, t.amount);
+      bump(yearMap, year, year, t.type, t.amount);
+    }
+  }
+
+  const byKey = (a: IptuAuditPeriodPoint, b: IptuAuditPeriodPoint) => a.key.localeCompare(b.key);
+
+  return {
+    monthly: Array.from(monthMap.values()).sort(byKey),
+    yearly: Array.from(yearMap.values()).sort(byKey),
+  };
 }
 
 export const prismaIptuAuditRepository = new PrismaIptuAuditRepository();

@@ -28,17 +28,54 @@ interface AgencyResponse {
  * CompanyBranding.company_info é um blob livre, sem esse detalhamento). O
  * logo vem do branding, que é o mesmo em toda a aplicação.
  */
+/** Normaliza para comparar nomes de empresa sem acento/pontuação/sufixo societário. */
+function normalizeCompanyName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\b(ltda|me|epp|eireli|s\.?a\.?|holding)\b/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
 export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderData | null> {
   try {
+    // Todas as imobiliárias da empresa ativa (a extensão do Prisma já filtra
+    // por company_id): a empresa pode ter mais de uma cadastrada e pegar
+    // "a primeira" trazia os dados de outra imobiliária no cabeçalho
+    // (Tarefa 5.1 — relatórios saíam com CNPJ/razão social da Adiplan).
     const [agencyRes, brandingRes] = await Promise.all([
-      listAgenciesAction({ limit: 1 }),
+      listAgenciesAction({ limit: 150 }),
       getMyBrandingAction(),
     ]);
 
     const agencyJson = agencyRes.ok ? (agencyRes.data as { data?: unknown }) : {};
-    const rawAgency = Array.isArray(agencyJson?.data) ? agencyJson.data[0] : undefined;
-    const agency: AgencyResponse | undefined = rawAgency as AgencyResponse | undefined;
+    const agencies: AgencyResponse[] = Array.isArray(agencyJson?.data)
+      ? (agencyJson.data as AgencyResponse[])
+      : [];
     const branding = brandingRes.ok ? brandingRes.data : null;
+
+    const brandingInfo = branding as {
+      trade_name?: string;
+      company_name?: string;
+      logo_url?: string | null;
+    } | null;
+
+    // Nome exibido: sempre o da identidade visual da empresa ativa.
+    const brandingName = brandingInfo?.trade_name || brandingInfo?.company_name || null;
+
+    // Razão social/CNPJ/endereço vêm da imobiliária que corresponde a essa
+    // identidade; sem correspondência, cai na primeira cadastrada.
+    const target = brandingName ? normalizeCompanyName(brandingName) : '';
+    const agency =
+      (target
+        ? agencies.find((a) => {
+            const trade = normalizeCompanyName(a.trade_name ?? '');
+            const legal = normalizeCompanyName(a.legal_name ?? '');
+            return trade === target || legal === target || trade.includes(target) || target.includes(trade);
+          })
+        : undefined) ?? agencies[0];
 
     const address = agency?.addresses?.[0]?.address;
     const addressLine = address
@@ -46,14 +83,9 @@ export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderDat
       : null;
 
     const contact = agency?.contacts?.[0];
-    const brandingInfo = branding as {
-      trade_name?: string;
-      company_name?: string;
-      logo_url?: string | null;
-    } | null;
 
     return {
-      companyName: brandingInfo?.trade_name || brandingInfo?.company_name || agency?.trade_name || 'Empresa',
+      companyName: brandingName || agency?.trade_name || 'Empresa',
       legalName: agency?.legal_name ?? null,
       cnpj: agency?.cnpj ?? null,
       phone: contact?.phone ?? null,

@@ -8,6 +8,9 @@ export interface MapCoordinate {
   lat: number;
   lng: number;
   info: string;
+  /** true = locado (alfinete roxo); false = disponível (alfinete vermelho). Tarefa 2. */
+  isLeased: boolean;
+  status: "OCCUPIED" | "AVAILABLE";
 }
 
 export interface DashboardData {
@@ -63,6 +66,8 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
       lat:  Number(g.lat  ?? 0),
       lng:  Number(g.lng  ?? 0),
       info: String(g.info ?? ""),
+      isLeased: Boolean(g.isLeased ?? g.status === "OCCUPIED"),
+      status: (g.status === "OCCUPIED" ? "OCCUPIED" : "AVAILABLE") as "OCCUPIED" | "AVAILABLE",
     })) as T;
   }
 

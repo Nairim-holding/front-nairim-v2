@@ -7,13 +7,10 @@ import type { IptuAuditParams, IptuAuditReport } from '@/core/entities/iptu-audi
  * seguindo o mesmo porte 1:1 de `AuditService.getIptuAudit` — que já
  * combinava as duas coisas no mesmo método no backend original.
  *
- * ⚠️ Bug herdado deliberadamente (não corrigido nesta migração — ver
- * MIGRATION_STATUS.md Módulo 13): a query em `buildSideWhere` exige
- * `lease_id: { not: null }` em ambos os lados (receita e despesa). Como
- * `Transaction` não tem `property_id` próprio, lançamentos de IPTU pago sem
- * vínculo a uma locação nunca entram na auditoria — é a causa raiz do "só
- * considera 1-2 imóveis" relatado pelo cliente. Corrigir isso exige mudança
- * estrutural (schema ou fluxo de lançamento), fora do escopo de um port 1:1.
+ * O bug herdado do backend original (a query exigia `lease_id: { not: null }`,
+ * deixando de fora todo IPTU pago sem locação vinculada — "só considera 1-2
+ * imóveis") foi corrigido na Tarefa 4.1: o repositório agora liga o lançamento
+ * ao imóvel também pelo centro (`center_id`/`debit_center_id`).
  *
  * Camada: core. Origem: api-nairim-v2/src/services/AuditService.ts.
  */

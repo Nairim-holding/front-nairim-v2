@@ -24,7 +24,7 @@ body {
 
   --color-brand-primary: #8b5cf6;
   --color-brand-primary-hover: #6d28d9;
-  --color-brand-logo: #4236c5;
+  --color-brand-logo-raw: #4236c5;
 
   --color-success: #10b981;
   --color-success-strong: #059669;
@@ -77,7 +77,7 @@ body.dark {
 
   --color-brand-primary: #8b5cf6;
   --color-brand-primary-hover: #7c3aed;
-  --color-brand-logo: #ffffff;
+  --color-brand-logo-raw: #ffffff;
 
   --color-success: #10b981;
   --color-success-strong: #059669;
@@ -132,7 +132,7 @@ body.dark {
 
   --color-brand: var(--color-brand-primary);
   --color-brand-hover: var(--color-brand-primary-hover);
-  --color-brand-logo: var(--color-brand-logo);
+  --color-brand-logo: var(--color-brand-logo-raw);
 
   /* Cor de destaque dos GRÁFICOS (laranja) — distinta de --color-brand (roxo,
      identidade visual), para os gráficos hand-rolled que hoje usam bg-brand. */

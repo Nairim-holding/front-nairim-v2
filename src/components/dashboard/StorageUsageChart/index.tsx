@@ -7,7 +7,6 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getStorageUsageAction } from '@/server/actions/dashboard-usage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
-import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 interface StorageGroup {
   key: string;
@@ -22,11 +21,19 @@ export function formatMegabytes(value: number): string {
   return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MB`;
 }
 
-/** Subconjunto do payload de callback do echarts que este gráfico usa. */
-interface TooltipParam {
-  dataIndex: number;
-  name?: string;
-  color?: string;
+/** Teto do arco: próxima "dezena" acima de 1,25x o total, para sobrar folga visual. */
+function computeMaxMegabytes(totalMegabytes: number): number {
+  const rawMax = Math.max(totalMegabytes, 1);
+  const magnitude = 10 ** Math.floor(Math.log10(rawMax));
+  return Math.ceil((rawMax * 1.25) / magnitude) * magnitude;
+}
+
+/** Cor conforme a posição do total dentro da própria escala (sem cota contratada aqui). */
+function computeGaugeColor(totalMegabytes: number): string {
+  const usageRatio = totalMegabytes / computeMaxMegabytes(totalMegabytes);
+  if (usageRatio > 0.8) return '#EF4444';
+  if (usageRatio > 0.6) return '#F59E0B';
+  return '#10B981';
 }
 
 interface StorageUsageChartProps {
@@ -98,17 +105,8 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {
     // Escala do arco em cima do total ocupado (não do maior grupo isolado) —
     // senão o ponteiro (que é o total) sempre estoura o próprio máximo.
-    // Arredonda para a próxima "dezena" acima para sobrar folga visual.
-    const rawMax = Math.max(totalMegabytes, 1);
-    const magnitude = 10 ** Math.floor(Math.log10(rawMax));
-    const maxMegabytes = Math.ceil((rawMax * 1.25) / magnitude) * magnitude;
-
-    // Cor conforme a posição do total dentro da própria escala (não há cota
-    // contratada aqui — é só uma indicação visual de "quanto do arco" está ocupado).
-    const usageRatio = totalMegabytes / maxMegabytes;
-    let gaugeColor = '#10B981'; // Verde
-    if (usageRatio > 0.8) gaugeColor = '#EF4444';
-    else if (usageRatio > 0.6) gaugeColor = '#F59E0B';
+    const maxMegabytes = computeMaxMegabytes(totalMegabytes);
+    const gaugeColor = computeGaugeColor(totalMegabytes);
 
     return {
       backgroundColor: 'transparent',
@@ -121,20 +119,15 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           max: maxMegabytes,
           startAngle: 225,
           endAngle: -45,
-          // Raio em pixels (não %) na tela ampliada: um container muito maior
-          // com raio percentual deixa o arco enorme e empurra o texto central
-          // (offsetCenter também é relativo ao raio) para fora do arco. Reduzido
-          // frente ao valor anterior para abrir espaço às marcações de escala
-          // (axisLabel) que agora ficam ao redor do arco.
-          radius: isLarge ? 150 : '82%',
-          center: ['50%', '58%'],
+          radius: isLarge ? 130 : '58%',
+          center: ['50%', '48%'],
 
           // Fundo em arco neutro — a cor de destaque fica só no progress/ponteiro,
           // que já reflete o nível de uso. Um arco tricolor fixo aqui competia
           // visualmente com o preenchimento e sugeria uma cota que não existe.
           axisLine: {
             lineStyle: {
-              width: isLarge ? 32 : 24,
+              width: isLarge ? 24 : 13,
               color: [[1, tokens.borderSoft]],
             },
           },
@@ -142,7 +135,7 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           // Preenchimento da barra com gradiente
           progress: {
             show: true,
-            width: isLarge ? 32 : 24,
+            width: isLarge ? 24 : 13,
             itemStyle: {
               color: gaugeColor,
               opacity: 0.95,
@@ -160,21 +153,21 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
               shadowColor: gaugeColor,
               shadowBlur: 8,
             },
-            width: isLarge ? 7 : 5,
-            length: '70%',
+            width: isLarge ? 6 : 3,
+            length: '60%',
           },
 
           // Âncora no centro
           anchor: {
             show: true,
             showAbove: true,
-            size: isLarge ? 24 : 18,
+            size: isLarge ? 18 : 9,
             itemStyle: {
               color: gaugeColor,
               borderColor: tokens.bgSurface,
-              borderWidth: isLarge ? 5 : 4,
+              borderWidth: isLarge ? 4 : 3,
               shadowColor: gaugeColor,
-              shadowBlur: 12,
+              shadowBlur: 10,
             },
           },
 
@@ -183,43 +176,29 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           // valores ao redor do arco (0 até o teto calculado) dão uma
           // referência de grandeza para o valor central, em vez de um arco "mudo".
           axisTick: {
-            distance: isLarge ? -26 : -18,
-            length: isLarge ? 7 : 5,
+            distance: isLarge ? -22 : -11,
+            length: isLarge ? 6 : 3,
             lineStyle: { color: tokens.textMuted, width: 1 },
           },
           splitLine: {
-            distance: isLarge ? -26 : -18,
-            length: isLarge ? 14 : 10,
+            distance: isLarge ? -22 : -11,
+            length: isLarge ? 12 : 6,
             lineStyle: { color: tokens.textMuted, width: 2 },
           },
           axisLabel: {
-            distance: isLarge ? 30 : 22,
+            distance: isLarge ? 20 : 10,
             color: tokens.textMuted,
-            fontSize: isLarge ? 11 : 9,
+            fontSize: isLarge ? 10 : 7,
             formatter: (value: number) => formatMegabytes(value).replace(',00', ''),
           },
 
-          // Valor central grande, com a unidade já embutida (evita repetir "MB"
-          // duas vezes perto de números pequenos como "0,00 MB / 22,83 MB").
-          // offsetCenter em % é relativo ao raio do gauge — com raio fixo em
-          // pixels na tela ampliada, o mesmo percentual já mantém o texto
-          // dentro do arco em vez de vazar para fora dele.
-          detail: {
-            valueAnimation: true,
-            offsetCenter: [0, '18%'],
-            color: gaugeColor,
-            fontSize: isLarge ? 30 : 24,
-            fontWeight: 'bold',
-            formatter: () => formatMegabytes(totalMegabytes),
-          },
-
-          // Rótulo descritivo abaixo do valor, no lugar do "%" pouco intuitivo.
-          title: {
-            offsetCenter: [0, '34%'],
-            color: tokens.textMuted,
-            fontSize: isLarge ? 13 : 11,
-            fontWeight: 500,
-          },
+          // Valor central e rótulo NÃO são desenhados pelo ECharts: são HTML
+          // sobreposto fora do canvas (ver JSX abaixo), pelo mesmo motivo do
+          // DatabaseUsageChart — offsetCenter é percentual do raio do arco, e
+          // com um arco fino não dá pra escapar do traçado sem estourar o
+          // card. HTML dá posição e contraste diretos.
+          detail: { show: false },
+          title: { show: false },
 
           data: [{
             value: totalMegabytes,
@@ -231,6 +210,7 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
   }, [totalMegabytes, tokens]);
 
   const hasUsage = groups.some((group) => group.bytes > 0);
+  const gaugeColor = computeGaugeColor(totalMegabytes);
 
   return (
     <ChartCard
@@ -247,8 +227,25 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
           </div>
         ) : (
           <div className="w-full h-full flex flex-col min-h-0">
-            <div className="flex-[2] relative min-h-0 p-2">
+            <div className="flex-1 min-h-[110px] relative p-2">
               <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
+            </div>
+            {/* Valor central FORA do canvas do ECharts, num bloco próprio com
+                altura reservada por flexbox (shrink-0) — não por porcentagem
+                estimada do raio do gauge. Isso garante que o número nunca
+                fica sobre o arco, seja qual for o tamanho do card. O arco em
+                si (radius) fica bem menor que o container para sobrar
+                respiro real entre o traçado e este bloco. */}
+            <div className="shrink-0 flex flex-col items-center gap-0.5 px-2 pb-2 pt-1">
+              <span
+                className="font-bold leading-tight text-center"
+                style={{ color: gaugeColor, fontSize: isFullscreen ? 26 : 18 }}
+              >
+                {formatMegabytes(totalMegabytes)}
+              </span>
+              <span className="text-content-muted text-center font-medium" style={{ fontSize: isFullscreen ? 13 : 11 }}>
+                Espaço utilizado
+              </span>
             </div>
             {sortedGroups.length > 0 && (
               <div className="shrink-0 border-t border-ui-border-soft">

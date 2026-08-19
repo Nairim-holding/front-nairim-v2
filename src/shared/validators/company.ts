@@ -30,7 +30,7 @@ export const switchCompanySchema = z.object({
 /** Parâmetros de listagem de empresas. */
 export const listCompaniesQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().default(30),
+  limit: z.coerce.number().int().positive().max(150).default(150),
   search: z.string().optional().default(''),
   // Aceita boolean real ou a string 'true' (compat com query string).
   includeInactive: z

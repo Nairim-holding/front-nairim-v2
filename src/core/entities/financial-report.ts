@@ -102,6 +102,6 @@ export interface DfcLine {
 export interface DemonstrativoResult {
   groupBy: DfcGroupBy;
   lines: DfcLine[];
-  /** Despesas cuja categoria não tem `dfc_group` — não entram em nenhuma linha, só neste total, para o front avisar o usuário. */
+  /** Despesas cuja categoria não tem `dfc_group` — entram na linha "Outras Despesas (sem classificação DFC)"; este total serve para o front avisar o usuário. */
   unclassifiedExpenseTotal: number;
 }

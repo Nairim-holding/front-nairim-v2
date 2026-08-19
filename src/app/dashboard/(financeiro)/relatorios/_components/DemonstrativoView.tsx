@@ -174,8 +174,9 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/40 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle size={15} className="shrink-0 mt-0.5" />
           <span>
-            {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período ainda não têm classificação DFC
-            (Impostos / Despesa Variável / Despesa Fixa / Pessoal) e não entram neste demonstrativo. Classifique as
+            {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período estão sem classificação DFC
+            (Impostos / Despesa Variável / Despesa Fixa / Pessoal). Elas entram no resultado pela linha
+            &ldquo;Outras Despesas (sem classificação DFC)&rdquo;. Para que apareçam na linha correta, classifique as
             categorias em Financeiro → Categorias/Subcategorias.
           </span>
         </div>

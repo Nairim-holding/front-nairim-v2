@@ -60,7 +60,7 @@ export const createLeaseSchema = z.object({
 export const updateLeaseSchema = createLeaseSchema.partial();
 
 export const listLeasesQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(10),
+  limit: z.coerce.number().int().min(1).max(150).default(150),
   page: z.coerce.number().int().min(1).default(1),
   search: z.string().optional(),
 });

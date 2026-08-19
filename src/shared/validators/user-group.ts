@@ -25,7 +25,7 @@ export const updateUserGroupSchema = z.object({
 });
 
 export const listUserGroupsQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1, 'Limit deve ser um número entre 1 e 100').max(100, 'Limit deve ser um número entre 1 e 100').optional(),
+  limit: z.coerce.number().int().min(1, 'Limit deve ser um número entre 1 e 150').max(150, 'Limit deve ser um número entre 1 e 150').optional(),
   page: z.coerce.number().int().min(1, 'Page deve ser um número positivo').optional(),
   search: z.string().optional(),
   includeInactive: z.coerce.boolean().optional(),

@@ -114,15 +114,17 @@ describe('resolveDashboardPeriod (fidelidade ao validateDashboardParams)', () =>
     ).toThrow(new ValidationError('startDate não pode ser maior que endDate'));
   });
 
-  it('rejeita intervalo maior que 365 dias', () => {
+  // O teto foi ampliado de 365 para 5480 dias (~15 anos) junto com o backend —
+  // é o que permite o "período limpo" do Dashboard varrer todo o histórico.
+  it('rejeita intervalo maior que 15 anos', () => {
     expect(() =>
-      resolveDashboardPeriod({ startDate: '2025-01-01', endDate: '2026-01-31' }),
-    ).toThrow(new ValidationError('O intervalo máximo permitido é de 365 dias'));
+      resolveDashboardPeriod({ startDate: '2010-01-01', endDate: '2026-01-31' }),
+    ).toThrow(new ValidationError('O intervalo máximo permitido é de 15 anos'));
   });
 
-  it('aceita um intervalo de exatamente 365 dias', () => {
+  it('aceita um intervalo de vários anos dentro do teto', () => {
     expect(() =>
-      resolveDashboardPeriod({ startDate: '2025-01-01', endDate: '2026-01-01' }),
+      resolveDashboardPeriod({ startDate: '2020-01-01', endDate: '2026-01-01' }),
     ).not.toThrow();
   });
 });

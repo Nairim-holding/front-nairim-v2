@@ -45,7 +45,8 @@ function ActiveSection({
     onSectionRangeChange(filter, startDate, endDate);
 
   if (filter === "map") {
-    return <MapSection data={(metrics.map as MapCoordinate[]) ?? []} onRangeChange={handleRangeChange} />;
+    // Sem filtro de período aqui (Tarefa 2) — o mapa não escuta range change.
+    return <MapSection data={(metrics.map as MapCoordinate[]) ?? []} />;
   }
 
   const current = metrics[filter] as MetricResponse | null;

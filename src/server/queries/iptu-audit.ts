@@ -15,8 +15,8 @@ export async function getIptuAuditSettingsData(): Promise<IptuAuditSettings | nu
 }
 
 export async function getIptuAuditData(raw: Record<string, unknown>): Promise<IptuAuditReport> {
-  const { startDate, endDate } = iptuAuditQuerySchema.parse(raw);
+  const { startDate, endDate, propertyIds } = iptuAuditQuerySchema.parse(raw);
   return withPermission('financial-audit', 'view', (session) =>
-    iptuAuditUseCases.getAudit.execute({ startDate, endDate }, session.company_id),
+    iptuAuditUseCases.getAudit.execute({ startDate, endDate, propertyIds }, session.company_id),
   );
 }

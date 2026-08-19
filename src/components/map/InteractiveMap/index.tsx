@@ -2,34 +2,36 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from "react-leaflet";
+import { createPortal } from "react-dom";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Maximize2, X } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getThemeTokens } from "@/utils";
 
-// Ícone personalizado dos marcadores (Pin Roxo), embutido como SVG inline em
-// vez de PNG hospedado em CDN externo (Tarefa 1.4 do guia de correções): os
-// pins não apareciam porque o ícone antigo dependia de raw.githubusercontent.com
-// e cdnjs.cloudflare.com — se esses hosts estiverem bloqueados (rede
-// corporativa, CSP, offline), o Leaflet posiciona o marcador normalmente mas a
-// imagem do pin fica invisível, sem nenhum erro no console. Um data URI SVG
-// não depende de nenhuma requisição de rede.
-const PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
-  <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.5"/>
-  <circle cx="12.5" cy="12.5" r="5.5" fill="#ffffff"/>
-</svg>`;
-const customIcon = new L.Icon({
-  iconUrl: `data:image/svg+xml;base64,${typeof window !== "undefined" ? window.btoa(PIN_SVG) : Buffer.from(PIN_SVG).toString("base64")}`,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+const createPinIcon = (fillColor: string) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
+    <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z" fill="${fillColor}" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="12.5" cy="12.5" r="5.5" fill="#ffffff"/>
+  </svg>`;
+  return new L.Icon({
+    iconUrl: `data:image/svg+xml;base64,${typeof window !== "undefined" ? window.btoa(svg) : Buffer.from(svg).toString("base64")}`,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+  });
+};
+
+const leasedIcon = createPinIcon("#8b5cf6"); // Roxa (Locado)
+const availableIcon = createPinIcon("#ef4444"); // Vermelha (Disponível)
 
 interface MapCoordinate {
   lat: number;
   lng: number;
   info: string;
+  isLeased?: boolean;
+  status?: 'OCCUPIED' | 'AVAILABLE';
 }
 
 interface LeafletMapProps {
@@ -118,10 +120,25 @@ function MapController({
   );
 }
 
-export default function LeafletMap({ data = [], loading = false }: LeafletMapProps) {
+type StatusFilter = 'ALL' | 'OCCUPIED' | 'AVAILABLE';
+
+interface MapCanvasProps {
+  data: MapCoordinate[];
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+}
+
+/**
+ * Corpo do mapa (busca, marcadores, legenda) — usado tanto no card normal
+ * quanto no overlay de tela cheia, cada um com sua própria instância do
+ * Leaflet (MapContainer não pode ser reaproveitado entre containers DOM).
+ */
+function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPoint, setSelectedPoint] = useState<MapCoordinate | null>(null);
   const [worldGeoJson, setWorldGeoJson] = useState<any>(null);
+  // Clicar na legenda restringe os alfinetes exibidos ao status escolhido.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const { theme } = useTheme();
   const tokens = getThemeTokens();
   const isDark = theme === "dark";
@@ -139,13 +156,18 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
       .catch(err => console.error("Erro ao carregar fronteiras:", err));
   }, []);
 
+  const filteredData = useMemo(() => {
+    if (statusFilter === 'ALL') return data;
+    return data.filter((p) => (p.isLeased || p.status === 'OCCUPIED' ? 'OCCUPIED' : 'AVAILABLE') === statusFilter);
+  }, [data, statusFilter]);
+
   // Filtra sugestões no input
   const filteredSuggestions = useMemo(() => {
     if (!searchTerm) return [];
-    return data.filter(item => 
+    return filteredData.filter(item =>
       item.info.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, data]);
+  }, [searchTerm, filteredData]);
 
   const handleSelect = (point: MapCoordinate) => {
     setSearchTerm(point.info);
@@ -157,17 +179,17 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
     setSelectedPoint(null);
   };
 
-  if (loading) {
-    return (
-      <div className="w-full h-[600px] flex items-center justify-center bg-surface-subtle rounded-xl border border-ui-border-soft">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
-      </div>
-    );
-  }
+  const toggleStatusFilter = (status: 'OCCUPIED' | 'AVAILABLE') => {
+    setSelectedPoint(null);
+    setStatusFilter((prev) => (prev === status ? 'ALL' : status));
+  };
+
+  const occupiedCount = useMemo(() => data.filter((p) => p.isLeased || p.status === 'OCCUPIED').length, [data]);
+  const availableCount = data.length - occupiedCount;
 
   return (
-    <div className="relative w-full h-[calc(100vh-140px)] min-h-[500px] bg-surface rounded-xl border border-ui-border-strong shadow-sm overflow-hidden group z-0">
-      
+    <div className="relative w-full h-full bg-surface rounded-xl border border-ui-border-strong shadow-sm overflow-hidden group z-0">
+
       {/* --- INPUT DE BUSCA FLUTUANTE --- */}
       <div className="absolute top-4 left-4 z-[1000] w-full max-w-md px-2">
         <div className="relative shadow-lg">
@@ -188,7 +210,7 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
             </svg>
           </div>
           {searchTerm && (
-            <button 
+            <button
               onClick={handleClear}
               className="absolute right-3 top-3 text-content-placeholder hover:text-content-secondary"
             >
@@ -196,12 +218,12 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
             </button>
           )}
         </div>
-        
+
         {/* Lista de Sugestões */}
         {searchTerm && filteredSuggestions.length > 0 && !selectedPoint && (
           <div className="mt-2 bg-surface rounded-lg shadow-xl border border-ui-border-soft max-h-60 overflow-y-auto">
             {filteredSuggestions.map((item, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="px-4 py-3 text-sm text-content-secondary hover:bg-surface-subtle cursor-pointer border-b border-ui-border-soft last:border-0 truncate flex flex-col"
                 onClick={() => handleSelect(item)}
@@ -213,6 +235,16 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
           </div>
         )}
       </div>
+
+      {/* --- BOTÃO DE TELA CHEIA --- */}
+      <button
+        type="button"
+        onClick={onToggleFullscreen}
+        title={isFullscreen ? "Fechar tela cheia" : "Ver mapa em tela cheia"}
+        className="absolute top-4 right-4 z-[1000] p-2.5 bg-surface border border-ui-border-soft rounded-lg shadow-lg text-content-secondary hover:text-content hover:bg-surface-subtle transition-colors"
+      >
+        {isFullscreen ? <X size={18} /> : <Maximize2 size={18} />}
+      </button>
 
       {/* --- MAPA --- */}
       <MapContainer
@@ -228,9 +260,9 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
         />
 
         {/* 2. Camada de Máscara (Mundo Cinza) e Controlador de Zoom */}
-        <MapController 
-          selectedLocation={selectedPoint} 
-          allLocations={data}
+        <MapController
+          selectedLocation={selectedPoint}
+          allLocations={filteredData}
           worldData={worldGeoJson}
           themeColors={{
             brandPrimary: tokens.brandPrimary,
@@ -241,34 +273,73 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
         />
 
         {/* 3. Marcadores dos Imóveis */}
-        {data.map((point, idx) => (
-          <Marker 
-            key={idx} 
-            position={[point.lat, point.lng]} 
-            icon={customIcon}
-            eventHandlers={{
-              click: () => handleSelect(point),
-            }}
-          >
-            <Popup className="custom-popup">
-              <div className="p-1">
-                <strong className="block text-sm text-brand-hover mb-1">Imóvel Encontrado</strong>
-                <p className="text-content-secondary text-xs m-0">{point.info}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {filteredData.map((point, idx) => {
+          const isLeased = point.isLeased || point.status === 'OCCUPIED';
+          return (
+            <Marker
+              key={idx}
+              position={[point.lat, point.lng]}
+              icon={isLeased ? leasedIcon : availableIcon}
+              eventHandlers={{
+                click: () => handleSelect(point),
+              }}
+            >
+              {/* Hover mostra os dados do imóvel sem precisar clicar (sticky
+                  acompanha o cursor em vez de ficar preso à ponta do pin). */}
+              <Tooltip direction="top" offset={[0, -38]} opacity={1} sticky>
+                <div className="text-xs">
+                  <strong className={isLeased ? 'text-purple-600' : 'text-red-600'}>
+                    {isLeased ? 'Imóvel Locado' : 'Disponível para Locação'}
+                  </strong>
+                  <div className="text-content-secondary">{point.info}</div>
+                </div>
+              </Tooltip>
+              <Popup className="custom-popup">
+                <div className="p-1">
+                  <strong className={`block text-sm mb-1 ${isLeased ? 'text-purple-600' : 'text-red-600'}`}>
+                    {isLeased ? 'Imóvel Locado' : 'Disponível para Locação'}
+                  </strong>
+                  <p className="text-content-secondary text-xs m-0">{point.info}</p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
-      
-      {/* Legenda Fixa */}
+
+      {/* Legenda Fixa — clicável: filtra os alfinetes exibidos por status.
+          Clicar de novo no mesmo item volta a mostrar todos. */}
       <div className="absolute bottom-6 right-6 bg-surface backdrop-blur px-4 py-3 rounded-xl shadow-lg border border-ui-border-soft text-xs text-content-secondary z-[1000] flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-brand border border-surface shadow-sm"></span>
-          <span className="font-medium">{data.length} Imóveis Disponíveis</span>
-        </div>
-        <div className="flex items-center gap-2 opacity-60">
-          <span className="w-3 h-3 rounded bg-map-mask"></span>
-          <span>Áreas sem atuação</span>
+        <button
+          type="button"
+          onClick={() => toggleStatusFilter('OCCUPIED')}
+          title="Mostrar somente imóveis locados"
+          className={`flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
+            statusFilter === 'OCCUPIED' ? 'bg-[#8b5cf6]/10 ring-1 ring-[#8b5cf6]/40' : 'hover:bg-surface-subtle'
+          }`}
+        >
+          <span className="w-3 h-3 rounded-full bg-[#8b5cf6] border border-surface shadow-sm shrink-0"></span>
+          <span className="font-medium">Imóvel Locado (Roxo)</span>
+          <span className="text-content-muted ml-auto">{occupiedCount}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleStatusFilter('AVAILABLE')}
+          title="Mostrar somente imóveis disponíveis"
+          className={`flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
+            statusFilter === 'AVAILABLE' ? 'bg-[#ef4444]/10 ring-1 ring-[#ef4444]/40' : 'hover:bg-surface-subtle'
+          }`}
+        >
+          <span className="w-3 h-3 rounded-full bg-[#ef4444] border border-surface shadow-sm shrink-0"></span>
+          <span className="font-medium">Disponível para Locação (Vermelho)</span>
+          <span className="text-content-muted ml-auto">{availableCount}</span>
+        </button>
+        <div className="flex items-center gap-2 pt-1 border-t border-ui-border-soft text-[11px] text-content-muted">
+          <span>
+            {statusFilter === 'ALL'
+              ? `Total de Imóveis: ${data.length}`
+              : `Exibindo ${filteredData.length} de ${data.length} imóveis`}
+          </span>
         </div>
       </div>
 
@@ -278,5 +349,51 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
         }
       `}</style>
     </div>
+  );
+}
+
+export default function LeafletMap({ data = [], loading = false }: LeafletMapProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Trava o scroll do body e permite fechar com Esc enquanto em tela cheia.
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isFullscreen]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-[600px] flex items-center justify-center bg-surface-subtle rounded-xl border border-ui-border-soft">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="w-full h-[calc(100vh-140px)] min-h-[500px]">
+        <MapCanvas data={data} isFullscreen={false} onToggleFullscreen={() => setIsFullscreen(true)} />
+      </div>
+
+      {isFullscreen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[1400] bg-black/60 p-3 sm:p-6">
+          <div className="w-full h-full">
+            <MapCanvas data={data} isFullscreen onToggleFullscreen={() => setIsFullscreen(false)} />
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

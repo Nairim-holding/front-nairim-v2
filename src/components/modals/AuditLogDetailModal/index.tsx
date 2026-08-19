@@ -42,73 +42,10 @@ function formatDateTime(value: string): string {
 }
 
 /**
- * Tradução dos rótulos de campo do diff (Tarefa 5.3 do guia de correções). O
- * backend só "prettifica" o nome técnico (`file_path` → "File Path"), sem
- * traduzir — o comentário em `api-nairim-v2/src/lib/auditModels.ts` já
- * reconhece isso como escopo futuro. Cobre os campos mais comuns nos modelos
- * auditados (Lançamento, Documento, Locação, Imóvel etc.); campo sem mapa
- * conhecido mantém o rótulo original vindo do backend, em vez de quebrar.
+ * Rótulo e valor já chegam prontos do servidor (Tarefa 8.2): PT-BR, uuid
+ * resolvido para o nome do registro, datas em `dd-mm-aaaa` e campos na mesma
+ * ordem da tela de Lançamentos. Aqui só resta o placeholder de vazio.
  */
-const FIELD_LABEL_PT: Record<string, string> = {
-  'Id': 'ID',
-  'Company Id': 'Empresa',
-  'Created At': 'Criado em',
-  'Created By': 'Criado por',
-  'Updated At': 'Atualizado em',
-  'Updated By': 'Atualizado por',
-  'Deleted At': 'Excluído em',
-  'Deleted By': 'Excluído por',
-  'Type': 'Tipo',
-  'Status': 'Situação',
-  'Description': 'Descrição',
-  'Amount': 'Valor',
-  'Event Date': 'Data do Evento',
-  'Effective Date': 'Data Efetiva',
-  'Due Date': 'Vencimento',
-  'Start Date': 'Data de Início',
-  'End Date': 'Data de Fim',
-  'Is Active': 'Ativo',
-  'Is Featured': 'Destaque',
-  'Is Transfer': 'É Transferência',
-  'Name': 'Nome',
-  'Title': 'Título',
-  'Email': 'E-mail',
-  'Phone': 'Telefone',
-  'Cpf': 'CPF',
-  'Cnpj': 'CNPJ',
-  'Category Id': 'Categoria',
-  'Subcategory Id': 'Subcategoria',
-  'Financial Institution Id': 'Instituição Financeira',
-  'Card Id': 'Cartão',
-  'Center Id': 'Centro',
-  'Supplier Id': 'Fornecedor',
-  'Lease Id': 'Locação',
-  'Property Id': 'Imóvel',
-  'Owner Id': 'Proprietário',
-  'Tenant Id': 'Inquilino',
-  'User Id': 'Usuário',
-  'Invoice Id': 'Fatura',
-  'Transaction Id': 'Lançamento',
-  'File Path': 'Arquivo',
-  'File Type': 'Tipo de Arquivo',
-  'File Name': 'Nome do Arquivo',
-  'Contract Number': 'Número do Contrato',
-  'Address': 'Endereço',
-  'City': 'Cidade',
-  'State': 'Estado',
-  'Zip Code': 'CEP',
-  'Latitude': 'Latitude',
-  'Longitude': 'Longitude',
-  'Default Amount': 'Valor Padrão',
-  'Monthly Values': 'Valores Mensais',
-};
-
-function translateFieldLabel(label: string): string {
-  return FIELD_LABEL_PT[label] ?? label;
-}
-
-/** Sem formatação especial por tipo: o print exibe até booleano cru
- *  ("true"/"false"), então valor vazio vira "—" e o resto é String(value). */
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   return String(value);
@@ -222,7 +159,7 @@ export default function AuditLogDetailModal({ logId, onClose }: AuditLogDetailMo
                           key={f.field}
                           className="border-t border-ui-border bg-[var(--color-brand-primary)]/5"
                         >
-                          <td className="px-4 py-2.5 text-content whitespace-nowrap align-top">{translateFieldLabel(f.label)}</td>
+                          <td className="px-4 py-2.5 text-content whitespace-nowrap align-top">{f.label}</td>
                           <td className="px-4 py-2.5 text-content-muted line-through decoration-state-error/50 whitespace-nowrap">
                             {formatValue(f.old_value)}
                           </td>

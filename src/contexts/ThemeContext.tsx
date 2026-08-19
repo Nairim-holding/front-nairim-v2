@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type Theme = "light" | "dark";
 
@@ -36,7 +36,20 @@ function persistTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => readThemeFromBody());
+  // O tema real vive na classe do <body>, escrita pelo script de bootstrap do
+  // RootLayout antes da hidratação. Ler essa classe no initializer quebraria a
+  // hidratação: no servidor não existe `document`, então o HTML do servidor
+  // sairia sempre como "light" enquanto o cliente já leria "dark".
+  // Começamos sempre em "light" (igual ao servidor) e sincronizamos no efeito,
+  // depois que o React casou as duas árvores.
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  useEffect(() => {
+    const bootstrapped = readThemeFromBody();
+    if (bootstrapped !== "light") {
+      setThemeState(bootstrapped);
+    }
+  }, []);
 
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);

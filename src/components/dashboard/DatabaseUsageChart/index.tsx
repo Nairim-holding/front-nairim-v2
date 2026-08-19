@@ -100,6 +100,12 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
     []
   );
 
+  // Valor central e rótulo NÃO são desenhados pelo ECharts (detail/title):
+  // são HTML sobreposto fora do canvas (ver abaixo), porque offsetCenter é
+  // percentual do raio do arco — com um arco fino, qualquer deslocamento
+  // grande o suficiente para escapar do traçado colorido também estourava a
+  // área do card. HTML dá controle direto de posição e contraste (fundo
+  // sólido atrás do texto), sem depender dessa matemática do gauge.
   const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
     backgroundColor: 'transparent',
     animationDurationUpdate: 1000,
@@ -112,12 +118,12 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
         max: quotaMb > 0 ? quotaMb : 1,
         startAngle: 210,
         endAngle: -30,
-        radius: isLarge ? '82%' : '92%',
-        center: ['50%', '58%'],
+        radius: isLarge ? '82%' : '58%',
+        center: ['50%', '48%'],
         // Faixas de alerta: verde até 60%, âmbar de 60% a 80%, vermelho de 80% a 100% da cota.
         axisLine: {
           lineStyle: {
-            width: isLarge ? 26 : 18,
+            width: isLarge ? 22 : 12,
             color: [
               [SAFE_PERCENT / 100, COLOR_OK],
               [WARNING_PERCENT / 100, COLOR_WARNING],
@@ -125,53 +131,40 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
             ],
           },
         },
-        // Preenchimento sólido até o valor atual, na cor do semáforo — efeito
-        // de "carga" além do ponteiro, mais legível à distância.
         progress: {
           show: true,
-          width: isLarge ? 26 : 18,
+          width: isLarge ? 22 : 12,
           itemStyle: { color: gaugeColor },
         },
         pointer: {
           itemStyle: { color: gaugeColor },
-          width: isLarge ? 6 : 4,
-          length: '62%',
+          width: isLarge ? 5 : 3,
+          length: '55%',
         },
         anchor: {
           show: true,
           showAbove: true,
-          size: isLarge ? 20 : 14,
-          itemStyle: { color: gaugeColor, borderColor: tokens.bgSurface, borderWidth: 4 },
+          size: isLarge ? 18 : 9,
+          itemStyle: { color: gaugeColor, borderColor: tokens.bgSurface, borderWidth: 3 },
         },
         axisTick: {
-          distance: isLarge ? -26 : -18,
-          length: isLarge ? 7 : 5,
+          distance: isLarge ? -22 : -10,
+          length: isLarge ? 6 : 3,
           lineStyle: { color: tokens.textMuted, width: 1 },
         },
         splitLine: {
-          distance: isLarge ? -26 : -18,
-          length: isLarge ? 14 : 10,
+          distance: isLarge ? -22 : -10,
+          length: isLarge ? 12 : 6,
           lineStyle: { color: tokens.textMuted, width: 2 },
         },
         axisLabel: {
-          distance: isLarge ? 30 : 22,
+          distance: isLarge ? 22 : 10,
           color: tokens.textMuted,
-          fontSize: isLarge ? 12 : 10,
+          fontSize: isLarge ? 11 : 7,
           formatter: (value: number) => formatMb(value).replace(',00', ''),
         },
-        detail: {
-          valueAnimation: true,
-          offsetCenter: [0, isLarge ? '38%' : '34%'],
-          color: gaugeColor,
-          fontSize: isLarge ? 26 : 18,
-          fontWeight: 'bold',
-          formatter: () => `${formatMb(usedMb)} / ${formatMb(quotaMb)} Megabytes`,
-        },
-        title: {
-          offsetCenter: [0, isLarge ? '64%' : '60%'],
-          color: tokens.textMuted,
-          fontSize: isLarge ? 14 : 11,
-        },
+        detail: { show: false },
+        title: { show: false },
         data: [{ value: usedMb, name: `${formatMb(percent)}% da cota` }],
       },
     ],
@@ -195,8 +188,26 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
           </div>
         ) : (
           <div className="w-full h-full flex flex-col min-h-0">
-            <div className="flex-1 relative min-h-0">
+            <div className="flex-1 min-h-[110px] relative">
               <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
+            </div>
+            {/* Valor central FORA do canvas do ECharts, num bloco próprio com
+                altura reservada por flexbox (shrink-0) — não em overlay
+                posicionado por porcentagem do raio do gauge (offsetCenter é
+                relativo ao raio, e um arco fino faz o texto ficar preso perto
+                do traçado colorido em vez de realmente "fora" dele). O arco
+                em si (radius) fica bem menor que o container para sobrar
+                respiro real entre o traçado e este bloco. */}
+            <div className="shrink-0 flex flex-col items-center gap-0.5 px-2 pb-2 pt-1">
+              <span
+                className="font-bold leading-tight text-center"
+                style={{ color: gaugeColor, fontSize: isFullscreen ? 24 : 18 }}
+              >
+                {formatMb(usedMb)} / {formatMb(quotaMb)} MB
+              </span>
+              <span className="text-content-muted text-center" style={{ fontSize: isFullscreen ? 12 : 11 }}>
+                {formatMb(percent)}% da cota
+              </span>
             </div>
             {(overQuota || nearQuota) && (
               <div

@@ -173,6 +173,16 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
             </tr>
           </thead>
           <tbody>
+            {summary && (
+              <tr className="text-sm font-semibold bg-surface-subtle border-b border-ui-border-soft">
+                <td className="px-3 py-2 text-content" colSpan={8}>
+                  Saldo Anterior
+                </td>
+                <td className={`px-3 py-2 text-right font-bold ${summary.saldoAnterior < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+                  {formatCurrency(summary.saldoAnterior)}
+                </td>
+              </tr>
+            )}
             {sortedItems.length === 0 && (
               <tr>
                 <td colSpan={columns.length} className="px-3 py-8 text-center text-content-muted text-sm">

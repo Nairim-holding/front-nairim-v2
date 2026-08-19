@@ -1,7 +1,18 @@
 import { MONTH_LABELS_FULL } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 
-/** "Período limpo" (Tarefa 6.3): sem filtro de data, pega todo o histórico disponível. */
-export const CLEARED_PERIOD_START = '2000-01-01';
+/**
+ * "Período limpo" (Tarefa 6.3): sem filtro de data, pega todo o histórico
+ * disponível. Fica 15 anos atrás em vez de uma data fixa antiga porque é
+ * exatamente o teto de intervalo aceito pelo Dashboard e pelos Relatórios
+ * (5480 dias, ver `shared/validators/dashboard.ts`) — com `2000-01-01` a
+ * chamada estourava esse limite e voltava 400 em vez do histórico.
+ */
+export const CLEARED_PERIOD_START = (() => {
+  const CLEARED_PERIOD_DAYS = 5470; // ~15 anos, com folga sob o teto de 5480.
+  const start = new Date();
+  start.setDate(start.getDate() - CLEARED_PERIOD_DAYS);
+  return start.toISOString().split('T')[0];
+})();
 
 /**
  * Converte ano(s) + meses selecionados (1-12) no intervalo [primeiro dia do

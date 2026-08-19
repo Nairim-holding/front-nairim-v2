@@ -749,11 +749,19 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   private async propagateToFollowing(existing: any, updated: any, fields: PropagatableField[]) {
     const isInstallment = !!existing.installment_group_id && existing.installment_number != null;
     const isRecurring = !!existing.recurring_group_id && existing.occurrence_number != null;
-    if (!isInstallment && !isRecurring) return;
+    const isLease = !!existing.lease_id && existing.installment_number != null;
+    if (!isInstallment && !isRecurring && !isLease) return;
 
     const where: any = isInstallment
       ? {
           installment_group_id: existing.installment_group_id,
+          installment_number: { gt: existing.installment_number },
+          status: 'PENDING',
+          deleted_at: null,
+        }
+      : isLease
+      ? {
+          lease_id: existing.lease_id,
           installment_number: { gt: existing.installment_number },
           status: 'PENDING',
           deleted_at: null,

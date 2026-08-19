@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   Menu,
-  X,
+  Pin,
   Home,
   Moon,
   Sun,
@@ -40,29 +40,36 @@ import { resourceForHref } from "@/utils/permissionResource";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { LucideIcon } from "lucide-react";
 
-/**
- * Formato comum dos itens de submenu — `disabled` é opcional porque só o
- * item "ROI" (Tarefa 3.1: sem rota funcional ainda) o usa; anotar os 3
- * arrays de submenu com este tipo evita que o TypeScript infira 3 tipos de
- * objeto distintos (um por menu) e rejeite o acesso a `.disabled` no `.map()`
- * unificado do JSX, que itera sobre `item.submenu` sem saber de qual menu veio.
- */
 interface SubmenuItem {
   href: string;
   icon: LucideIcon;
   label: string;
   resource?: string;
   disabled?: boolean;
+  isSeparatorBefore?: boolean;
 }
 
-export default function Aside() {
-  const [openAside, setOpenAside] = useState(false);
-  // Mudamos de booleano para string, para saber QUAL menu está aberto
+interface AsideProps {
+  isOpen?: boolean;
+  onToggle?: () => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+}
+
+export default function Aside({
+  isOpen: propIsOpen,
+  onToggle: propOnToggle,
+  isPinned = false,
+  onTogglePin,
+}: AsideProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(true);
+  const isOpen = propIsOpen ?? internalIsOpen;
+  const handleToggle = propOnToggle ?? (() => setInternalIsOpen((prev) => !prev));
+
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [isDarkModeAnimating, setIsDarkModeAnimating] = useState(false);
   const [activeItem, setActiveItem] = useState("/dashboard");
   const submenuRef = useRef<HTMLDivElement>(null);
-  const menuItemsRef = useRef<HTMLUListElement>(null);
 
   const { logout, user } = useAuth();
   const { can } = usePermissions();
@@ -72,14 +79,12 @@ export default function Aside() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
-        setOpenSubmenu(null); // Fecha todos ao clicar fora
+        setOpenSubmenu(null);
       }
     }
-
     if (openSubmenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -87,39 +92,32 @@ export default function Aside() {
 
   useEffect(() => {
     const currentPath = window.location.pathname;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveItem(currentPath);
   }, []);
 
   const handleItemClick = (href: string) => {
     setActiveItem(href);
     if (href !== "#") {
-      setOpenAside(false);
+      if (window.innerWidth < 768) {
+        handleToggle();
+      }
       setOpenSubmenu(null);
     }
   };
 
-  // Nova função de clique que recebe o nome do menu
   const handleSubmenuClick = (e: React.MouseEvent, label: string) => {
     e.stopPropagation();
-    // Se clicar no menu que já está aberto, ele fecha. Se clicar em outro, ele abre e fecha o anterior.
     setOpenSubmenu(openSubmenu === label ? null : label);
   };
 
   const handleDarkModeToggle = () => {
     setIsDarkModeAnimating(true);
     toggleTheme();
-    
     setTimeout(() => {
       setIsDarkModeAnimating(false);
     }, 300);
   };
 
-  // `resource` vem de RESOURCE_ROUTES (utils/permissionResource.ts) — mesma
-  // tabela usada pelo PermissionGate para bloquear acesso direto por URL, para
-  // as duas features nunca divergirem sobre "que rota cobre que recurso".
-  // Item sem `resource` (os "guarda-chuva" Cadastrar/Financeiro) não é
-  // filtrado direto: fica visível se sobrar ao menos 1 item no submenu.
   const menuItems = useMemo(() => {
     const raw = [
       { href: "/dashboard", icon: Home, label: "Resumo", resource: resourceForHref("/dashboard") },
@@ -150,7 +148,7 @@ export default function Aside() {
           { href: "/dashboard/centros", icon: HandCoins, label: "Centros", resource: resourceForHref("/dashboard/centros") },
           { href: "/dashboard/fornecedores", icon: Users, label: "Contatos", resource: resourceForHref("/dashboard/fornecedores") },
           { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
-          { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
+          { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento"), isSeparatorBefore: true },
           { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios") },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
@@ -159,10 +157,6 @@ export default function Aside() {
         href: "#",
         icon: FileClock,
         label: "Auditoria",
-        // Reorganização do menu (Tarefa 3.1): IPTU (antes dentro de Financeiro)
-        // e Logs (antes item de topo isolado) agora vivem sob um único menu
-        // Auditoria. ROI ainda não existe como tela (Tarefa 3.4 é só proposta
-        // técnica) — fica visível e desabilitado até a implementação real.
         submenu: ([
           { href: "/dashboard/financeiro-auditoria", icon: SearchCheck, label: "IPTU", resource: resourceForHref("/dashboard/financeiro-auditoria") },
           { href: "#", icon: TrendingUp, label: "ROI", disabled: true },
@@ -176,213 +170,194 @@ export default function Aside() {
 
   const handleLogout = async () => {
     logout();
-    setOpenAside(false);
+    setOpenSubmenu(null);
   };
 
   return (
     <>
-      <button
-        className={`fixed top-[8px] left-[10px] z-[1100] bg-page p-2 rounded-md shadow-md transition-all duration-300 hover:opacity-100 text-content ${openAside ? "left-[14.25rem]" : "left-[10px]"}`}
-        onClick={() => setOpenAside(!openAside)}
-      >
-        {openAside ? (
-          <X size={25} />
-        ) : (
-          <Menu size={25} />
-        )}
-      </button>
-
-      {/* Overlay */}
-      {openAside && (
+      {/* Overlay Mobile */}
+      {isOpen && (
         <div
-          className="fixed inset-0 bg-layer-overlay z-[999] transition-opacity duration-300"
-          onClick={() => {
-            setOpenAside(false);
-            setOpenSubmenu(null);
-          }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[990] md:hidden transition-opacity duration-300"
+          onClick={handleToggle}
         />
       )}
 
-      {/* Aside */}
+      {/* Painel do Sidebar — Moldura com borda visível e cor interna clara (Modelo de Referência) */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[300px] z-[1000] shadow-lg transform transition-transform duration-300 ease-in-out bg-page ${openAside ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-3 left-3 bottom-3 z-[1000] w-[260px] bg-surface border border-ui-border-soft rounded-2xl shadow-xl flex flex-col transition-all duration-300 ease-in-out ${
+          isOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "-translate-x-[290px] opacity-0 pointer-events-none"
+        }`}
       >
-        <div className="flex flex-col h-full pt-5 px-5 pb-3 items-start">
-          <div className="mb-4">
-            <Link href="/dashboard">
+        {/* Topo: Seletor de Encolher/Abrir + Logo + Alfinete (Pin) para manter sempre fixado/expandido */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-ui-border-soft">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={handleToggle}
+              className="p-1.5 rounded-lg text-content-secondary hover:text-content hover:bg-surface-subtle transition-colors focus:outline-none shrink-0"
+              title="Encolher menu"
+            >
+              <Menu size={20} />
+            </button>
+
+            <Link href="/dashboard" className="flex items-center truncate">
               <Logo className="text-brand-logo" variant="sidebar" />
             </Link>
           </div>
 
-          {isSuperAdmin && <CompanySwitcher isOpen={openAside} onNavigate={() => setOpenAside(false)} />}
-
-          <div className="flex-1 w-full overflow-hidden">
-            <nav className="h-full" ref={submenuRef}>
-              <ul 
-                ref={menuItemsRef}
-                className="space-y-2 h-full overflow-y-auto pr-2 custom-scrollbar"
-                style={{ maxHeight: "calc(100vh - 200px)" }}
-              >
-                {menuItems.map((item) => {
-                  const isOpen = openSubmenu === item.label;
-
-                  return (
-                    <li key={item.label} className="relative">
-                      {item.submenu ? (
-                        <>
-                          <button
-                            onClick={(e) => handleSubmenuClick(e, item.label)}
-                            className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                              isOpen
-                                ? "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
-                                : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
-                            }`}
-                          >
-                            <item.icon size={22} className="min-w-[25px]" />
-                            {openAside && (
-                              <>
-                                <span className="ml-3 flex-1 text-left">{item.label}</span>
-                                <ChevronDown 
-                                  size={16} 
-                                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                                />
-                              </>
-                            )}
-                          </button>
-
-                          {isOpen && openAside && (
-                            <div className="mt-1 bg-surface-muted rounded-lg shadow-lg overflow-hidden">
-                              <ul className="space-y-1">
-                                {item.submenu.map((subItem) => (
-                                  <li key={subItem.label}>
-                                    {subItem.disabled ? (
-                                      // Item "em breve" (ex.: ROI — Tarefa 3.1): sem rota funcional ainda, não navega.
-                                      <span
-                                        title="Em breve"
-                                        className="flex items-center p-3 rounded text-sm text-content-muted opacity-50 cursor-not-allowed"
-                                      >
-                                        <subItem.icon size={18} className="mr-3" />
-                                        {subItem.label}
-                                        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
-                                      </span>
-                                    ) : (
-                                      <Link
-                                        href={subItem.href}
-                                        onClick={() => {
-                                          setActiveItem(subItem.href);
-                                          setOpenAside(false);
-                                          setOpenSubmenu(null);
-                                        }}
-                                        className={`flex items-center p-3 rounded text-sm transition-colors ${
-                                          activeItem === subItem.href
-                                            ? "bg-surface-subtle text-content"
-                                            : "text-content-secondary hover:bg-surface-subtle hover:text-content"
-                                        }`}
-                                      >
-                                        <subItem.icon size={18} className="mr-3" />
-                                        {subItem.label}
-                                      </Link>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <Link
-                          href={item.href}
-                          onClick={() => handleItemClick(item.href)}
-                          className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
-                            activeItem === item.href
-                              ? "bg-gradient-to-r from-brand to-brand-hover text-content-inverse"
-                              : "text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
-                          }`}
-                        >
-                          <item.icon size={22} className="min-w-[25px]" />
-                          {openAside && <span className="ml-3">{item.label}</span>}
-                        </Link>
-                      )}
-                    </li>
-                  );
-                })}
-
-                {/* Logout */}
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full p-3 rounded-lg transition-all duration-200 text-content-muted hover:bg-gradient-to-r hover:from-brand hover:to-brand-hover hover:text-content-inverse"
-                  >
-                    <LogOut size={22} className="min-w-[25px]" />
-                    {openAside && <span className="ml-3">Sair</span>}
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
-
-          {/* Dark Mode Toggle - Fixo na parte inferior */}
-          <div className="w-full pt-4 border-t border-ui-border-soft mt-4">
-            <div className="flex items-center justify-between">
-              {openAside && (
-                <>
-                  <div className="flex items-center gap-3">
-                    {isDark ? (
-                      <Moon size={20} className="text-content-inverse" />
-                    ) : (
-                      <Sun size={20} className="text-content-secondary" />
-                    )}
-                    <span className="text-content-secondary">
-                      {isDark ? "Dark Mode" : "Light Mode"}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleDarkModeToggle}
-                    className="relative w-12 h-6 rounded-full bg-surface-strong transition-all duration-300 hover:opacity-80"
-                  >
-                    <div
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-surface transition-all duration-300 flex items-center justify-center ${
-                        isDark ? "left-7" : "left-1"
-                      } ${
-                        isDarkModeAnimating ? "scale-110" : "scale-100"
-                      }`}
-                    >
-                      {isDark ? (
-                        <Moon size={10} className="text-content transition-all duration-300" />
-                      ) : (
-                        <Sun size={10} className="text-yellow-500 transition-all duration-300" />
-                      )}
-                    </div>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+          {onTogglePin && (
+            <button
+              onClick={onTogglePin}
+              className={`p-1.5 rounded-lg transition-colors focus:outline-none shrink-0 ${
+                isPinned
+                  ? "bg-brand/10 text-brand font-semibold border border-brand/30"
+                  : "text-content-muted hover:text-content hover:bg-surface-subtle"
+              }`}
+              title={isPinned ? "Menu fixado (sempre expandido)" : "Fixar menu sempre expandido"}
+            >
+              <Pin size={18} className={isPinned ? "rotate-45 text-brand" : ""} />
+            </button>
+          )}
         </div>
 
-        {/* Estilos para o scrollbar */}
+        {isSuperAdmin && (
+          <div className="px-3 pt-3">
+            <CompanySwitcher isOpen={isOpen} onNavigate={handleToggle} />
+          </div>
+        )}
+
+        {/* Lista de Navegação */}
+        <div className="flex-1 w-full overflow-hidden py-3 px-3">
+          <nav className="h-full" ref={submenuRef}>
+            <ul className="space-y-1.5 h-full overflow-y-auto pr-1 custom-scrollbar">
+              {menuItems.map((item) => {
+                const isSubmenuOpen = openSubmenu === item.label;
+                const isActive = activeItem === item.href;
+
+                return (
+                  <li key={item.label} className="relative">
+                    {item.submenu ? (
+                      <>
+                        <button
+                          onClick={(e) => handleSubmenuClick(e, item.label)}
+                          className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                            isSubmenuOpen
+                              ? "bg-surface-subtle text-content"
+                              : "text-content-secondary hover:bg-surface-subtle hover:text-content"
+                          }`}
+                        >
+                          <item.icon size={18} className="min-w-[20px] text-content-muted" />
+                          <span className="ml-3 flex-1 text-left">{item.label}</span>
+                          <ChevronDown
+                            size={15}
+                            className={`transition-transform duration-200 text-content-muted ${
+                              isSubmenuOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+
+                        {isSubmenuOpen && (
+                          <div className="mt-1 ml-4 pl-2 border-l border-ui-border-soft space-y-1">
+                            {item.submenu.map((subItem) => {
+                              const isSubActive = activeItem === subItem.href;
+                              return (
+                                <div
+                                  key={subItem.label}
+                                  className={subItem.isSeparatorBefore ? "border-t border-ui-border-soft pt-1 mt-1" : ""}
+                                >
+                                  {subItem.disabled ? (
+                                    <span
+                                      title="Em breve"
+                                      className="flex items-center px-3 py-2 rounded-lg text-xs text-content-muted opacity-50 cursor-not-allowed"
+                                    >
+                                      <subItem.icon size={16} className="mr-2.5" />
+                                      {subItem.label}
+                                      <span className="ml-auto text-[9px] font-semibold uppercase tracking-wide">Em breve</span>
+                                    </span>
+                                  ) : (
+                                    <Link
+                                      href={subItem.href}
+                                      onClick={() => handleItemClick(subItem.href)}
+                                      className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                                        isSubActive
+                                          ? "bg-brand/10 text-brand font-semibold border border-brand/20"
+                                          : "text-content-secondary hover:bg-surface-subtle hover:text-content"
+                                      }`}
+                                    >
+                                      <subItem.icon size={16} className="mr-2.5 text-brand" />
+                                      {subItem.label}
+                                    </Link>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={() => handleItemClick(item.href)}
+                        className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-brand/10 text-brand font-semibold border border-brand/20"
+                            : "text-content-secondary hover:bg-surface-subtle hover:text-content"
+                        }`}
+                      >
+                        <item.icon size={18} className="min-w-[20px] text-content-muted" />
+                        <span className="ml-3">{item.label}</span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+
+        {/* Rodapé: Dark Mode & Sair */}
+        <div className="p-3 border-t border-ui-border-soft flex flex-col gap-2">
+          <div className="flex items-center justify-between px-2 py-1.5 rounded-xl bg-surface-subtle/50">
+            <div className="flex items-center gap-2 text-xs text-content-secondary">
+              {isDark ? <Moon size={16} className="text-brand" /> : <Sun size={16} className="text-brand" />}
+              <span>{isDark ? "Modo Escuro" : "Modo Claro"}</span>
+            </div>
+            <button
+              onClick={handleDarkModeToggle}
+              className="relative w-10 h-5 rounded-full bg-ui-border-soft transition-all duration-300 hover:opacity-80"
+              title="Alternar tema"
+            >
+              <div
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface shadow-xs transition-all duration-300 flex items-center justify-center ${
+                  isDark ? "left-5" : "left-0.5"
+                }`}
+              />
+            </button>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full px-3 py-2 rounded-xl text-xs font-medium text-content-muted hover:text-state-error hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+          >
+            <LogOut size={16} className="mr-2.5" />
+            <span>Sair da conta</span>
+          </button>
+        </div>
+
         <style jsx>{`
           .custom-scrollbar {
             scrollbar-width: thin;
             scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
           }
-          
           .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
           }
-          
           .custom-scrollbar::-webkit-scrollbar-track {
-            background: var(--color-scrollbar-track);
-            border-radius: 3px;
+            background: transparent;
           }
-          
           .custom-scrollbar::-webkit-scrollbar-thumb {
             background: var(--color-scrollbar-thumb);
-            border-radius: 3px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: var(--color-scrollbar-thumb-hover);
+            border-radius: 4px;
           }
         `}</style>
       </aside>

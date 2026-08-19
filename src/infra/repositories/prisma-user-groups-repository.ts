@@ -56,9 +56,9 @@ function companyId(): string {
 
 export class PrismaUserGroupsRepository implements UserGroupsRepository {
   async list(params: GetUserGroupsParams): Promise<PaginatedUserGroups> {
-    const { limit = 30, page = 1, search = '', filters = {}, sortOptions = {}, includeInactive = false } = params;
+    const { limit = 150, page = 1, search = '', filters = {}, sortOptions = {}, includeInactive = false } = params;
 
-    const take = Math.max(1, Math.min(limit, 100));
+    const take = Math.max(1, Math.min(limit, 150));
     const skip = (Math.max(1, page) - 1) * take;
 
     const where = this.buildWhereClauseWithoutSearch(filters, includeInactive);

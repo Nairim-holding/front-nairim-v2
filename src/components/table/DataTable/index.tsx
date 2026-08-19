@@ -82,7 +82,7 @@ export default function DynamicTableManager({
   basePath,
   autoFocusSearch = true,
   defaultSort = {},
-  defaultLimit = 30,
+  defaultLimit = 150,
   enableCreate = true,
   enableView = true,
   enableEdit = true,
@@ -1188,21 +1188,9 @@ export default function DynamicTableManager({
           )}
         </div>
 
+        {/* Contagem e navegação de páginas moram no rodapé fixo (padrão da tela
+            de Lançamentos) — aqui fica só o seletor "Exibir N registros". */}
         {!useLocalMode && <SelectLimit limit={state.limit} onLimitChange={handleLimitChange} />}
-
-        <p className="text-[16px] font-normal text-content-secondary laptop:relative tablet:text-center tablet:w-full">
-          {meta && meta.total > 0 
-            ? `Exibindo ${tableData.start} a ${tableData.end} de ${meta.total} registros` 
-            : 'Nenhum registro encontrado'}
-        </p>
-
-        {meta && meta.totalPages > 1 && (
-          <Pagination 
-            currentPage={meta.page} 
-            totalPage={meta.totalPages} 
-            onPageChange={handlePageChange} 
-          />
-        )}
       </div>
 
       <div 
@@ -1332,6 +1320,37 @@ export default function DynamicTableManager({
           ))}
         </TableInformations>
       </div>
+
+      {/* Rodapé fixo de paginação — mesmo padrão visual da tela de Lançamentos
+          (Tarefa 8.1): total à esquerda, navegação de páginas à direita. Fica
+          de fora no modo local (tabela embutida em formulário, como a de IPTU
+          do imóvel), onde um rodapé preso à janela flutuaria sobre a tela. */}
+      {!useLocalMode && (
+        <>
+          <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-3 sm:px-4 py-2 z-50 shadow-lg">
+            <div className="flex flex-wrap justify-between items-center gap-2 max-w-[1400px] mx-auto">
+              <p className="text-[13px] text-content-secondary">
+                {meta && meta.total > 0
+                  ? `Total de registros: ${meta.total} (Exibindo ${tableData.start} a ${tableData.end})`
+                  : 'Nenhum registro encontrado'}
+              </p>
+
+              <div className="flex items-center gap-3">
+                {meta && meta.totalPages > 1 && (
+                  <Pagination
+                    currentPage={meta.page}
+                    totalPage={meta.totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Espaço para o rodapé fixo não cobrir o fim da tabela */}
+          <div className="h-12" />
+        </>
+      )}
 
       <ColumnCustomizer
         isOpen={isColumnModalOpen}

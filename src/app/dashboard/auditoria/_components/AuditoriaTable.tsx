@@ -26,7 +26,7 @@ export default function AuditoriaTable({ columns }: AuditoriaTableProps) {
         columns={columns}
         basePath="/dashboard/auditoria"
         autoFocusSearch
-        defaultLimit={100}
+        defaultLimit={150}
         enableExcelExport
         excludeFilterFields={['created_at']}
         enableCreate={false}

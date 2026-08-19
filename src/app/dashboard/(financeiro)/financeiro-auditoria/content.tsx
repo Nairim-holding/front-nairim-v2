@@ -9,34 +9,42 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import IptuAuditSettingsModal from './_components/IptuAuditSettingsModal';
 import IptuAuditTable, { type IptuAuditRow } from './_components/IptuAuditTable';
 import IptuAuditChart from './_components/IptuAuditChart';
-
-function formatDateISO(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
+import IptuAuditComparativeChart, { type IptuAuditPeriodPoint } from './_components/IptuAuditComparativeChart';
+import IptuAuditPropertyFilter, { type PropertyOption } from './_components/IptuAuditPropertyFilter';
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
   return `${day}/${month}/${year}`;
 }
 
-function getDefaultDateRange(): { from: string; to: string } {
-  const today = new Date();
-  const first = new Date(today.getFullYear(), 0, 1);
-  return { from: formatDateISO(first), to: formatDateISO(today) };
+/** Ano inteiro — é o recorte natural do IPTU (Tarefa 4.1: "selecionar o ano de análise"). */
+function yearRange(year: number): { from: string; to: string } {
+  return { from: `${year}-01-01`, to: `${year}-12-31` };
 }
+
+/** Anos oferecidos no seletor: do ano corrente até 5 anos atrás. */
+const YEAR_OPTIONS = (() => {
+  const current = new Date().getFullYear();
+  return Array.from({ length: 6 }, (_, i) => current - i);
+})();
 
 export default function AuditoriaIptuContent() {
   const { showMessage } = useMessageContext();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const defaults = useMemo(() => getDefaultDateRange(), []);
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  const [dateRange, setDateRange] = useState(defaults);
+  const [selectedYear, setSelectedYear] = useState<number | null>(currentYear);
+  const [dateRange, setDateRange] = useState(() => yearRange(new Date().getFullYear()));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [hasSettings, setHasSettings] = useState<boolean | null>(null);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
 
   const [rows, setRows] = useState<IptuAuditRow[]>([]);
   const [totals, setTotals] = useState({ income: 0, expense: 0, balance: 0 });
+  const [monthly, setMonthly] = useState<IptuAuditPeriodPoint[]>([]);
+  const [yearly, setYearly] = useState<IptuAuditPeriodPoint[]>([]);
+  const [availableProperties, setAvailableProperties] = useState<PropertyOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +60,11 @@ export default function AuditoriaIptuContent() {
   const fetchAudit = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await getIptuAuditAction({ startDate: dateRange.from, endDate: dateRange.to });
+      const result = await getIptuAuditAction({
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        ...(selectedProperties.length > 0 ? { propertyIds: selectedProperties } : {}),
+      });
 
       if (!result.ok) {
         // Configuração ainda não definida (400 "Configure as categorias...")
@@ -61,19 +73,24 @@ export default function AuditoriaIptuContent() {
         setHasSettings(false);
         setRows([]);
         setTotals({ income: 0, expense: 0, balance: 0 });
+        setMonthly([]);
+        setYearly([]);
         return;
       }
 
       setHasSettings(true);
       setRows(Array.isArray(result.data?.rows) ? result.data.rows : []);
       setTotals(result.data?.totals ?? { income: 0, expense: 0, balance: 0 });
+      setMonthly(Array.isArray(result.data?.monthly) ? result.data.monthly : []);
+      setYearly(Array.isArray(result.data?.yearly) ? result.data.yearly : []);
+      setAvailableProperties(Array.isArray(result.data?.availableProperties) ? result.data.availableProperties : []);
     } catch (error) {
       console.error('[AuditoriaIptuContent] Erro ao carregar auditoria:', error);
       showMessage('Erro ao carregar a Auditoria de IPTU.', 'error', 4000);
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, showMessage]);
+  }, [dateRange, selectedProperties, showMessage]);
 
   useEffect(() => {
     fetchAudit();
@@ -88,6 +105,31 @@ export default function AuditoriaIptuContent() {
     <Section title="Auditoria de IPTU">
       <div className="flex flex-col gap-4 relative">
         <div className="flex gap-3 items-center flex-wrap">
+          {/* Ano de análise: o recorte padrão da auditoria. "Personalizado"
+              libera o intervalo livre do calendário ao lado. */}
+          <select
+            value={selectedYear ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!value) {
+                setSelectedYear(null);
+                return;
+              }
+              const year = Number(value);
+              setSelectedYear(year);
+              setDateRange(yearRange(year));
+            }}
+            className="border border-ui-border rounded-lg px-3 py-2 text-sm text-content bg-surface hover:bg-surface-subtle focus:outline-none focus:border-brand transition-colors"
+            title="Ano de análise"
+          >
+            {YEAR_OPTIONS.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+            <option value="">Personalizado</option>
+          </select>
+
           <div className="relative" ref={popoverRef}>
             <button
               onClick={() => setIsCalendarOpen((o) => !o)}
@@ -104,12 +146,20 @@ export default function AuditoriaIptuContent() {
                   dateRange={dateRange}
                   onChange={(range) => {
                     setDateRange(range);
+                    setSelectedYear(null);
                     setIsCalendarOpen(false);
                   }}
                 />
               </div>
             )}
           </div>
+
+          <IptuAuditPropertyFilter
+            options={availableProperties}
+            selected={selectedProperties}
+            onChange={setSelectedProperties}
+          />
+
           <button
             onClick={() => fetchAudit()}
             disabled={isLoading}
@@ -143,7 +193,8 @@ export default function AuditoriaIptuContent() {
           </div>
         ) : (
           <>
-            <div className="h-[320px]">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <IptuAuditComparativeChart monthly={monthly} yearly={yearly} isLoading={isLoading} />
               <IptuAuditChart rows={rows} isLoading={isLoading} />
             </div>
             <IptuAuditTable rows={rows} totals={totals} isLoading={isLoading} />

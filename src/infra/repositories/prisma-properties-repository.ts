@@ -398,7 +398,8 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
         { field: 'bathrooms', type: 'number', label: 'Banheiros', description: 'Número de banheiros', values: uniqNum(properties.map((p) => p.bathrooms)), searchable: true },
         { field: 'garage_spaces', type: 'number', label: 'Vagas na Garagem', description: 'Número de vagas na garagem', values: uniqNum(properties.map((p) => p.garage_spaces)), searchable: true },
         { field: 'status', type: 'select', label: 'Disponibilidade', description: 'Status de ocupação do imóvel', options: [{ value: 'AVAILABLE', label: 'Disponível' }, { value: 'OCCUPIED', label: 'Ocupado' }], searchable: false },
-        { field: 'furnished', type: 'boolean', label: 'Mobiliado', description: 'Propriedade mobiliada', values: ['true', 'false'], options: ['true', 'false'] },
+        // Rótulos em PT-BR: o seletor exibia "true"/"false" cru (Tarefa 1.4).
+        { field: 'furnished', type: 'select', label: 'Mobiliado', description: 'Propriedade mobiliada', options: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }], searchable: false },
         { field: 'tax_registration', type: 'string', label: 'Inscrição fiscal', description: 'Inscrição fiscal da propriedade', values: uniq(properties.map((p) => p.tax_registration)), searchable: true, autocomplete: true },
         { field: 'owner_id', type: 'select', label: 'Proprietário', description: 'Proprietário da propriedade', options: owners.map((o) => ({ value: o.id, label: o.name })), searchable: true },
         { field: 'type_id', type: 'select', label: 'Tipo do imóvel', description: 'Tipo da propriedade', options: propertyTypes.map((t) => ({ value: t.id, label: t.description })), searchable: true },

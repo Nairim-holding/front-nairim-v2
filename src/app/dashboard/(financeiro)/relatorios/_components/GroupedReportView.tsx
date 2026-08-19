@@ -188,7 +188,7 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
       yAxis: {
         type: 'category',
         data: ordered.map((g) => g.label),
-        axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 11 : 10, width: 160, overflow: 'truncate' },
+        axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 11 : 10, width: 220, overflow: 'break' },
         axisLine: { lineStyle: { color: tokens.borderSoft } },
       },
       series: [
@@ -275,14 +275,12 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
                   </Fragment>
                 ))}
           </tbody>
-          {reportKind === 'sintetico' && (
-            <tfoot>
-              <tr className="text-sm font-bold text-content border-t-2 border-ui-border">
-                <td className="px-3 py-2">Total Geral</td>
-                <td className="px-3 py-2 text-right">{formatCurrency(data?.totalGeral ?? 0)}</td>
-              </tr>
-            </tfoot>
-          )}
+          <tfoot>
+            <tr className="text-sm font-bold text-content bg-surface-subtle border-t-2 border-ui-border">
+              <td className="px-3 py-2.5" colSpan={reportKind === 'analitico' ? 10 : 1}>Total Geral</td>
+              <td className="px-3 py-2.5 text-right font-bold text-brand">{formatCurrency(data?.totalGeral ?? 0)}</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>

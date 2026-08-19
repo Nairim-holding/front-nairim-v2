@@ -39,10 +39,13 @@ export const LeafletMap = dynamic(() => import("@/components/map/InteractiveMap"
  * inteiro" enquanto os dados eram só do mês).
  * Tarefa 5.2: `years` é um array — mais de um ano pode ser selecionado.
  * Tarefa 6.3: "Limpar período" pega todo o histórico disponível. */
-function useSectionPeriod(onRangeChange: (startDate: string, endDate: string) => void) {
+function useSectionPeriod(
+  onRangeChange: (startDate: string, endDate: string) => void,
+  defaultCleared = false
+) {
   const [years, setYears] = useState<number[]>(() => [new Date().getFullYear()]);
   const [selectedMonths, setSelectedMonths] = useState<number[]>(() => [new Date().getMonth() + 1]);
-  const [isCleared, setIsCleared] = useState(false);
+  const [isCleared, setIsCleared] = useState(defaultCleared);
 
   const { startDate, endDate } = useMemo(() => {
     if (isCleared) {
@@ -58,12 +61,15 @@ function useSectionPeriod(onRangeChange: (startDate: string, endDate: string) =>
   const clearPeriod = () => setIsCleared(true);
 
   // Na primeira renderização os dados já vieram do fetch inicial com este mesmo
-  // período — rebuscar aqui seria uma segunda chamada idêntica.
+  // período — rebuscar aqui seria uma segunda chamada idêntica. A exceção é a
+  // aba que nasce com o período limpo (`defaultCleared`, Tarefa 3): o fetch
+  // inicial usou o mês corrente, então sem esta busca o cabeçalho mostraria
+  // "todo o período" enquanto os números ainda seriam só do mês.
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      return;
+      if (!defaultCleared) return;
     }
     onRangeChange(startDate, endDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,7 +204,7 @@ export function PortfolioSection({
   metrics: MetricResponse;
   onRangeChange: (startDate: string, endDate: string) => void;
 }) {
-  const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod, startDate, endDate } = useSectionPeriod(onRangeChange);
+  const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod, startDate, endDate } = useSectionPeriod(onRangeChange, true);
 
   // Mesma posição do botão "Personalizar" do Financeiro (Tarefa: padronizar as
   // 4 abas) — antes ficava solto num `flex justify-end` acima do grid, aqui.
@@ -268,28 +274,13 @@ export function ClientsSection({
   );
 }
 
-export function MapSection({
-  data,
-  onRangeChange,
-}: {
-  data: MapCoordinate[];
-  onRangeChange: (startDate: string, endDate: string) => void;
-}) {
-  const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod } = useSectionPeriod(onRangeChange);
-
+export function MapSection({ data }: { data: MapCoordinate[] }) {
+  // Tarefa 2: sem filtro de período no topo do mapa — os alfinetes são
+  // sempre de TODOS os imóveis, independentemente de ano/mês. O status
+  // (locado/disponível) já reflete o período de análise das outras abas,
+  // calculado no backend (getGeolocation), sem precisar de um seletor aqui.
   return (
     <SectionShell>
-      {/* Sem WidgetPersonalizer: o Mapa é um widget único, não uma grid
-          configurável — nada para "personalizar" aqui. O cartão de período
-          mantém a mesma moldura das demais abas para a régua visual bater. */}
-      <PeriodFilterHeader
-        years={years}
-        selectedMonths={selectedMonths}
-        onYearsChange={setYears}
-        onMonthsChange={setSelectedMonths}
-        isCleared={isCleared}
-        onClear={clearPeriod}
-      />
       <LeafletMap data={data} />
     </SectionShell>
   );

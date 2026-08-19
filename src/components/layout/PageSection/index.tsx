@@ -23,7 +23,10 @@ export default function Section({ children, title, href, hrefText, action, fill 
         fill ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
       }`}
     >
-      <div className="flex justify-between items-center mb-2 pl-10 sm:pl-11">
+      {/* O recuo do título acompanha o que está sobreposto no canto superior
+          esquerdo: só o botão do menu (aberto) ou botão + logo (encolhido).
+          A variável é definida pelo DashboardShell. */}
+      <div className="flex justify-between items-center mb-2 pl-10 sm:pl-[var(--page-header-offset,2.75rem)] transition-[padding] duration-300">
         <h1 className="text-xl sm:text-2xl font-semibold text-content">{title}</h1>
         <div className="flex items-center gap-2">
           {action}

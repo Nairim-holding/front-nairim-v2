@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { authUseCases } from '@/infra/factories/auth-factory';
 import {
   loginSchema,
@@ -40,13 +41,15 @@ export async function loginAction(input: { email: string; password: string }): P
     return { ok: false, message: parsed.error.issues[0]?.message ?? 'Erro de validação' };
   }
 
-  const ip = await getRequestIp();
   const emailKey = parsed.data.email.toLowerCase().trim();
-
-  const blockedMessage = loginRateLimiter.checkBlocked(emailKey, ip);
-  if (blockedMessage) return { ok: false, message: blockedMessage };
+  let ip = 'desconhecido';
 
   try {
+    ip = await getRequestIp();
+
+    const blockedMessage = loginRateLimiter.checkBlocked(emailKey, ip);
+    if (blockedMessage) return { ok: false, message: blockedMessage };
+
     const result = await authUseCases.login.execute(parsed.data);
     loginRateLimiter.reset(emailKey, ip);
     await setSessionCookie(result.token, result.user.company_slug || undefined);
@@ -56,8 +59,29 @@ export async function loginAction(input: { email: string; password: string }): P
       loginRateLimiter.registerFailure(emailKey, ip);
       return { ok: false, message: 'Email ou senha incorretos', rateLimit: loginRateLimiter.getStatus(emailKey, ip) };
     }
+
+    // Falha que NÃO é credencial inválida (banco fora do ar, JWT_SECRET
+    // ausente, hash de senha corrompido, cookie recusado…). O usuário via
+    // apenas "Erro interno do servidor", sem nada que ligasse a tela ao log do
+    // servidor (Tarefa 8). Agora cada ocorrência recebe um código: o mesmo
+    // código aparece na tela e na linha de log, com causa e stack.
+    const errorId = randomUUID().slice(0, 8);
+    const cause = err as { name?: string; message?: string; code?: string; stack?: string };
+    console.error(
+      `[loginAction] Falha inesperada no login (código ${errorId})`,
+      {
+        errorId,
+        email: emailKey,
+        ip,
+        name: cause?.name,
+        code: cause?.code,
+        message: cause?.message,
+      },
+      cause?.stack,
+    );
+
     const failed = actionFail(err);
-    return { ok: false, message: failed.error };
+    return { ok: false, message: `${failed.error} (código ${errorId})` };
   }
 }
 

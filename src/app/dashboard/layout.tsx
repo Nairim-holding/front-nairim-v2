@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Aside from '@/components/layout/Sidebar';
+import DashboardShell from '@/components/layout/DashboardShell';
 import PermissionGate from '@/components/layout/PermissionGate';
 import { Metadata } from 'next';
 import { getActiveBranding } from '@/lib/fetchBranding';
@@ -30,11 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      <Aside />
-      <main>
-        <PermissionGate>{children}</PermissionGate>
-      </main>
-    </>
+    <DashboardShell>
+      <PermissionGate>{children}</PermissionGate>
+    </DashboardShell>
   );
 }

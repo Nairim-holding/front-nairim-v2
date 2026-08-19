@@ -25,7 +25,7 @@ export class ListCompaniesUseCase {
   async execute(params: { page?: number; limit?: number; search?: string; includeInactive?: boolean }): Promise<CompanyListResult> {
     return this.companies.list({
       page: params.page ?? 1,
-      limit: params.limit ?? 30,
+      limit: params.limit ?? 150,
       search: params.search ?? '',
       includeInactive: params.includeInactive ?? false,
     });

@@ -142,7 +142,11 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
   const conditions: Record<string, any> = {};
   Object.entries(filters).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
-    if (['contract_number', 'rent_due_day', 'tax_due_day', 'condo_due_day', 'status', 'payment_condition'].includes(key)) {
+    const values = Array.isArray(value) ? value : [value];
+
+    if (key === 'status' || key === 'payment_condition') {
+      conditions[key] = { in: values.map(String) };
+    } else if (['contract_number', 'rent_due_day', 'tax_due_day', 'condo_due_day'].includes(key)) {
       conditions[key] = { contains: String(value), mode: 'insensitive' };
     } else if (['rent_amount', 'condo_fee', 'property_tax', 'property_tax_cash', 'property_tax_first_installment', 'property_tax_second_installment', 'extra_charges', 'commission_amount'].includes(key)) {
       const n = parseFloat(String(value));
@@ -334,8 +338,33 @@ export class PrismaLeasesRepository implements LeasesRepository {
     return {
       filters: [
         { field: 'contract_number', type: 'string', label: 'Número do Contrato', values: uniq(leases.map((l) => l.contract_number)), searchable: true, autocomplete: true },
-        { field: 'status', type: 'select', label: 'Status', values: ['EXPIRED', 'EXPIRING', 'ACTIVE', 'CANCELED'], searchable: false, autocomplete: false },
-        { field: 'payment_condition', type: 'select', label: 'Condição de Pagamento', values: ['IN_FULL_15_DISCOUNT', 'SECOND_INSTALLMENT_10_DISCOUNT', 'INSTALLMENTS'], searchable: false, autocomplete: false },
+        {
+          field: 'status',
+          type: 'select',
+          label: 'Status',
+          multiple: true,
+          values: [
+            { value: 'ACTIVE', label: 'Ativo' },
+            { value: 'EXPIRING', label: 'A Vencer (em 30 dias)' },
+            { value: 'EXPIRED', label: 'Expirado / Vencido' },
+            { value: 'CANCELED', label: 'Cancelado' },
+          ],
+          searchable: false,
+          autocomplete: false,
+        },
+        {
+          field: 'payment_condition',
+          type: 'select',
+          label: 'Condição de Pagamento',
+          multiple: true,
+          values: [
+            { value: 'IN_FULL_15_DISCOUNT', label: 'À vista c/ 15% desc.' },
+            { value: 'SECOND_INSTALLMENT_10_DISCOUNT', label: '2 parcelas c/ 10% desc.' },
+            { value: 'INSTALLMENTS', label: 'Parcelado' },
+          ],
+          searchable: false,
+          autocomplete: false,
+        },
         { field: 'start_date', type: 'date', label: 'Data de Início', dateRange: true },
         { field: 'end_date', type: 'date', label: 'Data de Término', dateRange: true },
         { field: 'rent_amount', type: 'number', label: 'Valor do Aluguel', values: uniqNum(leases.map((l) => Number(l.rent_amount))), searchable: true },

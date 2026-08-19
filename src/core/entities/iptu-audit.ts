@@ -31,6 +31,8 @@ export interface IptuAuditSettingsInput {
 export interface IptuAuditParams {
   startDate: string;
   endDate: string;
+  /** Restringe a apuração a um subconjunto de imóveis (filtro da tela). Vazio/ausente = todos. */
+  propertyIds?: string[];
 }
 
 export interface IptuAuditTransactionDetail {
@@ -51,7 +53,29 @@ export interface IptuAuditRow {
   transactions: IptuAuditTransactionDetail[];
 }
 
+/** Ponto da visão comparativa (pagamento pela empresa x restituição pelos inquilinos). */
+export interface IptuAuditPeriodPoint {
+  /** `2026-03` na visão mensal, `2026` na anual. */
+  key: string;
+  /** `Mar/2026` na visão mensal, `2026` na anual. */
+  label: string;
+  income: number;
+  expense: number;
+  balance: number;
+}
+
+/** Imóvel disponível no filtro da tela (lista completa, independente do filtro aplicado). */
+export interface IptuAuditPropertyOption {
+  id: string;
+  title: string;
+}
+
 export interface IptuAuditReport {
   rows: IptuAuditRow[];
   totals: { income: number; expense: number; balance: number };
+  /** Série por mês do período, para o comparativo restituição x IPTU pago. */
+  monthly: IptuAuditPeriodPoint[];
+  /** Mesma comparação agregada por ano. */
+  yearly: IptuAuditPeriodPoint[];
+  availableProperties: IptuAuditPropertyOption[];
 }

@@ -61,6 +61,8 @@ export interface GeolocationPoint {
   lat: number;
   lng: number;
   info: string;
+  isLeased?: boolean;
+  status?: 'OCCUPIED' | 'AVAILABLE';
 }
 
 export interface GeolocationResponse {

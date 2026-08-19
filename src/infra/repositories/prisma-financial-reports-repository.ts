@@ -310,6 +310,10 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
     const variaveisTxns = byDfcGroup('VARIABLE_EXPENSE');
     const fixasTxns = byDfcGroup('FIXED_EXPENSE');
     const pessoalTxns = byDfcGroup('PAYROLL');
+    // Despesa cuja categoria não tem `dfc_group` não pertence a nenhuma linha
+    // do DFC. Antes ela simplesmente sumia do relatório (Tarefa 5.4: "só
+    // considerou as Receitas") — agora entra numa linha própria, sem ser
+    // reclassificada como Fixa, e continua sinalizada para o usuário.
     const unclassifiedTxns = expenseTxns.filter((t) => !t.category?.dfc_group);
 
     const sumOf = (list: RawTransaction[]) => list.reduce((sum, t) => sum + Number(t.amount), 0);
@@ -323,7 +327,8 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
     const lucroOperacionalBruto = resultadoBruto - despesasVariaveis;
     const despesasFixas = sumOf(fixasTxns);
     const despesasPessoal = sumOf(pessoalTxns);
-    const resultado = lucroOperacionalBruto - despesasFixas - despesasPessoal;
+    const despesasSemClassificacao = sumOf(unclassifiedTxns);
+    const resultado = lucroOperacionalBruto - despesasFixas - despesasPessoal - despesasSemClassificacao;
 
     const lines: DfcLine[] = [
       { key: 'receita_bruta', label: 'Receita Bruta', kind: 'line', sign: 1, total: receitaBruta, groups: groupsOf(incomeTxns) },
@@ -334,10 +339,29 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
       { key: 'lucro_operacional_bruto', label: 'Lucro Operacional Bruto', kind: 'subtotal', sign: lucroOperacionalBruto < 0 ? -1 : 1, total: lucroOperacionalBruto, groups: [] },
       { key: 'despesas_fixas', label: 'Total Despesas Fixas', kind: 'line', sign: -1, total: despesasFixas, groups: groupsOf(fixasTxns) },
       { key: 'despesas_pessoal', label: 'Despesas com Pessoal', kind: 'line', sign: -1, total: despesasPessoal, groups: groupsOf(pessoalTxns) },
-      { key: 'resultado', label: 'Resultado (Lucro/Prejuízo Líquido)', kind: 'final', sign: resultado < 0 ? -1 : 1, total: resultado, groups: [] },
     ];
 
-    return { groupBy, lines, unclassifiedExpenseTotal: sumOf(unclassifiedTxns) };
+    if (unclassifiedTxns.length > 0) {
+      lines.push({
+        key: 'despesas_sem_classificacao',
+        label: 'Outras Despesas (sem classificação DFC)',
+        kind: 'line',
+        sign: -1,
+        total: despesasSemClassificacao,
+        groups: groupsOf(unclassifiedTxns),
+      });
+    }
+
+    lines.push({
+      key: 'resultado',
+      label: 'Resultado (Lucro/Prejuízo Líquido)',
+      kind: 'final',
+      sign: resultado < 0 ? -1 : 1,
+      total: resultado,
+      groups: [],
+    });
+
+    return { groupBy, lines, unclassifiedExpenseTotal: despesasSemClassificacao };
   }
 }
 

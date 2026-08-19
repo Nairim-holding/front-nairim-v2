@@ -72,7 +72,7 @@ export const changeUserPasswordSchema = z.object({
 
 /** Parâmetros de listagem (limit 1..100, page ≥ 1) — igual ao validateQueryParams. */
 export const listUsersQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1, 'Limit deve ser um número entre 1 e 100').max(100, 'Limit deve ser um número entre 1 e 100').default(10),
+  limit: z.coerce.number().int().min(1, 'Limit deve ser um número entre 1 e 150').max(150, 'Limit deve ser um número entre 1 e 150').default(150),
   page: z.coerce.number().int().min(1, 'Page deve ser um número positivo').default(1),
   search: z.string().optional(),
   includeInactive: z.union([z.boolean(), z.string()]).optional().transform((v) => v === true || v === 'true'),

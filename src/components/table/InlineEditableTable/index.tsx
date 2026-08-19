@@ -627,7 +627,7 @@ function AttachmentHoverPreview({ transactionId, children }: { transactionId: st
 }
 
 export default function InlineEditableTable({
-  resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 30, enableCreate = true, enableDelete = true,
+  resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 150, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
   onAppliedFiltersChange,
@@ -1207,17 +1207,18 @@ export default function InlineEditableTable({
 
         const isInstallment = !!original?.installment_group_id && original?.installment_number != null;
         const isRecurring = !!original?.recurring_group_id && original?.occurrence_number != null;
+        const isLease = !!original?.lease_id && original?.installment_number != null;
         const total = original?.total_installments ?? null;
-        const position = isInstallment ? original?.installment_number : original?.occurrence_number;
-        // "Tem seguintes": parcelada com número < total; recorrente assume que
-        // pode haver seguintes (o backend filtra por occurrence_number maior).
-        const hasFollowing = isInstallment
+        const position = isInstallment || isLease ? original?.installment_number : original?.occurrence_number;
+        // "Tem seguintes": parcelada/locação com número < total; recorrente assume que
+        // pode haver seguintes (o backend filtra por occurrence_number/installment_number maior).
+        const hasFollowing = (isInstallment || isLease)
           ? (total == null || position < total)
           : isRecurring;
 
         const changedFields = original ? getChangedPropagatableFields(original, payload) : [];
 
-        if (changedFields.length > 0 && (isInstallment || isRecurring) && hasFollowing) {
+        if (changedFields.length > 0 && (isInstallment || isRecurring || isLease) && hasFollowing) {
           const labels = changedFields.map(field => PROPAGATABLE_FIELD_LABELS[field]).join(', ');
           const propagate = await new Promise<boolean>((resolve) => {
             showPopup(
@@ -1405,12 +1406,13 @@ export default function InlineEditableTable({
 
       const rows = exportItems.map((item: any) => {
         const row: Record<string, string | number> = {};
+        const isExpense = item.category?.type === 'EXPENSE';
+        const numAmount = typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount);
+        const signedAmount = isExpense ? -Math.abs(numAmount) : Math.abs(numAmount);
+
         visibleDataColumns.forEach((col) => {
-          // Valor: grava o número real (não a string "R$ ...") para que o Excel
-          // reconheça como número e permita SOMA. A formatação de moeda é aplicada
-          // como número-formato da célula abaixo, mantendo o valor numérico por baixo.
           if (col.field === 'amount') {
-            row[col.label] = typeof item.amount === 'number' ? item.amount : parseCurrencyFromPTBR(item.amount);
+            row[col.label] = signedAmount;
           } else {
             row[col.label] = getExportCellValue(item, col);
           }
@@ -1420,12 +1422,11 @@ export default function InlineEditableTable({
 
       const worksheet = XLSX.utils.json_to_sheet(rows);
 
-      // Aplica formato de moeda BRL à coluna "Valor", mantendo o conteúdo numérico.
-      // O Excel exibe conforme o locale do usuário (pt-BR → vírgula decimal).
+      // Aplica formato de moeda BRL à coluna "Valor", com cor vermelha para valores negativos.
+      // O Excel exibe positivos como "R$ 100,00" e negativos em vermelho como "R$ -61,70".
       const amountLabel = visibleDataColumns.find((col) => col.field === 'amount')?.label;
       if (amountLabel && rows.length > 0) {
         const range = XLSX.utils.decode_range(worksheet['!ref'] as string);
-        // Localiza o índice da coluna do Valor pelo header (linha 0).
         let amountCol = -1;
         for (let c = range.s.c; c <= range.e.c; c++) {
           const headerCell = worksheet[XLSX.utils.encode_cell({ r: 0, c })];
@@ -1434,7 +1435,7 @@ export default function InlineEditableTable({
         if (amountCol !== -1) {
           for (let r = range.s.r + 1; r <= range.e.r; r++) {
             const cell = worksheet[XLSX.utils.encode_cell({ r, c: amountCol })];
-            if (cell && cell.t === 'n') cell.z = 'R$ #,##0.00';
+            if (cell && cell.t === 'n') cell.z = 'R$ #,##0.00;[Red]R$ -#,##0.00;R$ 0.00';
           }
         }
       }

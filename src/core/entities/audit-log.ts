@@ -23,7 +23,13 @@ export interface AuditLogRow {
   table_name: string;
   table_label: string;
   record_id: string | null;
+  /** Descrição legível do registro afetado (Tarefa 8.2) — null quando o log não guardou nada identificável. */
+  record_label: string | null;
   ip: string | null;
+  /** IP pronto para exibição: IPv4 desembrulhado de `::ffff:` quando é o caso. */
+  ip_label: string | null;
+  /** true quando o valor exibido é IPv6 de verdade — a coluna sinaliza isso. */
+  ip_is_ipv6: boolean;
   created_at: Date;
 }
 

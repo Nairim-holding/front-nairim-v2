@@ -57,11 +57,11 @@ export default function IptuAuditTable({ rows, totals, isLoading }: IptuAuditTab
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="bg-surface-subtle text-content-secondary text-xs uppercase tracking-wide">
-            <th className="w-10 px-3 py-2.5"></th>
-            <th className="text-left px-3 py-2.5">Imóvel</th>
+            <th className="w-10 px-3 py-2.5">Detalhe</th>
+            <th className="text-left px-3 py-2.5">Nome Fantasia do Imóvel</th>
             <th className="text-left px-3 py-2.5">Endereço</th>
-            <th className="text-right px-3 py-2.5">Receita</th>
-            <th className="text-right px-3 py-2.5">Despesa</th>
+            <th className="text-right px-3 py-2.5">Receitas</th>
+            <th className="text-right px-3 py-2.5">Despesas</th>
             <th className="text-right px-3 py-2.5">Saldo</th>
           </tr>
         </thead>
@@ -122,7 +122,7 @@ export default function IptuAuditTable({ rows, totals, isLoading }: IptuAuditTab
         <tfoot>
           <tr className="border-t-2 border-ui-border font-semibold bg-surface-subtle">
             <td className="px-3 py-2.5"></td>
-            <td className="px-3 py-2.5" colSpan={2}>Total</td>
+            <td className="px-3 py-2.5" colSpan={2}>Totais</td>
             <td className="px-3 py-2.5 text-right text-state-success">{formatCurrency(totals.income)}</td>
             <td className="px-3 py-2.5 text-right text-state-warning">{formatCurrency(totals.expense)}</td>
             <td className={`px-3 py-2.5 text-right ${totals.balance < 0 ? 'text-state-error' : 'text-content'}`}>
