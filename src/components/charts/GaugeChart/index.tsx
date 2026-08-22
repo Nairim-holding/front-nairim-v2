@@ -170,8 +170,9 @@ export default function EChartsGauge({
           axisLabel: {
             show: isLarge,
             distance: isLarge ? (isMobile ? -25 : -28) : -28,
-            color: tokens.textMuted,
-            fontSize: isLarge ? (isMobile ? 10 : 12) : 12,
+            color: tokens.textSecondary,
+            fontSize: isLarge ? (isMobile ? 11 : 13) : 12,
+            fontWeight: 600,
             formatter: (val: number) => `${val}`
           },
           anchor: {
@@ -404,7 +405,7 @@ export default function EChartsGauge({
           cobrir a tela inteira (mesmo padrão já usado no ChartCard e no DataModal). */}
       {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4"
+          className="fixed inset-0 z-[9990] flex items-center justify-center bg-layer-overlay-strong backdrop-blur-xs p-2 sm:p-4"
           onClick={() => setIsFullscreenModalOpen(false)}
         >
           <div

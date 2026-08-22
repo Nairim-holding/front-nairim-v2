@@ -36,6 +36,21 @@ function colorForPercent(percent: number): string {
   return COLOR_OK;
 }
 
+/** Define 4 intervalos ideais (0%, 25%, 50%, 75%, 100%) para haver um único valor no ápice e amplo espaçamento. */
+function getSmartSplitNumber(_max: number): number {
+  return 4;
+}
+
+/** Formata todos os valores da escala com MB no final de forma nítida. */
+function formatGaugeTick(value: number): string {
+  const isInteger = Number.isInteger(value) || Math.abs(value - Math.round(value)) < 0.001;
+  const formatted = value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: isInteger ? 0 : 1,
+  });
+  return `${formatted} MB`;
+}
+
 interface DatabaseUsageChartProps {
   /** Fora do grid arrastável do Financeiro, o cabeçalho não é alça de arraste. */
   isDraggable?: boolean;
@@ -78,6 +93,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
   const quotaMb = current?.quotaMb ?? 0;
   const percent = current?.percent ?? 0;
   const gaugeColor = colorForPercent(percent);
+  const remainingMb = Math.max(0, quotaMb - usedMb);
 
   const detailData = useMemo(
     () =>
@@ -100,75 +116,108 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
     []
   );
 
-  // Valor central e rótulo NÃO são desenhados pelo ECharts (detail/title):
-  // são HTML sobreposto fora do canvas (ver abaixo), porque offsetCenter é
-  // percentual do raio do arco — com um arco fino, qualquer deslocamento
-  // grande o suficiente para escapar do traçado colorido também estourava a
-  // área do card. HTML dá controle direto de posição e contraste (fundo
-  // sólido atrás do texto), sem depender dessa matemática do gauge.
-  const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
-    backgroundColor: 'transparent',
-    animationDurationUpdate: 1000,
-    animationEasingUpdate: 'cubicOut',
-    series: [
-      {
-        type: 'gauge',
-        min: 0,
-        // Cota 0 quebraria a escala do gauge; 1 mantém o arco desenhável.
-        max: quotaMb > 0 ? quotaMb : 1,
-        startAngle: 210,
-        endAngle: -30,
-        radius: isLarge ? '82%' : '58%',
-        center: ['50%', '48%'],
-        // Faixas de alerta: verde até 60%, âmbar de 60% a 80%, vermelho de 80% a 100% da cota.
-        axisLine: {
-          lineStyle: {
-            width: isLarge ? 22 : 12,
-            color: [
-              [SAFE_PERCENT / 100, COLOR_OK],
-              [WARNING_PERCENT / 100, COLOR_WARNING],
-              [1, COLOR_CRITICAL],
-            ],
+  const buildOption = useCallback((isLarge: boolean): EChartsOption => {
+    const maxScale = quotaMb > 0 ? quotaMb : 1;
+    const splitNumber = getSmartSplitNumber(maxScale);
+
+    return {
+      backgroundColor: 'transparent',
+      animationDurationUpdate: 1000,
+      animationEasingUpdate: 'cubicOut',
+      series: [
+        {
+          type: 'gauge',
+          min: 0,
+          max: maxScale,
+          splitNumber,
+          startAngle: 220,
+          endAngle: -40,
+          radius: isLarge ? '76%' : '88%',
+          center: ['50%', isLarge ? '48%' : '56%'],
+
+          // Faixas de alerta: verde até 60%, âmbar de 60% a 80%, vermelho de 80% a 100% da cota.
+          axisLine: {
+            lineStyle: {
+              width: isLarge ? 22 : 14,
+              color: [
+                [SAFE_PERCENT / 100, COLOR_OK],
+                [WARNING_PERCENT / 100, COLOR_WARNING],
+                [1, COLOR_CRITICAL],
+              ],
+            },
           },
+
+          // Preenchimento da barra com cor e brilho suave
+          progress: {
+            show: true,
+            width: isLarge ? 22 : 14,
+            itemStyle: {
+              color: gaugeColor,
+              shadowColor: gaugeColor,
+              shadowBlur: 10,
+            },
+          },
+
+          // Ponteiro moderno e visível
+          pointer: {
+            show: true,
+            itemStyle: {
+              color: gaugeColor,
+              shadowColor: gaugeColor,
+              shadowBlur: 6,
+            },
+            width: isLarge ? 5 : 3.5,
+            length: '58%',
+          },
+
+          // Âncora central com contraste
+          anchor: {
+            show: true,
+            showAbove: true,
+            size: isLarge ? 15 : 10,
+            itemStyle: {
+              color: gaugeColor,
+              borderColor: tokens.bgSurface,
+              borderWidth: 3,
+              shadowColor: gaugeColor,
+              shadowBlur: 8,
+            },
+          },
+
+          // Subdivisões do arco (ticks intermediários)
+          axisTick: {
+            show: true,
+            splitNumber: 2,
+            distance: isLarge ? 4 : 2,
+            length: isLarge ? 5 : 3,
+            lineStyle: { color: tokens.textMuted, width: 1 },
+          },
+
+          // Divisões principais da escala
+          splitLine: {
+            show: true,
+            distance: isLarge ? 4 : 2,
+            length: isLarge ? 8 : 5,
+            lineStyle: { color: tokens.textSecondary, width: 2 },
+          },
+
+          // Números de escala com "MB" em cada marcação
+          axisLabel: {
+            show: true,
+            distance: isLarge ? 22 : 14,
+            color: tokens.textPrimary,
+            fontSize: isLarge ? 12 : 10,
+            fontWeight: 600,
+            formatter: (value: number) => formatGaugeTick(value),
+          },
+
+          detail: { show: false },
+          title: { show: false },
+          data: [{ value: usedMb, name: `${formatMb(percent)}% da cota` }],
         },
-        progress: {
-          show: true,
-          width: isLarge ? 22 : 12,
-          itemStyle: { color: gaugeColor },
-        },
-        pointer: {
-          itemStyle: { color: gaugeColor },
-          width: isLarge ? 5 : 3,
-          length: '55%',
-        },
-        anchor: {
-          show: true,
-          showAbove: true,
-          size: isLarge ? 18 : 9,
-          itemStyle: { color: gaugeColor, borderColor: tokens.bgSurface, borderWidth: 3 },
-        },
-        axisTick: {
-          distance: isLarge ? -22 : -10,
-          length: isLarge ? 6 : 3,
-          lineStyle: { color: tokens.textMuted, width: 1 },
-        },
-        splitLine: {
-          distance: isLarge ? -22 : -10,
-          length: isLarge ? 12 : 6,
-          lineStyle: { color: tokens.textMuted, width: 2 },
-        },
-        axisLabel: {
-          distance: isLarge ? 22 : 10,
-          color: tokens.textMuted,
-          fontSize: isLarge ? 11 : 7,
-          formatter: (value: number) => formatMb(value).replace(',00', ''),
-        },
-        detail: { show: false },
-        title: { show: false },
-        data: [{ value: usedMb, name: `${formatMb(percent)}% da cota` }],
-      },
-    ],
-  }), [usedMb, quotaMb, percent, gaugeColor, tokens]);
+      ],
+    };
+  }, [usedMb, quotaMb, percent, gaugeColor, tokens]);
 
   const overQuota = percent >= CRITICAL_PERCENT;
   const nearQuota = percent >= WARNING_PERCENT && !overQuota;
@@ -186,37 +235,139 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
           <div className="flex items-center justify-center h-full text-content-muted text-sm">
             Consumo de banco indisponível.
           </div>
+        ) : isFullscreen ? (
+          /* ══════════════════════════════════════════════════════════════════
+             MODO TELA CHEIA — Layout Executivo Dividido (2 Colunas)
+             ══════════════════════════════════════════════════════════════════ */
+          <div className="w-full h-full flex flex-col justify-center py-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Coluna Esquerda: Medidor Hero + Valor Central */}
+              <div className="lg:col-span-6 flex flex-col items-center justify-center p-6 rounded-2xl bg-surface-subtle/30 border border-ui-border-soft">
+                <div className="w-full h-[280px] sm:h-[320px] relative">
+                  <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
+                </div>
+                <div className="flex flex-col items-center gap-1 -mt-4 text-center">
+                  <span
+                    className="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                    style={{ color: gaugeColor }}
+                  >
+                    {formatMb(usedMb)} / {formatMb(quotaMb)} MB
+                  </span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-ui-border-soft text-xs font-medium text-content-muted">
+                    <span>{formatMb(percent)}% da cota contratada</span>
+                    <span>•</span>
+                    <span
+                      className="font-bold"
+                      style={{ color: overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK }}
+                    >
+                      {overQuota ? 'Excedido' : nearQuota ? 'Atenção' : 'Saudável'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coluna Direita: Painel Diagnóstico e Métricas de Capacidade */}
+              <div className="lg:col-span-6 flex flex-col gap-3.5">
+                <div className="mb-1">
+                  <h4 className="text-base font-bold text-content">Diagnóstico de Capacidade</h4>
+                  <p className="text-xs text-content-muted">Resumo de consumo e disponibilidade do banco de dados</p>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Card Consumo */}
+                  <div className="p-4 rounded-xl bg-surface-subtle/50 border border-ui-border-soft flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Espaço Ocupado</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-brand/10 text-brand">
+                        {formatMb(percent)}%
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xl font-bold text-content">{formatMb(usedMb)} MB</span>
+                      <span className="text-xs text-content-muted">de {formatMb(quotaMb)} MB contratados</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-ui-border-soft overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, percent)}%`, backgroundColor: gaugeColor }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card Disponível */}
+                  <div className="p-4 rounded-xl bg-surface-subtle/50 border border-ui-border-soft flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Espaço Livre</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-success/10 text-success">
+                        {formatMb(Math.max(0, 100 - percent))}% livre
+                      </span>
+                    </div>
+                    <span className="text-xl font-bold text-success">{formatMb(remainingMb)} MB</span>
+                    <p className="text-xs text-content-muted">Disponível para novos registros e tabelas</p>
+                  </div>
+
+                  {/* Card Status / Alerta */}
+                  <div
+                    className="p-4 rounded-xl border flex items-center justify-between"
+                    style={{
+                      backgroundColor: overQuota ? `${COLOR_CRITICAL}10` : nearQuota ? `${COLOR_WARNING}10` : 'rgba(16, 185, 129, 0.05)',
+                      borderColor: overQuota ? `${COLOR_CRITICAL}40` : nearQuota ? `${COLOR_WARNING}40` : 'rgba(16, 185, 129, 0.2)',
+                    }}
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-content">Status da Cota</div>
+                      <div className="text-xs text-content-muted mt-0.5">
+                        {overQuota
+                          ? 'A cota contratada foi ultrapassada. Solicite upgrade.'
+                          : nearQuota
+                          ? 'Consumo próximo do limite contratado.'
+                          : 'Uso dentro dos parâmetros normais de operação.'}
+                      </div>
+                    </div>
+                    <span
+                      className="text-xs font-extrabold px-2.5 py-1 rounded-lg shrink-0"
+                      style={{
+                        backgroundColor: overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {overQuota ? 'CRÍTICO' : nearQuota ? 'ATENÇÃO' : 'OK'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="w-full h-full flex flex-col min-h-0">
-            <div className="flex-1 min-h-[110px] relative">
+          /* ══════════════════════════════════════════════════════════════════
+             MODO COMPACTO PADRÃO (Card da Dashboard)
+             ══════════════════════════════════════════════════════════════════ */
+          <div className="w-full h-full flex flex-col justify-between min-h-0">
+            <div className="flex-1 min-h-[140px] relative">
               <EchartsSurface isFullscreen={isFullscreen} isLoading={isLoading} buildOption={buildOption} />
             </div>
-            {/* Valor central FORA do canvas do ECharts, num bloco próprio com
-                altura reservada por flexbox (shrink-0) — não em overlay
-                posicionado por porcentagem do raio do gauge (offsetCenter é
-                relativo ao raio, e um arco fino faz o texto ficar preso perto
-                do traçado colorido em vez de realmente "fora" dele). O arco
-                em si (radius) fica bem menor que o container para sobrar
-                respiro real entre o traçado e este bloco. */}
-            <div className="shrink-0 flex flex-col items-center gap-0.5 px-2 pb-2 pt-1">
+
+            {/* Valor central */}
+            <div className="shrink-0 flex flex-col items-center gap-0.5 px-2 pb-2 pt-0.5">
               <span
-                className="font-bold leading-tight text-center"
-                style={{ color: gaugeColor, fontSize: isFullscreen ? 24 : 18 }}
+                className="font-bold leading-tight text-center tracking-tight text-xl"
+                style={{ color: gaugeColor }}
               >
                 {formatMb(usedMb)} / {formatMb(quotaMb)} MB
               </span>
-              <span className="text-content-muted text-center" style={{ fontSize: isFullscreen ? 12 : 11 }}>
-                {formatMb(percent)}% da cota
+              <span className="text-content-muted text-center font-medium text-[11px]">
+                {formatMb(percent)}% da cota contratada
               </span>
             </div>
+
             {(overQuota || nearQuota) && (
               <div
-                className="shrink-0 px-4 py-2 text-xs font-medium border-t border-ui-border-soft"
+                className="shrink-0 px-4 py-2 text-xs font-semibold border-t border-ui-border-soft text-center"
                 style={{ color: overQuota ? COLOR_CRITICAL : COLOR_WARNING }}
               >
                 {overQuota
-                  ? 'Limite contratado excedido.'
-                  : `Consumo em ${formatMb(percent)}% do limite contratado.`}
+                  ? '⚠️ Limite contratado excedido.'
+                  : `⚠️ Consumo em ${formatMb(percent)}% do limite contratado.`}
               </div>
             )}
           </div>

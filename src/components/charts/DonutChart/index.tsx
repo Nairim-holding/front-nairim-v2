@@ -337,7 +337,7 @@ export default function EChartsDonut({
       {/* Modal Fullscreen do Gráfico */}
       {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4"
+          className="fixed inset-0 z-[9990] flex items-center justify-center bg-layer-overlay-strong backdrop-blur-xs p-2 sm:p-4"
           onClick={() => setIsFullscreenModalOpen(false)}
         >
           <div 

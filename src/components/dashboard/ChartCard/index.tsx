@@ -113,14 +113,14 @@ export default function ChartCard({
 
       {isFullscreenOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4"
+          className="fixed inset-0 z-[9990] flex items-center justify-center bg-layer-overlay-strong backdrop-blur-xs p-2 sm:p-4"
           onClick={() => setIsFullscreenOpen(false)}
         >
           <div
-            className="bg-surface rounded-xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4"
+            className="bg-surface border border-ui-border-soft rounded-2xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-ui-border-soft gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-ui-border-soft gap-3 sm:gap-0 shrink-0">
               <div className="w-full sm:w-auto">
                 <h2 className="text-xl sm:text-2xl font-bold text-content">{title}</h2>
                 {subtitle && <p className="text-content-muted text-sm mt-1">{subtitle}</p>}
@@ -144,7 +144,7 @@ export default function ChartCard({
                 </button>
               </div>
             </div>
-            <div className="flex-1 p-4 sm:p-6 md:p-8 relative bg-surface-subtle">
+            <div className="flex-1 p-3 sm:p-4 md:p-5 relative bg-surface overflow-y-auto custom-scrollbar flex flex-col min-h-0">
               {children({ isFullscreen: true })}
             </div>
           </div>

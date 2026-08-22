@@ -243,7 +243,7 @@ export default function EChartsBar({
       <DataModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle} data={modalData} columns={detailColumns} />
 
       {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-layer-overlay-strong p-2 sm:p-4" onClick={() => setIsFullscreenModalOpen(false)}>
+        <div className="fixed inset-0 z-[9990] flex items-center justify-center bg-layer-overlay-strong backdrop-blur-xs p-2 sm:p-4" onClick={() => setIsFullscreenModalOpen(false)}>
           <div className="bg-surface rounded-xl w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl mx-2 sm:mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-ui-border-soft gap-3 sm:gap-0">
               <div className="w-full sm:w-auto">
