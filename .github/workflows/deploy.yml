@@ -18,10 +18,12 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY_2 }}
           port: 22
           script: |
+            set -e
             cd /var/www/front-nairim-v2
-            
-            git pull origin main
-            
+
+            git fetch origin main
+            git reset --hard origin/main
+
             # Compila e inicia um por vez sequencialmente (evita travamento do servidor)
             # Removemos o "docker compose down" geral para que o site não fique fora do ar 
             # durante todo o tempo de build. Cada container só será recriado no momento final.

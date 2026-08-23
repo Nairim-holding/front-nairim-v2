@@ -216,10 +216,10 @@ volumes:
   # troque o REPLACE_WITH_... correspondente pelo nome real (ver runbook).
   postgres_data:
     external: true
-    name: REPLACE_WITH_ACTUAL_POSTGRES_VOLUME_NAME
+    name: api-nairim-v2_postgres_data
   postgres_test2_data:
     external: true
     name: api-nairim-v2_postgres_test2_data
   postgres_homolog_data:
     external: true
-    name: REPLACE_WITH_ACTUAL_POSTGRES_HOMOLOG_VOLUME_NAME
+    name: api-nairim-v2_postgres_homolog_data
