@@ -113,7 +113,21 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   if (!el) return false;
 
   const company = await fetchReportPrintHeaderData();
-  const headerHTML = buildReportPrintHeaderHTML(company, context);
+
+  // A logomarca vai embutida como data URI, e não pela URL do MinIO.
+  //
+  // A janela de impressão é um documento `blob:`, que tem ORIGEM OPACA: a
+  // requisição da imagem sai com `Origin: null` e sem os cookies/referer do
+  // app, então a logo simplesmente não carregava e o cabeçalho saía sem ela.
+  // Aqui no app a busca acontece na origem normal (mesma abordagem que o
+  // export em PDF já usava), e o que entra no HTML é o base64 — a janela de
+  // impressão não precisa buscar nada de fora.
+  const logo = await fetchLogoAsDataUrl(company?.logoUrl ?? null);
+  const companyForHeader = company
+    ? { ...company, logoUrl: logo?.dataUrl ?? company.logoUrl }
+    : null;
+
+  const headerHTML = buildReportPrintHeaderHTML(companyForHeader, context);
   // Título "Resumo" fixo acima do bloco (Tarefas 4.3-C/4.4-B): a tela não tem
   // esse cabeçalho porque o contexto já deixa claro que é o resumo (é o único
   // bloco fora da tabela); isoladamente numa página impressa, sem essa pista,
