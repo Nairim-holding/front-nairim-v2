@@ -9,6 +9,12 @@ import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
 import { getCompanyByIdAction } from '@/server/actions/company';
+import { COMPANY_IDENTITY_FIELDS, formatCompanyAddress } from '@/lib/companyIdentity';
+
+/** Componentes do endereço — exibidos juntos numa linha só, não individualmente. */
+const ADDRESS_PART_FIELDS = new Set<string>([
+  'zip_code', 'street', 'number', 'complement', 'district', 'city', 'state',
+]);
 
 export default function VisualizarEmpresaPage() {
   const params = useParams();
@@ -72,6 +78,26 @@ export default function VisualizarEmpresaPage() {
     },
   ], []);
 
+  // Só os campos preenchidos viram linha — empresa sem endereço não rende uma
+  // lista de rótulos vazios.
+  const identityRows = useMemo(() => {
+    if (!branding) return [];
+
+    const rows: { label: string; value: string }[] = [];
+    for (const { field, label } of COMPANY_IDENTITY_FIELDS) {
+      // O endereço é montado numa linha só logo abaixo; seus componentes
+      // individuais não viram linha própria.
+      if (ADDRESS_PART_FIELDS.has(field)) continue;
+      const value = (branding[field] ?? '').trim();
+      if (value) rows.push({ label, value });
+    }
+
+    const address = formatCompanyAddress(branding);
+    if (address) rows.push({ label: 'Endereço', value: address });
+
+    return rows;
+  }, [branding]);
+
   // `useCallback`: está nas dependências do useEffect de fetch do
   // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
   const transformData = useCallback((d: any) => ({
@@ -95,6 +121,37 @@ export default function VisualizarEmpresaPage() {
           fetchResource={getCompanyByIdAction}
           transformData={transformData}
         />
+
+        {/* Identidade jurídica + endereço do tenant — os mesmos dados que saem
+            no cabeçalho dos relatórios impressos/exportados. */}
+        <div className="bg-surface border border-ui-border rounded-xl p-5 flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-content">Dados da Empresa</h2>
+            <p className="text-sm text-content-muted">
+              Usados no cabeçalho dos relatórios impressos e exportados.
+            </p>
+          </div>
+          {loadingBranding ? (
+            <div className="flex items-center justify-center py-8 text-content-muted gap-2">
+              <Loader2 size={20} className="animate-spin" />
+              Carregando dados da empresa...
+            </div>
+          ) : identityRows.length > 0 ? (
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+              {identityRows.map(({ label, value }) => (
+                <div key={label} className="flex flex-col gap-0.5 min-w-0">
+                  <dt className="text-xs text-content-muted">{label}</dt>
+                  <dd className="text-sm text-content break-words">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-sm text-content-muted py-6 text-center">
+              Nenhum dado cadastrado. Preencha em Editar &gt; Dados da Empresa para que apareçam
+              no cabeçalho dos relatórios.
+            </p>
+          )}
+        </div>
 
         <div className="bg-surface border border-ui-border rounded-xl p-5 flex flex-col gap-4">
           <div>

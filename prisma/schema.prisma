@@ -68,6 +68,23 @@ model CompanyBranding {
   logo_dark_url    String?
   og_image_url     String?
 
+  // Identidade jurídica e endereço do tenant — alimentam o cabeçalho dos
+  // relatórios impressos/exportados. Ficam aqui (e não em Company) porque é
+  // onde já moram company_name/trade_name e porque /company/branding/me já
+  // entrega este registro para a aplicação. Antes esses dados eram lidos da
+  // Imobiliária (Agency), que é outra pessoa jurídica.
+  legal_name String?
+  cnpj       String? @db.VarChar(18)
+  phone      String? @db.VarChar(20)
+  email      String?
+  zip_code   String? @db.VarChar(10)
+  street     String?
+  number     String?
+  complement String?
+  district   String?
+  city       String?
+  state      String? @db.VarChar(2)
+
   // Tema light (cores adicionais — primary/secondary já existem acima)
   accent_color  String?
   success_color String?

@@ -1,5 +1,7 @@
 import { formatDateDisplay } from './dateShortcuts';
 import { getMyBrandingAction } from '@/server/actions/company';
+import { formatCompanyAddress } from '@/lib/companyIdentity';
+import type { CompanyBranding } from '@/types/branding';
 
 export interface ReportPrintHeaderData {
   companyName: string;
@@ -12,31 +14,11 @@ export interface ReportPrintHeaderData {
 }
 
 /**
- * Identificacao juridica do tenant, guardada em `CompanyBranding.company_info`.
- *
- * Nao existe coluna propria para isso: `Company` so tem name/slug e
- * `CompanyBranding` so tem campos de identidade visual. `company_info` e um
- * `Json?` que ja passa pela whitelist do CompanyController, entao serve de
- * lugar para esses dados sem exigir migration.
- */
-export interface CompanyIdentityInfo {
-  legal_name?: string | null;
-  cnpj?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-}
-
-function readText(source: Record<string, unknown> | null, key: string): string | null {
-  const value = source?.[key];
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
-}
-
-/**
  * Dados de identificacao da empresa para o cabecalho de impressao.
  *
  * Tudo vem do TENANT ativo (CompanyBranding): nome/logo dos campos de
- * identidade visual, e razao social/CNPJ/telefone/endereco de `company_info`.
+ * identidade visual, e razao social/CNPJ/telefone/endereco das colunas
+ * proprias adicionadas em `20260823000000_add_company_branding_identity`.
  *
  * Antes o CNPJ/endereco vinham da tabela `Agency`, escolhendo a imobiliaria
  * cujo nome batia com o do tenant — quando nao batia, caia na primeira
@@ -44,37 +26,30 @@ function readText(source: Record<string, unknown> | null, key: string): string |
  * outra ("Nairim Holding" + endereco da Adiplan). Imobiliaria e pessoa
  * juridica distinta do tenant, entao deixou de ser fonte deste cabecalho.
  *
- * Os campos de `company_info` sao preenchidos em Identidade Visual
- * (White Label) > Dados da Empresa.
+ * Preenchidos em Empresas > Editar > Dados da Empresa (ou em Identidade
+ * Visual, para a propria empresa do usuario).
  */
 export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderData | null> {
   try {
     const brandingRes = await getMyBrandingAction();
-    const branding = brandingRes.ok ? brandingRes.data : null;
-
-    const brandingInfo = branding as {
-      trade_name?: string | null;
-      company_name?: string | null;
-      logo_url?: string | null;
-      company_info?: Record<string, unknown> | null;
-    } | null;
+    const branding = brandingRes.ok ? (brandingRes.data as CompanyBranding | null) : null;
 
     // Nome exibido: sempre o da identidade visual do tenant ativo.
-    const brandingName = brandingInfo?.trade_name || brandingInfo?.company_name || null;
+    const brandingName = branding?.trade_name || branding?.company_name || null;
 
-    const info =
-      brandingInfo?.company_info && typeof brandingInfo.company_info === 'object'
-        ? (brandingInfo.company_info as Record<string, unknown>)
-        : null;
+    const text = (value: string | null | undefined): string | null => {
+      const trimmed = (value ?? '').trim();
+      return trimmed.length > 0 ? trimmed : null;
+    };
 
     return {
       companyName: brandingName || 'Empresa',
-      legalName: readText(info, 'legal_name'),
-      cnpj: readText(info, 'cnpj'),
-      phone: readText(info, 'phone'),
-      email: readText(info, 'email'),
-      address: readText(info, 'address'),
-      logoUrl: brandingInfo?.logo_url ?? null,
+      legalName: text(branding?.legal_name),
+      cnpj: text(branding?.cnpj),
+      phone: text(branding?.phone),
+      email: text(branding?.email),
+      address: formatCompanyAddress(branding),
+      logoUrl: branding?.logo_url ?? null,
     };
   } catch (error) {
     console.error('[reportPrintHeader] Erro ao carregar dados da empresa:', error);

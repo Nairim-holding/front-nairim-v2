@@ -13,6 +13,19 @@ export interface CompanyBranding {
   logo_dark_url: string | null;
   og_image_url: string | null;
 
+  /** Identidade jurídica e endereço do tenant — cabeçalho dos relatórios. */
+  legal_name: string | null;
+  cnpj: string | null;
+  phone: string | null;
+  email: string | null;
+  zip_code: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  district: string | null;
+  city: string | null;
+  state: string | null;
+
   accent_color: string | null;
   success_color: string | null;
   warning_color: string | null;

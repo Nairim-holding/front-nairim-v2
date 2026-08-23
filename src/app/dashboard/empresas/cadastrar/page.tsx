@@ -8,7 +8,8 @@ import DynamicFormManager from '@/components/form/DynamicForm';
 import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import type { FormStep } from '@/types/types';
-import { Building2, Globe, Type, Sun, Moon, Database } from 'lucide-react';
+import { Building2, Globe, Type, Sun, Moon, Database, MapPin } from 'lucide-react';
+import { COMPANY_IDENTITY_FIELDS, COMPANY_IDENTITY_FIELD_KEYS } from '@/lib/companyIdentity';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 import { createCompanyAction, checkSlugAction } from '@/server/actions/company';
 
@@ -28,9 +29,16 @@ const COLOR_FIELDS: { key: string; label: string; defaultValue: string }[] = [
 
 const BRANDING_FIELD_KEYS = [
   'company_name', 'trade_name', 'app_title', 'app_description',
+  ...COMPANY_IDENTITY_FIELD_KEYS,
   ...COLOR_FIELDS.map(c => c.key),
   ...COLOR_FIELDS.map(c => `${c.key}_dark`),
 ];
+
+const IDENTITY_SPAN_CLASS: Record<'full' | 'half' | 'third', string> = {
+  full: 'col-span-full',
+  half: 'col-span-full sm:col-span-6',
+  third: 'col-span-full sm:col-span-4',
+};
 
 const isEmptyColorValue = (value: unknown): boolean => (
   value === undefined ||
@@ -241,6 +249,33 @@ export default function CadastrarEmpresaPage() {
           placeholder: 'Breve descrição da plataforma',
           className: 'col-span-full',
         },
+      ],
+    },
+    {
+      // Identidade jurídica + endereço: alimentam o cabeçalho dos relatórios
+      // impressos/exportados.
+      title: 'Dados da Empresa',
+      icon: <MapPin size={20} />,
+      fields: [
+        {
+          field: '__helper_identity',
+          label: '',
+          type: 'custom' as const,
+          className: 'col-span-full',
+          render: () => (
+            <p className="text-xs text-content-muted -mt-2">
+              Usados no cabeçalho dos relatórios impressos e exportados.
+            </p>
+          ),
+        },
+        ...COMPANY_IDENTITY_FIELDS.map(({ field, label, placeholder, span, maxLength }) => ({
+          field,
+          label,
+          type: 'text' as const,
+          placeholder,
+          className: IDENTITY_SPAN_CLASS[span],
+          ...(maxLength ? { validation: { maxLength } } : {}),
+        })),
       ],
     },
     colorStep('Tema Light', <Sun size={20} />, ''),

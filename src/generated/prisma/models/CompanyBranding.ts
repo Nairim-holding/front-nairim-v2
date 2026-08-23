@@ -38,6 +38,17 @@ export type CompanyBrandingMinAggregateOutputType = {
   logo_sidebar_url: string | null
   logo_dark_url: string | null
   og_image_url: string | null
+  legal_name: string | null
+  cnpj: string | null
+  phone: string | null
+  email: string | null
+  zip_code: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  district: string | null
+  city: string | null
+  state: string | null
   accent_color: string | null
   success_color: string | null
   warning_color: string | null
@@ -76,6 +87,17 @@ export type CompanyBrandingMaxAggregateOutputType = {
   logo_sidebar_url: string | null
   logo_dark_url: string | null
   og_image_url: string | null
+  legal_name: string | null
+  cnpj: string | null
+  phone: string | null
+  email: string | null
+  zip_code: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  district: string | null
+  city: string | null
+  state: string | null
   accent_color: string | null
   success_color: string | null
   warning_color: string | null
@@ -115,6 +137,17 @@ export type CompanyBrandingCountAggregateOutputType = {
   logo_sidebar_url: number
   logo_dark_url: number
   og_image_url: number
+  legal_name: number
+  cnpj: number
+  phone: number
+  email: number
+  zip_code: number
+  street: number
+  number: number
+  complement: number
+  district: number
+  city: number
+  state: number
   accent_color: number
   success_color: number
   warning_color: number
@@ -155,6 +188,17 @@ export type CompanyBrandingMinAggregateInputType = {
   logo_sidebar_url?: true
   logo_dark_url?: true
   og_image_url?: true
+  legal_name?: true
+  cnpj?: true
+  phone?: true
+  email?: true
+  zip_code?: true
+  street?: true
+  number?: true
+  complement?: true
+  district?: true
+  city?: true
+  state?: true
   accent_color?: true
   success_color?: true
   warning_color?: true
@@ -193,6 +237,17 @@ export type CompanyBrandingMaxAggregateInputType = {
   logo_sidebar_url?: true
   logo_dark_url?: true
   og_image_url?: true
+  legal_name?: true
+  cnpj?: true
+  phone?: true
+  email?: true
+  zip_code?: true
+  street?: true
+  number?: true
+  complement?: true
+  district?: true
+  city?: true
+  state?: true
   accent_color?: true
   success_color?: true
   warning_color?: true
@@ -232,6 +287,17 @@ export type CompanyBrandingCountAggregateInputType = {
   logo_sidebar_url?: true
   logo_dark_url?: true
   og_image_url?: true
+  legal_name?: true
+  cnpj?: true
+  phone?: true
+  email?: true
+  zip_code?: true
+  street?: true
+  number?: true
+  complement?: true
+  district?: true
+  city?: true
+  state?: true
   accent_color?: true
   success_color?: true
   warning_color?: true
@@ -344,6 +410,17 @@ export type CompanyBrandingGroupByOutputType = {
   logo_sidebar_url: string | null
   logo_dark_url: string | null
   og_image_url: string | null
+  legal_name: string | null
+  cnpj: string | null
+  phone: string | null
+  email: string | null
+  zip_code: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  district: string | null
+  city: string | null
+  state: string | null
   accent_color: string | null
   success_color: string | null
   warning_color: string | null
@@ -404,6 +481,17 @@ export type CompanyBrandingWhereInput = {
   logo_sidebar_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   logo_dark_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   og_image_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  legal_name?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  cnpj?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  phone?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  email?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  zip_code?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  street?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  number?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  complement?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  district?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  city?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  state?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   accent_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   success_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   warning_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
@@ -444,6 +532,17 @@ export type CompanyBrandingOrderByWithRelationInput = {
   logo_sidebar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   logo_dark_url?: Prisma.SortOrderInput | Prisma.SortOrder
   og_image_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  legal_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  cnpj?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  zip_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  street?: Prisma.SortOrderInput | Prisma.SortOrder
+  number?: Prisma.SortOrderInput | Prisma.SortOrder
+  complement?: Prisma.SortOrderInput | Prisma.SortOrder
+  district?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
   accent_color?: Prisma.SortOrderInput | Prisma.SortOrder
   success_color?: Prisma.SortOrderInput | Prisma.SortOrder
   warning_color?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -487,6 +586,17 @@ export type CompanyBrandingWhereUniqueInput = Prisma.AtLeast<{
   logo_sidebar_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   logo_dark_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   og_image_url?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  legal_name?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  cnpj?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  phone?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  email?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  zip_code?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  street?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  number?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  complement?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  district?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  city?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
+  state?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   accent_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   success_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
   warning_color?: Prisma.StringNullableFilter<"CompanyBranding"> | string | null
@@ -527,6 +637,17 @@ export type CompanyBrandingOrderByWithAggregationInput = {
   logo_sidebar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   logo_dark_url?: Prisma.SortOrderInput | Prisma.SortOrder
   og_image_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  legal_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  cnpj?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  zip_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  street?: Prisma.SortOrderInput | Prisma.SortOrder
+  number?: Prisma.SortOrderInput | Prisma.SortOrder
+  complement?: Prisma.SortOrderInput | Prisma.SortOrder
+  district?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
   accent_color?: Prisma.SortOrderInput | Prisma.SortOrder
   success_color?: Prisma.SortOrderInput | Prisma.SortOrder
   warning_color?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -572,6 +693,17 @@ export type CompanyBrandingScalarWhereWithAggregatesInput = {
   logo_sidebar_url?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
   logo_dark_url?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
   og_image_url?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  legal_name?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  cnpj?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  phone?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  email?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  zip_code?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  street?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  number?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  complement?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  district?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  city?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
+  state?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
   accent_color?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
   success_color?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
   warning_color?: Prisma.StringNullableWithAggregatesFilter<"CompanyBranding"> | string | null
@@ -610,6 +742,17 @@ export type CompanyBrandingCreateInput = {
   logo_sidebar_url?: string | null
   logo_dark_url?: string | null
   og_image_url?: string | null
+  legal_name?: string | null
+  cnpj?: string | null
+  phone?: string | null
+  email?: string | null
+  zip_code?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  district?: string | null
+  city?: string | null
+  state?: string | null
   accent_color?: string | null
   success_color?: string | null
   warning_color?: string | null
@@ -650,6 +793,17 @@ export type CompanyBrandingUncheckedCreateInput = {
   logo_sidebar_url?: string | null
   logo_dark_url?: string | null
   og_image_url?: string | null
+  legal_name?: string | null
+  cnpj?: string | null
+  phone?: string | null
+  email?: string | null
+  zip_code?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  district?: string | null
+  city?: string | null
+  state?: string | null
   accent_color?: string | null
   success_color?: string | null
   warning_color?: string | null
@@ -688,6 +842,17 @@ export type CompanyBrandingUpdateInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -728,6 +893,17 @@ export type CompanyBrandingUncheckedUpdateInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -767,6 +943,17 @@ export type CompanyBrandingCreateManyInput = {
   logo_sidebar_url?: string | null
   logo_dark_url?: string | null
   og_image_url?: string | null
+  legal_name?: string | null
+  cnpj?: string | null
+  phone?: string | null
+  email?: string | null
+  zip_code?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  district?: string | null
+  city?: string | null
+  state?: string | null
   accent_color?: string | null
   success_color?: string | null
   warning_color?: string | null
@@ -805,6 +992,17 @@ export type CompanyBrandingUpdateManyMutationInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -844,6 +1042,17 @@ export type CompanyBrandingUncheckedUpdateManyInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -888,6 +1097,17 @@ export type CompanyBrandingCountOrderByAggregateInput = {
   logo_sidebar_url?: Prisma.SortOrder
   logo_dark_url?: Prisma.SortOrder
   og_image_url?: Prisma.SortOrder
+  legal_name?: Prisma.SortOrder
+  cnpj?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  zip_code?: Prisma.SortOrder
+  street?: Prisma.SortOrder
+  number?: Prisma.SortOrder
+  complement?: Prisma.SortOrder
+  district?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   accent_color?: Prisma.SortOrder
   success_color?: Prisma.SortOrder
   warning_color?: Prisma.SortOrder
@@ -926,6 +1146,17 @@ export type CompanyBrandingMaxOrderByAggregateInput = {
   logo_sidebar_url?: Prisma.SortOrder
   logo_dark_url?: Prisma.SortOrder
   og_image_url?: Prisma.SortOrder
+  legal_name?: Prisma.SortOrder
+  cnpj?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  zip_code?: Prisma.SortOrder
+  street?: Prisma.SortOrder
+  number?: Prisma.SortOrder
+  complement?: Prisma.SortOrder
+  district?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   accent_color?: Prisma.SortOrder
   success_color?: Prisma.SortOrder
   warning_color?: Prisma.SortOrder
@@ -964,6 +1195,17 @@ export type CompanyBrandingMinOrderByAggregateInput = {
   logo_sidebar_url?: Prisma.SortOrder
   logo_dark_url?: Prisma.SortOrder
   og_image_url?: Prisma.SortOrder
+  legal_name?: Prisma.SortOrder
+  cnpj?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  zip_code?: Prisma.SortOrder
+  street?: Prisma.SortOrder
+  number?: Prisma.SortOrder
+  complement?: Prisma.SortOrder
+  district?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   accent_color?: Prisma.SortOrder
   success_color?: Prisma.SortOrder
   warning_color?: Prisma.SortOrder
@@ -1038,6 +1280,17 @@ export type CompanyBrandingCreateWithoutCompanyInput = {
   logo_sidebar_url?: string | null
   logo_dark_url?: string | null
   og_image_url?: string | null
+  legal_name?: string | null
+  cnpj?: string | null
+  phone?: string | null
+  email?: string | null
+  zip_code?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  district?: string | null
+  city?: string | null
+  state?: string | null
   accent_color?: string | null
   success_color?: string | null
   warning_color?: string | null
@@ -1076,6 +1329,17 @@ export type CompanyBrandingUncheckedCreateWithoutCompanyInput = {
   logo_sidebar_url?: string | null
   logo_dark_url?: string | null
   og_image_url?: string | null
+  legal_name?: string | null
+  cnpj?: string | null
+  phone?: string | null
+  email?: string | null
+  zip_code?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  district?: string | null
+  city?: string | null
+  state?: string | null
   accent_color?: string | null
   success_color?: string | null
   warning_color?: string | null
@@ -1130,6 +1394,17 @@ export type CompanyBrandingUpdateWithoutCompanyInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1168,6 +1443,17 @@ export type CompanyBrandingUncheckedUpdateWithoutCompanyInput = {
   logo_sidebar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_dark_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   og_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complement?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  district?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accent_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   success_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   warning_color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1209,6 +1495,17 @@ export type CompanyBrandingSelect<ExtArgs extends runtime.Types.Extensions.Inter
   logo_sidebar_url?: boolean
   logo_dark_url?: boolean
   og_image_url?: boolean
+  legal_name?: boolean
+  cnpj?: boolean
+  phone?: boolean
+  email?: boolean
+  zip_code?: boolean
+  street?: boolean
+  number?: boolean
+  complement?: boolean
+  district?: boolean
+  city?: boolean
+  state?: boolean
   accent_color?: boolean
   success_color?: boolean
   warning_color?: boolean
@@ -1249,6 +1546,17 @@ export type CompanyBrandingSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   logo_sidebar_url?: boolean
   logo_dark_url?: boolean
   og_image_url?: boolean
+  legal_name?: boolean
+  cnpj?: boolean
+  phone?: boolean
+  email?: boolean
+  zip_code?: boolean
+  street?: boolean
+  number?: boolean
+  complement?: boolean
+  district?: boolean
+  city?: boolean
+  state?: boolean
   accent_color?: boolean
   success_color?: boolean
   warning_color?: boolean
@@ -1289,6 +1597,17 @@ export type CompanyBrandingSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   logo_sidebar_url?: boolean
   logo_dark_url?: boolean
   og_image_url?: boolean
+  legal_name?: boolean
+  cnpj?: boolean
+  phone?: boolean
+  email?: boolean
+  zip_code?: boolean
+  street?: boolean
+  number?: boolean
+  complement?: boolean
+  district?: boolean
+  city?: boolean
+  state?: boolean
   accent_color?: boolean
   success_color?: boolean
   warning_color?: boolean
@@ -1329,6 +1648,17 @@ export type CompanyBrandingSelectScalar = {
   logo_sidebar_url?: boolean
   logo_dark_url?: boolean
   og_image_url?: boolean
+  legal_name?: boolean
+  cnpj?: boolean
+  phone?: boolean
+  email?: boolean
+  zip_code?: boolean
+  street?: boolean
+  number?: boolean
+  complement?: boolean
+  district?: boolean
+  city?: boolean
+  state?: boolean
   accent_color?: boolean
   success_color?: boolean
   warning_color?: boolean
@@ -1353,7 +1683,7 @@ export type CompanyBrandingSelectScalar = {
   updated_at?: boolean
 }
 
-export type CompanyBrandingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "logo_url" | "favicon_url" | "primary_color" | "secondary_color" | "company_name" | "company_info" | "trade_name" | "app_title" | "app_description" | "logo_sidebar_url" | "logo_dark_url" | "og_image_url" | "accent_color" | "success_color" | "warning_color" | "error_color" | "info_color" | "bg_color" | "card_color" | "border_color" | "text_color" | "primary_color_dark" | "secondary_color_dark" | "accent_color_dark" | "success_color_dark" | "warning_color_dark" | "error_color_dark" | "info_color_dark" | "bg_color_dark" | "card_color_dark" | "border_color_dark" | "text_color_dark" | "created_at" | "updated_at", ExtArgs["result"]["companyBranding"]>
+export type CompanyBrandingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "logo_url" | "favicon_url" | "primary_color" | "secondary_color" | "company_name" | "company_info" | "trade_name" | "app_title" | "app_description" | "logo_sidebar_url" | "logo_dark_url" | "og_image_url" | "legal_name" | "cnpj" | "phone" | "email" | "zip_code" | "street" | "number" | "complement" | "district" | "city" | "state" | "accent_color" | "success_color" | "warning_color" | "error_color" | "info_color" | "bg_color" | "card_color" | "border_color" | "text_color" | "primary_color_dark" | "secondary_color_dark" | "accent_color_dark" | "success_color_dark" | "warning_color_dark" | "error_color_dark" | "info_color_dark" | "bg_color_dark" | "card_color_dark" | "border_color_dark" | "text_color_dark" | "created_at" | "updated_at", ExtArgs["result"]["companyBranding"]>
 export type CompanyBrandingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }
@@ -1384,6 +1714,17 @@ export type $CompanyBrandingPayload<ExtArgs extends runtime.Types.Extensions.Int
     logo_sidebar_url: string | null
     logo_dark_url: string | null
     og_image_url: string | null
+    legal_name: string | null
+    cnpj: string | null
+    phone: string | null
+    email: string | null
+    zip_code: string | null
+    street: string | null
+    number: string | null
+    complement: string | null
+    district: string | null
+    city: string | null
+    state: string | null
     accent_color: string | null
     success_color: string | null
     warning_color: string | null
@@ -1844,6 +2185,17 @@ export interface CompanyBrandingFieldRefs {
   readonly logo_sidebar_url: Prisma.FieldRef<"CompanyBranding", 'String'>
   readonly logo_dark_url: Prisma.FieldRef<"CompanyBranding", 'String'>
   readonly og_image_url: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly legal_name: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly cnpj: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly phone: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly email: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly zip_code: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly street: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly number: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly complement: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly district: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly city: Prisma.FieldRef<"CompanyBranding", 'String'>
+  readonly state: Prisma.FieldRef<"CompanyBranding", 'String'>
   readonly accent_color: Prisma.FieldRef<"CompanyBranding", 'String'>
   readonly success_color: Prisma.FieldRef<"CompanyBranding", 'String'>
   readonly warning_color: Prisma.FieldRef<"CompanyBranding", 'String'>

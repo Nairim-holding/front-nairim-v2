@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Building2, Image as ImageIcon, Palette, Moon, Sun, Eye, Loader2, Save } from 'lucide-react';
 import { useMessageContext } from '@/contexts';
 import type { CompanyBranding } from '@/types/branding';
+import {
+  COMPANY_IDENTITY_FIELDS,
+  COMPANY_IDENTITY_FIELD_KEYS,
+  type CompanyIdentityKey,
+} from '@/lib/companyIdentity';
 import { buildBrandingCss } from '@/lib/brandingCss';
 import ColorInput from './ColorInput';
 import AssetUploader from './AssetUploader';
@@ -27,26 +32,6 @@ const TEXT_FIELDS: { field: keyof FormState; label: string; placeholder?: string
   { field: 'app_title', label: 'Título da aplicação (aba do navegador)', placeholder: 'Ex: Nairim — Gestão Imobiliária' },
   { field: 'app_description', label: 'Descrição (meta description / compartilhamento)', placeholder: 'Breve descrição da plataforma', multiline: true },
 ];
-
-/**
- * Dados juridicos do tenant, gravados em `CompanyBranding.company_info` (Json).
- * Alimentam o cabecalho dos relatorios impressos/exportados — antes esses
- * campos vinham da Imobiliaria cadastrada, que e outra pessoa juridica.
- */
-const COMPANY_INFO_FIELDS: { field: CompanyInfoKey; label: string; placeholder?: string; wide?: boolean }[] = [
-  { field: 'legal_name', label: 'Razão social', placeholder: 'Ex: Nairim Holding LTDA' },
-  { field: 'cnpj', label: 'CNPJ', placeholder: 'Ex: 00.000.000/0001-00' },
-  { field: 'phone', label: 'Telefone', placeholder: 'Ex: (14) 3471-0000' },
-  { field: 'email', label: 'E-mail', placeholder: 'Ex: contato@nairim.com.br' },
-  { field: 'address', label: 'Endereço', placeholder: 'Ex: Rua Exemplo, 100 Centro - Garça/SP', wide: true },
-];
-
-type CompanyInfoKey = 'legal_name' | 'cnpj' | 'phone' | 'email' | 'address';
-type CompanyInfoState = Record<CompanyInfoKey, string>;
-
-const EMPTY_COMPANY_INFO: CompanyInfoState = {
-  legal_name: '', cnpj: '', phone: '', email: '', address: '',
-};
 
 const COLOR_FIELDS: { key: ColorKey; label: string; defaultValue: string }[] = [
   { key: 'primary', label: 'Cor primária', defaultValue: '#8b5cf6' },
@@ -78,10 +63,12 @@ const DARK_FIELD_BY_KEY: Record<ColorKey, keyof FormState> = {
 
 const COLOR_AND_TEXT_FIELDS = [
   'company_name', 'trade_name', 'app_title', 'app_description',
+  ...COMPANY_IDENTITY_FIELD_KEYS,
   ...Object.values(LIGHT_FIELD_BY_KEY), ...Object.values(DARK_FIELD_BY_KEY),
 ] as const;
 
 type FormState = Record<
+  | CompanyIdentityKey
   | 'company_name' | 'trade_name' | 'app_title' | 'app_description'
   | 'logo_url' | 'logo_sidebar_url' | 'logo_dark_url' | 'favicon_url' | 'og_image_url'
   | 'primary_color' | 'secondary_color' | 'accent_color' | 'success_color' | 'warning_color'
@@ -101,16 +88,6 @@ EMPTY_FORM.logo_sidebar_url = '';
 EMPTY_FORM.logo_dark_url = '';
 EMPTY_FORM.favicon_url = '';
 EMPTY_FORM.og_image_url = '';
-
-function companyInfoToState(info: Record<string, unknown> | null): CompanyInfoState {
-  const state = { ...EMPTY_COMPANY_INFO };
-  if (!info || typeof info !== 'object') return state;
-  (Object.keys(state) as CompanyInfoKey[]).forEach((key) => {
-    const value = info[key];
-    if (typeof value === 'string') state[key] = value;
-  });
-  return state;
-}
 
 function brandingToForm(b: CompanyBranding | null): FormState {
   const form = { ...EMPTY_FORM };
@@ -132,7 +109,6 @@ export default function WhiteLabelManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfoState>(EMPTY_COMPANY_INFO);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,11 +116,7 @@ export default function WhiteLabelManager() {
       try {
         const result = await getMyBrandingAction();
         if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
-        if (!cancelled) {
-          const branding = result.data as CompanyBranding | null;
-          setForm(brandingToForm(branding));
-          setCompanyInfo(companyInfoToState(branding?.company_info ?? null));
-        }
+        if (!cancelled) setForm(brandingToForm(result.data as CompanyBranding | null));
       } catch (err: any) {
         if (!cancelled) showMessage(err?.message ?? 'Erro ao carregar configurações de marca', 'error');
       } finally {
@@ -171,18 +143,6 @@ export default function WhiteLabelManager() {
       for (const field of COLOR_AND_TEXT_FIELDS) {
         payload[field] = form[field] || undefined;
       }
-      // Dados juridicos do tenant vao juntos, num objeto so (coluna Json).
-      // Campos em branco saem do objeto para nao gravar string vazia.
-      const info = Object.fromEntries(
-        (Object.keys(companyInfo) as CompanyInfoKey[])
-          .map((key) => [key, companyInfo[key].trim()])
-          .filter(([, value]) => value.length > 0)
-      );
-      // Objeto vazio (e nao `null`) quando tudo esta em branco: a coluna e Json
-      // e o Prisma exige `DbNull`/`JsonNull` para gravar null — um `null` cru
-      // faria a API estourar ao limpar os campos.
-      payload.company_info = info;
-
       const result = await updateBrandingAction(payload);
       if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
       showMessage('Identidade visual atualizada com sucesso!', 'success');
@@ -192,7 +152,7 @@ export default function WhiteLabelManager() {
     } finally {
       setSaving(false);
     }
-  }, [form, companyInfo, showMessage, router]);
+  }, [form, showMessage, router]);
 
   // Monta um objeto compatível com CompanyBranding para gerar o preview ao vivo
   const previewBranding = useMemo<CompanyBranding>(() => ({
@@ -294,15 +254,16 @@ export default function WhiteLabelManager() {
               </p>
             </div>
 
-            {COMPANY_INFO_FIELDS.map(({ field, label, placeholder, wide }) => (
-              <div key={field} className={`flex flex-col gap-1.5 ${wide ? 'md:col-span-2' : ''}`}>
-                <label className="text-sm text-content-secondary" htmlFor={`company_info_${field}`}>{label}</label>
+            {COMPANY_IDENTITY_FIELDS.map(({ field, label, placeholder, span, maxLength }) => (
+              <div key={field} className={`flex flex-col gap-1.5 ${span === 'full' ? 'md:col-span-2' : ''}`}>
+                <label className="text-sm text-content-secondary" htmlFor={field}>{label}</label>
                 <input
-                  id={`company_info_${field}`}
+                  id={field}
                   type="text"
-                  value={companyInfo[field]}
-                  onChange={e => setCompanyInfo(prev => ({ ...prev, [field]: e.target.value }))}
+                  value={form[field]}
+                  onChange={e => setField(field, e.target.value)}
                   placeholder={placeholder}
+                  maxLength={maxLength}
                   className="h-[46px] text-content bg-surface border border-ui-border rounded-lg px-3 text-sm focus:outline-none focus:border-brand"
                 />
               </div>

@@ -10,7 +10,8 @@ import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
 import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
-import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye, Database } from 'lucide-react';
+import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye, Database, MapPin } from 'lucide-react';
+import { COMPANY_IDENTITY_FIELDS, COMPANY_IDENTITY_FIELD_KEYS } from '@/lib/companyIdentity';
 import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 import { getCompanyByIdAction, updateCompanyAction, checkSlugAction } from '@/server/actions/company';
 
@@ -38,7 +39,18 @@ const BRANDING_COLOR_FIELDS = [
   ...COLOR_FIELDS.map(c => c.key),
   ...COLOR_FIELDS.map(c => `${c.key}_dark`),
 ];
-const ALL_BRANDING_FIELDS = [...BRANDING_TEXT_FIELDS, ...BRANDING_ASSET_FIELDS, ...BRANDING_COLOR_FIELDS];
+const ALL_BRANDING_FIELDS = [
+  ...BRANDING_TEXT_FIELDS,
+  ...COMPANY_IDENTITY_FIELD_KEYS,
+  ...BRANDING_ASSET_FIELDS,
+  ...BRANDING_COLOR_FIELDS,
+];
+
+const IDENTITY_SPAN_CLASS: Record<'full' | 'half' | 'third', string> = {
+  full: 'col-span-full',
+  half: 'col-span-full sm:col-span-6',
+  third: 'col-span-full sm:col-span-4',
+};
 
 const isEmptyColorValue = (value: unknown): boolean => (
   value === undefined ||
@@ -254,6 +266,33 @@ export default function EditarEmpresaPage({ params }: Props) {
         { field: 'trade_name', label: 'Nome fantasia', type: 'text', placeholder: 'Ex: Nairim Imóveis', className: 'col-span-full' },
         { field: 'app_title', label: 'Título da aplicação (aba do navegador)', type: 'text', placeholder: 'Ex: Nairim — Gestão Imobiliária', className: 'col-span-full' },
         { field: 'app_description', label: 'Descrição (meta description / compartilhamento)', type: 'textarea', placeholder: 'Breve descrição da plataforma', className: 'col-span-full' },
+      ],
+    },
+    {
+      // Identidade juridica + endereco: alimentam o cabecalho dos relatorios
+      // impressos/exportados.
+      title: 'Dados da Empresa',
+      icon: <MapPin size={20} />,
+      fields: [
+        {
+          field: '__helper_identity',
+          label: '',
+          type: 'custom' as const,
+          className: 'col-span-full',
+          render: () => (
+            <p className="text-xs text-content-muted -mt-2">
+              Usados no cabecalho dos relatorios impressos e exportados.
+            </p>
+          ),
+        },
+        ...COMPANY_IDENTITY_FIELDS.map(({ field, label, placeholder, span, maxLength }) => ({
+          field,
+          label,
+          type: 'text' as const,
+          placeholder,
+          className: IDENTITY_SPAN_CLASS[span],
+          ...(maxLength ? { validation: { maxLength } } : {}),
+        })),
       ],
     },
     {
