@@ -361,7 +361,25 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
       groups: [],
     });
 
-    return { groupBy, lines, unclassifiedExpenseTotal: despesasSemClassificacao };
+    // Agrupa por categoria para o aviso apontar exatamente o que classificar.
+    const unclassifiedByCategory = new Map<string, { id: string; name: string; total: number }>();
+    for (const txn of unclassifiedTxns) {
+      const category = txn.category;
+      if (!category) continue;
+      const entry = unclassifiedByCategory.get(category.id)
+        ?? { id: category.id, name: category.name, total: 0 };
+      entry.total += Number(txn.amount);
+      unclassifiedByCategory.set(category.id, entry);
+    }
+
+    return {
+      groupBy,
+      lines,
+      unclassifiedExpenseTotal: despesasSemClassificacao,
+      // Maior peso primeiro: classificar essas resolve a maior parte do desvio.
+      unclassifiedExpenseCategories: Array.from(unclassifiedByCategory.values())
+        .sort((a, b) => b.total - a.total),
+    };
   }
 }
 

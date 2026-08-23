@@ -113,6 +113,23 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
     [groups]
   );
 
+  /**
+   * Barras horizontais: uma faixa por categoria (ate 20). Com altura fixa a
+   * fonte maior dos rotulos colidia e o echarts escondia parte dos nomes —
+   * entao a altura acompanha a quantidade de faixas. Pizza e barras por dia
+   * nao empilham no eixo vertical e ficam na altura padrao.
+   */
+  const chartHeight = (() => {
+    // Barras por dia: as faixas correm na horizontal, altura fixa serve.
+    if (groupBy === 'day') return 288;
+    // Pizza: a legenda embaixo quebra em linhas (~3 itens por linha) e a fonte
+    // maior engorda cada linha — sem folga ela comia o proprio grafico.
+    if (groupBy === 'category') {
+      return 288 + Math.max(0, Math.ceil(chartData.length / 3) - 2) * 22;
+    }
+    return Math.max(288, chartData.length * 34 + 48);
+  })();
+
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {
     const tooltipConfig = getCustomEchartsTooltipConfig((params: any) => {
       const item = Array.isArray(params) ? params[0] : params;
@@ -126,7 +143,7 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
       return {
         backgroundColor: 'transparent',
         tooltip: { ...tooltipConfig, trigger: 'item' },
-        legend: { bottom: 0, textStyle: { color: tokens.textMuted, fontSize: 11 } },
+        legend: { bottom: 0, textStyle: { color: tokens.textMuted, fontSize: 12 } },
         series: [
           {
             type: 'pie',
@@ -140,7 +157,7 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
             label: {
               formatter: (p: any) => formatCurrency(p.value),
               color: tokens.textPrimary,
-              fontSize: isLarge ? 12 : 10,
+              fontSize: isLarge ? 15 : 13,
             },
           },
         ],
@@ -155,12 +172,12 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
         xAxis: {
           type: 'category',
           data: chartData.map((g) => g.label),
-          axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 11 : 10 },
+          axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 14 : 12 },
           axisLine: { lineStyle: { color: tokens.borderSoft } },
         },
         yAxis: {
           type: 'value',
-          axisLabel: { color: tokens.textMuted, fontSize: 10, formatter: (v: number) => formatCurrency(v) },
+          axisLabel: { color: tokens.textMuted, fontSize: 12, formatter: (v: number) => formatCurrency(v) },
           splitLine: { lineStyle: { color: tokens.borderSoft } },
         },
         series: [
@@ -179,16 +196,16 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
     return {
       backgroundColor: 'transparent',
       tooltip: tooltipConfig,
-      grid: { top: 16, bottom: 16, left: 16, right: 60, containLabel: true },
+      grid: { top: 16, bottom: 16, left: 16, right: 88, containLabel: true },
       xAxis: {
         type: 'value',
-        axisLabel: { color: tokens.textMuted, fontSize: 10, formatter: (v: number) => formatCurrency(v) },
+        axisLabel: { color: tokens.textMuted, fontSize: 12, formatter: (v: number) => formatCurrency(v) },
         splitLine: { lineStyle: { color: tokens.borderSoft } },
       },
       yAxis: {
         type: 'category',
         data: ordered.map((g) => g.label),
-        axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 11 : 10, width: 220, overflow: 'break' },
+        axisLabel: { color: tokens.textMuted, fontSize: isLarge ? 14 : 12, width: 260, overflow: 'break' },
         axisLine: { lineStyle: { color: tokens.borderSoft } },
       },
       series: [
@@ -202,7 +219,7 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
             position: 'right',
             formatter: (p: any) => formatCurrency(p.value),
             color: tokens.textPrimary,
-            fontSize: 10,
+            fontSize: 12,
           },
         },
       ],
@@ -234,7 +251,7 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
     <div className="flex flex-col gap-4 p-4">
       <div className="bg-surface border border-ui-border-soft rounded-lg p-2">
         <h2 className="text-sm font-semibold text-content px-2 pt-1 pb-2">{title}</h2>
-        <div className="h-72 relative">
+        <div className="relative" style={{ height: chartHeight }}>
           <EchartsSurface isFullscreen={false} isLoading={false} buildOption={buildOption} />
         </div>
       </div>

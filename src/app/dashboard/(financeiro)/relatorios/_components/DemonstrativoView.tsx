@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Plus, Minus, AlertTriangle } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { buildReportActionParams } from '../_lib/buildReportQuery';
@@ -59,6 +60,7 @@ interface DfcResponse {
   groupBy: DfcGroupBy;
   lines: DfcLine[];
   unclassifiedExpenseTotal: number;
+  unclassifiedExpenseCategories?: { id: string; name: string; total: number }[];
 }
 
 interface DemonstrativoViewProps {
@@ -173,12 +175,34 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
       {data.unclassifiedExpenseTotal > 0 && (
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/40 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle size={15} className="shrink-0 mt-0.5" />
-          <span>
-            {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período estão sem classificação DFC
-            (Impostos / Despesa Variável / Despesa Fixa / Pessoal). Elas entram no resultado pela linha
-            &ldquo;Outras Despesas (sem classificação DFC)&rdquo;. Para que apareçam na linha correta, classifique as
-            categorias em Financeiro → Categorias/Subcategorias.
-          </span>
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <span>
+              {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período estão sem classificação DFC
+              (Impostos / Despesa Variável / Despesa Fixa / Pessoal). Elas entram no resultado pela linha
+              &ldquo;Outras Despesas (sem classificação DFC)&rdquo;.
+            </span>
+
+            {/* Nomear as categorias evita a caça uma a uma em Categorias: o
+                aviso antes so dava o total, sem dizer onde mexer. */}
+            {(data.unclassifiedExpenseCategories?.length ?? 0) > 0 && (
+              <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                {data.unclassifiedExpenseCategories!.map((c) => (
+                  <li key={c.id} className="font-medium">
+                    {c.name}
+                    <span className="font-normal opacity-80"> — {formatCurrency(c.total)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <span>
+              Classifique{' '}
+              <Link href="/dashboard/categorias" className="underline font-medium hover:opacity-80">
+                em Financeiro → Categorias
+              </Link>
+              {' '}para que apareçam na linha correta.
+            </span>
+          </div>
         </div>
       )}
 

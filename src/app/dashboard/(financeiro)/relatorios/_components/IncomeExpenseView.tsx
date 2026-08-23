@@ -32,16 +32,16 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
         { label: 'Categoria', value: formatCurrency(g?.total ?? item.value ?? 0), color },
       ]);
     }),
-    grid: { top: 16, bottom: 16, left: 16, right: 60, containLabel: true },
+    grid: { top: 16, bottom: 16, left: 16, right: 88, containLabel: true },
     xAxis: {
       type: 'value',
-      axisLabel: { color: tokens.textMuted, fontSize: 10, formatter: (v: number) => formatCurrency(v) },
+      axisLabel: { color: tokens.textMuted, fontSize: 12, formatter: (v: number) => formatCurrency(v) },
       splitLine: { lineStyle: { color: tokens.borderSoft } },
     },
     yAxis: {
       type: 'category',
       data: chartData.map((g) => g.category),
-      axisLabel: { color: tokens.textMuted, fontSize: 10, width: 140, overflow: 'truncate' },
+      axisLabel: { color: tokens.textMuted, fontSize: 12, width: 180, overflow: 'truncate' },
       axisLine: { lineStyle: { color: tokens.borderSoft } },
     },
     series: [
@@ -50,7 +50,7 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
         data: chartData.map((g) => g.total),
         barMaxWidth: 20,
         itemStyle: { borderRadius: [0, 6, 6, 0], color },
-        label: { show: true, position: 'right', formatter: (p) => formatCurrency(Number(p.value)), color: tokens.textPrimary, fontSize: 10 },
+        label: { show: true, position: 'right', formatter: (p) => formatCurrency(Number(p.value)), color: tokens.textPrimary, fontSize: 12 },
       },
     ],
   });
@@ -59,8 +59,12 @@ function MiniBarChart({ side, color }: { side: IncomeExpenseSide; color: string 
     return <div className="flex items-center justify-center h-40 text-content-muted text-xs">Sem lançamentos no período.</div>;
   }
 
+  // Uma faixa por categoria (ate 15): com altura fixa a fonte maior colidia e
+  // o echarts escondia parte dos nomes no eixo.
+  const chartHeight = Math.max(256, chartData.length * 32 + 48);
+
   return (
-    <div className="h-64 relative">
+    <div className="relative" style={{ height: chartHeight }}>
       <EchartsSurface isFullscreen={false} isLoading={false} buildOption={buildOption} />
     </div>
   );

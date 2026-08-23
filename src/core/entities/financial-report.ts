@@ -104,4 +104,10 @@ export interface DemonstrativoResult {
   lines: DfcLine[];
   /** Despesas cuja categoria não tem `dfc_group` — entram na linha "Outras Despesas (sem classificação DFC)"; este total serve para o front avisar o usuário. */
   unclassifiedExpenseTotal: number;
+  /**
+   * Quais categorias precisam ser classificadas, com quanto cada uma pesa no
+   * período. Só o total não dizia ONDE mexer: o usuário tinha que abrir uma a
+   * uma em Categorias para descobrir quais estavam sem `dfc_group`.
+   */
+  unclassifiedExpenseCategories: { id: string; name: string; total: number }[];
 }
