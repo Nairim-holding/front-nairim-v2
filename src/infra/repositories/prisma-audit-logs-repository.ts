@@ -9,6 +9,9 @@ import type {
 } from '@/core/entities/audit-log';
 import {
   AUDIT_CONTROL_FIELDS,
+  AUDIT_HIDDEN_FIELDS,
+  AUDIT_MONEY_FIELDS,
+  AUDIT_PERCENT_FIELDS,
   fieldLabel,
   formatAuditIp,
   modelLabel,
@@ -136,6 +139,18 @@ const REFERENCE_LOOKUPS: Record<string, (ids: string[]) => Promise<Map<string, s
   lease_id: (ids) => lookup(prisma.lease, ids, ['contract_number']),
   transaction_id: (ids) => lookup(prisma.transaction, ids, ['description']),
   parent_transaction_id: (ids) => lookup(prisma.transaction, ids, ['description']),
+  // Campos de autoria: guardam uuid de User e sairiam crus no diff.
+  created_by: (ids) => lookup(prisma.user, ids, ['name', 'email']),
+  updated_by: (ids) => lookup(prisma.user, ids, ['name', 'email']),
+  deleted_by: (ids) => lookup(prisma.user, ids, ['name', 'email']),
+  // Fatura nao tem campo de nome — identifica-se por competencia (MM/AAAA).
+  invoice_id: async (ids) => {
+    const rows = await prisma.invoice.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, month: true, year: true },
+    });
+    return new Map(rows.map((r) => [r.id, `${pad2(r.month)}/${r.year}`]));
+  },
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -199,10 +214,13 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /**
- * `created_at` → `15-08-2026 — 12:53:24` (horário local); campos de data pura
- * (`event_date`, `effective_date`, …) → `15-08-2026` lido em UTC, que é como o
+ * `created_at` → `15/08/2026 12:53:24` (horário local); campos de data pura
+ * (`event_date`, `effective_date`, …) → `15/08/2026` lido em UTC, que é como o
  * banco guarda esses campos (ver `shared/utils/date-utils`). Ler um campo
  * date-only no fuso local devolveria o dia anterior no Brasil.
+ *
+ * Separador `/` (e não `-`) para bater com a máscara de data usada no resto
+ * do sistema — `formatDate` em `utils/formatters`.
  */
 function formatAuditDate(field: string, value: string): string {
   const date = new Date(value);
@@ -210,11 +228,29 @@ function formatAuditDate(field: string, value: string): string {
 
   const isDateOnly = field.endsWith('_date') || !/[T ]\d{2}:\d{2}/.test(value);
   if (isDateOnly) {
-    return `${pad2(date.getUTCDate())}-${pad2(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
+    return `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
   }
 
-  const day = `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}-${date.getFullYear()}`;
-  return `${day} — ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+  const day = `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+  return `${day} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+}
+
+/**
+ * Máscara de moeda/percentual dos campos numéricos do diff. O valor chega do
+ * JSON do log como number ou string ("15.33") — ambos com ponto decimal, então
+ * `Number()` dá conta antes de formatar em pt-BR.
+ */
+function formatAuditNumber(field: string, value: unknown): string | null {
+  const num = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+  if (!Number.isFinite(num)) return null;
+
+  if (AUDIT_MONEY_FIELDS.has(field)) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+  }
+  if (AUDIT_PERCENT_FIELDS.has(field)) {
+    return `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)} %`;
+  }
+  return null;
 }
 
 /** Enums gravados no diff — o usuário não reconhece `COMPLETED`/`MONTHLY`. */
@@ -250,6 +286,13 @@ function displayValue(field: string, value: unknown, names: Map<string, string>)
   }
 
   if (value instanceof Date) return formatAuditDate(field, value.toISOString());
+
+  // Moeda/percentual depois das datas: um campo `_date` nunca cai aqui, e
+  // valores numericos chegam como number ou string decimal.
+  if (typeof value === 'number' || typeof value === 'string') {
+    const masked = formatAuditNumber(field, value);
+    if (masked !== null) return masked;
+  }
 
   return value;
 }
@@ -293,6 +336,8 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     // Campo interno de controle sem valor nos dois lados não vira linha
     // (Tarefa 8.2) — só polui o diff com "— → —".
     const visibleFields = fields.filter((field) => {
+      // uuid do proprio registro nao vira linha (nao diz nada ao usuario).
+      if (AUDIT_HIDDEN_FIELDS.has(field)) return false;
       if (!AUDIT_CONTROL_FIELDS.has(field)) return true;
       return !isEmptyValue(oldValues[field]) || !isEmptyValue(newValues[field]);
     });

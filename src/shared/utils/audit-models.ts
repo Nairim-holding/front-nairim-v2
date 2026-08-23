@@ -117,7 +117,77 @@ export const FIELD_LABELS_PT: Record<string, string> = {
   longitude: 'Longitude',
   default_amount: 'Valor Padrão',
   monthly_values: 'Valores Mensais',
+  purchase_date: 'Data da Compra',
+  sale_date: 'Data da Venda',
+  payment_date: 'Data do Pagamento',
+  closing_date: 'Data de Fechamento',
+  birth_date: 'Data de Nascimento',
+  rent_amount: 'Valor do Aluguel',
+  rental_value: 'Valor de Locação',
+  sale_value: 'Valor de Venda',
+  purchase_value: 'Valor de Compra',
+  market_value: 'Valor de Mercado',
+  total_amount: 'Valor Total',
+  paid_amount: 'Valor Pago',
+  commission_amount: 'Valor da Comissão',
+  commission_percentage: 'Percentual de Comissão',
+  agency_commission: 'Comissão da Imobiliária',
+  cancellation_penalty: 'Multa de Cancelamento',
+  other_cancellation_amounts: 'Outros Valores de Cancelamento',
+  extra_charges: 'Encargos Extras',
+  condo_fee: 'Condomínio',
+  property_tax: 'IPTU',
+  property_tax_cash: 'IPTU à Vista',
+  property_tax_first_installment: 'IPTU 1ª Parcela',
+  property_tax_second_installment: 'IPTU 2ª Parcela',
+  current_balance: 'Saldo Atual',
+  limit: 'Limite',
+  max_recommended: 'Máximo Recomendado',
+  min_recommended: 'Mínimo Recomendado',
 };
+
+/**
+ * Campos que nunca viram linha no detalhe do log: o uuid do proprio registro
+ * nao diz nada ao usuario (a tela ja identifica qual registro esta sendo
+ * auditado) e so ocupa espaco no diff.
+ */
+export const AUDIT_HIDDEN_FIELDS = new Set<string>(['id']);
+
+/**
+ * Campos monetarios (Decimal no schema) — exibidos com mascara de moeda.
+ * `commission_percentage`/`agency_commission` sao Decimal(5,2) de PERCENTUAL,
+ * por isso ficam de fora e entram em AUDIT_PERCENT_FIELDS.
+ */
+export const AUDIT_MONEY_FIELDS = new Set<string>([
+  'amount',
+  'default_amount',
+  'rent_amount',
+  'rental_value',
+  'sale_value',
+  'purchase_value',
+  'market_value',
+  'total_amount',
+  'paid_amount',
+  'commission_amount',
+  'cancellation_penalty',
+  'other_cancellation_amounts',
+  'extra_charges',
+  'condo_fee',
+  'property_tax',
+  'property_tax_cash',
+  'property_tax_first_installment',
+  'property_tax_second_installment',
+  'current_balance',
+  'limit',
+  'max_recommended',
+  'min_recommended',
+]);
+
+/** Campos percentuais — mascara `0,00 %`. */
+export const AUDIT_PERCENT_FIELDS = new Set<string>([
+  'commission_percentage',
+  'agency_commission',
+]);
 
 export function fieldLabel(field: string): string {
   return FIELD_LABELS_PT[field] ?? prettifyFieldName(field);

@@ -211,6 +211,28 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
               </tr>
             ))}
           </tbody>
+          {/* Linha de Total: fecha a tabela somando Crédito/Débito do período e
+              repetindo o Saldo Final. Fica dentro do <table> (e não só no bloco
+              de Resumo) porque a impressão/exportação usa o `outerHTML` da
+              tabela — um total fora dela não acompanha o documento exportado. */}
+          {summary && sortedItems.length > 0 && (
+            <tfoot>
+              <tr className="text-sm font-semibold bg-surface-subtle border-t-2 border-ui-border">
+                <td className="px-3 py-2 text-content" colSpan={6}>
+                  Total do Período
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(summary.totalReceitas)}
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-orange-600 dark:text-orange-400">
+                  {formatCurrency(summary.totalDespesas)}
+                </td>
+                <td className={`px-3 py-2 text-right font-bold ${summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+                  {formatCurrency(summary.saldoFinal)}
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 

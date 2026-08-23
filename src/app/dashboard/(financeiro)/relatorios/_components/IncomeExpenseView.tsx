@@ -241,6 +241,21 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
             <SideTable side={data.receitas} label="Receitas" variant="income" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
             <SideTable side={data.despesas} label="Despesas" variant="expense" reportKind={reportKind} detailSortField={detailSortField} detailSortDir={detailSortDir} />
           </tbody>
+          {/* Linha de Total no fim da tabela — o bloco de Resumo abaixo continua
+              como estava; esta linha existe para acompanhar a tabela na
+              impressão/exportação, que usam só o elemento <table>. */}
+          <tfoot>
+            <tr className="text-sm font-bold text-content bg-surface-subtle border-t-2 border-ui-border">
+              <td className="px-3 py-2.5" colSpan={10}>Total do Período</td>
+              <td
+                className={`px-3 py-2.5 text-right font-bold ${
+                  data.summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'
+                }`}
+              >
+                {formatCurrency(data.summary.balancoPeriodo)}
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 

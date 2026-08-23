@@ -1,6 +1,5 @@
 import { formatDateDisplay } from './dateShortcuts';
 import { getMyBrandingAction } from '@/server/actions/company';
-import { listAgenciesAction } from '@/server/actions/agency';
 
 export interface ReportPrintHeaderData {
   companyName: string;
@@ -12,85 +11,69 @@ export interface ReportPrintHeaderData {
   logoUrl: string | null;
 }
 
-interface AgencyResponse {
-  id: string;
-  trade_name: string;
-  legal_name: string;
-  cnpj: string;
-  addresses?: { address: { street: string; number: string; district: string; city: string; state: string } }[];
-  contacts?: { phone: string | null; email: string | null }[];
+/**
+ * Identificacao juridica do tenant, guardada em `CompanyBranding.company_info`.
+ *
+ * Nao existe coluna propria para isso: `Company` so tem name/slug e
+ * `CompanyBranding` so tem campos de identidade visual. `company_info` e um
+ * `Json?` que ja passa pela whitelist do CompanyController, entao serve de
+ * lugar para esses dados sem exigir migration.
+ */
+export interface CompanyIdentityInfo {
+  legal_name?: string | null;
+  cnpj?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+}
+
+function readText(source: Record<string, unknown> | null, key: string): string | null {
+  const value = source?.[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
 
 /**
- * Dados de identificação da empresa para o cabeçalho de impressão (Tarefa 4.3
- * do guia de correções). CNPJ/telefone/endereço vêm da primeira Imobiliária
- * ativa da empresa (é lá que o schema tem esses campos estruturados —
- * CompanyBranding.company_info é um blob livre, sem esse detalhamento). O
- * logo vem do branding, que é o mesmo em toda a aplicação.
+ * Dados de identificacao da empresa para o cabecalho de impressao.
+ *
+ * Tudo vem do TENANT ativo (CompanyBranding): nome/logo dos campos de
+ * identidade visual, e razao social/CNPJ/telefone/endereco de `company_info`.
+ *
+ * Antes o CNPJ/endereco vinham da tabela `Agency`, escolhendo a imobiliaria
+ * cujo nome batia com o do tenant — quando nao batia, caia na primeira
+ * cadastrada e o relatorio saia com o nome de uma empresa e o endereco de
+ * outra ("Nairim Holding" + endereco da Adiplan). Imobiliaria e pessoa
+ * juridica distinta do tenant, entao deixou de ser fonte deste cabecalho.
+ *
+ * Os campos de `company_info` sao preenchidos em Identidade Visual
+ * (White Label) > Dados da Empresa.
  */
-/** Normaliza para comparar nomes de empresa sem acento/pontuação/sufixo societário. */
-function normalizeCompanyName(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/\b(ltda|me|epp|eireli|s\.?a\.?|holding)\b/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
 export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderData | null> {
   try {
-    // Todas as imobiliárias da empresa ativa (a extensão do Prisma já filtra
-    // por company_id): a empresa pode ter mais de uma cadastrada e pegar
-    // "a primeira" trazia os dados de outra imobiliária no cabeçalho
-    // (Tarefa 5.1 — relatórios saíam com CNPJ/razão social da Adiplan).
-    const [agencyRes, brandingRes] = await Promise.all([
-      listAgenciesAction({ limit: 150 }),
-      getMyBrandingAction(),
-    ]);
-
-    const agencyJson = agencyRes.ok ? (agencyRes.data as { data?: unknown }) : {};
-    const agencies: AgencyResponse[] = Array.isArray(agencyJson?.data)
-      ? (agencyJson.data as AgencyResponse[])
-      : [];
+    const brandingRes = await getMyBrandingAction();
     const branding = brandingRes.ok ? brandingRes.data : null;
 
     const brandingInfo = branding as {
-      trade_name?: string;
-      company_name?: string;
+      trade_name?: string | null;
+      company_name?: string | null;
       logo_url?: string | null;
+      company_info?: Record<string, unknown> | null;
     } | null;
 
-    // Nome exibido: sempre o da identidade visual da empresa ativa.
+    // Nome exibido: sempre o da identidade visual do tenant ativo.
     const brandingName = brandingInfo?.trade_name || brandingInfo?.company_name || null;
 
-    // Razão social/CNPJ/endereço vêm da imobiliária que corresponde a essa
-    // identidade; sem correspondência, cai na primeira cadastrada.
-    const target = brandingName ? normalizeCompanyName(brandingName) : '';
-    const agency =
-      (target
-        ? agencies.find((a) => {
-            const trade = normalizeCompanyName(a.trade_name ?? '');
-            const legal = normalizeCompanyName(a.legal_name ?? '');
-            return trade === target || legal === target || trade.includes(target) || target.includes(trade);
-          })
-        : undefined) ?? agencies[0];
-
-    const address = agency?.addresses?.[0]?.address;
-    const addressLine = address
-      ? `${address.street}, ${address.number} ${address.district} - ${address.city}/${address.state}`
-      : null;
-
-    const contact = agency?.contacts?.[0];
+    const info =
+      brandingInfo?.company_info && typeof brandingInfo.company_info === 'object'
+        ? (brandingInfo.company_info as Record<string, unknown>)
+        : null;
 
     return {
-      companyName: brandingName || agency?.trade_name || 'Empresa',
-      legalName: agency?.legal_name ?? null,
-      cnpj: agency?.cnpj ?? null,
-      phone: contact?.phone ?? null,
-      email: contact?.email ?? null,
-      address: addressLine,
+      companyName: brandingName || 'Empresa',
+      legalName: readText(info, 'legal_name'),
+      cnpj: readText(info, 'cnpj'),
+      phone: readText(info, 'phone'),
+      email: readText(info, 'email'),
+      address: readText(info, 'address'),
       logoUrl: brandingInfo?.logo_url ?? null,
     };
   } catch (error) {

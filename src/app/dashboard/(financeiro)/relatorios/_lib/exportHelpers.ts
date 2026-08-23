@@ -188,6 +188,12 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   .max-w-md.ml-auto > div > span:last-child { font-weight: 600; }
   .text-emerald-600, .text-emerald-400 { color: #059669 !important; }
   .text-red-600, .text-red-400 { color: #dc2626 !important; }
+  /* Débito usa laranja na tela (Extrato); sem equivalente aqui a coluna e a
+     linha de Total do Período saíam pretas na impressão. */
+  .text-orange-600, .text-orange-400 { color: #ea580c !important; }
+  /* Linha de Total do Período (tfoot do Extrato): o Tailwind não existe nesta
+     janela, então o realce vem daqui. */
+  tfoot td { background-color: #e2e8f0 !important; font-weight: 700 !important; border-top: 2px solid #94a3b8 !important; }
 </style>
 </head>
 <body>

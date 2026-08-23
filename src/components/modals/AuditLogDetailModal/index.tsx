@@ -42,12 +42,16 @@ function formatDateTime(value: string): string {
 }
 
 /**
- * Rótulo e valor já chegam prontos do servidor (Tarefa 8.2): PT-BR, uuid
- * resolvido para o nome do registro, datas em `dd-mm-aaaa` e campos na mesma
- * ordem da tela de Lançamentos. Aqui só resta o placeholder de vazio.
+ * Rótulo e valor já chegam prontos do servidor: PT-BR, uuid resolvido para o
+ * nome do registro, datas em `dd/mm/aaaa`, moeda/percentual mascarados e
+ * campos na mesma ordem da tela de Lançamentos.
+ *
+ * Campo vazio fica em branco (e não `—`): numa Inclusão a coluna "Valor
+ * Antigo" é vazia por definição, e a coluna inteira de travessões só poluía a
+ * leitura do que de fato mudou.
  */
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—';
+  if (value === null || value === undefined || value === '') return '';
   return String(value);
 }
 
