@@ -86,7 +86,7 @@ const isCurrencyField = (fieldName: string, type?: string): boolean => {
   return currencyFields.some(currencyField => fieldName.toLowerCase().includes(currencyField.toLowerCase()));
 };
 
-const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>, dropdownRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>) => {
+const updateDropdownPosition = (field: string, inputRefs: React.MutableRefObject<Record<string, HTMLElement | null>>, dropdownRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>) => {
   const inputEl = inputRefs.current[field];
   const dropdownEl = dropdownRefs.current[field];
 
@@ -277,7 +277,10 @@ export default function DynamicFilterModal({
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  // Âncora de posicionamento do dropdown: no multi-seleção aponta para o
+  // container do campo (que cresce com os chips), nos demais para o próprio input.
+  const inputRefs = useRef<Record<string, HTMLElement | null>>({});
+  const innerInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -574,6 +577,8 @@ export default function DynamicFilterModal({
   const handleInputBlur = useCallback((field: string) => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     closeTimeoutRef.current = setTimeout(() => {
+      // Se o foco voltou ao campo (ex: clique no container dos chips), não fecha.
+      if (document.activeElement === innerInputRefs.current[field]) return;
       setLocalFilters(prev => ({ ...prev, [field]: { ...(prev[field] || {}), showDropdown: false } }));
       if (activeDropdown === field) setActiveDropdown(null);
     }, 200);
@@ -628,6 +633,41 @@ export default function DynamicFilterModal({
     return source;
   };
 
+  // Manipulador compartilhado de digitação nos campos que possuem lista de opções.
+  const buildSearchChangeHandler = (filter: DynamicFilter) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      let cleanedValue: any = value;
+      let newSearchTerm = value;
+
+      if (isPhoneField(filter.field)) {
+        cleanedValue = removePhoneMask(value);
+      } else if (isCurrencyField(filter.field, filter.type)) {
+        newSearchTerm = formatCurrencyRealtime(value);
+        cleanedValue = parseCurrencyFromPTBR(newSearchTerm);
+      }
+
+      setSearchTerms(prev => ({ ...prev, [filter.field]: newSearchTerm }));
+
+      const hasOpts = Boolean(filter.autocomplete || filter.options || filter.values);
+      const multiple = Boolean(filter.multiple) && hasOpts;
+
+      if (multiple) {
+        setLocalFilters(prev => ({
+          ...prev,
+          [filter.field]: { ...(prev[filter.field] || {}), showDropdown: true }
+        }));
+      } else {
+        setLocalFilters(prev => ({
+          ...prev,
+          [filter.field]: { ...(prev[filter.field] || {}), value: cleanedValue, showDropdown: Boolean(newSearchTerm.length > 0 && hasOpts) }
+        }));
+      }
+
+      if (newSearchTerm.length > 0 && hasOpts) handleInputFocus(filter.field);
+    };
+  };
+
   const renderFilterInput = (filter: DynamicFilter) => {
     const filterValue = localFilters[filter.field] || { value: '', showDropdown: false };
     const searchTerm = searchTerms[filter.field] || '';
@@ -644,6 +684,77 @@ export default function DynamicFilterModal({
       ? selectedValues.length > 0
       : (filterValue.value !== undefined && filterValue.value !== null && filterValue.value !== '');
     const showChevron = Boolean(hasOptions) && !isPhone;
+
+    // Dropdown de opções (portal fixo ancorado no campo), compartilhado pelos
+    // modos multi e single. Opções já marcadas ganham destaque + check.
+    const dropdownElement = (isDropdownOpen && hasOptions) ? createPortal(
+      <div
+        ref={(el) => {
+          if (el) dropdownRefs.current[filter.field] = el;
+        }}
+        className="bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+        style={{
+          position: 'fixed',
+          zIndex: 9999,
+        }}
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        {hasSuggestions ? (
+          suggestions.map((suggestion, index) => {
+            if (filter.type === 'select' && suggestion && typeof suggestion === 'object') {
+              const { label, value } = suggestion as { value: any; label: string };
+              const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(value));
+              return (
+                <div
+                  key={index}
+                  className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if (isMultiple) handleMultiOptionToggle(filter.field, value);
+                    else handleOptionClick(filter.field, value, label);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if (!isMultiple) handleOptionClick(filter.field, value, label);
+                  }}
+                >
+                  <span className="whitespace-normal break-words">{label}</span>
+                  {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
+                </div>
+              );
+            }
+
+            let formattedLabel = String(suggestion);
+            if (isCurrency && !isNaN(Number(suggestion))) {
+              formattedLabel = formatCurrencyRealtime((Number(suggestion) * 100).toFixed(0));
+            }
+            const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(suggestion));
+
+            return (
+              <div
+                key={index}
+                className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
+                onMouseDown={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  if (isMultiple) handleMultiOptionToggle(filter.field, suggestion);
+                  else handleOptionClick(filter.field, suggestion, formattedLabel);
+                }}
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  if (!isMultiple) handleOptionClick(filter.field, suggestion, formattedLabel);
+                }}
+              >
+                <span className="whitespace-normal break-words">{formattedLabel}</span>
+                {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
+              </div>
+            );
+          })
+        ) : (
+          <div className="px-3 py-2 text-sm text-content-muted">Nenhuma opção disponível</div>
+        )}
+      </div>,
+      document.body
+    ) : null;
 
     return (
       <div className="relative flex flex-col gap-1" key={filter.field}>
@@ -681,6 +792,83 @@ export default function DynamicFilterModal({
             }}
             onClear={() => handleClearField(filter.field)}
           />
+        ) : isMultiple ? (
+          // Multi-seleção: os itens escolhidos ficam DENTRO do campo, cada um
+          // com X para remoção individual; o X à direita limpa todos de uma vez.
+          <div className="relative">
+            <div
+              ref={(el) => { if (el) inputRefs.current[filter.field] = el; }}
+              onClick={() => innerInputRefs.current[filter.field]?.focus()}
+              className="w-full flex flex-wrap items-center gap-1 min-h-[40px] border border-ui-border rounded-lg px-2 py-1 cursor-text focus-within:ring-2 focus-within:ring-brand focus-within:border-transparent"
+            >
+              {selectedValues.map((val) => (
+                <span
+                  key={String(val)}
+                  className="inline-flex items-center gap-1 bg-brand/10 text-brand text-xs pl-2 pr-1 py-0.5 rounded-md max-w-full"
+                >
+                  <span className="truncate">{getLabelForValue(filter, val)}</span>
+                  <button
+                    type="button"
+                    className="hover:bg-brand/20 rounded p-0.5 flex-shrink-0"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveChipValue(filter.field, val); }}
+                    aria-label={`Remover ${getLabelForValue(filter, val)}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                ref={(el) => { if (el) innerInputRefs.current[filter.field] = el; }}
+                type={filter.inputType || 'text'}
+                className="flex-1 min-w-[80px] bg-transparent text-sm focus:outline-none h-7"
+                value={searchTerm}
+                onChange={buildSearchChangeHandler(filter)}
+                onFocus={() => handleInputFocus(filter.field)}
+                onBlur={() => handleInputBlur(filter.field)}
+                placeholder={selectedValues.length > 0 ? "Adicionar..." : "Selecione..."}
+              />
+
+              <div className="flex items-center gap-0.5 ml-auto pl-1 flex-shrink-0">
+                {fieldHasValue && (
+                  <button
+                    type="button"
+                    className="p-0.5 hover:bg-surface-subtle rounded transition-colors"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClearField(filter.field); }}
+                    aria-label={`Limpar todos de ${filter.label}`}
+                  >
+                    <X size={14} className="text-content-muted" />
+                  </button>
+                )}
+                {showChevron && (
+                  <button
+                    type="button"
+                    className="p-0.5 hover:bg-surface-subtle rounded transition-colors"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault(); e.stopPropagation();
+                      if (isDropdownOpen) {
+                        setLocalFilters(prev => ({ ...prev, [filter.field]: { ...(prev[filter.field] || {}), showDropdown: false } }));
+                        setActiveDropdown(null);
+                      } else {
+                        handleInputFocus(filter.field);
+                        innerInputRefs.current[filter.field]?.focus();
+                      }
+                    }}
+                    aria-label={`Abrir opções de ${filter.label}`}
+                  >
+                    <svg className={`w-4 h-4 text-content-placeholder transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {dropdownElement}
+          </div>
         ) : (
           <div className="relative">
             <div className="relative">
@@ -759,96 +947,7 @@ export default function DynamicFilterModal({
               )}
             </div>
 
-            {isDropdownOpen && hasOptions && createPortal(
-              <div
-                ref={(el) => {
-                  if (el) dropdownRefs.current[filter.field] = el;
-                }}
-                className="bg-surface border border-ui-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                style={{
-                  position: 'fixed',
-                  zIndex: 9999,
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                {hasSuggestions ? (
-                  suggestions.map((suggestion, index) => {
-                    if (filter.type === 'select' && suggestion && typeof suggestion === 'object') {
-                      const { label, value } = suggestion as { value: any; label: string };
-                      const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(value));
-                      return (
-                        <div
-                          key={index}
-                          className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
-                          onMouseDown={(e) => {
-                            e.preventDefault(); e.stopPropagation();
-                            if (isMultiple) handleMultiOptionToggle(filter.field, value);
-                            else handleOptionClick(filter.field, value, label);
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault(); e.stopPropagation();
-                            if (!isMultiple) handleOptionClick(filter.field, value, label);
-                          }}
-                        >
-                          <span className="whitespace-normal break-words">{label}</span>
-                          {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
-                        </div>
-                      );
-                    }
-
-                    let formattedLabel = String(suggestion);
-                    if (isCurrency && !isNaN(Number(suggestion))) {
-                      formattedLabel = formatCurrencyRealtime((Number(suggestion) * 100).toFixed(0));
-                    }
-                    const isSelected = isMultiple && selectedValues.some((v) => String(v) === String(suggestion));
-
-                    return (
-                      <div
-                        key={index}
-                        className={`px-3 py-2 hover:bg-surface-subtle cursor-pointer text-sm flex items-center justify-between gap-2 ${isSelected ? 'bg-brand/5' : ''}`}
-                        onMouseDown={(e) => {
-                          e.preventDefault(); e.stopPropagation();
-                          if (isMultiple) handleMultiOptionToggle(filter.field, suggestion);
-                          else handleOptionClick(filter.field, suggestion, formattedLabel);
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault(); e.stopPropagation();
-                          if (!isMultiple) handleOptionClick(filter.field, suggestion, formattedLabel);
-                        }}
-                      >
-                        <span className="whitespace-normal break-words">{formattedLabel}</span>
-                        {isSelected && <Check size={14} className="text-brand flex-shrink-0" />}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="px-3 py-2 text-sm text-content-muted">Nenhuma opção disponível</div>
-                )}
-              </div>,
-              document.body
-            )}
-
-            {isMultiple && selectedValues.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {selectedValues.map((val) => (
-                  <span
-                    key={String(val)}
-                    className="inline-flex items-center gap-1 bg-brand/10 text-brand text-xs pl-2 pr-1 py-1 rounded-md max-w-full"
-                  >
-                    <span className="truncate">{getLabelForValue(filter, val)}</span>
-                    <button
-                      type="button"
-                      className="hover:bg-brand/20 rounded p-0.5 flex-shrink-0"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveChipValue(filter.field, val); }}
-                      aria-label={`Remover ${getLabelForValue(filter, val)}`}
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            {dropdownElement}
           </div>
         )}
 
