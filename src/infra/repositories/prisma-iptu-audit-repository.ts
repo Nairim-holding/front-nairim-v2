@@ -119,7 +119,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       const where: Record<string, unknown> = {
         deleted_at: null,
         NOT: { is_transfer: true },
-        event_date: { gte: start, lte: end },
+        effective_date: { gte: start, lte: end },
         category_id: categoryId,
       };
       if (subcategoryId) where.subcategory_id = subcategoryId;
@@ -134,6 +134,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       description: true,
       amount: true,
       event_date: true,
+      effective_date: true,
       center_id: true,
       lease: { select: { property: { select: { id: true, title: true } } } },
     } as const;
@@ -150,7 +151,8 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       if (!row) continue;
       const amount = Number(t.amount);
       row.income += amount;
-      row.transactions.push({ id: t.id, description: t.description, amount, date: t.event_date.toISOString().slice(0, 10), type: 'INCOME' });
+      const txDate = (t.effective_date ?? t.event_date).toISOString().slice(0, 10);
+      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'INCOME' });
     }
 
     for (const t of expenseTxns) {
@@ -160,7 +162,8 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       if (!row) continue;
       const amount = Number(t.amount);
       row.expense += amount;
-      row.transactions.push({ id: t.id, description: t.description, amount, date: t.event_date.toISOString().slice(0, 10), type: 'EXPENSE' });
+      const txDate = (t.effective_date ?? t.event_date).toISOString().slice(0, 10);
+      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'EXPENSE' });
     }
 
     const rows = Array.from(rowsByProperty.values())
