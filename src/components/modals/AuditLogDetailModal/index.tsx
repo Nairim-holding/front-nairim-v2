@@ -158,20 +158,46 @@ export default function AuditLogDetailModal({ logId, onClose }: AuditLogDetailMo
                       </tr>
                     </thead>
                     <tbody>
-                      {log.changed_fields.map((f) => (
-                        <tr
-                          key={f.field}
-                          className="border-t border-ui-border bg-[var(--color-brand-primary)]/5"
-                        >
-                          <td className="px-4 py-2.5 text-content whitespace-nowrap align-top">{f.label}</td>
-                          <td className="px-4 py-2.5 text-content-muted line-through decoration-state-error/50 whitespace-nowrap">
-                            {formatValue(f.old_value)}
-                          </td>
-                          <td className="px-4 py-2.5 text-content font-medium whitespace-nowrap">
-                            {formatValue(f.new_value)}
-                          </td>
-                        </tr>
-                      ))}
+                      {log.changed_fields.map((f) => {
+                        const hasNewValue = f.new_value !== null && f.new_value !== undefined && f.new_value !== '';
+                        const isUpdate = log.action === 'UPDATE';
+                        const isChanged = isUpdate ? hasNewValue : true;
+
+                        return (
+                          <tr
+                            key={f.field}
+                            className={`border-t border-ui-border transition-colors ${
+                              isUpdate
+                                ? hasNewValue
+                                  ? 'bg-[var(--color-brand-primary)]/10 font-medium'
+                                  : 'hover:bg-surface-subtle/40'
+                                : 'bg-[var(--color-brand-primary)]/5'
+                            }`}
+                          >
+                            <td className="px-4 py-2.5 text-content whitespace-nowrap align-top">
+                              {f.label}
+                            </td>
+                            <td
+                              className={`px-4 py-2.5 whitespace-nowrap ${
+                                isUpdate && hasNewValue
+                                  ? 'text-content-muted line-through decoration-state-error/50'
+                                  : 'text-content'
+                              }`}
+                            >
+                              {formatValue(f.old_value)}
+                            </td>
+                            <td
+                              className={`px-4 py-2.5 whitespace-nowrap ${
+                                hasNewValue
+                                  ? 'text-content font-semibold'
+                                  : 'text-content-muted'
+                              }`}
+                            >
+                              {formatValue(f.new_value)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

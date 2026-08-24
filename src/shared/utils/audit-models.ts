@@ -49,79 +49,113 @@ export function prettifyFieldName(field: string): string {
 }
 
 /**
- * Rótulo PT-BR por nome técnico do campo (Tarefa 8.2). "Fornecedor" virou
- * "Contato" para acompanhar o rótulo já usado na tela de Lançamentos.
+ * Rótulo PT-BR por nome técnico do campo. Todos os campos do sistema
+ * traduzidos para exibição em auditoria.
  */
 export const FIELD_LABELS_PT: Record<string, string> = {
-  id: 'ID',
-  company_id: 'Empresa',
-  created_at: 'Criado em',
-  created_by: 'Criado por',
-  updated_at: 'Atualizado em',
-  updated_by: 'Atualizado por',
-  deleted_at: 'Excluído em',
-  deleted_by: 'Excluído por',
-  type: 'Tipo',
-  status: 'Status',
+  // Identificação e Cadastro
+  legal_name: 'Razão Social',
+  trade_name: 'Nome Fantasia',
+  name: 'Nome',
+  title: 'Título',
   description: 'Descrição',
-  amount: 'Valor',
+  email: 'E-mail',
+  phone: 'Telefone',
+  cellphone: 'Celular',
+  cpf: 'CPF',
+  cnpj: 'CNPJ',
+  rg: 'RG',
+  rg_issuing_body: 'Órgão Emissor',
+  rg_issuing_state: 'UF Emissor',
+  nationality: 'Nacionalidade',
+  marital_status: 'Estado Civil',
+  occupation: 'Profissão',
+  gender: 'Gênero',
+  birth_date: 'Data de Nascimento',
+  internal_code: 'Código Interno',
+  sequential_id: 'Código',
+  license_number: 'CRECI / Registro',
+  state_registration: 'Inscrição Estadual',
+  municipal_registration: 'Inscrição Municipal',
+  tax_registration: 'Inscrição Imobiliária (IPTU)',
+  registration_number: 'Matrícula',
+
+  // Contato / Usuário / Permissões
+  phone_country_code: 'DDI',
+  phone_area_code: 'DDD',
+  phone_extension: 'Ramal',
+  contact: 'Nome do Contato',
+  photo_url: 'Foto',
+  role: 'Perfil de Acesso',
+  has_time_restriction: 'Restrição de Horário',
+  day_of_week: 'Dia da Semana',
+  start_time: 'Horário de Início',
+  end_time: 'Horário de Fim',
+  resource: 'Recurso / Módulo',
+  can_view: 'Pode Visualizar',
+  can_create: 'Pode Criar',
+  can_edit: 'Pode Editar',
+  can_delete: 'Pode Excluir',
+  can_export: 'Pode Exportar',
+  can_custom_field: 'Diretivas de Campo',
+
+  // Características do Imóvel
+  bedrooms: 'Quartos',
+  bathrooms: 'Banheiros',
+  half_bathrooms: 'Lavabos',
+  garage_spaces: 'Vagas de Garagem',
+  area_total: 'Área Total (m²)',
+  area_built: 'Área Construída (m²)',
+  frontage: 'Frente (m)',
+  furnished: 'Mobiliado',
+  floor_number: 'Andar',
+  notes: 'Observações',
+
+  // Locação e Contrato
+  contract_number: 'Número do Contrato',
+  start_date: 'Data de Início',
+  end_date: 'Data de Fim',
+  rent_due_day: 'Vencimento do Aluguel (Dia)',
+  tax_due_day: 'Vencimento do IPTU (Dia)',
+  condo_due_day: 'Vencimento do Condomínio (Dia)',
+  canceled_at: 'Data de Cancelamento',
+  cancellation_justification: 'Justificativa de Cancelamento',
+  cancellation_penalty: 'Multa de Cancelamento',
+  other_cancellation_amounts: 'Outros Valores de Cancelamento',
+  payment_condition: 'Condição de Pagamento',
+  insurance_company: 'Seguradora',
+  insurance_type: 'Tipo de Seguro',
+  insurance_policy: 'Apólice de Seguro',
+  guarantors: 'Garantias / Fiadores',
+
+  // Datas, Meses e Anos
+  month: 'Mês',
+  year: 'Ano',
   event_date: 'Data do Evento',
   effective_date: 'Data Efetiva',
   due_date: 'Vencimento',
-  start_date: 'Data de Início',
-  end_date: 'Data de Fim',
-  is_active: 'Ativo',
-  is_featured: 'Destaque',
-  is_transfer: 'É Transferência',
-  is_recurring: 'É Recorrente',
-  is_cancellation_charge: 'Encargo de Cancelamento',
-  name: 'Nome',
-  title: 'Título',
-  email: 'E-mail',
-  phone: 'Telefone',
-  cpf: 'CPF',
-  cnpj: 'CNPJ',
-  category_id: 'Categoria',
-  subcategory_id: 'Subcategoria',
-  financial_institution_id: 'Instituição Financeira',
-  card_id: 'Cartão',
-  center_id: 'Centro',
-  supplier_id: 'Contato',
-  lease_id: 'Locação',
-  property_id: 'Imóvel',
-  property_type_id: 'Tipo de Imóvel',
-  agency_id: 'Imobiliária',
-  owner_id: 'Proprietário',
-  tenant_id: 'Inquilino',
-  user_id: 'Usuário',
-  invoice_id: 'Fatura',
-  transaction_id: 'Lançamento',
-  parent_transaction_id: 'Lançamento de Origem',
-  recurring_group_id: 'Série de Recorrência',
-  installment_group_id: 'Série de Parcelas',
-  transfer_group_id: 'Par de Transferência',
-  installment_number: 'Nº da Parcela',
-  occurrence_number: 'Nº da Ocorrência',
-  total_installments: 'Total de Parcelas',
-  payment_mode: 'Forma de Pagamento',
-  recurring_frequency: 'Frequência',
-  file_path: 'Arquivo',
-  file_type: 'Tipo de Arquivo',
-  file_name: 'Nome do Arquivo',
-  contract_number: 'Número do Contrato',
-  address: 'Endereço',
-  city: 'Cidade',
-  state: 'Estado',
-  zip_code: 'CEP',
-  latitude: 'Latitude',
-  longitude: 'Longitude',
-  default_amount: 'Valor Padrão',
-  monthly_values: 'Valores Mensais',
   purchase_date: 'Data da Compra',
   sale_date: 'Data da Venda',
   payment_date: 'Data do Pagamento',
+  paid_date: 'Data do Pagamento',
   closing_date: 'Data de Fechamento',
-  birth_date: 'Data de Nascimento',
+  next_generation_date: 'Próxima Geração',
+
+  // IPTU
+  iptu_year: 'Ano do IPTU',
+  iptu_installments: 'Parcelas do IPTU',
+  iptu_installments_due_dates: 'Vencimentos do IPTU',
+  iptu_installments_count: 'Qtd. de Parcelas do IPTU',
+  property_tax_cash: 'IPTU à Vista',
+  property_tax_cash_due_date: 'Vencimento IPTU à Vista',
+  property_tax_first_installment: 'IPTU 1ª Parcela',
+  property_tax_first_installment_due_date: 'Vencimento IPTU 1ª Parcela',
+  property_tax_second_installment: 'IPTU 2ª Parcela',
+  property_tax_second_installment_due_date: 'Vencimento IPTU 2ª Parcela',
+
+  // Financeiro e Valores
+  amount: 'Valor',
+  default_amount: 'Valor Padrão',
   rent_amount: 'Valor do Aluguel',
   rental_value: 'Valor de Locação',
   sale_value: 'Valor de Venda',
@@ -132,31 +166,136 @@ export const FIELD_LABELS_PT: Record<string, string> = {
   commission_amount: 'Valor da Comissão',
   commission_percentage: 'Percentual de Comissão',
   agency_commission: 'Comissão da Imobiliária',
-  cancellation_penalty: 'Multa de Cancelamento',
-  other_cancellation_amounts: 'Outros Valores de Cancelamento',
   extra_charges: 'Encargos Extras',
   condo_fee: 'Condomínio',
   property_tax: 'IPTU',
-  property_tax_cash: 'IPTU à Vista',
-  property_tax_first_installment: 'IPTU 1ª Parcela',
-  property_tax_second_installment: 'IPTU 2ª Parcela',
   current_balance: 'Saldo Atual',
   limit: 'Limite',
   max_recommended: 'Máximo Recomendado',
   min_recommended: 'Mínimo Recomendado',
+  installment_number: 'Nº da Parcela',
+  occurrence_number: 'Nº da Ocorrência',
+  total_installments: 'Total de Parcelas',
+  total_occurrences: 'Total de Ocorrências',
+  generated_occurrences: 'Ocorrências Geradas',
+  payment_mode: 'Forma de Pagamento',
+  recurring_frequency: 'Frequência',
+  frequency: 'Frequência',
+  monthly_values: 'Valores Mensais',
+  closing_day: 'Dia de Fechamento',
+  due_day: 'Dia de Vencimento',
+  brand: 'Bandeira',
+  account_number: 'Número da Conta',
+  agency_number: 'Número da Agência',
+  bank_number: 'Código do Banco',
+  dfc_group: 'Grupo DFC',
+
+  // Status / Flags
+  type: 'Tipo',
+  status: 'Status',
+  is_active: 'Ativo',
+  is_featured: 'Destaque',
+  is_transfer: 'É Transferência',
+  is_recurring: 'É Recorrente',
+  is_cancellation_charge: 'Encargo de Cancelamento',
+  is_system: 'Do Sistema',
+  created_via: 'Origem do Cadastro',
+
+  // Arquivos
+  file_path: 'Arquivo',
+  file_type: 'Tipo de Arquivo',
+  file_name: 'Nome do Arquivo',
+
+  // Endereço
+  address: 'Endereço',
+  street: 'Logradouro / Rua',
+  number: 'Número',
+  complement: 'Complemento',
+  district: 'Bairro',
+  city: 'Cidade',
+  state: 'Estado (UF)',
+  country: 'País',
+  zip_code: 'CEP',
+  block: 'Quadra',
+  lot: 'Lote',
+  latitude: 'Latitude',
+  longitude: 'Longitude',
+
+  // Branding / Empresa
+  app_title: 'Título do Sistema',
+  app_description: 'Descrição do Sistema',
+  company_name: 'Nome da Empresa',
+  slug: 'Identificador (Slug)',
+  db_quota_mb: 'Limite de Armazenamento (MB)',
+  logo_url: 'Logo',
+  favicon_url: 'Favicon',
+  primary_color: 'Cor Primária',
+  secondary_color: 'Cor Secundária',
+  accent_color: 'Cor de Destaque',
+  success_color: 'Cor de Sucesso',
+  warning_color: 'Cor de Aviso',
+  error_color: 'Cor de Erro',
+  info_color: 'Cor Informativa',
+  bg_color: 'Cor de Fundo',
+  card_color: 'Cor dos Cards',
+  border_color: 'Cor das Bordas',
+  text_color: 'Cor do Texto',
+
+  // Referências com nomes amigáveis
+  category_id: 'Categoria',
+  subcategory_id: 'Subcategoria',
+  financial_institution_id: 'Instituição Financeira',
+  card_id: 'Cartão',
+  center_id: 'Centro de Custo / Lucro',
+  supplier_id: 'Contato / Fornecedor',
+  lease_id: 'Locação',
+  property_id: 'Imóvel',
+  property_type_id: 'Tipo de Imóvel',
+  type_id: 'Tipo de Imóvel',
+  agency_id: 'Imobiliária',
+  owner_id: 'Proprietário',
+  tenant_id: 'Inquilino',
+  user_id: 'Usuário',
+  user_group_id: 'Grupo de Usuário',
+  invoice_id: 'Fatura',
+  transaction_id: 'Lançamento',
 };
 
 /**
- * Campos que nunca viram linha no detalhe do log: o uuid do proprio registro
- * nao diz nada ao usuario (a tela ja identifica qual registro esta sendo
- * auditado) e so ocupa espaco no diff.
+ * Campos técnicos internos que NUNCA devem aparecer no detalhe do log de auditoria:
+ * IDs primários, chaves estrangeiras não amigáveis e timestamps de controle.
  */
-export const AUDIT_HIDDEN_FIELDS = new Set<string>(['id']);
+export const AUDIT_HIDDEN_FIELDS = new Set<string>([
+  'id',
+  'company_id',
+  'commission_category_id',
+  'commission_subcategory_id',
+  'income_category_id',
+  'income_subcategory_id',
+  'expense_category_id',
+  'expense_subcategory_id',
+  'iptu_refund_category_id',
+  'iptu_refund_subcategory_id',
+  'debit_center_id',
+  'institution_id',
+  'created_by',
+  'updated_by',
+  'deleted_by',
+  'created_at',
+  'updated_at',
+  'deleted_at',
+  'password',
+  'recurring_group_id',
+  'installment_group_id',
+  'transfer_group_id',
+  'parent_transaction_id',
+  'address_id',
+  'planning_id',
+  'company_info',
+]);
 
 /**
- * Campos monetarios (Decimal no schema) — exibidos com mascara de moeda.
- * `commission_percentage`/`agency_commission` sao Decimal(5,2) de PERCENTUAL,
- * por isso ficam de fora e entram em AUDIT_PERCENT_FIELDS.
+ * Campos monetários (Decimal no schema) — exibidos com máscara de moeda.
  */
 export const AUDIT_MONEY_FIELDS = new Set<string>([
   'amount',
@@ -183,7 +322,7 @@ export const AUDIT_MONEY_FIELDS = new Set<string>([
   'min_recommended',
 ]);
 
-/** Campos percentuais — mascara `0,00 %`. */
+/** Campos percentuais — máscara `0,00 %`. */
 export const AUDIT_PERCENT_FIELDS = new Set<string>([
   'commission_percentage',
   'agency_commission',
@@ -194,8 +333,7 @@ export function fieldLabel(field: string): string {
 }
 
 /**
- * Sequência dos campos de negócio no detalhe do log — a mesma da tela de
- * Lançamentos, para o usuário reconhecer a ordem (Tarefa 8.2).
+ * Sequência dos campos de negócio no detalhe do log.
  */
 export const AUDIT_FIELD_ORDER: string[] = [
   'event_date',
@@ -212,24 +350,9 @@ export const AUDIT_FIELD_ORDER: string[] = [
 ];
 
 /**
- * Campos internos de controle: nunca vêm antes dos de negócio e só aparecem
- * quando têm algum valor (Tarefa 8.2).
+ * Campos internos de controle (caso algum não esteja em AUDIT_HIDDEN_FIELDS).
  */
 export const AUDIT_CONTROL_FIELDS = new Set<string>([
-  'id',
-  'company_id',
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-  'invoice_id',
-  'lease_id',
-  'parent_transaction_id',
-  'recurring_group_id',
-  'installment_group_id',
-  'transfer_group_id',
   'installment_number',
   'occurrence_number',
   'total_installments',
