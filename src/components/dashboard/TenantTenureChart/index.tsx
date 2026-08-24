@@ -171,7 +171,12 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
           label: {
             show: isLarge,
             position: 'outside',
-            formatter: '{b}: {d}%',
+            formatter: (params: any) => {
+              const bucket = buckets[params.dataIndex];
+              const count = bucket?.count ?? Number(params.value) ?? 0;
+              const share = total > 0 ? Math.round((count / total) * 1000) / 10 : 0;
+              return `${params.name}: ${count} (${String(share).replace('.', ',')}%)`;
+            },
             color: tokens.textSecondary,
             fontSize: isLarge ? 12 : 10,
           },
