@@ -98,7 +98,9 @@ export default function Aside({
   const handleItemClick = (href: string) => {
     setActiveItem(href);
     if (href !== "#") {
-      if (window.innerWidth < 768) {
+      // Sem alfinete: navegar e ocultar o menu, dando foco à página aberta.
+      // Com o alfinete fixado: o menu permanece sempre visível.
+      if (!isPinned) {
         handleToggle();
       }
       setOpenSubmenu(null);
@@ -148,8 +150,8 @@ export default function Aside({
           { href: "/dashboard/centros", icon: HandCoins, label: "Centros", resource: resourceForHref("/dashboard/centros") },
           { href: "/dashboard/fornecedores", icon: Users, label: "Contatos", resource: resourceForHref("/dashboard/fornecedores") },
           { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
-          { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento"), isSeparatorBefore: true },
-          { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios") },
+          { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
+          { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios"), isSeparatorBefore: true },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações", resource: resourceForHref("/dashboard/configuracoes") },
@@ -222,7 +224,7 @@ export default function Aside({
 
         {isSuperAdmin && (
           <div className="px-3 pt-3">
-            <CompanySwitcher isOpen={isOpen} onNavigate={handleToggle} />
+            <CompanySwitcher isOpen={isOpen} onNavigate={() => { if (!isPinned) handleToggle(); }} />
           </div>
         )}
 
