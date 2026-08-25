@@ -59,6 +59,56 @@ interface RawTransaction {
   center: { id: string; name: string } | null;
 }
 
+type DfcGroupKey = 'TAXES' | 'VARIABLE_EXPENSE' | 'FIXED_EXPENSE' | 'PAYROLL';
+
+/** Sem acentos, minúsculo, espaços colapsados — para comparar nome de categoria. */
+function normalizeName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Fallback de classificação do DFC pelo NOME da categoria, usado só quando
+ * `Category.dfc_group` está nulo.
+ *
+ * Motivo: a coluna `dfc_group` nasceu vazia (migration
+ * 20260804120000_add_category_dfc_group não fez backfill). Quem já tinha o
+ * plano de contas montado com os próprios nomes do DFC — "Impostos",
+ * "Despesas Fixas", "Despesas Variáveis", "Pessoas" — via TODAS as despesas
+ * caírem em "Outras Despesas (sem classificação DFC)" e as linhas de Impostos/
+ * Fixas/Variáveis/Pessoal zeradas, com um aviso pedindo para classificar
+ * categorias que, pelo nome, já estavam classificadas.
+ *
+ * `dfc_group` continua sendo a fonte de verdade: quando preenchido, manda.
+ * Ordem importa — "variável" antes de "fixa" só por clareza, e os marcadores
+ * são específicos o bastante para não se cruzarem.
+ */
+const DFC_NAME_FALLBACK: [DfcGroupKey, RegExp][] = [
+  ['VARIABLE_EXPENSE', /variave(l|is)/],
+  ['FIXED_EXPENSE', /\bfix[oa]s?\b/],
+  // "das" (guia do Simples) ficou de fora de propósito: é preposição comum em
+  // nome de categoria ("Despesas das Lojas") e classificaria errado.
+  ['TAXES', /\bimposto|\btributo|\bdarf\b|simples nacional|\birpj\b|\bcsll\b|\biss\b|\bicms\b|\bpis\b|\bcofins\b/],
+  ['PAYROLL', /\bpessoal\b|\bpessoas?\b|folha de pagamento|\bfolha\b|salario|pro.?labore|decimo terceiro|\b13o?\b|rescisao|\bferias\b|encargo/],
+];
+
+/** Grupo do DFC da categoria: o campo salvo ou, na falta dele, o inferido pelo nome. */
+function dfcGroupOf(category: RawTransaction['category']): string | null {
+  if (!category) return null;
+  if (category.dfc_group) return category.dfc_group;
+
+  const name = normalizeName(category.name ?? '');
+  if (!name) return null;
+  for (const [group, pattern] of DFC_NAME_FALLBACK) {
+    if (pattern.test(name)) return group;
+  }
+  return null;
+}
+
 function mapItem(t: RawTransaction): ReportItem {
   return {
     id: t.id,
@@ -298,10 +348,11 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
   }
 
   /**
-   * Ignora o filtro de type (precisa das duas pontas). As despesas só entram
-   * numa linha do DFC se a categoria tiver `dfc_group` classificado — o total
-   * de despesas sem classificação volta em `unclassifiedExpenseTotal` para o
-   * front avisar o usuário (evita "sumir" dinheiro do relatório em silêncio).
+   * Ignora o filtro de type (precisa das duas pontas). A linha do DFC de cada
+   * despesa vem de {@link dfcGroupOf}: `Category.dfc_group` quando preenchido,
+   * senão o grupo inferido pelo nome da categoria. O que não cai em nenhum
+   * grupo volta em `unclassifiedExpenseTotal` para o front avisar o usuário
+   * (evita "sumir" dinheiro do relatório em silêncio).
    */
   async getDemonstrativo(params: ReportParams, groupBy: DfcGroupBy = 'day'): Promise<DemonstrativoResult> {
     const { where, dateField } = this.buildBaseWhere({ ...params, type: undefined });
@@ -313,17 +364,18 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
 
     const incomeTxns = transactions.filter((t) => t.category?.type === 'INCOME');
     const expenseTxns = transactions.filter((t) => t.category?.type === 'EXPENSE');
-    const byDfcGroup = (group: string) => expenseTxns.filter((t) => t.category?.dfc_group === group);
+    const byDfcGroup = (group: string) => expenseTxns.filter((t) => dfcGroupOf(t.category) === group);
 
     const impostosTxns = byDfcGroup('TAXES');
     const variaveisTxns = byDfcGroup('VARIABLE_EXPENSE');
     const fixasTxns = byDfcGroup('FIXED_EXPENSE');
     const pessoalTxns = byDfcGroup('PAYROLL');
-    // Despesa cuja categoria não tem `dfc_group` não pertence a nenhuma linha
-    // do DFC. Antes ela simplesmente sumia do relatório (Tarefa 5.4: "só
-    // considerou as Receitas") — agora entra numa linha própria, sem ser
-    // reclassificada como Fixa, e continua sinalizada para o usuário.
-    const unclassifiedTxns = expenseTxns.filter((t) => !t.category?.dfc_group);
+    // Despesa que não caiu em nenhum grupo (nem por `dfc_group`, nem pelo nome
+    // da categoria) não pertence a nenhuma linha do DFC. Antes ela simplesmente
+    // sumia do relatório (Tarefa 5.4: "só considerou as Receitas") — agora entra
+    // numa linha própria, sem ser reclassificada como Fixa, e continua
+    // sinalizada para o usuário.
+    const unclassifiedTxns = expenseTxns.filter((t) => !dfcGroupOf(t.category));
 
     const sumOf = (list: RawTransaction[]) => list.reduce((sum, t) => sum + Number(t.amount), 0);
     const groupsOf = (list: RawTransaction[]) => buildGroups(list, groupBy, dateField);

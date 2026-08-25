@@ -261,9 +261,12 @@ export default function CadastrarEmpresaPage() {
           field: '__helper_identity',
           label: '',
           type: 'custom' as const,
-          className: 'col-span-full',
+          // basis-full: força este item a ocupar a linha inteira no layout
+          // flex-wrap do formulário — "col-span-full" não tem efeito aqui,
+          // é classe de CSS Grid e o container é flex.
+          className: 'basis-full w-full',
           render: () => (
-            <p className="text-xs text-content-muted -mt-2">
+            <p className="text-xs text-content-muted mb-2">
               Usados no cabeçalho dos relatórios impressos e exportados.
             </p>
           ),

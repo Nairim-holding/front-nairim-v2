@@ -111,8 +111,9 @@ async function buscarCoordenadas(endereco: string, cidadeEstado: string): Promis
   return {};
 }
 
-async function normalizarViaCep(data: ViaCepResponse): Promise<CepNormalizado> {
-  const enderecoCompleto = `${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`;
+async function normalizarViaCep(data: ViaCepResponse, numero?: string): Promise<CepNormalizado> {
+  const logradouroCompleto = numero ? `${data.logradouro}, ${numero}` : data.logradouro;
+  const enderecoCompleto = `${logradouroCompleto}, ${data.localidade}, ${data.uf}, Brasil`;
   const cidadeEstado = `${data.localidade}, ${data.uf}, Brasil`;
   const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
 
@@ -129,8 +130,9 @@ async function normalizarViaCep(data: ViaCepResponse): Promise<CepNormalizado> {
   };
 }
 
-async function normalizarOpenCep(data: OpenCepResponse): Promise<CepNormalizado> {
-  const enderecoCompleto = `${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`;
+async function normalizarOpenCep(data: OpenCepResponse, numero?: string): Promise<CepNormalizado> {
+  const logradouroCompleto = numero ? `${data.logradouro}, ${numero}` : data.logradouro;
+  const enderecoCompleto = `${logradouroCompleto}, ${data.localidade}, ${data.uf}, Brasil`;
   const cidadeEstado = `${data.localidade}, ${data.uf}, Brasil`;
   const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
 
@@ -147,8 +149,9 @@ async function normalizarOpenCep(data: OpenCepResponse): Promise<CepNormalizado>
   };
 }
 
-async function normalizarBrasilApi(data: BrasilApiResponse): Promise<CepNormalizado> {
-  const enderecoCompleto = `${data.street}, ${data.city}, ${data.state}, Brasil`;
+async function normalizarBrasilApi(data: BrasilApiResponse, numero?: string): Promise<CepNormalizado> {
+  const logradouroCompleto = numero ? `${data.street}, ${numero}` : data.street;
+  const enderecoCompleto = `${logradouroCompleto}, ${data.city}, ${data.state}, Brasil`;
   const cidadeEstado = `${data.city}, ${data.state}, Brasil`;
   const coords = await buscarCoordenadas(enderecoCompleto, cidadeEstado);
 
@@ -165,7 +168,7 @@ async function normalizarBrasilApi(data: BrasilApiResponse): Promise<CepNormaliz
   };
 }
 
-async function buscarViaCep(cep: string): Promise<CepNormalizado> {
+async function buscarViaCep(cep: string, numero?: string): Promise<CepNormalizado> {
   const response = await fetchComTimeout(`https://viacep.com.br/ws/${cep}/json/`);
 
   if (!response.ok) {
@@ -178,10 +181,10 @@ async function buscarViaCep(cep: string): Promise<CepNormalizado> {
     throw new Error("CEP não encontrado no ViaCEP");
   }
 
-  return await normalizarViaCep(data);
+  return await normalizarViaCep(data, numero);
 }
 
-async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
+async function buscarOpenCep(cep: string, numero?: string): Promise<CepNormalizado> {
   const response = await fetchComTimeout(`https://opencep.com/v1/${cep}`);
 
   if (!response.ok) {
@@ -194,10 +197,10 @@ async function buscarOpenCep(cep: string): Promise<CepNormalizado> {
     throw new Error("CEP não encontrado no OpenCEP");
   }
 
-  return await normalizarOpenCep(data);
+  return await normalizarOpenCep(data, numero);
 }
 
-async function buscarBrasilApi(cep: string): Promise<CepNormalizado> {
+async function buscarBrasilApi(cep: string, numero?: string): Promise<CepNormalizado> {
   const response = await fetchComTimeout(`https://brasilapi.com.br/api/cep/v2/${cep}`);
 
   if (!response.ok) {
@@ -210,7 +213,7 @@ async function buscarBrasilApi(cep: string): Promise<CepNormalizado> {
     throw new Error("CEP não encontrado na BrasilAPI");
   }
 
-  return await normalizarBrasilApi(data);
+  return await normalizarBrasilApi(data, numero);
 }
 
 export async function GET(
@@ -219,6 +222,9 @@ export async function GET(
 ) {
   const { cep } = await context.params;
   const cepLimpo = limparCep(cep);
+  // Número do imóvel, quando já conhecido — refina a geocodificação (Nominatim)
+  // para o ponto exato do lote em vez de um ponto genérico da rua.
+  const numero = request.nextUrl.searchParams.get("numero")?.trim() || undefined;
 
   if (!validarCep(cepLimpo)) {
     return NextResponse.json(
@@ -228,7 +234,7 @@ export async function GET(
   }
 
   try {
-    const endereco = await buscarViaCep(cepLimpo);
+    const endereco = await buscarViaCep(cepLimpo, numero);
     return NextResponse.json(endereco, { status: 200 });
   } catch (viaCepError: unknown) {
     if (viaCepError instanceof Error) {
@@ -236,7 +242,7 @@ export async function GET(
     }
 
     try {
-      const endereco = await buscarOpenCep(cepLimpo);
+      const endereco = await buscarOpenCep(cepLimpo, numero);
       return NextResponse.json(endereco, { status: 200 });
     } catch (openCepError: unknown) {
       if (openCepError instanceof Error) {
@@ -245,7 +251,7 @@ export async function GET(
 
       // Terceiro fallback: BrasilAPI
       try {
-        const endereco = await buscarBrasilApi(cepLimpo);
+        const endereco = await buscarBrasilApi(cepLimpo, numero);
         return NextResponse.json(endereco, { status: 200 });
       } catch (brasilApiError: unknown) {
         if (brasilApiError instanceof Error) {

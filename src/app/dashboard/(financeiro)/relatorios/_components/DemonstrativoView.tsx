@@ -176,10 +176,13 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/40 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle size={15} className="shrink-0 mt-0.5" />
           <div className="flex flex-col gap-1.5 min-w-0">
+            {/* O aviso antes só falava em "despesas sem classificação DFC", o
+                que mandava o usuário procurar nos Lançamentos — onde não há o
+                que classificar. A classificação é um campo da CATEGORIA. */}
             <span>
-              {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período estão sem classificação DFC
-              (Impostos / Despesa Variável / Despesa Fixa / Pessoal). Elas entram no resultado pela linha
-              &ldquo;Outras Despesas (sem classificação DFC)&rdquo;.
+              {formatCurrency(data.unclassifiedExpenseTotal)} em despesas do período estão em categorias que
+              não pertencem a nenhuma linha do DFC (Impostos / Despesa Variável / Despesa Fixa / Pessoal),
+              então entram no resultado pela linha &ldquo;Outras Despesas (sem classificação DFC)&rdquo;.
             </span>
 
             {/* Nomear as categorias evita a caça uma a uma em Categorias: o
@@ -196,11 +199,12 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
             )}
 
             <span>
-              Classifique{' '}
+              Não é nada no lançamento: abra{' '}
               <Link href="/dashboard/categorias" className="underline font-medium hover:opacity-80">
-                em Financeiro → Categorias
+                Financeiro → Categorias
               </Link>
-              {' '}para que apareçam na linha correta.
+              , clique na categoria acima (aba Despesa) e escolha o campo
+              &ldquo;Classificação no DFC&rdquo; para que ela apareça na linha correta.
             </span>
           </div>
         </div>
