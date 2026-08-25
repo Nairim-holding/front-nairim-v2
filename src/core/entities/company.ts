@@ -18,6 +18,10 @@ export const BRANDING_FIELDS = [
   'primary_color_dark', 'secondary_color_dark', 'accent_color_dark', 'success_color_dark',
   'warning_color_dark', 'error_color_dark', 'info_color_dark',
   'bg_color_dark', 'card_color_dark', 'border_color_dark', 'text_color_dark',
+  // Identidade jurídica e endereço (colunas de CompanyBranding — ver COMPANY_IDENTITY_FIELD_KEYS
+  // em `@/lib/companyIdentity`). Sem elas aqui, pickBrandingFields descartava esses campos
+  // silenciosamente em create/update de empresa.
+  'legal_name', 'cnpj', 'phone', 'email', 'zip_code', 'street', 'number', 'complement', 'district', 'city', 'state',
 ] as const;
 
 export type BrandingField = (typeof BRANDING_FIELDS)[number];

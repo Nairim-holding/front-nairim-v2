@@ -127,6 +127,7 @@ export async function createCompanyAction(input: Record<string, unknown>): Promi
     return companyUseCases.create.execute({
       name: input.name as string | undefined,
       slug: input.slug as string | undefined,
+      db_quota_mb: input.db_quota_mb as number | null | undefined,
       ...pickBrandingFields(input),
     });
   });
@@ -141,6 +142,7 @@ export async function updateCompanyAction(id: string, input: Record<string, unkn
       name: input.name as string | undefined,
       slug: input.slug as string | undefined,
       is_active: input.is_active as boolean | undefined,
+      db_quota_mb: input.db_quota_mb as number | null | undefined,
       ...pickBrandingFields(input),
     });
   });

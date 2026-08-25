@@ -139,8 +139,8 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
     return company as unknown as CompanyWithBranding | null;
   }
 
-  async create(data: { name: string; slug: string } & BrandingData): Promise<CompanyWithBranding> {
-    const { name, slug, ...branding } = data;
+  async create(data: { name: string; slug: string; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding> {
+    const { name, slug, db_quota_mb, ...branding } = data;
     const hasBranding = Object.values(branding).some((v) => v !== undefined);
 
     const company = await prisma.company.create({
@@ -148,6 +148,7 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
         name,
         slug,
         is_active: true,
+        ...(db_quota_mb !== undefined ? { db_quota_mb } : {}),
         ...(hasBranding ? { branding: { create: { ...(branding as any) } } } : {}),
       },
       include: { branding: true },
@@ -155,8 +156,8 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
     return company as unknown as CompanyWithBranding;
   }
 
-  async update(id: string, data: { name?: string; slug?: string; is_active?: boolean } & BrandingData): Promise<CompanyWithBranding> {
-    const { name, slug, is_active, ...branding } = data;
+  async update(id: string, data: { name?: string; slug?: string; is_active?: boolean; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding> {
+    const { name, slug, is_active, db_quota_mb, ...branding } = data;
     const hasBranding = Object.values(branding).some((v) => v !== undefined);
 
     const updated = await prisma.company.update({
@@ -165,6 +166,7 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
         ...(name !== undefined ? { name } : {}),
         ...(slug !== undefined ? { slug } : {}),
         ...(is_active !== undefined ? { is_active } : {}),
+        ...(db_quota_mb !== undefined ? { db_quota_mb } : {}),
         ...(hasBranding
           ? {
               branding: {

@@ -45,22 +45,22 @@ export class GetCompanyByIdUseCase {
 /** Cria empresa. Origem: createCompany. */
 export class CreateCompanyUseCase {
   constructor(private readonly companies: CompaniesRepository) {}
-  async execute(data: { name?: string; slug?: string } & BrandingData): Promise<CompanyWithBranding> {
-    const { name, slug: slugRaw, ...branding } = data;
+  async execute(data: { name?: string; slug?: string; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding> {
+    const { name, slug: slugRaw, db_quota_mb, ...branding } = data;
     if (!name || !slugRaw) throw new ValidationError('name e slug são obrigatórios');
 
     const slug = String(slugRaw).toLowerCase().trim();
     if (await this.companies.checkSlugExists(slug)) {
       throw new ConflictError('Já existe uma empresa com este slug');
     }
-    return this.companies.create({ name, slug, ...branding });
+    return this.companies.create({ name, slug, db_quota_mb, ...branding });
   }
 }
 
 /** Atualiza empresa. Origem: updateCompany. */
 export class UpdateCompanyUseCase {
   constructor(private readonly companies: CompaniesRepository) {}
-  async execute(id: string, data: { name?: string; slug?: string; is_active?: boolean } & BrandingData): Promise<CompanyWithBranding> {
+  async execute(id: string, data: { name?: string; slug?: string; is_active?: boolean; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding> {
     const existing = await this.companies.findByIdWithBranding(id);
     if (!existing) throw new NotFoundError('Empresa não encontrada');
 

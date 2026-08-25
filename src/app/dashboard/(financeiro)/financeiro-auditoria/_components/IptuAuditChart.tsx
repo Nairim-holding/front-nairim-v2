@@ -92,7 +92,7 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-ui-border-soft shrink-0">
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5 font-medium text-content-secondary">
-                  <span className="w-3 h-3 rounded-sm bg-orange-300 dark:bg-orange-400/50 border border-orange-400/40 shrink-0" />
+                  <span className="w-3 h-3 rounded-sm bg-amber-400 dark:bg-amber-400 border border-amber-500/40 shrink-0" />
                   <span>Receita (Restituição)</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium text-content-secondary">
@@ -101,7 +101,7 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
                 </div>
               </div>
 
-              <div className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate hidden sm:block">
+              <div className="text-xs font-bold text-content-secondary truncate hidden sm:block">
                 TOTAL PAGO:{' '}
                 <span className="text-orange-600 dark:text-orange-400 font-extrabold">
                   {formatCurrency(totalDespesas)}
@@ -126,7 +126,7 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
                   return (
                     <RowHoverTooltip
                       key={row.propertyId}
-                      className="flex items-center gap-3 text-xs py-0.5 hover:bg-surface-subtle/60 rounded-lg px-1 transition-colors"
+                      className="flex items-center gap-3 text-xs py-1 hover:bg-surface-subtle/80 rounded-lg px-1.5 transition-colors"
                       title={row.propertyTitle}
                       rows={[
                         { label: 'Valor Restituição do IPTU (CR)', value: formatCurrency(row.income) },
@@ -136,10 +136,10 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
                     >
                       {/* Ícone do Imóvel + Nome */}
                       <div className="flex items-center gap-2 w-36 sm:w-44 shrink-0 min-w-0">
-                        <div className="w-6 h-6 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 dark:bg-orange-500/25 flex items-center justify-center font-extrabold text-[10px] border border-orange-500/20 shrink-0">
+                        <div className="w-6 h-6 rounded bg-orange-500/15 text-orange-600 dark:text-orange-300 dark:bg-orange-500/25 flex items-center justify-center font-extrabold text-[10px] border border-orange-500/30 shrink-0">
                           {getPropertyInitials(row.propertyTitle)}
                         </div>
-                        <span className="font-bold text-slate-700 dark:text-slate-200 truncate" title={row.propertyTitle}>
+                        <span className="font-bold text-content truncate text-xs" title={row.propertyTitle}>
                           {row.propertyTitle}
                         </span>
                       </div>
@@ -147,19 +147,23 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
                       {/* Trilha das Barras Horizontais Duplas */}
                       <div className="flex-1 flex flex-col justify-center gap-1 min-w-[80px]">
                         {/* Barra Clara: Receitas de Restituição do IPTU */}
-                        <div className="w-full h-3 rounded bg-orange-50 dark:bg-slate-800/80 relative overflow-hidden">
-                          <div
-                            className="absolute left-0 top-0 bottom-0 rounded bg-orange-300 dark:bg-orange-400/60 transition-all duration-500"
-                            style={{ width: `${Math.max(incomeWidth, 1)}%` }}
-                          />
+                        <div className="w-full h-2.5 rounded-full bg-surface-subtle border border-ui-border-soft/60 relative overflow-hidden">
+                          {incomeWidth > 0 && (
+                            <div
+                              className="absolute left-0 top-0 bottom-0 rounded-full bg-amber-400 dark:bg-amber-400 transition-all duration-500 shadow-sm"
+                              style={{ width: `${incomeWidth}%` }}
+                            />
+                          )}
                         </div>
 
                         {/* Barra Escura: Despesas de Pagamento do IPTU */}
-                        <div className="w-full h-3 rounded bg-orange-50 dark:bg-slate-800/80 relative overflow-hidden">
-                          <div
-                            className="absolute left-0 top-0 bottom-0 rounded bg-orange-600 dark:bg-orange-500 transition-all duration-500"
-                            style={{ width: `${Math.max(expenseWidth, 1)}%` }}
-                          />
+                        <div className="w-full h-2.5 rounded-full bg-surface-subtle border border-ui-border-soft/60 relative overflow-hidden">
+                          {expenseWidth > 0 && (
+                            <div
+                              className="absolute left-0 top-0 bottom-0 rounded-full bg-orange-600 dark:bg-orange-500 transition-all duration-500 shadow-sm"
+                              style={{ width: `${expenseWidth}%` }}
+                            />
+                          )}
                         </div>
                       </div>
 
@@ -167,7 +171,11 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
                       <div className="w-24 sm:w-28 text-right shrink-0">
                         <span
                           className={`font-extrabold text-xs tracking-tight ${
-                            row.balance < 0 ? 'text-state-error' : row.balance > 0 ? 'text-state-success' : 'text-slate-700 dark:text-slate-200'
+                            row.balance < 0
+                              ? 'text-state-error'
+                              : row.balance > 0
+                              ? 'text-state-success'
+                              : 'text-content-muted'
                           }`}
                         >
                           {formatCurrency(row.balance)}

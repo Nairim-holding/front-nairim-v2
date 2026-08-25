@@ -42,9 +42,9 @@ export interface CompaniesRepository {
   /** Empresa por ID com branding, ou `null`. */
   findByIdWithBranding(id: string): Promise<CompanyWithBranding | null>;
   /** Cria empresa (+ branding aninhado, se houver). */
-  create(data: { name: string; slug: string } & BrandingData): Promise<CompanyWithBranding>;
+  create(data: { name: string; slug: string; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding>;
   /** Atualiza empresa (+ branding aninhado, se houver). */
-  update(id: string, data: { name?: string; slug?: string; is_active?: boolean } & BrandingData): Promise<CompanyWithBranding>;
+  update(id: string, data: { name?: string; slug?: string; is_active?: boolean; db_quota_mb?: number | null } & BrandingData): Promise<CompanyWithBranding>;
   /** Soft-delete (deleted_at + is_active=false). */
   softDelete(id: string): Promise<void>;
   /** Reativa (deleted_at=null + is_active=true). */

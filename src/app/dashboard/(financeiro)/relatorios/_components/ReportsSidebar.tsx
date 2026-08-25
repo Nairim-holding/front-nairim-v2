@@ -47,7 +47,7 @@ const RECEITAS_ITEMS: SidebarItem[] = [
 
 const FLUXO_ITEMS: SidebarItem[] = [
   { key: 'extrato', label: 'Extrato', icon: FileText },
-  { key: 'income-expense', label: 'Despesas / Receitas', icon: PieChart },
+  { key: 'income-expense', label: 'Receitas / Despesas', icon: PieChart },
   { key: 'demonstrativo', label: 'Demonstrativo', icon: ClipboardList },
 ];
 

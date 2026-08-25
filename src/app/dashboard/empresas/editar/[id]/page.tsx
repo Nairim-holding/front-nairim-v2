@@ -291,6 +291,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           type: 'text' as const,
           placeholder,
           className: IDENTITY_SPAN_CLASS[span],
+          full: span === 'full',
           ...(maxLength ? { validation: { maxLength } } : {}),
         })),
       ],

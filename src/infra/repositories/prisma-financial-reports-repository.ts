@@ -157,9 +157,18 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
 
   /**
    * Saldo anterior: receitas - despesas de lançamentos COMPLETED com data do
-   * regime anterior a startDate, respeitando os demais filtros e excluindo
-   * transferências. Com filtro status=PENDING não se aplica (= 0). Compartilhado
-   * entre Extrato e Receitas/Despesas (Fluxo de Caixa), que têm o mesmo Resumo.
+   * regime anterior a startDate, respeitando os demais filtros. Com filtro
+   * status=PENDING não se aplica (= 0). Compartilhado entre Extrato e
+   * Receitas/Despesas (Fluxo de Caixa), que têm o mesmo Resumo.
+   *
+   * ⚠️ Transferências ENTRAM aqui (o `NOT: { is_transfer: true }` do where-base
+   * é removido). Saldo anterior é saldo de conta, não receita/despesa: uma
+   * transferência de/para a instituição filtrada move o dinheiro de verdade e
+   * precisa contar. Excluindo-a, o Extrato filtrado por uma conta (ex.: BB)
+   * abria com saldo menor que o real e divergia do "Saldo da(s) conta(s)" da
+   * tela de Lançamentos, que sempre incluiu transferências
+   * (prisma-financial-transactions-repository.ts → accumulatedBalance).
+   * Sem filtro de instituição não muda nada: entrada e saída se anulam.
    */
   private async computeSaldoAnterior(
     params: ReportParams,
@@ -169,7 +178,7 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
   ): Promise<number> {
     if (params.status === 'PENDING') return 0;
 
-    const { [dateField]: _period, status: _status, ...rest } = where;
+    const { [dateField]: _period, status: _status, NOT: _excludeTransfers, ...rest } = where;
     const previousWhere: Record<string, unknown> = {
       ...rest,
       [dateField]: { lt: start },
