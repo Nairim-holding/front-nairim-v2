@@ -133,6 +133,7 @@ export default function VisualizarLocacaoPage() {
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
       property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
+      discount_amount: apiData.discount_amount ? formatMoney(apiData.discount_amount) : '',
       agency_commission: apiData.agency_commission ? String(apiData.agency_commission) : '5',
       commission_amount: apiData.commission_amount ? formatMoney(apiData.commission_amount) : 'R$ 0,00',
       rent_due_day: apiData.rent_due_day ? String(apiData.rent_due_day) : '5',
@@ -369,6 +370,15 @@ export default function VisualizarLocacaoPage() {
           {
             field: 'extra_charges',
             label: 'Taxas Extras',
+            type: 'text',
+            icon: <Calculator size={20} />,
+            mask: 'money',
+            readOnly: true,
+            disabled: true,
+          },
+          {
+            field: 'discount_amount',
+            label: 'Desconto / Despesa',
             type: 'text',
             icon: <Calculator size={20} />,
             mask: 'money',

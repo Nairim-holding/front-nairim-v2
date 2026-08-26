@@ -32,6 +32,8 @@ export interface Lease {
   condo_fee?: number | null;
   property_tax?: number | null;
   extra_charges?: number | null;
+  /** Desconto/despesa acordado na locação — abate o valor líquido no Relatório de Locações. */
+  discount_amount?: number | null;
   commission_amount?: number | null;
   rent_due_day: number;
   tax_due_day?: number | null;
@@ -84,6 +86,8 @@ export interface CreateLeaseData {
   condo_fee?: number | null;
   property_tax?: number | null;
   extra_charges?: number | null;
+  /** Desconto/despesa acordado na locação — abate o valor líquido no Relatório de Locações. */
+  discount_amount?: number | null;
   commission_amount?: number | null;
   rent_due_day: number;
   tax_due_day?: number | null;

@@ -11,7 +11,7 @@ import DemonstrativoView from './_components/DemonstrativoView';
 import { useReportOptions } from './_lib/useReportOptions';
 import { getDefaultReportDateRange } from './_lib/dateShortcuts';
 import { describeActiveFilters } from './_lib/buildReportQuery';
-import { exportTableToExcel, exportTableToPDF, printReportElement } from './_lib/exportHelpers';
+import { exportTableToExcel, exportTableToPDF, printReportElement } from '@/lib/reports/exportHelpers';
 import { useAuth } from '@/contexts/AuthContext';
 import { EMPTY_FILTERS } from './_lib/types';
 import type { ReportFiltersState, ReportGroupBy, ReportKind, ReportRegime, ReportViewHandle, SelectedReport } from './_lib/types';

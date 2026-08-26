@@ -83,6 +83,10 @@ export const createUnifiedPropertySchema = z.object({
   area_built: z.union([z.number(), z.string()]).optional(),
   frontage: z.union([z.number(), z.string()]).optional(),
   furnished: z.union([z.boolean(), z.string()]),
+  // Checkbox do formulário chega como boolean, mas o FormData pode entregar
+  // 'true'/'false'; normaliza aqui para o repositório receber sempre boolean —
+  // `Boolean('false')` seria `true` e marcaria IRRF em imóvel desmarcado.
+  income_tax_withholding: z.union([z.boolean(), z.string()]).optional().transform((v) => v === true || v === 'true'),
   floor_number: z.union([z.number(), z.string()]).nullish(),
   tax_registration: z.string().trim().min(1, 'Registro de imposto é obrigatório'),
   notes: z.string().nullish(),

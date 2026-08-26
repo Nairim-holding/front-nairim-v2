@@ -213,6 +213,7 @@ export default function EditarLocacaoPage() {
         condo_fee: data.condo_fee ? parseMoney(data.condo_fee) : null,
         property_tax: data.property_tax ? parseMoney(data.property_tax) : null,
         extra_charges: data.extra_charges ? parseMoney(data.extra_charges) : null,
+        discount_amount: data.discount_amount ? parseMoney(data.discount_amount) : null,
         agency_commission: data.agency_commission !== undefined && data.agency_commission !== null && data.agency_commission !== ''
           ? parseFloat(data.agency_commission)
           : null,
@@ -346,6 +347,7 @@ export default function EditarLocacaoPage() {
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
       property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
+      discount_amount: apiData.discount_amount ? formatMoney(apiData.discount_amount) : '',
       agency_commission: apiData.agency_commission !== null && apiData.agency_commission !== undefined
         ? String(apiData.agency_commission)
         : (apiData.commission_amount && apiData.rent_amount
@@ -427,6 +429,7 @@ export default function EditarLocacaoPage() {
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <FileIcon size={20} />, mask: 'money' },
           { field: 'extra_charges', label: 'Taxas Extras', type: 'text', icon: <Calculator size={20} />, mask: 'money' },
+          { field: 'discount_amount', label: 'Desconto / Despesa', type: 'text', placeholder: 'R$ 0,00', icon: <Calculator size={20} />, mask: 'money' },
           { field: 'agency_commission', label: 'Comissão Imobiliária (%)', type: 'number', maxLength: 3, icon: <Percent size={20} /> },
           { field: 'commission_amount', label: 'Valor Comissão', type: 'text', icon: <DollarSign size={20} />, readOnly: true, disabled: true, className: 'bg-gray-50', mask: 'money' },
           { field: 'rent_due_day', label: 'Vencimento Aluguel', type: 'text', required: true, icon: <Calendar size={20} /> },

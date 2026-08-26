@@ -1,7 +1,13 @@
-import { formatDateDisplay } from './dateShortcuts';
 import { getMyBrandingAction } from '@/server/actions/company';
 import { formatCompanyAddress } from '@/lib/companyIdentity';
 import type { CompanyBranding } from '@/types/branding';
+
+/** DD/MM/AAAA a partir de uma data ISO (YYYY-MM-DD). */
+function formatDateDisplay(dateStr: string): string {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+}
 
 export interface ReportPrintHeaderData {
   companyName: string;
@@ -52,7 +58,7 @@ export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderDat
       logoUrl: branding?.logo_url ?? null,
     };
   } catch (error) {
-    console.error('[reportPrintHeader] Erro ao carregar dados da empresa:', error);
+    console.error('[printHeader] Erro ao carregar dados da empresa:', error);
     return null;
   }
 }
@@ -62,6 +68,14 @@ export interface ReportPrintContext {
   dateRange: { from: string; to: string };
   filterLabels: string[];
   userName: string;
+  /**
+   * Rótulo do período, quando "de X a Y" não descreve a seleção — é o caso do
+   * Relatório de Locações, que é pedido por mês(es) de referência avulsos
+   * ("Dez/2025, Fev/2026") e não por um intervalo contínuo.
+   */
+  periodLabel?: string;
+  /** Título do bloco impresso depois da tabela. Default: "Resumo". */
+  summaryTitle?: string;
 }
 
 /** HTML do cabeçalho, usado tanto na impressão (janela nova) quanto embutido antes da tabela exportada. */
@@ -97,7 +111,7 @@ export function buildReportPrintHeaderHTML(company: ReportPrintHeaderData | null
     <div style="text-align:center; margin-bottom:10px;">
       <div style="font-weight:700; font-size:15px;">${context.reportTitle}</div>
       <div style="font-size:11px; color:#475569; margin-top:2px;">
-        Período: ${formatDateDisplay(context.dateRange.from)} a ${formatDateDisplay(context.dateRange.to)}
+        ${context.periodLabel ?? `Período: ${formatDateDisplay(context.dateRange.from)} a ${formatDateDisplay(context.dateRange.to)}`}
         ${context.filterLabels.length > 0 ? ` &middot; Filtros: ${context.filterLabels.join(', ')}` : ''}
       </div>
     </div>

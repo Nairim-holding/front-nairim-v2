@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { fetchReportPrintHeaderData, buildReportPrintHeaderHTML, type ReportPrintContext } from './reportPrintHeader';
+import { fetchReportPrintHeaderData, buildReportPrintHeaderHTML, type ReportPrintContext } from './printHeader';
 
 /**
  * Busca a logomarca da empresa e converte para data URL (Tarefa 4.3-D do guia
@@ -87,7 +87,8 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
   doc.setFont('helvetica', 'normal');
   cursorY += 12;
   doc.setFontSize(8);
-  const periodLine = `Período: ${context.dateRange.from.split('-').reverse().join('/')} a ${context.dateRange.to.split('-').reverse().join('/')}`
+  const periodLine = (context.periodLabel
+    ?? `Período: ${context.dateRange.from.split('-').reverse().join('/')} a ${context.dateRange.to.split('-').reverse().join('/')}`)
     + (context.filterLabels.length > 0 ? `  ·  Filtros: ${context.filterLabels.join(', ')}` : '');
   doc.text(periodLine, 20, cursorY);
   cursorY += 8;
@@ -101,6 +102,30 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
   });
   doc.save(`${filename}.pdf`);
   return true;
+}
+
+/**
+ * HTML estático de um bloco da tela, pronto para a janela de impressão.
+ *
+ * `outerHTML` sozinho não basta quando o bloco tem campos digitáveis: React
+ * controla `input.value` pela PROPRIEDADE, não pelo atributo, então o valor
+ * que o usuário digitou não aparece no HTML serializado e o quadro sairia
+ * impresso em branco. É o caso do quadro de Resgate de Aplicações do
+ * Relatório de Locações. Aqui os campos são trocados pelo texto que exibem.
+ */
+function staticHTMLOf(el: HTMLElement): string {
+  const clone = el.cloneNode(true) as HTMLElement;
+  const originals = el.querySelectorAll('input, select, textarea');
+
+  clone.querySelectorAll('input, select, textarea').forEach((node, index) => {
+    const source = originals[index] as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | undefined;
+    const text = source?.value?.trim() || '-';
+    const replacement = clone.ownerDocument.createElement('span');
+    replacement.textContent = text;
+    node.replaceWith(replacement);
+  });
+
+  return clone.outerHTML;
 }
 
 /**
@@ -132,7 +157,9 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   // esse cabeçalho porque o contexto já deixa claro que é o resumo (é o único
   // bloco fora da tabela); isoladamente numa página impressa, sem essa pista,
   // o bloco de números soltos no fim do documento perde contexto.
-  const summaryHTML = summaryEl ? `<h3 class="report-summary-title">Resumo</h3>${summaryEl.outerHTML}` : '';
+  const summaryHTML = summaryEl
+    ? `<h3 class="report-summary-title">${context.summaryTitle ?? 'Resumo'}</h3>${staticHTMLOf(summaryEl)}`
+    : '';
 
   const html = `<!doctype html>
 <html>
@@ -208,11 +235,31 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   /* Linha de Total do Período (tfoot do Extrato): o Tailwind não existe nesta
      janela, então o realce vem daqui. */
   tfoot td { background-color: #e2e8f0 !important; font-weight: 700 !important; border-top: 2px solid #94a3b8 !important; }
+
+  /*
+   * Quadros do Relatório de Locações (Retenções, DARF mensal, Resgate de
+   * Aplicações, DARF trimestral). Mesma lição do bloco de Resumo acima: as
+   * regras miram as classes que o componente REALMENTE emite
+   * (report-panel / report-panel-title, em TaxPanels.tsx), não uma classe
+   * inventada só para o CSS de impressão. Na página, os quadros ficam lado a
+   * lado num grid do Tailwind; aqui empilham, que é o que cabe em A4.
+   */
+  .report-panels { display: block; }
+  .report-panel {
+    border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 14px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .report-panel-title {
+    background: #e2e8f0; color: #1e293b; padding: 6px 10px; text-align: center;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .report-panel table { font-size: 11px; }
+  .report-panel-note { padding: 6px 10px; font-size: 10px; color: #475569; border-top: 1px solid #e2e8f0; }
 </style>
 </head>
 <body>
 <div class="cabecalho-impressao">${headerHTML}</div>
-${el.outerHTML}
+${staticHTMLOf(el)}
 ${summaryHTML}
 </body>
 </html>`;

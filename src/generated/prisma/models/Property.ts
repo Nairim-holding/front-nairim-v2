@@ -72,6 +72,7 @@ export type PropertyMinAggregateOutputType = {
   furnished: boolean | null
   floor_number: number | null
   tax_registration: string | null
+  income_tax_withholding: boolean | null
   notes: string | null
   created_at: Date | null
   updated_at: Date | null
@@ -102,6 +103,7 @@ export type PropertyMaxAggregateOutputType = {
   furnished: boolean | null
   floor_number: number | null
   tax_registration: string | null
+  income_tax_withholding: boolean | null
   notes: string | null
   created_at: Date | null
   updated_at: Date | null
@@ -132,6 +134,7 @@ export type PropertyCountAggregateOutputType = {
   furnished: number
   floor_number: number
   tax_registration: number
+  income_tax_withholding: number
   notes: number
   created_at: number
   updated_at: number
@@ -186,6 +189,7 @@ export type PropertyMinAggregateInputType = {
   furnished?: true
   floor_number?: true
   tax_registration?: true
+  income_tax_withholding?: true
   notes?: true
   created_at?: true
   updated_at?: true
@@ -216,6 +220,7 @@ export type PropertyMaxAggregateInputType = {
   furnished?: true
   floor_number?: true
   tax_registration?: true
+  income_tax_withholding?: true
   notes?: true
   created_at?: true
   updated_at?: true
@@ -246,6 +251,7 @@ export type PropertyCountAggregateInputType = {
   furnished?: true
   floor_number?: true
   tax_registration?: true
+  income_tax_withholding?: true
   notes?: true
   created_at?: true
   updated_at?: true
@@ -363,6 +369,7 @@ export type PropertyGroupByOutputType = {
   furnished: boolean
   floor_number: number | null
   tax_registration: string
+  income_tax_withholding: boolean
   notes: string | null
   created_at: Date
   updated_at: Date
@@ -416,6 +423,7 @@ export type PropertyWhereInput = {
   furnished?: Prisma.BoolFilter<"Property"> | boolean
   floor_number?: Prisma.IntNullableFilter<"Property"> | number | null
   tax_registration?: Prisma.StringFilter<"Property"> | string
+  income_tax_withholding?: Prisma.BoolFilter<"Property"> | boolean
   notes?: Prisma.StringNullableFilter<"Property"> | string | null
   created_at?: Prisma.DateTimeFilter<"Property"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Property"> | Date | string
@@ -462,6 +470,7 @@ export type PropertyOrderByWithRelationInput = {
   furnished?: Prisma.SortOrder
   floor_number?: Prisma.SortOrderInput | Prisma.SortOrder
   tax_registration?: Prisma.SortOrder
+  income_tax_withholding?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -511,6 +520,7 @@ export type PropertyWhereUniqueInput = Prisma.AtLeast<{
   furnished?: Prisma.BoolFilter<"Property"> | boolean
   floor_number?: Prisma.IntNullableFilter<"Property"> | number | null
   tax_registration?: Prisma.StringFilter<"Property"> | string
+  income_tax_withholding?: Prisma.BoolFilter<"Property"> | boolean
   notes?: Prisma.StringNullableFilter<"Property"> | string | null
   created_at?: Prisma.DateTimeFilter<"Property"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Property"> | Date | string
@@ -557,6 +567,7 @@ export type PropertyOrderByWithAggregationInput = {
   furnished?: Prisma.SortOrder
   floor_number?: Prisma.SortOrderInput | Prisma.SortOrder
   tax_registration?: Prisma.SortOrder
+  income_tax_withholding?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -595,6 +606,7 @@ export type PropertyScalarWhereWithAggregatesInput = {
   furnished?: Prisma.BoolWithAggregatesFilter<"Property"> | boolean
   floor_number?: Prisma.IntNullableWithAggregatesFilter<"Property"> | number | null
   tax_registration?: Prisma.StringWithAggregatesFilter<"Property"> | string
+  income_tax_withholding?: Prisma.BoolWithAggregatesFilter<"Property"> | boolean
   notes?: Prisma.StringNullableWithAggregatesFilter<"Property"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Property"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"Property"> | Date | string
@@ -615,6 +627,7 @@ export type PropertyCreateInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -661,6 +674,7 @@ export type PropertyUncheckedCreateInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -687,6 +701,7 @@ export type PropertyUpdateInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -733,6 +748,7 @@ export type PropertyUncheckedUpdateInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -769,6 +785,7 @@ export type PropertyCreateManyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -789,6 +806,7 @@ export type PropertyUpdateManyMutationInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -819,6 +837,7 @@ export type PropertyUncheckedUpdateManyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -859,6 +878,7 @@ export type PropertyCountOrderByAggregateInput = {
   furnished?: Prisma.SortOrder
   floor_number?: Prisma.SortOrder
   tax_registration?: Prisma.SortOrder
+  income_tax_withholding?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -900,6 +920,7 @@ export type PropertyMaxOrderByAggregateInput = {
   furnished?: Prisma.SortOrder
   floor_number?: Prisma.SortOrder
   tax_registration?: Prisma.SortOrder
+  income_tax_withholding?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -930,6 +951,7 @@ export type PropertyMinOrderByAggregateInput = {
   furnished?: Prisma.SortOrder
   floor_number?: Prisma.SortOrder
   tax_registration?: Prisma.SortOrder
+  income_tax_withholding?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -1493,6 +1515,7 @@ export type PropertyCreateWithoutCompanyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1537,6 +1560,7 @@ export type PropertyUncheckedCreateWithoutCompanyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1602,6 +1626,7 @@ export type PropertyScalarWhereInput = {
   furnished?: Prisma.BoolFilter<"Property"> | boolean
   floor_number?: Prisma.IntNullableFilter<"Property"> | number | null
   tax_registration?: Prisma.StringFilter<"Property"> | string
+  income_tax_withholding?: Prisma.BoolFilter<"Property"> | boolean
   notes?: Prisma.StringNullableFilter<"Property"> | string | null
   created_at?: Prisma.DateTimeFilter<"Property"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Property"> | Date | string
@@ -1622,6 +1647,7 @@ export type PropertyCreateWithoutAgencyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1666,6 +1692,7 @@ export type PropertyUncheckedCreateWithoutAgencyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1718,6 +1745,7 @@ export type PropertyCreateWithoutIptusInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1763,6 +1791,7 @@ export type PropertyUncheckedCreateWithoutIptusInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1804,6 +1833,7 @@ export type PropertyUpdateWithoutIptusInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1849,6 +1879,7 @@ export type PropertyUncheckedUpdateWithoutIptusInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1874,6 +1905,7 @@ export type PropertyCreateWithoutDocumentsInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1919,6 +1951,7 @@ export type PropertyUncheckedCreateWithoutDocumentsInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -1960,6 +1993,7 @@ export type PropertyUpdateWithoutDocumentsInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2005,6 +2039,7 @@ export type PropertyUncheckedUpdateWithoutDocumentsInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2030,6 +2065,7 @@ export type PropertyCreateWithoutOwnerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2074,6 +2110,7 @@ export type PropertyUncheckedCreateWithoutOwnerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2126,6 +2163,7 @@ export type PropertyCreateWithoutLeasesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2171,6 +2209,7 @@ export type PropertyUncheckedCreateWithoutLeasesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2212,6 +2251,7 @@ export type PropertyUpdateWithoutLeasesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2257,6 +2297,7 @@ export type PropertyUncheckedUpdateWithoutLeasesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2282,6 +2323,7 @@ export type PropertyCreateWithoutValuesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2327,6 +2369,7 @@ export type PropertyUncheckedCreateWithoutValuesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2368,6 +2411,7 @@ export type PropertyUpdateWithoutValuesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2413,6 +2457,7 @@ export type PropertyUncheckedUpdateWithoutValuesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2438,6 +2483,7 @@ export type PropertyCreateWithoutTypeInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2482,6 +2528,7 @@ export type PropertyUncheckedCreateWithoutTypeInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2534,6 +2581,7 @@ export type PropertyCreateWithoutFavoritesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2579,6 +2627,7 @@ export type PropertyUncheckedCreateWithoutFavoritesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2620,6 +2669,7 @@ export type PropertyUpdateWithoutFavoritesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2665,6 +2715,7 @@ export type PropertyUncheckedUpdateWithoutFavoritesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2690,6 +2741,7 @@ export type PropertyCreateWithoutAddressesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2735,6 +2787,7 @@ export type PropertyUncheckedCreateWithoutAddressesInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2776,6 +2829,7 @@ export type PropertyUpdateWithoutAddressesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2821,6 +2875,7 @@ export type PropertyUncheckedUpdateWithoutAddressesInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2846,6 +2901,7 @@ export type PropertyCreateWithoutCategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2890,6 +2946,7 @@ export type PropertyUncheckedCreateWithoutCategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2926,6 +2983,7 @@ export type PropertyCreateWithoutIptu_refund_categoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -2970,6 +3028,7 @@ export type PropertyUncheckedCreateWithoutIptu_refund_categoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3038,6 +3097,7 @@ export type PropertyCreateWithoutSubcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3082,6 +3142,7 @@ export type PropertyUncheckedCreateWithoutSubcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3118,6 +3179,7 @@ export type PropertyCreateWithoutIptu_refund_subcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3162,6 +3224,7 @@ export type PropertyUncheckedCreateWithoutIptu_refund_subcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3230,6 +3293,7 @@ export type PropertyCreateWithoutCenterInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3274,6 +3338,7 @@ export type PropertyUncheckedCreateWithoutCenterInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3310,6 +3375,7 @@ export type PropertyCreateWithoutDebit_centerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3354,6 +3420,7 @@ export type PropertyUncheckedCreateWithoutDebit_centerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3431,6 +3498,7 @@ export type PropertyCreateManyCompanyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3451,6 +3519,7 @@ export type PropertyUpdateWithoutCompanyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3495,6 +3564,7 @@ export type PropertyUncheckedUpdateWithoutCompanyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3530,6 +3600,7 @@ export type PropertyUncheckedUpdateManyWithoutCompanyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3559,6 +3630,7 @@ export type PropertyCreateManyAgencyInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3579,6 +3651,7 @@ export type PropertyUpdateWithoutAgencyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3623,6 +3696,7 @@ export type PropertyUncheckedUpdateWithoutAgencyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3658,6 +3732,7 @@ export type PropertyUncheckedUpdateManyWithoutAgencyInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3687,6 +3762,7 @@ export type PropertyCreateManyOwnerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3707,6 +3783,7 @@ export type PropertyUpdateWithoutOwnerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3751,6 +3828,7 @@ export type PropertyUncheckedUpdateWithoutOwnerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3786,6 +3864,7 @@ export type PropertyUncheckedUpdateManyWithoutOwnerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3815,6 +3894,7 @@ export type PropertyCreateManyTypeInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3835,6 +3915,7 @@ export type PropertyUpdateWithoutTypeInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3879,6 +3960,7 @@ export type PropertyUncheckedUpdateWithoutTypeInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3914,6 +3996,7 @@ export type PropertyUncheckedUpdateManyWithoutTypeInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3943,6 +4026,7 @@ export type PropertyCreateManyCategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3972,6 +4056,7 @@ export type PropertyCreateManyIptu_refund_categoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -3992,6 +4077,7 @@ export type PropertyUpdateWithoutCategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4036,6 +4122,7 @@ export type PropertyUncheckedUpdateWithoutCategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4071,6 +4158,7 @@ export type PropertyUncheckedUpdateManyWithoutCategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4091,6 +4179,7 @@ export type PropertyUpdateWithoutIptu_refund_categoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4135,6 +4224,7 @@ export type PropertyUncheckedUpdateWithoutIptu_refund_categoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4170,6 +4260,7 @@ export type PropertyUncheckedUpdateManyWithoutIptu_refund_categoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4199,6 +4290,7 @@ export type PropertyCreateManySubcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -4228,6 +4320,7 @@ export type PropertyCreateManyIptu_refund_subcategoryInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -4248,6 +4341,7 @@ export type PropertyUpdateWithoutSubcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4292,6 +4386,7 @@ export type PropertyUncheckedUpdateWithoutSubcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4327,6 +4422,7 @@ export type PropertyUncheckedUpdateManyWithoutSubcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4347,6 +4443,7 @@ export type PropertyUpdateWithoutIptu_refund_subcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4391,6 +4488,7 @@ export type PropertyUncheckedUpdateWithoutIptu_refund_subcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4426,6 +4524,7 @@ export type PropertyUncheckedUpdateManyWithoutIptu_refund_subcategoryInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4455,6 +4554,7 @@ export type PropertyCreateManyCenterInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -4484,6 +4584,7 @@ export type PropertyCreateManyDebit_centerInput = {
   furnished: boolean
   floor_number?: number | null
   tax_registration: string
+  income_tax_withholding?: boolean
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -4504,6 +4605,7 @@ export type PropertyUpdateWithoutCenterInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4548,6 +4650,7 @@ export type PropertyUncheckedUpdateWithoutCenterInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4583,6 +4686,7 @@ export type PropertyUncheckedUpdateManyWithoutCenterInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4603,6 +4707,7 @@ export type PropertyUpdateWithoutDebit_centerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4647,6 +4752,7 @@ export type PropertyUncheckedUpdateWithoutDebit_centerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4682,6 +4788,7 @@ export type PropertyUncheckedUpdateManyWithoutDebit_centerInput = {
   furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4788,6 +4895,7 @@ export type PropertySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   furnished?: boolean
   floor_number?: boolean
   tax_registration?: boolean
+  income_tax_withholding?: boolean
   notes?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -4835,6 +4943,7 @@ export type PropertySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   furnished?: boolean
   floor_number?: boolean
   tax_registration?: boolean
+  income_tax_withholding?: boolean
   notes?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -4875,6 +4984,7 @@ export type PropertySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   furnished?: boolean
   floor_number?: boolean
   tax_registration?: boolean
+  income_tax_withholding?: boolean
   notes?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -4915,13 +5025,14 @@ export type PropertySelectScalar = {
   furnished?: boolean
   floor_number?: boolean
   tax_registration?: boolean
+  income_tax_withholding?: boolean
   notes?: boolean
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
 }
 
-export type PropertyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "owner_id" | "agency_id" | "type_id" | "center_id" | "debit_center_id" | "category_id" | "subcategory_id" | "iptu_refund_category_id" | "iptu_refund_subcategory_id" | "title" | "registration_number" | "bedrooms" | "bathrooms" | "half_bathrooms" | "garage_spaces" | "area_total" | "area_built" | "frontage" | "furnished" | "floor_number" | "tax_registration" | "notes" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["property"]>
+export type PropertyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "owner_id" | "agency_id" | "type_id" | "center_id" | "debit_center_id" | "category_id" | "subcategory_id" | "iptu_refund_category_id" | "iptu_refund_subcategory_id" | "title" | "registration_number" | "bedrooms" | "bathrooms" | "half_bathrooms" | "garage_spaces" | "area_total" | "area_built" | "frontage" | "furnished" | "floor_number" | "tax_registration" | "income_tax_withholding" | "notes" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["property"]>
 export type PropertyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   documents?: boolean | Prisma.Property$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Property$favoritesArgs<ExtArgs>
@@ -5010,6 +5121,12 @@ export type $PropertyPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     furnished: boolean
     floor_number: number | null
     tax_registration: string
+    /**
+     * Imóvel sujeito a IRRF (Imposto de Renda Retido na Fonte) sobre o aluguel.
+     * Marca quais locações entram no quadro "Retenções dos Aluguéis" do
+     * relatório de Locações — só os imóveis marcados sofrem retenção.
+     */
+    income_tax_withholding: boolean
     notes: string | null
     created_at: Date
     updated_at: Date
@@ -5476,6 +5593,7 @@ export interface PropertyFieldRefs {
   readonly furnished: Prisma.FieldRef<"Property", 'Boolean'>
   readonly floor_number: Prisma.FieldRef<"Property", 'Int'>
   readonly tax_registration: Prisma.FieldRef<"Property", 'String'>
+  readonly income_tax_withholding: Prisma.FieldRef<"Property", 'Boolean'>
   readonly notes: Prisma.FieldRef<"Property", 'String'>
   readonly created_at: Prisma.FieldRef<"Property", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"Property", 'DateTime'>

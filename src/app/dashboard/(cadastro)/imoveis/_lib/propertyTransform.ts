@@ -165,6 +165,8 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     iptu_refund_category_id:    data.iptu_refund_category_id ?? '',
     iptu_refund_subcategory_id: data.iptu_refund_subcategory_id ?? '',
     furnished:        data.furnished?.toString() ?? 'false',
+    // Campo do tipo checkbox no formulário — vai e volta como boolean puro.
+    income_tax_withholding: data.income_tax_withholding === true,
     registration_number: data.registration_number ?? '',
     notes:            data.notes ?? '',
 
@@ -237,6 +239,7 @@ export function buildPropertyFormData(
     area_built:       parseMetric(data.area_built),
     frontage:         parseMetric(data.frontage),
     furnished:        data.furnished === 'true',
+    income_tax_withholding: data.income_tax_withholding === true || data.income_tax_withholding === 'true',
     floor_number:     parseInt(data.floor_number) || 0,
     tax_registration: data.tax_registration,
     notes:            data.notes,

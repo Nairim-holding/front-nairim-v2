@@ -35,6 +35,9 @@ export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
   { path: '/dashboard/proprietarios', resource: 'owners' },
   { path: '/dashboard/tipo-imovel', resource: 'property-types' },
   { path: '/dashboard/locacoes', resource: 'leases' },
+  // Vem depois de /dashboard/locacoes, mas `resourceForPathname` casa pelo
+  // prefixo mais longo — o relatório não herda a diretiva de `leases`.
+  { path: '/dashboard/locacoes/relatorios', resource: 'lease-reports' },
   { path: '/dashboard/instituicoes-financeiras', resource: 'financial-institutions' },
   { path: '/dashboard/categorias', resource: 'financial-categories' },
   { path: '/dashboard/cartoes', resource: 'financial-cards' },

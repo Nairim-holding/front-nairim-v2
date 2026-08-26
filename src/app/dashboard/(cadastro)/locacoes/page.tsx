@@ -21,6 +21,7 @@ const COLUMNS: ColumnDef[] = [
   { field: 'property_tax',     label: 'Valor IPTU',          sortParam: 'property_tax',          type: 'currency' },
   { field: 'payment_condition',label: 'Condição Pagamento',  sortParam: 'payment_condition',     type: 'text' },
   { field: 'extra_charges',    label: 'Valor Taxas Extras',  sortParam: 'extra_charges',         type: 'currency' },
+  { field: 'discount_amount',  label: 'Desconto / Despesa',  sortParam: 'discount_amount',       type: 'currency' },
   { field: 'commission_amount',label: 'Valor Comissão',      sortParam: 'commission_amount',     type: 'currency' },
   { field: 'rent_due_day',     label: 'Vencimento Aluguel',  sortParam: 'rent_due_day',          type: 'number' },
   { field: 'tax_due_day',      label: 'Vencimento IPTU',     sortParam: 'tax_due_day',           type: 'number' },

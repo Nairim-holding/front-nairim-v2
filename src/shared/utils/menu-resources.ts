@@ -130,6 +130,15 @@ export const MENU_RESOURCES: MenuResource[] = [
     actions: FULL,
     routes: ['/leases'],
   },
+  {
+    key: 'lease-reports',
+    label: 'Relatórios',
+    group: 'Locações',
+    // Gerado sob demanda a partir das locações e dos lançamentos — não se
+    // cadastra nada aqui; mesmo par de ações de `financial-reports`.
+    actions: ['view', 'export'],
+    routes: ['/lease-reports'],
+  },
 
   // ─── Financeiro ────────────────────────────────────────────────────────────
   {

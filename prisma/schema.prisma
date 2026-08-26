@@ -171,6 +171,10 @@ model Property {
   furnished           Boolean
   floor_number        Int?
   tax_registration    String            @db.VarChar(20)
+  /// Imóvel sujeito a IRRF (Imposto de Renda Retido na Fonte) sobre o aluguel.
+  /// Marca quais locações entram no quadro "Retenções dos Aluguéis" do
+  /// relatório de Locações — só os imóveis marcados sofrem retenção.
+  income_tax_withholding Boolean        @default(false)
   notes               String?
   created_at          DateTime          @default(now())
   updated_at          DateTime          @updatedAt
@@ -534,6 +538,10 @@ model Lease {
   condo_fee                       Decimal?          @db.Decimal(20, 2)
   property_tax                    Decimal?          @db.Decimal(20, 2)
   extra_charges                   Decimal?          @db.Decimal(20, 2)
+  /// Desconto ou despesa acordada na locação, abatida do valor líquido
+  /// repassado ao proprietário. Coluna "Desconto/Despesa" (DB) do relatório
+  /// de Locações. Distinto de `extra_charges` (Taxas Extras), que é cobrança.
+  discount_amount                 Decimal?          @db.Decimal(20, 2)
   commission_amount               Decimal?          @db.Decimal(20, 2)
   agency_commission               Decimal?          @db.Decimal(5, 2)
   rent_due_day                    Int

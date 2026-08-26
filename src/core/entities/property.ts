@@ -72,6 +72,8 @@ export interface Property {
   area_built: number;
   frontage: number;
   furnished: boolean;
+  /** Imóvel sujeito a IRRF sobre o aluguel — alimenta o quadro de Retenções do Relatório de Locações. */
+  income_tax_withholding?: boolean;
   floor_number?: number | null;
   tax_registration: string;
   notes?: string | null;
@@ -119,6 +121,8 @@ export interface CreateUnifiedPropertyData {
   area_built?: number;
   frontage?: number;
   furnished: boolean;
+  /** Imóvel sujeito a IRRF sobre o aluguel — alimenta o quadro de Retenções do Relatório de Locações. */
+  income_tax_withholding?: boolean;
   floor_number?: number | null;
   tax_registration: string;
   notes?: string | null;

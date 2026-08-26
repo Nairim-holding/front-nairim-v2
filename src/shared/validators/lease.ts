@@ -31,6 +31,7 @@ export const createLeaseSchema = z.object({
   condo_fee: z.union([z.number(), z.string()]).nullish(),
   property_tax: z.union([z.number(), z.string()]).nullish(),
   extra_charges: z.union([z.number(), z.string()]).nullish(),
+  discount_amount: z.union([z.number(), z.string()]).nullish(),
   commission_amount: z.union([z.number(), z.string()]).nullish(),
   rent_due_day: z.union([z.number(), z.string()]),
   tax_due_day: z.union([z.number(), z.string()]).nullish(),

@@ -79,6 +79,9 @@ export function buildPropertySteps({
         { field: 'type_id', label: 'Tipo do imóvel', type: 'select', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro },
         { field: 'agency_id', label: 'Imobiliária', type: 'select', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
         { field: 'furnished', label: 'Mobiliado', type: 'select', required: true, options: [{ label: 'Sim', value: 'true' }, { label: 'Não', value: 'false' }], icon: <Sofa size={20} />, className: 'col-span-full', ...ro },
+        // Marca o imóvel cuja locação sofre IRRF — é o que separa as linhas que
+        // entram no quadro "Retenções dos Aluguéis" do Relatório de Locações.
+        { field: 'income_tax_withholding', label: 'Imóvel com IRRF (Imposto de Renda Retido na Fonte)', type: 'checkbox', className: 'col-span-full', ...ro },
         { field: 'registration_number', label: 'Nº Cadastro', type: 'text', required: false, placeholder: 'Número de cadastro do imóvel', icon: <Hash size={20} />, className: 'col-span-full', ...ro },
         { field: 'notes', label: 'Observações', type: 'textarea', placeholder: 'Escreva detalhes não especificados anteriormente', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
       ],

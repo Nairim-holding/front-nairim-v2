@@ -19,7 +19,7 @@ import type {
  * Camada: infra.
  */
 
-const DIRECT_FIELDS = ['title', 'bedrooms', 'bathrooms', 'half_bathrooms', 'garage_spaces', 'area_total', 'area_built', 'frontage', 'furnished', 'floor_number', 'tax_registration', 'notes', 'created_at', 'updated_at'];
+const DIRECT_FIELDS = ['title', 'bedrooms', 'bathrooms', 'half_bathrooms', 'garage_spaces', 'area_total', 'area_built', 'frontage', 'furnished', 'income_tax_withholding', 'floor_number', 'tax_registration', 'notes', 'created_at', 'updated_at'];
 const RELATION_FIELD_MAP: Record<string, { type: 'relation' | 'address'; relationPath: string }> = {
   owner_name: { type: 'relation', relationPath: 'owner.name' },
   type_description: { type: 'relation', relationPath: 'type.description' },
@@ -166,8 +166,8 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
 
     if (['owner_id', 'type_id', 'agency_id', 'center_id'].includes(key)) {
       conditions[key] = value;
-    } else if (key === 'furnished') {
-      conditions.furnished = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
+    } else if (key === 'furnished' || key === 'income_tax_withholding') {
+      conditions[key] = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
     } else if (['bedrooms', 'bathrooms', 'half_bathrooms', 'garage_spaces', 'floor_number'].includes(key)) {
       const n = parseInt(String(value));
       if (!isNaN(n)) conditions[key] = n;
@@ -400,6 +400,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
         { field: 'status', type: 'select', label: 'Disponibilidade', description: 'Status de ocupação do imóvel', options: [{ value: 'AVAILABLE', label: 'Disponível' }, { value: 'OCCUPIED', label: 'Ocupado' }], searchable: false },
         // Rótulos em PT-BR: o seletor exibia "true"/"false" cru (Tarefa 1.4).
         { field: 'furnished', type: 'select', label: 'Mobiliado', description: 'Propriedade mobiliada', options: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }], searchable: false },
+        { field: 'income_tax_withholding', type: 'select', label: 'IRRF', description: 'Imóvel com Imposto de Renda Retido na Fonte', options: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }], searchable: false },
         { field: 'tax_registration', type: 'string', label: 'Inscrição fiscal', description: 'Inscrição fiscal da propriedade', values: uniq(properties.map((p) => p.tax_registration)), searchable: true, autocomplete: true },
         { field: 'owner_id', type: 'select', label: 'Proprietário', description: 'Proprietário da propriedade', options: owners.map((o) => ({ value: o.id, label: o.name })), searchable: true },
         { field: 'type_id', type: 'select', label: 'Tipo do imóvel', description: 'Tipo da propriedade', options: propertyTypes.map((t) => ({ value: t.id, label: t.description })), searchable: true },
@@ -459,6 +460,8 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
             area_built: data.area_built != null && (data.area_built as unknown) !== '' ? Number(data.area_built) : 0,
             frontage: data.frontage != null && (data.frontage as unknown) !== '' ? Number(data.frontage) : 0,
             furnished: Boolean(data.furnished),
+            // Já normalizado para boolean em `createUnifiedPropertySchema`.
+            income_tax_withholding: data.income_tax_withholding === true,
             floor_number: data.floor_number != null && (data.floor_number as unknown) !== '' ? Number(data.floor_number) : null,
             tax_registration: data.tax_registration,
             registration_number: data.registration_number || null,
@@ -520,6 +523,8 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
             area_built: data.area_built != null && (data.area_built as unknown) !== '' ? Number(data.area_built) : 0,
             frontage: data.frontage != null && (data.frontage as unknown) !== '' ? Number(data.frontage) : 0,
             furnished: Boolean(data.furnished),
+            // Já normalizado para boolean em `createUnifiedPropertySchema`.
+            income_tax_withholding: data.income_tax_withholding === true,
             floor_number: data.floor_number != null && (data.floor_number as unknown) !== '' ? Number(data.floor_number) : null,
             tax_registration: data.tax_registration,
             registration_number: data.registration_number || null,

@@ -138,7 +138,15 @@ export default function Aside({
           { href: "/dashboard/tipo-imovel", icon: Tag, label: "Tipo Imóvel", resource: resourceForHref("/dashboard/tipo-imovel") },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
-      { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
+      {
+        href: "#",
+        icon: Key,
+        label: "Locações",
+        submenu: ([
+          { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
+          { href: "/dashboard/locacoes/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/locacoes/relatorios"), isSeparatorBefore: true },
+        ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
+      },
       {
         href: "#",
         icon: PiggyBank,

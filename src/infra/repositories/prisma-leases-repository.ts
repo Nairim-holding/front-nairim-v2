@@ -26,7 +26,7 @@ const DIRECT_FIELDS = [
   'id', 'contract_number', 'start_date', 'end_date', 'rent_amount', 'condo_fee', 'property_tax',
   'property_tax_cash', 'property_tax_cash_due_date', 'property_tax_first_installment', 'property_tax_first_installment_due_date',
   'property_tax_second_installment', 'property_tax_second_installment_due_date', 'iptu_installments_count',
-  'extra_charges', 'commission_amount', 'rent_due_day', 'tax_due_day', 'condo_due_day', 'status', 'payment_condition',
+  'extra_charges', 'discount_amount', 'commission_amount', 'rent_due_day', 'tax_due_day', 'condo_due_day', 'status', 'payment_condition',
   'cancellation_penalty', 'other_cancellation_amounts', 'cancellation_justification', 'canceled_at', 'created_at', 'updated_at',
 ];
 
@@ -100,6 +100,7 @@ function serializeLease<T extends Record<string, any>>(lease: T): T {
     condo_fee: lease.condo_fee != null ? Number(lease.condo_fee) : lease.condo_fee,
     property_tax: lease.property_tax != null ? Number(lease.property_tax) : lease.property_tax,
     extra_charges: lease.extra_charges != null ? Number(lease.extra_charges) : lease.extra_charges,
+    discount_amount: lease.discount_amount != null ? Number(lease.discount_amount) : lease.discount_amount,
     commission_amount: lease.commission_amount != null ? Number(lease.commission_amount) : lease.commission_amount,
     agency_commission: lease.agency_commission != null ? Number(lease.agency_commission) : lease.agency_commission,
     cancellation_penalty: lease.cancellation_penalty != null ? Number(lease.cancellation_penalty) : lease.cancellation_penalty,
@@ -148,7 +149,7 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
       conditions[key] = { in: values.map(String) };
     } else if (['contract_number', 'rent_due_day', 'tax_due_day', 'condo_due_day'].includes(key)) {
       conditions[key] = { contains: String(value), mode: 'insensitive' };
-    } else if (['rent_amount', 'condo_fee', 'property_tax', 'property_tax_cash', 'property_tax_first_installment', 'property_tax_second_installment', 'extra_charges', 'commission_amount'].includes(key)) {
+    } else if (['rent_amount', 'condo_fee', 'property_tax', 'property_tax_cash', 'property_tax_first_installment', 'property_tax_second_installment', 'extra_charges', 'discount_amount', 'commission_amount'].includes(key)) {
       const n = parseFloat(String(value));
       if (!isNaN(n)) conditions[key] = n;
     } else if (['start_date', 'end_date', 'canceled_at', 'created_at'].includes(key)) {
@@ -255,6 +256,7 @@ function buildLeaseData(data: CreateLeaseData | UpdateLeaseData, existing?: any)
     iptu_installments: data.iptu_installments !== undefined ? (Array.isArray(data.iptu_installments) ? data.iptu_installments : null) : (existing?.iptu_installments ?? null),
     iptu_installments_due_dates: data.iptu_installments_due_dates !== undefined ? (Array.isArray(data.iptu_installments_due_dates) ? data.iptu_installments_due_dates : null) : (existing?.iptu_installments_due_dates ?? null),
     extra_charges: data.extra_charges !== undefined ? num(data.extra_charges) : (existing?.extra_charges ?? null),
+    discount_amount: data.discount_amount !== undefined ? num(data.discount_amount) : (existing?.discount_amount ?? null),
     commission_amount: data.commission_amount !== undefined ? num(data.commission_amount) : (existing?.commission_amount ?? null),
     insurance_company: data.insurance_company !== undefined ? (data.insurance_company ? String(data.insurance_company).trim() : null) : (existing?.insurance_company ?? null),
     insurance_type: data.insurance_type !== undefined ? (data.insurance_type ? String(data.insurance_type).trim() : null) : (existing?.insurance_type ?? null),
@@ -371,6 +373,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
         { field: 'condo_fee', type: 'number', label: 'Valor do Condomínio', searchable: true },
         { field: 'property_tax', type: 'number', label: 'Valor do IPTU Base', searchable: true },
         { field: 'extra_charges', type: 'number', label: 'Taxas Extras', searchable: true },
+        { field: 'discount_amount', type: 'number', label: 'Desconto / Despesa', searchable: true },
         { field: 'commission_amount', type: 'number', label: 'Comissão', searchable: true },
         { field: 'rent_due_day', type: 'number', label: 'Dia de Vencimento do Aluguel', values: uniqNum(leases.map((l) => l.rent_due_day)), searchable: true },
         { field: 'tax_due_day', type: 'number', label: 'Dia de Vencimento do IPTU', searchable: true },
