@@ -27,6 +27,10 @@ const TENANT_MODELS = new Set([
   // mesmo isolamento automático dos demais.
   'UserGroup', 'UserGroupPermission', 'UserAccessSchedule', 'AuditLog',
   'IptuAuditSettings',
+  // Investimentos: só a raiz tem company_id. InvestmentTransaction e
+  // InvestmentMonthBalance são escopados pelo investimento pai, que é
+  // sempre resolvido antes por `prisma.investment.findFirst` (já injetado).
+  'Investment', 'InvestmentSettings',
 ]);
 
 /** Injeta company_id no `where` das queries de leitura. */

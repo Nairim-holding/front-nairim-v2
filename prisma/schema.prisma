@@ -39,6 +39,8 @@ model Company {
   centers                 Center[]
   recurring_configs       RecurringConfig[]
   plannings               Planning[]
+  investments             Investment[]
+  investment_settings     InvestmentSettings?
   documents               Document[]
   favorites               Favorite[]
   user_column_preferences UserColumnPreference[]
@@ -747,6 +749,7 @@ model FinancialInstitution {
   recurring_configs RecurringConfig[]
   transactions      Transaction[]
   leases            Lease[]
+  investments       Investment[]
   company           Company          @relation(fields: [company_id], references: [id])
 
   @@index([company_id])
@@ -1080,6 +1083,97 @@ model PlanningMonth {
   @@index([planning_id])
 }
 
+/// Investimento da carteira (tela Meus Investimentos).
+///
+/// O emissor/produto são texto livre porque a carteira mistura papéis de
+/// natureza muito diferente (Tesouro, ação, CDB de banco pequeno) e não há
+/// cadastro de "produtos" no sistema — o que existe e é reaproveitado é a
+/// Instituição Financeira, referenciada por FK. `partition` é a conta/carteira
+/// dentro da instituição ("Principal"), exibida junto no rótulo da coluna
+/// "Inst. Fin. - Partição".
+model Investment {
+  id                       String                @id @default(uuid())
+  company_id               String
+  financial_institution_id String
+  partition                String                @default("Principal")
+  issuer                   String
+  product_type             InvestmentProductType
+  product                  String
+  application_date         DateTime              @db.Date
+  maturity_date            DateTime?             @db.Date
+  /// Prazo de resgate em dias. Nulo quando `liquidity_at_maturity` é true.
+  liquidity_days           Int?
+  liquidity_at_maturity    Boolean               @default(false)
+  /// Valor da aplicação inicial. Espelhado como o primeiro InvestmentTransaction
+  /// (é ele que alimenta a linha "Aplicado" do mês da aplicação).
+  invested_amount          Decimal               @db.Decimal(20, 2)
+  notes                    String?
+  /// Ordem de exibição na grid (modal "Editar Ordem de Visualização").
+  display_order            Int                   @default(0)
+  /// Preenchido quando o investimento foi liquidado/resgatado por completo.
+  liquidated_at            DateTime?             @db.Date
+  is_active                Boolean               @default(true)
+  created_at               DateTime              @default(now())
+  updated_at               DateTime              @updatedAt
+  deleted_at               DateTime?
+
+  company               Company                  @relation(fields: [company_id], references: [id])
+  financial_institution FinancialInstitution     @relation(fields: [financial_institution_id], references: [id])
+  transactions          InvestmentTransaction[]
+  monthly_balances      InvestmentMonthBalance[]
+
+  @@index([company_id])
+  @@index([financial_institution_id])
+  @@index([display_order])
+}
+
+/// Aporte (ou resgate) lançado em um investimento. Vários no mesmo mês são
+/// somados na célula "Aplicado" daquele mês.
+model InvestmentTransaction {
+  id            String                    @id @default(uuid())
+  investment_id String
+  type          InvestmentTransactionType @default(CONTRIBUTION)
+  date          DateTime                  @db.Date
+  amount        Decimal                   @db.Decimal(20, 2)
+  created_at    DateTime                  @default(now())
+  updated_at    DateTime                  @updatedAt
+
+  investment Investment @relation(fields: [investment_id], references: [id], onDelete: Cascade)
+
+  @@index([investment_id])
+  @@index([date])
+}
+
+/// Saldo total do investimento em um mês, informado manualmente pelo usuário
+/// (modal "Editar Saldo do Mês"). Mês sem registro herda o saldo do mês
+/// anterior somado ao que foi aplicado — ver InvestmentsRepository.getDashboard.
+model InvestmentMonthBalance {
+  id            String  @id @default(uuid())
+  investment_id String
+  year          Int
+  month         Int
+  balance       Decimal @db.Decimal(20, 2)
+
+  investment Investment @relation(fields: [investment_id], references: [id], onDelete: Cascade)
+
+  @@unique([investment_id, year, month])
+  @@index([investment_id])
+}
+
+/// Configuração da tela de Investimentos — uma linha por empresa (upsert).
+/// `independence_reference_amount` é a renda mensal que o usuário considera
+/// suficiente para a independência financeira; o "Grau de Indep. Financeira"
+/// é Rendimento Mensal ÷ esse valor.
+model InvestmentSettings {
+  id                            String   @id @default(uuid())
+  company_id                    String   @unique
+  independence_reference_amount Decimal? @db.Decimal(20, 2)
+  created_at                    DateTime @default(now())
+  updated_at                    DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id])
+}
+
 // ─── ENUMS ───────────────────────────────────────────────────────────────────
 
 enum Gender {
@@ -1164,4 +1258,35 @@ enum RecurringFrequency {
 enum PlanningType {
   FIXED
   VARIABLE
+}
+
+/// Tipos de produto da tela de Investimentos. Enum (e não tabela) porque a
+/// lista é do mercado, não do cliente — o rótulo exibido vive no front
+/// (INVESTMENT_PRODUCT_TYPE_LABELS).
+enum InvestmentProductType {
+  CDB
+  RDB
+  LCI
+  LCA
+  LC
+  LF
+  TESOURO_DIRETO
+  POUPANCA
+  DEBENTURE
+  CRI
+  CRA
+  COE
+  FUNDO
+  PREVIDENCIA
+  ACAO
+  FII
+  ETF
+  BDR
+  CRIPTO
+  OUTRO
+}
+
+enum InvestmentTransactionType {
+  CONTRIBUTION
+  REDEMPTION
 }

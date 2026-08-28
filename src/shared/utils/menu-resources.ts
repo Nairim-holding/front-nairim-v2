@@ -191,6 +191,13 @@ export const MENU_RESOURCES: MenuResource[] = [
     routes: ['/planning'],
   },
   {
+    key: 'investments',
+    label: 'Meus Investimentos',
+    group: 'Financeiro',
+    actions: FULL,
+    routes: ['/investments'],
+  },
+  {
     key: 'financial-reports',
     label: 'Relatórios',
     group: 'Financeiro',

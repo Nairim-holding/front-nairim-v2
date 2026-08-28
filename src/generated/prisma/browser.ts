@@ -216,3 +216,36 @@ export type Planning = Prisma.PlanningModel
  * 
  */
 export type PlanningMonth = Prisma.PlanningMonthModel
+/**
+ * Model Investment
+ * Investimento da carteira (tela Meus Investimentos).
+ * 
+ * O emissor/produto são texto livre porque a carteira mistura papéis de
+ * natureza muito diferente (Tesouro, ação, CDB de banco pequeno) e não há
+ * cadastro de "produtos" no sistema — o que existe e é reaproveitado é a
+ * Instituição Financeira, referenciada por FK. `partition` é a conta/carteira
+ * dentro da instituição ("Principal"), exibida junto no rótulo da coluna
+ * "Inst. Fin. - Partição".
+ */
+export type Investment = Prisma.InvestmentModel
+/**
+ * Model InvestmentTransaction
+ * Aporte (ou resgate) lançado em um investimento. Vários no mesmo mês são
+ * somados na célula "Aplicado" daquele mês.
+ */
+export type InvestmentTransaction = Prisma.InvestmentTransactionModel
+/**
+ * Model InvestmentMonthBalance
+ * Saldo total do investimento em um mês, informado manualmente pelo usuário
+ * (modal "Editar Saldo do Mês"). Mês sem registro herda o saldo do mês
+ * anterior somado ao que foi aplicado — ver InvestmentsRepository.getDashboard.
+ */
+export type InvestmentMonthBalance = Prisma.InvestmentMonthBalanceModel
+/**
+ * Model InvestmentSettings
+ * Configuração da tela de Investimentos — uma linha por empresa (upsert).
+ * `independence_reference_amount` é a renda mensal que o usuário considera
+ * suficiente para a independência financeira; o "Grau de Indep. Financeira"
+ * é Rendimento Mensal ÷ esse valor.
+ */
+export type InvestmentSettings = Prisma.InvestmentSettingsModel

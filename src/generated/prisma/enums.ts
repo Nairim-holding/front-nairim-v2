@@ -130,3 +130,37 @@ export const PlanningType = {
 } as const
 
 export type PlanningType = (typeof PlanningType)[keyof typeof PlanningType]
+
+
+export const InvestmentProductType = {
+  CDB: 'CDB',
+  RDB: 'RDB',
+  LCI: 'LCI',
+  LCA: 'LCA',
+  LC: 'LC',
+  LF: 'LF',
+  TESOURO_DIRETO: 'TESOURO_DIRETO',
+  POUPANCA: 'POUPANCA',
+  DEBENTURE: 'DEBENTURE',
+  CRI: 'CRI',
+  CRA: 'CRA',
+  COE: 'COE',
+  FUNDO: 'FUNDO',
+  PREVIDENCIA: 'PREVIDENCIA',
+  ACAO: 'ACAO',
+  FII: 'FII',
+  ETF: 'ETF',
+  BDR: 'BDR',
+  CRIPTO: 'CRIPTO',
+  OUTRO: 'OUTRO'
+} as const
+
+export type InvestmentProductType = (typeof InvestmentProductType)[keyof typeof InvestmentProductType]
+
+
+export const InvestmentTransactionType = {
+  CONTRIBUTION: 'CONTRIBUTION',
+  REDEMPTION: 'REDEMPTION'
+} as const
+
+export type InvestmentTransactionType = (typeof InvestmentTransactionType)[keyof typeof InvestmentTransactionType]

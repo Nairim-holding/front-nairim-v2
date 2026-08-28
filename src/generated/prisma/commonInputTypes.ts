@@ -650,6 +650,40 @@ export type EnumPlanningTypeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPlanningTypeFilter<$PrismaModel>
 }
 
+export type EnumInvestmentProductTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentProductType | Prisma.EnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel> | $Enums.InvestmentProductType
+}
+
+export type EnumInvestmentProductTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentProductType | Prisma.EnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentProductTypeWithAggregatesFilter<$PrismaModel> | $Enums.InvestmentProductType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel>
+}
+
+export type EnumInvestmentTransactionTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentTransactionType | Prisma.EnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel> | $Enums.InvestmentTransactionType
+}
+
+export type EnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentTransactionType | Prisma.EnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.InvestmentTransactionType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1221,6 +1255,40 @@ export type NestedEnumPlanningTypeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPlanningTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPlanningTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumInvestmentProductTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentProductType | Prisma.EnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel> | $Enums.InvestmentProductType
+}
+
+export type NestedEnumInvestmentProductTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentProductType | Prisma.EnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentProductType[] | Prisma.ListEnumInvestmentProductTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentProductTypeWithAggregatesFilter<$PrismaModel> | $Enums.InvestmentProductType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInvestmentProductTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumInvestmentTransactionTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentTransactionType | Prisma.EnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel> | $Enums.InvestmentTransactionType
+}
+
+export type NestedEnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InvestmentTransactionType | Prisma.EnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InvestmentTransactionType[] | Prisma.ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.InvestmentTransactionType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
 }
 
 

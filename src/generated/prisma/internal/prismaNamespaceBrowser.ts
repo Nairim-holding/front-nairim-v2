@@ -88,7 +88,11 @@ export const ModelName = {
   Invoice: 'Invoice',
   RecurringConfig: 'RecurringConfig',
   Planning: 'Planning',
-  PlanningMonth: 'PlanningMonth'
+  PlanningMonth: 'PlanningMonth',
+  Investment: 'Investment',
+  InvestmentTransaction: 'InvestmentTransaction',
+  InvestmentMonthBalance: 'InvestmentMonthBalance',
+  InvestmentSettings: 'InvestmentSettings'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -854,6 +858,66 @@ export const PlanningMonthScalarFieldEnum = {
 } as const
 
 export type PlanningMonthScalarFieldEnum = (typeof PlanningMonthScalarFieldEnum)[keyof typeof PlanningMonthScalarFieldEnum]
+
+
+export const InvestmentScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  financial_institution_id: 'financial_institution_id',
+  partition: 'partition',
+  issuer: 'issuer',
+  product_type: 'product_type',
+  product: 'product',
+  application_date: 'application_date',
+  maturity_date: 'maturity_date',
+  liquidity_days: 'liquidity_days',
+  liquidity_at_maturity: 'liquidity_at_maturity',
+  invested_amount: 'invested_amount',
+  notes: 'notes',
+  display_order: 'display_order',
+  liquidated_at: 'liquidated_at',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type InvestmentScalarFieldEnum = (typeof InvestmentScalarFieldEnum)[keyof typeof InvestmentScalarFieldEnum]
+
+
+export const InvestmentTransactionScalarFieldEnum = {
+  id: 'id',
+  investment_id: 'investment_id',
+  type: 'type',
+  date: 'date',
+  amount: 'amount',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type InvestmentTransactionScalarFieldEnum = (typeof InvestmentTransactionScalarFieldEnum)[keyof typeof InvestmentTransactionScalarFieldEnum]
+
+
+export const InvestmentMonthBalanceScalarFieldEnum = {
+  id: 'id',
+  investment_id: 'investment_id',
+  year: 'year',
+  month: 'month',
+  balance: 'balance'
+} as const
+
+export type InvestmentMonthBalanceScalarFieldEnum = (typeof InvestmentMonthBalanceScalarFieldEnum)[keyof typeof InvestmentMonthBalanceScalarFieldEnum]
+
+
+export const InvestmentSettingsScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  independence_reference_amount: 'independence_reference_amount',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type InvestmentSettingsScalarFieldEnum = (typeof InvestmentSettingsScalarFieldEnum)[keyof typeof InvestmentSettingsScalarFieldEnum]
 
 
 export const SortOrder = {

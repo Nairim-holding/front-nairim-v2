@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   Pin,
@@ -36,7 +37,7 @@ import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
-import { resourceForHref } from "@/utils/permissionResource";
+import { normalizeDashboardPathname, resourceForHref } from "@/utils/permissionResource";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { LucideIcon } from "lucide-react";
 
@@ -47,6 +48,39 @@ interface SubmenuItem {
   resource?: string;
   disabled?: boolean;
   isSeparatorBefore?: boolean;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  submenu?: SubmenuItem[];
+}
+
+/**
+ * Item de menu que cobre a rota atual, com a seção (accordion) que o contém.
+ *
+ * Casa por prefixo para que subpáginas fiquem marcadas — `/dashboard/imoveis/
+ * editar/123` acende "Imóvel" —, e escolhe o prefixo MAIS LONGO para que
+ * `/dashboard/locacoes/relatorios` não caia no item `/dashboard/locacoes`.
+ */
+function findActiveEntry(
+  items: NavItem[],
+  currentPath: string,
+): { href: string; parentLabel: string | null } | null {
+  let best: { href: string; parentLabel: string | null } | null = null;
+
+  const consider = (href: string, parentLabel: string | null) => {
+    if (!href || href === '#') return;
+    if (currentPath !== href && !currentPath.startsWith(`${href}/`)) return;
+    if (!best || href.length > best.href.length) best = { href, parentLabel };
+  };
+
+  for (const item of items) {
+    if (item.submenu) item.submenu.forEach((sub) => consider(sub.href, item.label));
+    else consider(item.href, null);
+  }
+
+  return best;
 }
 
 interface AsideProps {
@@ -66,50 +100,40 @@ export default function Aside({
   const isOpen = propIsOpen ?? internalIsOpen;
   const handleToggle = propOnToggle ?? (() => setInternalIsOpen((prev) => !prev));
 
-  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  /**
+   * Seção aberta manualmente, presa à rota em que o clique aconteceu.
+   *
+   * Guardar o `path` junto é o que faz o accordion "seguir" a navegação sem
+   * `useEffect`: assim que a rota muda, a escolha manual deixa de valer e a
+   * seção da nova página assume (ver `openSubmenu` abaixo).
+   */
+  const [manualSubmenu, setManualSubmenu] = useState<{ path: string; label: string | null } | null>(null);
   const [isDarkModeAnimating, setIsDarkModeAnimating] = useState(false);
-  const [activeItem, setActiveItem] = useState("/dashboard");
   const submenuRef = useRef<HTMLDivElement>(null);
+
+  // Rota atual sem o `/{slug}` — os href do menu são sempre `/dashboard/...`.
+  const currentPath = normalizeDashboardPathname(usePathname());
 
   const { logout, user } = useAuth();
   const { can } = usePermissions();
   const { isDark, toggleTheme } = useTheme();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
-        setOpenSubmenu(null);
-      }
-    }
-    if (openSubmenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openSubmenu]);
-
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    setActiveItem(currentPath);
-  }, []);
-
   const handleItemClick = (href: string) => {
-    setActiveItem(href);
     if (href !== "#") {
       // Sem alfinete: navegar e ocultar o menu, dando foco à página aberta.
       // Com o alfinete fixado: o menu permanece sempre visível.
+      // O accordion NÃO é fechado aqui: quem manda nele é a rota (ver
+      // `openSubmenu`), senão o menu voltaria vazio na página recém-aberta.
       if (!isPinned) {
         handleToggle();
       }
-      setOpenSubmenu(null);
     }
   };
 
   const handleSubmenuClick = (e: React.MouseEvent, label: string) => {
     e.stopPropagation();
-    setOpenSubmenu(openSubmenu === label ? null : label);
+    setManualSubmenu({ path: currentPath, label: openSubmenu === label ? null : label });
   };
 
   const handleDarkModeToggle = () => {
@@ -159,6 +183,7 @@ export default function Aside({
           { href: "/dashboard/fornecedores", icon: Users, label: "Contatos", resource: resourceForHref("/dashboard/fornecedores") },
           { href: "/dashboard/lancamentos", icon: FolderInput, label: "Lançamentos", resource: resourceForHref("/dashboard/lancamentos") },
           { href: "/dashboard/planejamento", icon: BarChart2, label: "Planejamento e Controle", resource: resourceForHref("/dashboard/planejamento") },
+          { href: "/dashboard/investimentos", icon: TrendingUp, label: "Meus Investimentos", resource: resourceForHref("/dashboard/investimentos") },
           { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios"), isSeparatorBefore: true },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
@@ -178,9 +203,37 @@ export default function Aside({
     return raw.filter((item) => (item.submenu ? item.submenu.length > 0 : can(item.resource, 'view')));
   }, [isSuperAdmin, can]);
 
+  // Sem `useMemo`: são poucas dezenas de comparações de string por render,
+  // barato o bastante para não valer o custo de memoizar.
+  const activeEntry = findActiveEntry(menuItems as NavItem[], currentPath);
+  const activeItem = activeEntry?.href ?? null;
+  const routeSubmenuLabel = activeEntry?.parentLabel ?? null;
+
+  // Estado derivado, sem efeito: numa subpágina (inclusive chegando por
+  // redirect ou link direto) a seção que a contém já vem aberta e marcada; a
+  // escolha manual só prevalece enquanto o usuário continuar na mesma rota.
+  const openSubmenu =
+    manualSubmenu && manualSubmenu.path === currentPath ? manualSubmenu.label : routeSubmenuLabel;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
+        // Descarta só a escolha manual: a seção da rota atual continua aberta,
+        // porque fechá-la esconderia a página em que o usuário está.
+        setManualSubmenu(null);
+      }
+    }
+    if (openSubmenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openSubmenu]);
+
   const handleLogout = async () => {
     logout();
-    setOpenSubmenu(null);
+    setManualSubmenu(null);
   };
 
   return (

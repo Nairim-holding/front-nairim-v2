@@ -225,6 +225,7 @@ export type FinancialInstitutionWhereInput = {
   recurring_configs?: Prisma.RecurringConfigListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   leases?: Prisma.LeaseListRelationFilter
+  investments?: Prisma.InvestmentListRelationFilter
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
 }
 
@@ -242,6 +243,7 @@ export type FinancialInstitutionOrderByWithRelationInput = {
   recurring_configs?: Prisma.RecurringConfigOrderByRelationAggregateInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   leases?: Prisma.LeaseOrderByRelationAggregateInput
+  investments?: Prisma.InvestmentOrderByRelationAggregateInput
   company?: Prisma.CompanyOrderByWithRelationInput
 }
 
@@ -262,6 +264,7 @@ export type FinancialInstitutionWhereUniqueInput = Prisma.AtLeast<{
   recurring_configs?: Prisma.RecurringConfigListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   leases?: Prisma.LeaseListRelationFilter
+  investments?: Prisma.InvestmentListRelationFilter
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
 }, "id">
 
@@ -310,6 +313,7 @@ export type FinancialInstitutionCreateInput = {
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutFinancial_institutionInput
   company: Prisma.CompanyCreateNestedOneWithoutFinancial_institutionsInput
 }
 
@@ -327,6 +331,7 @@ export type FinancialInstitutionUncheckedCreateInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionUpdateInput = {
@@ -342,6 +347,7 @@ export type FinancialInstitutionUpdateInput = {
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutFinancial_institutionNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutFinancial_institutionsNestedInput
 }
 
@@ -359,6 +365,7 @@ export type FinancialInstitutionUncheckedUpdateInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutFinancial_institutionNestedInput
 }
 
 export type FinancialInstitutionCreateManyInput = {
@@ -544,6 +551,20 @@ export type FinancialInstitutionUpdateOneRequiredWithoutRecurring_configsNestedI
   update?: Prisma.XOR<Prisma.XOR<Prisma.FinancialInstitutionUpdateToOneWithWhereWithoutRecurring_configsInput, Prisma.FinancialInstitutionUpdateWithoutRecurring_configsInput>, Prisma.FinancialInstitutionUncheckedUpdateWithoutRecurring_configsInput>
 }
 
+export type FinancialInstitutionCreateNestedOneWithoutInvestmentsInput = {
+  create?: Prisma.XOR<Prisma.FinancialInstitutionCreateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedCreateWithoutInvestmentsInput>
+  connectOrCreate?: Prisma.FinancialInstitutionCreateOrConnectWithoutInvestmentsInput
+  connect?: Prisma.FinancialInstitutionWhereUniqueInput
+}
+
+export type FinancialInstitutionUpdateOneRequiredWithoutInvestmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.FinancialInstitutionCreateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedCreateWithoutInvestmentsInput>
+  connectOrCreate?: Prisma.FinancialInstitutionCreateOrConnectWithoutInvestmentsInput
+  upsert?: Prisma.FinancialInstitutionUpsertWithoutInvestmentsInput
+  connect?: Prisma.FinancialInstitutionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FinancialInstitutionUpdateToOneWithWhereWithoutInvestmentsInput, Prisma.FinancialInstitutionUpdateWithoutInvestmentsInput>, Prisma.FinancialInstitutionUncheckedUpdateWithoutInvestmentsInput>
+}
+
 export type FinancialInstitutionCreateWithoutCompanyInput = {
   id?: string
   name: string
@@ -557,6 +578,7 @@ export type FinancialInstitutionCreateWithoutCompanyInput = {
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionUncheckedCreateWithoutCompanyInput = {
@@ -572,6 +594,7 @@ export type FinancialInstitutionUncheckedCreateWithoutCompanyInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionCreateOrConnectWithoutCompanyInput = {
@@ -628,6 +651,7 @@ export type FinancialInstitutionCreateWithoutLeasesInput = {
   bank_number?: string | null
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutFinancial_institutionInput
   company: Prisma.CompanyCreateNestedOneWithoutFinancial_institutionsInput
 }
 
@@ -644,6 +668,7 @@ export type FinancialInstitutionUncheckedCreateWithoutLeasesInput = {
   bank_number?: string | null
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutFinancial_institutionInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionCreateOrConnectWithoutLeasesInput = {
@@ -674,6 +699,7 @@ export type FinancialInstitutionUpdateWithoutLeasesInput = {
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutFinancial_institutionNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutFinancial_institutionsNestedInput
 }
 
@@ -690,6 +716,7 @@ export type FinancialInstitutionUncheckedUpdateWithoutLeasesInput = {
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutFinancial_institutionNestedInput
 }
 
 export type FinancialInstitutionCreateWithoutTransactionsInput = {
@@ -704,6 +731,7 @@ export type FinancialInstitutionCreateWithoutTransactionsInput = {
   bank_number?: string | null
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutFinancial_institutionInput
   company: Prisma.CompanyCreateNestedOneWithoutFinancial_institutionsInput
 }
 
@@ -720,6 +748,7 @@ export type FinancialInstitutionUncheckedCreateWithoutTransactionsInput = {
   bank_number?: string | null
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionCreateOrConnectWithoutTransactionsInput = {
@@ -750,6 +779,7 @@ export type FinancialInstitutionUpdateWithoutTransactionsInput = {
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutFinancial_institutionNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutFinancial_institutionsNestedInput
 }
 
@@ -766,6 +796,7 @@ export type FinancialInstitutionUncheckedUpdateWithoutTransactionsInput = {
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutFinancial_institutionNestedInput
 }
 
 export type FinancialInstitutionCreateWithoutRecurring_configsInput = {
@@ -780,6 +811,7 @@ export type FinancialInstitutionCreateWithoutRecurring_configsInput = {
   bank_number?: string | null
   transactions?: Prisma.TransactionCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutFinancial_institutionInput
   company: Prisma.CompanyCreateNestedOneWithoutFinancial_institutionsInput
 }
 
@@ -796,6 +828,7 @@ export type FinancialInstitutionUncheckedCreateWithoutRecurring_configsInput = {
   bank_number?: string | null
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutFinancial_institutionInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutFinancial_institutionInput
 }
 
 export type FinancialInstitutionCreateOrConnectWithoutRecurring_configsInput = {
@@ -826,6 +859,7 @@ export type FinancialInstitutionUpdateWithoutRecurring_configsInput = {
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   transactions?: Prisma.TransactionUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutFinancial_institutionNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutFinancial_institutionsNestedInput
 }
 
@@ -840,6 +874,87 @@ export type FinancialInstitutionUncheckedUpdateWithoutRecurring_configsInput = {
   account_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+}
+
+export type FinancialInstitutionCreateWithoutInvestmentsInput = {
+  id?: string
+  name: string
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  is_active?: boolean
+  account_number?: string | null
+  agency_number?: string | null
+  bank_number?: string | null
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutFinancial_institutionInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutFinancial_institutionInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutFinancial_institutionInput
+  company: Prisma.CompanyCreateNestedOneWithoutFinancial_institutionsInput
+}
+
+export type FinancialInstitutionUncheckedCreateWithoutInvestmentsInput = {
+  id?: string
+  company_id: string
+  name: string
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  is_active?: boolean
+  account_number?: string | null
+  agency_number?: string | null
+  bank_number?: string | null
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutFinancial_institutionInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutFinancial_institutionInput
+}
+
+export type FinancialInstitutionCreateOrConnectWithoutInvestmentsInput = {
+  where: Prisma.FinancialInstitutionWhereUniqueInput
+  create: Prisma.XOR<Prisma.FinancialInstitutionCreateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedCreateWithoutInvestmentsInput>
+}
+
+export type FinancialInstitutionUpsertWithoutInvestmentsInput = {
+  update: Prisma.XOR<Prisma.FinancialInstitutionUpdateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedUpdateWithoutInvestmentsInput>
+  create: Prisma.XOR<Prisma.FinancialInstitutionCreateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedCreateWithoutInvestmentsInput>
+  where?: Prisma.FinancialInstitutionWhereInput
+}
+
+export type FinancialInstitutionUpdateToOneWithWhereWithoutInvestmentsInput = {
+  where?: Prisma.FinancialInstitutionWhereInput
+  data: Prisma.XOR<Prisma.FinancialInstitutionUpdateWithoutInvestmentsInput, Prisma.FinancialInstitutionUncheckedUpdateWithoutInvestmentsInput>
+}
+
+export type FinancialInstitutionUpdateWithoutInvestmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  account_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutFinancial_institutionNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutFinancial_institutionNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutFinancial_institutionNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutFinancial_institutionsNestedInput
+}
+
+export type FinancialInstitutionUncheckedUpdateWithoutInvestmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  account_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bank_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutFinancial_institutionNestedInput
 }
@@ -869,6 +984,7 @@ export type FinancialInstitutionUpdateWithoutCompanyInput = {
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutFinancial_institutionNestedInput
 }
 
 export type FinancialInstitutionUncheckedUpdateWithoutCompanyInput = {
@@ -884,6 +1000,7 @@ export type FinancialInstitutionUncheckedUpdateWithoutCompanyInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutFinancial_institutionNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutFinancial_institutionNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutFinancial_institutionNestedInput
 }
 
 export type FinancialInstitutionUncheckedUpdateManyWithoutCompanyInput = {
@@ -907,12 +1024,14 @@ export type FinancialInstitutionCountOutputType = {
   recurring_configs: number
   transactions: number
   leases: number
+  investments: number
 }
 
 export type FinancialInstitutionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   recurring_configs?: boolean | FinancialInstitutionCountOutputTypeCountRecurring_configsArgs
   transactions?: boolean | FinancialInstitutionCountOutputTypeCountTransactionsArgs
   leases?: boolean | FinancialInstitutionCountOutputTypeCountLeasesArgs
+  investments?: boolean | FinancialInstitutionCountOutputTypeCountInvestmentsArgs
 }
 
 /**
@@ -946,6 +1065,13 @@ export type FinancialInstitutionCountOutputTypeCountLeasesArgs<ExtArgs extends r
   where?: Prisma.LeaseWhereInput
 }
 
+/**
+ * FinancialInstitutionCountOutputType without action
+ */
+export type FinancialInstitutionCountOutputTypeCountInvestmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InvestmentWhereInput
+}
+
 
 export type FinancialInstitutionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -961,6 +1087,7 @@ export type FinancialInstitutionSelect<ExtArgs extends runtime.Types.Extensions.
   recurring_configs?: boolean | Prisma.FinancialInstitution$recurring_configsArgs<ExtArgs>
   transactions?: boolean | Prisma.FinancialInstitution$transactionsArgs<ExtArgs>
   leases?: boolean | Prisma.FinancialInstitution$leasesArgs<ExtArgs>
+  investments?: boolean | Prisma.FinancialInstitution$investmentsArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.FinancialInstitutionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["financialInstitution"]>
@@ -1011,6 +1138,7 @@ export type FinancialInstitutionInclude<ExtArgs extends runtime.Types.Extensions
   recurring_configs?: boolean | Prisma.FinancialInstitution$recurring_configsArgs<ExtArgs>
   transactions?: boolean | Prisma.FinancialInstitution$transactionsArgs<ExtArgs>
   leases?: boolean | Prisma.FinancialInstitution$leasesArgs<ExtArgs>
+  investments?: boolean | Prisma.FinancialInstitution$investmentsArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.FinancialInstitutionCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1027,6 +1155,7 @@ export type $FinancialInstitutionPayload<ExtArgs extends runtime.Types.Extension
     recurring_configs: Prisma.$RecurringConfigPayload<ExtArgs>[]
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     leases: Prisma.$LeasePayload<ExtArgs>[]
+    investments: Prisma.$InvestmentPayload<ExtArgs>[]
     company: Prisma.$CompanyPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1437,6 +1566,7 @@ export interface Prisma__FinancialInstitutionClient<T, Null = never, ExtArgs ext
   recurring_configs<T extends Prisma.FinancialInstitution$recurring_configsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialInstitution$recurring_configsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecurringConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transactions<T extends Prisma.FinancialInstitution$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialInstitution$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   leases<T extends Prisma.FinancialInstitution$leasesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialInstitution$leasesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  investments<T extends Prisma.FinancialInstitution$investmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialInstitution$investmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   company<T extends Prisma.CompanyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CompanyDefaultArgs<ExtArgs>>): Prisma.Prisma__CompanyClient<runtime.Types.Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1947,6 +2077,30 @@ export type FinancialInstitution$leasesArgs<ExtArgs extends runtime.Types.Extens
   take?: number
   skip?: number
   distinct?: Prisma.LeaseScalarFieldEnum | Prisma.LeaseScalarFieldEnum[]
+}
+
+/**
+ * FinancialInstitution.investments
+ */
+export type FinancialInstitution$investmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Investment
+   */
+  select?: Prisma.InvestmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Investment
+   */
+  omit?: Prisma.InvestmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InvestmentInclude<ExtArgs> | null
+  where?: Prisma.InvestmentWhereInput
+  orderBy?: Prisma.InvestmentOrderByWithRelationInput | Prisma.InvestmentOrderByWithRelationInput[]
+  cursor?: Prisma.InvestmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InvestmentScalarFieldEnum | Prisma.InvestmentScalarFieldEnum[]
 }
 
 /**
