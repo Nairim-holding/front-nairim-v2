@@ -38,64 +38,61 @@ export default function Footer() {
       <div className="relative max-w-[1800px] mx-auto px-6 md:px-20 pt-16 md:pt-32 pb-12 md:pb-16">
         
         {/* Grid Principal */}
-        <div className="grid gap-12 md:gap-16 sm:grid-cols-1 md:grid-cols-12 xl:grid-cols-12 mb-16 md:mb-32 items-start">
+        <div className="flex flex-col items-center text-center gap-10 md:gap-16 mb-16 md:mb-32">
 
-          <div className="md:col-span-6 flex flex-col gap-10 md:gap-16">
-
-            {/* Logo e Descrição */}
-            <div className="space-y-6 flex flex-col justify-center items-center lg:justify-start lg:items-start md:space-y-10">
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1.5 }}
-                viewport={{ once: true }}
-                className="flex justify-center md:justify-start"
-              >
-                <div className="relative">
-                  <div className="text-3xl md:text-4xl font-bold tracking-tight">
-                    <Image
-                      src={logoUrl ?? "/logo.svg"}
-                      alt={`Logo ${companyName}`}
-                      width={150}
-                      height={50}
-                      className="object-contain md:w-auto md:h-20"
-                    />
-                  </div>
+          {/* Logo e Descrição */}
+          <div className="space-y-6 flex flex-col items-center md:space-y-10">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1.5 }}
+              viewport={{ once: true }}
+              className="flex justify-center"
+            >
+              <div className="relative">
+                <div className="text-3xl md:text-4xl font-bold tracking-tight">
+                  <Image
+                    src={logoUrl ?? "/logo.svg"}
+                    alt={`Logo ${companyName}`}
+                    width={150}
+                    height={50}
+                    className="object-contain md:w-auto md:h-20"
+                  />
                 </div>
-              </motion.div>
-
-              <div className="flex flex-col gap-4 md:gap-6 border-l border-brand/30 pl-6 md:pl-8 sm:items-center md:items-start">
-                <p className="text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center md:text-left text-content-muted">
-                  Grupo familiar com tradição, investindo no futuro através de
-                  inovação, desenvolvimento e crescimento sustentável.
-                </p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Navegação */}
-            <div className="space-y-6 md:space-y-10">
-              <h4 className="text-[12px] md:text-[15px] text-brand-accent tracking-[0.3em] opacity-80 text-center md:text-left">
-                NAVEGAÇÃO
-              </h4>
-              <nav className="flex flex-col gap-4 md:gap-6">
-                {[
-                  { name: 'Ínicio', href: '/' },
-                  { name: 'Imóveis', href: '#imoveis' },
-                  { name: 'Sobre', href: '#rodape' }
-                ].map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="group flex items-center gap-4 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium justify-center md:justify-start text-content-muted hover:text-content"
-                  >
-                    <span className="w-0 group-hover:w-6 md:group-hover:w-8 h-[1px] bg-brand transition-all duration-500" />
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
+            <div className="flex flex-col items-center gap-4 md:gap-6">
+              <p className="text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center text-content-muted">
+                Grupo familiar com tradição, investindo no futuro através de
+                inovação, desenvolvimento e crescimento sustentável.
+              </p>
             </div>
-
           </div>
+
+          {/* Navegação */}
+          <div className="space-y-6 md:space-y-10">
+            <h4 className="text-[12px] md:text-[15px] text-brand-accent tracking-[0.3em] opacity-80 text-center">
+              NAVEGAÇÃO
+            </h4>
+            <nav className="flex flex-col items-center gap-4 md:gap-6">
+              {[
+                { name: 'Ínicio', href: '/' },
+                { name: 'Imóveis', href: '#imoveis' },
+                { name: 'Sobre', href: '#rodape' }
+              ].map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="group flex items-center gap-4 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium justify-center text-content-muted hover:text-content"
+                >
+                  <span className="w-0 group-hover:w-6 md:group-hover:w-8 h-[1px] bg-brand transition-all duration-500" />
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
         </div>
 
       
@@ -134,11 +131,11 @@ export default function Footer() {
         </div> */}
 
         {/* Base Legal */}
-        <div className="pt-8 md:pt-12 border-t border-ui-border-soft flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 relative">
+        <div className="pt-8 md:pt-12 border-t border-ui-border-soft flex flex-col items-center justify-center gap-6 md:gap-8 relative">
           <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-gradient-to-b from-brand/40 to-transparent" />
 
-          <div className="order-2 md:order-1">
-            <p className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-medium text-center md:text-left text-content-muted">
+          <div>
+            <p className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-medium text-center text-content-muted">
               © {currentYear} {companyName}
             </p>
           </div>
