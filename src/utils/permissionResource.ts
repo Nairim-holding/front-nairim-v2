@@ -34,6 +34,7 @@ export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
   { path: '/dashboard/inquilinos', resource: 'tenants' },
   { path: '/dashboard/proprietarios', resource: 'owners' },
   { path: '/dashboard/tipo-imovel', resource: 'property-types' },
+  { path: '/dashboard/indices-reajuste', resource: 'adjustment-indexes' },
   { path: '/dashboard/locacoes', resource: 'leases' },
   // Vem depois de /dashboard/locacoes, mas `resourceForPathname` casa pelo
   // prefixo mais longo — o relatório não herda a diretiva de `leases`.

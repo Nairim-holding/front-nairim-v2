@@ -31,6 +31,11 @@ const TENANT_MODELS = new Set([
   // InvestmentMonthBalance são escopados pelo investimento pai, que é
   // sempre resolvido antes por `prisma.investment.findFirst` (já injetado).
   'Investment', 'InvestmentSettings',
+  // Etapa 4/7/8: têm company_id e precisam do mesmo isolamento automático.
+  // AdjustmentIndexValue fica de fora de propósito — é escopado pelo
+  // indexador pai, que já vem filtrado por empresa (mesmo caso de
+  // InvestmentTransaction).
+  'AdjustmentIndex', 'Holiday', 'LeaseNotification',
 ]);
 
 /** Injeta company_id no `where` das queries de leitura. */

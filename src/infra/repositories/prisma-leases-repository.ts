@@ -50,8 +50,8 @@ const LIST_INCLUDE = {
 
 const DETAIL_INCLUDE = {
   property: { include: { type: true, addresses: { where: { deleted_at: null }, include: { address: true } }, owner: true, category: true, subcategory: true, center: true } },
-  owner: { include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null } } } },
-  tenant: { include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null } } } },
+  owner: { include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } } } },
+  tenant: { include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } } } },
   type: true,
   agency: { include: { commission_category: true, commission_subcategory: true } },
   financial_institution: true,
@@ -239,6 +239,7 @@ function buildLeaseData(data: CreateLeaseData | UpdateLeaseData, existing?: any)
     tenant_id: data.tenant_id ?? existing?.tenant_id,
     agency_id: data.agency_id !== undefined ? (data.agency_id || null) : (existing?.agency_id ?? null),
     financial_institution_id: data.financial_institution_id !== undefined ? (data.financial_institution_id || null) : (existing?.financial_institution_id ?? null),
+    adjustment_index_id: data.adjustment_index_id !== undefined ? (data.adjustment_index_id || null) : (existing?.adjustment_index_id ?? null),
     contract_number: data.contract_number ?? existing?.contract_number,
     start_date: data.start_date ? new Date(data.start_date) : existing?.start_date,
     end_date: data.end_date ? new Date(data.end_date) : existing?.end_date,

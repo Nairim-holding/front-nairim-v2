@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { X, Check } from "lucide-react";
+import Select from "@/components/ui/Select";
 import { FilterField } from "@/types/administrador";
 
 interface FilterModalProps {
@@ -52,18 +53,15 @@ export default function FilterModal({
               {field.label}
             </label>
             {field.type === 'select' ? (
-              <select
-                className="w-full border border-ui-border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-surface"
+              <Select
                 value={localFilters[field.key] || ''}
-                onChange={(e) => setLocalFilters({
-                  ...localFilters, 
-                  [field.key]: e.target.value || null
+                onChange={(value) => setLocalFilters({
+                  ...localFilters,
+                  [field.key]: String(value) || null
                 })}
-              >
-                {field.options?.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+                options={(field.options ?? []).map((opt) => ({ label: opt.label, value: opt.value }))}
+                full
+              />
             ) : (
               <input
                 type={field.type}

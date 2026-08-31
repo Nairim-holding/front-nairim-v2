@@ -11,13 +11,14 @@ import LeaseCancellationModal from '@/components/domain/leases/LeaseCancellation
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building,
-  Home, File as FileIcon, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload
+  Home, File as FileIcon, Percent, Calculator, Hash, AlertCircle, CreditCard, Copy, Shield, Users, Upload, TrendingUp
 } from 'lucide-react';
 import { updateLeaseAction, getLeaseByIdAction, updateLeaseDocumentsAction } from '@/server/actions/lease';
 import { listPropertiesAction, getPropertyByIdAction } from '@/server/actions/property';
 import { listTenantsAction } from '@/server/actions/tenant';
 import { listAgenciesAction } from '@/server/actions/agency';
 import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
+import { listAdjustmentIndexOptionsAction } from '@/server/actions/adjustment-index';
 
 // Extrai um nome de arquivo legível do caminho salvo (remove diretórios e o
 // prefixo de timestamp gerado no upload). Espelha o padrão de Imóveis.
@@ -79,6 +80,7 @@ export default function EditarLocacaoPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [agencies, setAgencies] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  const [adjustmentIndexes, setAdjustmentIndexes] = useState<Array<{ label: string; value: string }>>([]);
   // Instituição vinculada à locação que não consta entre as ativas (foi
   // inativada depois). Mantida nas opções para não sumir o dado já salvo.
   const [linkedInstitution, setLinkedInstitution] = useState<any>(null);
@@ -90,13 +92,16 @@ export default function EditarLocacaoPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [propertiesRes, tenantsRes, agenciesRes, institutionsRes] = await Promise.all([
+        const [propertiesRes, tenantsRes, agenciesRes, institutionsRes, indexesRes] = await Promise.all([
           listPropertiesAction({ limit: 50 }),
           listTenantsAction({ limit: 100 }),
           listAgenciesAction({ limit: 100 }),
           // Só instituições ativas — mesmo critério do filtro de Lançamentos.
           // A instituição já vinculada à locação é reinserida abaixo, mesmo inativa.
           listFinancialInstitutionsAction({ limit: 100, 'filter[is_active]': 'true' }),
+          // Índices de reajuste (Etapa 4): a action semeia IGP-M/IPCA/INPC/IVAR
+          // na primeira chamada, então o campo nunca aparece vazio.
+          listAdjustmentIndexOptionsAction(),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
@@ -105,6 +110,7 @@ export default function EditarLocacaoPage() {
         setTenants(tenantsRes.data?.data || tenantsRes.data || []);
         setAgencies(agenciesRes.ok ? (agenciesRes.data?.data || agenciesRes.data || []) : []);
         setInstitutions(institutionsRes.ok ? (institutionsRes.data?.data || institutionsRes.data || []) : []);
+        setAdjustmentIndexes(indexesRes.ok ? (indexesRes.data ?? []) : []);
       } catch (error) {
         showMessage('Erro ao carregar dados', 'error');
       } finally {
@@ -210,6 +216,7 @@ export default function EditarLocacaoPage() {
         start_date: data.start_date,
         end_date: data.end_date,
         rent_amount: parseMoney(data.rent_amount || 0),
+        adjustment_index_id: data.adjustment_index_id || null,
         condo_fee: data.condo_fee ? parseMoney(data.condo_fee) : null,
         property_tax: data.property_tax ? parseMoney(data.property_tax) : null,
         extra_charges: data.extra_charges ? parseMoney(data.extra_charges) : null,
@@ -344,6 +351,7 @@ export default function EditarLocacaoPage() {
       financial_institution_id: apiData.financial_institution_id || '',
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
+      adjustment_index_id: apiData.adjustment_index_id || '',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
       property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
@@ -426,6 +434,8 @@ export default function EditarLocacaoPage() {
           { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, full: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
           { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutionOptions], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, icon: <DollarSign size={20} />, mask: 'money' },
+          // Etapa 4, item 1.2: vem logo APÓS o Valor do Aluguel, como pedido.
+          { field: 'adjustment_index_id', label: 'Índice de Reajuste', type: 'select', options: [{ label: 'Nenhum', value: '' }, ...adjustmentIndexes], icon: <TrendingUp size={20} /> },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, icon: <FileIcon size={20} />, mask: 'money' },
           { field: 'extra_charges', label: 'Taxas Extras', type: 'text', icon: <Calculator size={20} />, mask: 'money' },
@@ -769,7 +779,7 @@ export default function EditarLocacaoPage() {
     }
 
     return baseSteps;
-  }, [properties, tenants, agencies, institutionOptions, loadingData, isCanceled]);
+  }, [properties, tenants, agencies, institutionOptions, adjustmentIndexes, loadingData, isCanceled]);
 
   const onSubmitSuccess = (result?: any) => {
     showMessage('Locação atualizada com sucesso!', 'success');

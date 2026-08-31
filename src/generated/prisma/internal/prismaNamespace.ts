@@ -425,7 +425,12 @@ export const ModelName = {
   Investment: 'Investment',
   InvestmentTransaction: 'InvestmentTransaction',
   InvestmentMonthBalance: 'InvestmentMonthBalance',
-  InvestmentSettings: 'InvestmentSettings'
+  InvestmentSettings: 'InvestmentSettings',
+  ContactChannel: 'ContactChannel',
+  AdjustmentIndex: 'AdjustmentIndex',
+  AdjustmentIndexValue: 'AdjustmentIndexValue',
+  Holiday: 'Holiday',
+  LeaseNotification: 'LeaseNotification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -441,7 +446,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "companyBranding" | "agency" | "property" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLog" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings"
+    modelProps: "company" | "companyBranding" | "agency" | "property" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLog" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3553,6 +3558,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ContactChannel: {
+      payload: Prisma.$ContactChannelPayload<ExtArgs>
+      fields: Prisma.ContactChannelFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ContactChannelFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ContactChannelFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        findFirst: {
+          args: Prisma.ContactChannelFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ContactChannelFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        findMany: {
+          args: Prisma.ContactChannelFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>[]
+        }
+        create: {
+          args: Prisma.ContactChannelCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        createMany: {
+          args: Prisma.ContactChannelCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ContactChannelCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>[]
+        }
+        delete: {
+          args: Prisma.ContactChannelDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        update: {
+          args: Prisma.ContactChannelUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        deleteMany: {
+          args: Prisma.ContactChannelDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ContactChannelUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ContactChannelUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>[]
+        }
+        upsert: {
+          args: Prisma.ContactChannelUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContactChannelPayload>
+        }
+        aggregate: {
+          args: Prisma.ContactChannelAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateContactChannel>
+        }
+        groupBy: {
+          args: Prisma.ContactChannelGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ContactChannelGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ContactChannelCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ContactChannelCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdjustmentIndex: {
+      payload: Prisma.$AdjustmentIndexPayload<ExtArgs>
+      fields: Prisma.AdjustmentIndexFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdjustmentIndexFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdjustmentIndexFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        findFirst: {
+          args: Prisma.AdjustmentIndexFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdjustmentIndexFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        findMany: {
+          args: Prisma.AdjustmentIndexFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>[]
+        }
+        create: {
+          args: Prisma.AdjustmentIndexCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        createMany: {
+          args: Prisma.AdjustmentIndexCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdjustmentIndexCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>[]
+        }
+        delete: {
+          args: Prisma.AdjustmentIndexDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        update: {
+          args: Prisma.AdjustmentIndexUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdjustmentIndexDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdjustmentIndexUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdjustmentIndexUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdjustmentIndexUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexPayload>
+        }
+        aggregate: {
+          args: Prisma.AdjustmentIndexAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdjustmentIndex>
+        }
+        groupBy: {
+          args: Prisma.AdjustmentIndexGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdjustmentIndexGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdjustmentIndexCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdjustmentIndexCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdjustmentIndexValue: {
+      payload: Prisma.$AdjustmentIndexValuePayload<ExtArgs>
+      fields: Prisma.AdjustmentIndexValueFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdjustmentIndexValueFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdjustmentIndexValueFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        findFirst: {
+          args: Prisma.AdjustmentIndexValueFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdjustmentIndexValueFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        findMany: {
+          args: Prisma.AdjustmentIndexValueFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>[]
+        }
+        create: {
+          args: Prisma.AdjustmentIndexValueCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        createMany: {
+          args: Prisma.AdjustmentIndexValueCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdjustmentIndexValueCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>[]
+        }
+        delete: {
+          args: Prisma.AdjustmentIndexValueDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        update: {
+          args: Prisma.AdjustmentIndexValueUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        deleteMany: {
+          args: Prisma.AdjustmentIndexValueDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdjustmentIndexValueUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdjustmentIndexValueUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>[]
+        }
+        upsert: {
+          args: Prisma.AdjustmentIndexValueUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdjustmentIndexValuePayload>
+        }
+        aggregate: {
+          args: Prisma.AdjustmentIndexValueAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdjustmentIndexValue>
+        }
+        groupBy: {
+          args: Prisma.AdjustmentIndexValueGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdjustmentIndexValueGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdjustmentIndexValueCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdjustmentIndexValueCountAggregateOutputType> | number
+        }
+      }
+    }
+    Holiday: {
+      payload: Prisma.$HolidayPayload<ExtArgs>
+      fields: Prisma.HolidayFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.HolidayFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.HolidayFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        findFirst: {
+          args: Prisma.HolidayFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.HolidayFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        findMany: {
+          args: Prisma.HolidayFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>[]
+        }
+        create: {
+          args: Prisma.HolidayCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        createMany: {
+          args: Prisma.HolidayCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.HolidayCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>[]
+        }
+        delete: {
+          args: Prisma.HolidayDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        update: {
+          args: Prisma.HolidayUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        deleteMany: {
+          args: Prisma.HolidayDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.HolidayUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.HolidayUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>[]
+        }
+        upsert: {
+          args: Prisma.HolidayUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HolidayPayload>
+        }
+        aggregate: {
+          args: Prisma.HolidayAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateHoliday>
+        }
+        groupBy: {
+          args: Prisma.HolidayGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HolidayGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.HolidayCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HolidayCountAggregateOutputType> | number
+        }
+      }
+    }
+    LeaseNotification: {
+      payload: Prisma.$LeaseNotificationPayload<ExtArgs>
+      fields: Prisma.LeaseNotificationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LeaseNotificationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LeaseNotificationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        findFirst: {
+          args: Prisma.LeaseNotificationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LeaseNotificationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        findMany: {
+          args: Prisma.LeaseNotificationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>[]
+        }
+        create: {
+          args: Prisma.LeaseNotificationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        createMany: {
+          args: Prisma.LeaseNotificationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LeaseNotificationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>[]
+        }
+        delete: {
+          args: Prisma.LeaseNotificationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        update: {
+          args: Prisma.LeaseNotificationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        deleteMany: {
+          args: Prisma.LeaseNotificationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LeaseNotificationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LeaseNotificationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>[]
+        }
+        upsert: {
+          args: Prisma.LeaseNotificationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseNotificationPayload>
+        }
+        aggregate: {
+          args: Prisma.LeaseNotificationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLeaseNotification>
+        }
+        groupBy: {
+          args: Prisma.LeaseNotificationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeaseNotificationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LeaseNotificationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeaseNotificationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -3960,7 +4335,9 @@ export const LeaseScalarFieldEnum = {
   insurance_company: 'insurance_company',
   insurance_type: 'insurance_type',
   insurance_policy: 'insurance_policy',
-  guarantors: 'guarantors'
+  guarantors: 'guarantors',
+  adjustment_index_id: 'adjustment_index_id',
+  overdue_status: 'overdue_status'
 } as const
 
 export type LeaseScalarFieldEnum = (typeof LeaseScalarFieldEnum)[keyof typeof LeaseScalarFieldEnum]
@@ -4401,6 +4778,89 @@ export const InvestmentSettingsScalarFieldEnum = {
 export type InvestmentSettingsScalarFieldEnum = (typeof InvestmentSettingsScalarFieldEnum)[keyof typeof InvestmentSettingsScalarFieldEnum]
 
 
+export const ContactChannelScalarFieldEnum = {
+  id: 'id',
+  contact_id: 'contact_id',
+  kind: 'kind',
+  value: 'value',
+  label: 'label',
+  display_order: 'display_order',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type ContactChannelScalarFieldEnum = (typeof ContactChannelScalarFieldEnum)[keyof typeof ContactChannelScalarFieldEnum]
+
+
+export const AdjustmentIndexScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  code: 'code',
+  description: 'description',
+  sgs_code: 'sgs_code',
+  sgs_code_12m: 'sgs_code_12m',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type AdjustmentIndexScalarFieldEnum = (typeof AdjustmentIndexScalarFieldEnum)[keyof typeof AdjustmentIndexScalarFieldEnum]
+
+
+export const AdjustmentIndexValueScalarFieldEnum = {
+  id: 'id',
+  adjustment_index_id: 'adjustment_index_id',
+  reference_month: 'reference_month',
+  reference_year: 'reference_year',
+  monthly_rate: 'monthly_rate',
+  accumulated_12m: 'accumulated_12m',
+  synced_at: 'synced_at',
+  from_api: 'from_api',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type AdjustmentIndexValueScalarFieldEnum = (typeof AdjustmentIndexValueScalarFieldEnum)[keyof typeof AdjustmentIndexValueScalarFieldEnum]
+
+
+export const HolidayScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  date: 'date',
+  description: 'description',
+  scope: 'scope',
+  city: 'city',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type HolidayScalarFieldEnum = (typeof HolidayScalarFieldEnum)[keyof typeof HolidayScalarFieldEnum]
+
+
+export const LeaseNotificationScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  lease_id: 'lease_id',
+  channel: 'channel',
+  recipient: 'recipient',
+  message: 'message',
+  reference_month: 'reference_month',
+  reference_year: 'reference_year',
+  days_overdue: 'days_overdue',
+  sent_at: 'sent_at',
+  sent_by_id: 'sent_by_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type LeaseNotificationScalarFieldEnum = (typeof LeaseNotificationScalarFieldEnum)[keyof typeof LeaseNotificationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -4631,6 +5091,20 @@ export type ListEnumLeaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'LeaseOverdueStatus'
+ */
+export type EnumLeaseOverdueStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LeaseOverdueStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'LeaseOverdueStatus[]'
+ */
+export type ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LeaseOverdueStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'PropertyStatus'
  */
 export type EnumPropertyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PropertyStatus'>
@@ -4753,6 +5227,48 @@ export type EnumInvestmentTransactionTypeFieldRefInput<$PrismaModel> = FieldRefI
  * Reference to a field of type 'InvestmentTransactionType[]'
  */
 export type ListEnumInvestmentTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InvestmentTransactionType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ContactChannelKind'
+ */
+export type EnumContactChannelKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ContactChannelKind'>
+    
+
+
+/**
+ * Reference to a field of type 'ContactChannelKind[]'
+ */
+export type ListEnumContactChannelKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ContactChannelKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'HolidayScope'
+ */
+export type EnumHolidayScopeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'HolidayScope'>
+    
+
+
+/**
+ * Reference to a field of type 'HolidayScope[]'
+ */
+export type ListEnumHolidayScopeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'HolidayScope[]'>
+    
+
+
+/**
+ * Reference to a field of type 'LeaseNotificationChannel'
+ */
+export type EnumLeaseNotificationChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LeaseNotificationChannel'>
+    
+
+
+/**
+ * Reference to a field of type 'LeaseNotificationChannel[]'
+ */
+export type ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LeaseNotificationChannel[]'>
     
 
 /**
@@ -4907,6 +5423,11 @@ export type GlobalOmitConfig = {
   investmentTransaction?: Prisma.InvestmentTransactionOmit
   investmentMonthBalance?: Prisma.InvestmentMonthBalanceOmit
   investmentSettings?: Prisma.InvestmentSettingsOmit
+  contactChannel?: Prisma.ContactChannelOmit
+  adjustmentIndex?: Prisma.AdjustmentIndexOmit
+  adjustmentIndexValue?: Prisma.AdjustmentIndexValueOmit
+  holiday?: Prisma.HolidayOmit
+  leaseNotification?: Prisma.LeaseNotificationOmit
 }
 
 /* Types for Logging */

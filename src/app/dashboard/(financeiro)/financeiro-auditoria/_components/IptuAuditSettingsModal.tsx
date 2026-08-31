@@ -157,6 +157,7 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
                 <Select
                   label="Categoria"
                   options={incomeCategoryOptions}
+                  searchable
                   value={incomeCategoryId}
                   onChange={handleIncomeCategoryChange}
                   placeholder="Selecione a categoria"
@@ -164,6 +165,7 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
                 <Select
                   label="Subcategoria (opcional)"
                   options={incomeSubcategoryOptions}
+                  searchable
                   value={incomeSubcategoryId}
                   onChange={(v) => setIncomeSubcategoryId(String(v))}
                   placeholder="Todas as subcategorias"
@@ -178,6 +180,7 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
                 <Select
                   label="Categoria"
                   options={expenseCategoryOptions}
+                  searchable
                   value={expenseCategoryId}
                   onChange={handleExpenseCategoryChange}
                   placeholder="Selecione a categoria"
@@ -185,6 +188,7 @@ export default function IptuAuditSettingsModal({ onClose, onSaved }: IptuAuditSe
                 <Select
                   label="Subcategoria (opcional)"
                   options={expenseSubcategoryOptions}
+                  searchable
                   value={expenseSubcategoryId}
                   onChange={(v) => setExpenseSubcategoryId(String(v))}
                   placeholder="Todas as subcategorias"

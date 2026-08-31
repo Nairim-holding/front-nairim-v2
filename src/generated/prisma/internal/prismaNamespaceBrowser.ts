@@ -92,7 +92,12 @@ export const ModelName = {
   Investment: 'Investment',
   InvestmentTransaction: 'InvestmentTransaction',
   InvestmentMonthBalance: 'InvestmentMonthBalance',
-  InvestmentSettings: 'InvestmentSettings'
+  InvestmentSettings: 'InvestmentSettings',
+  ContactChannel: 'ContactChannel',
+  AdjustmentIndex: 'AdjustmentIndex',
+  AdjustmentIndexValue: 'AdjustmentIndexValue',
+  Holiday: 'Holiday',
+  LeaseNotification: 'LeaseNotification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -479,7 +484,9 @@ export const LeaseScalarFieldEnum = {
   insurance_company: 'insurance_company',
   insurance_type: 'insurance_type',
   insurance_policy: 'insurance_policy',
-  guarantors: 'guarantors'
+  guarantors: 'guarantors',
+  adjustment_index_id: 'adjustment_index_id',
+  overdue_status: 'overdue_status'
 } as const
 
 export type LeaseScalarFieldEnum = (typeof LeaseScalarFieldEnum)[keyof typeof LeaseScalarFieldEnum]
@@ -918,6 +925,89 @@ export const InvestmentSettingsScalarFieldEnum = {
 } as const
 
 export type InvestmentSettingsScalarFieldEnum = (typeof InvestmentSettingsScalarFieldEnum)[keyof typeof InvestmentSettingsScalarFieldEnum]
+
+
+export const ContactChannelScalarFieldEnum = {
+  id: 'id',
+  contact_id: 'contact_id',
+  kind: 'kind',
+  value: 'value',
+  label: 'label',
+  display_order: 'display_order',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type ContactChannelScalarFieldEnum = (typeof ContactChannelScalarFieldEnum)[keyof typeof ContactChannelScalarFieldEnum]
+
+
+export const AdjustmentIndexScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  code: 'code',
+  description: 'description',
+  sgs_code: 'sgs_code',
+  sgs_code_12m: 'sgs_code_12m',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type AdjustmentIndexScalarFieldEnum = (typeof AdjustmentIndexScalarFieldEnum)[keyof typeof AdjustmentIndexScalarFieldEnum]
+
+
+export const AdjustmentIndexValueScalarFieldEnum = {
+  id: 'id',
+  adjustment_index_id: 'adjustment_index_id',
+  reference_month: 'reference_month',
+  reference_year: 'reference_year',
+  monthly_rate: 'monthly_rate',
+  accumulated_12m: 'accumulated_12m',
+  synced_at: 'synced_at',
+  from_api: 'from_api',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type AdjustmentIndexValueScalarFieldEnum = (typeof AdjustmentIndexValueScalarFieldEnum)[keyof typeof AdjustmentIndexValueScalarFieldEnum]
+
+
+export const HolidayScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  date: 'date',
+  description: 'description',
+  scope: 'scope',
+  city: 'city',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type HolidayScalarFieldEnum = (typeof HolidayScalarFieldEnum)[keyof typeof HolidayScalarFieldEnum]
+
+
+export const LeaseNotificationScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  lease_id: 'lease_id',
+  channel: 'channel',
+  recipient: 'recipient',
+  message: 'message',
+  reference_month: 'reference_month',
+  reference_year: 'reference_year',
+  days_overdue: 'days_overdue',
+  sent_at: 'sent_at',
+  sent_by_id: 'sent_by_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type LeaseNotificationScalarFieldEnum = (typeof LeaseNotificationScalarFieldEnum)[keyof typeof LeaseNotificationScalarFieldEnum]
 
 
 export const SortOrder = {

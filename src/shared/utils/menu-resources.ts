@@ -121,6 +121,13 @@ export const MENU_RESOURCES: MenuResource[] = [
     actions: FULL,
     routes: ['/property-types'],
   },
+  {
+    key: 'adjustment-indexes',
+    label: 'Índices de Reajuste',
+    group: 'Cadastrar',
+    actions: FULL,
+    routes: ['/adjustment-indexes'],
+  },
 
   // ─── Locações ──────────────────────────────────────────────────────────────
   {

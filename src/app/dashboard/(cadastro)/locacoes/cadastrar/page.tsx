@@ -10,13 +10,14 @@ import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building,
-  Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users, Upload
+  Home, File, Percent, Calculator, Hash, CreditCard, Copy, Shield, Users, Upload, TrendingUp
 } from 'lucide-react';
 import { createLeaseAction, updateLeaseDocumentsAction } from '@/server/actions/lease';
 import { listPropertiesAction, getPropertyByIdAction } from '@/server/actions/property';
 import { listTenantsAction } from '@/server/actions/tenant';
 import { listAgenciesAction } from '@/server/actions/agency';
 import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
+import { listAdjustmentIndexOptionsAction } from '@/server/actions/adjustment-index';
 
 const parseMoney = (value: string | number) => {
   if (!value && value !== 0) return 0;
@@ -51,6 +52,7 @@ export default function CadastrarLocacaoPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [agencies, setAgencies] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  const [adjustmentIndexes, setAdjustmentIndexes] = useState<Array<{ label: string; value: string }>>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
 
@@ -65,12 +67,14 @@ export default function CadastrarLocacaoPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [propertiesRes, tenantsRes, agenciesRes, institutionsRes] = await Promise.all([
+        const [propertiesRes, tenantsRes, agenciesRes, institutionsRes, indexesRes] = await Promise.all([
           listPropertiesAction({ limit: 100 }),
           listTenantsAction({ limit: 100 }),
           listAgenciesAction({ limit: 100 }),
           // Só instituições ativas — mesmo critério do filtro de Lançamentos.
           listFinancialInstitutionsAction({ limit: 100, 'filter[is_active]': 'true' }),
+          // Índices de reajuste (Etapa 4).
+          listAdjustmentIndexOptionsAction(),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) throw new Error('Erro ao buscar dados');
@@ -79,6 +83,7 @@ export default function CadastrarLocacaoPage() {
         setTenants(tenantsRes.data?.data || tenantsRes.data || []);
         setAgencies(agenciesRes.ok ? (agenciesRes.data?.data || agenciesRes.data || []) : []);
         setInstitutions(institutionsRes.ok ? (institutionsRes.data?.data || institutionsRes.data || []) : []);
+        setAdjustmentIndexes(indexesRes.ok ? (indexesRes.data ?? []) : []);
       } catch (error) {
         showMessage('Erro ao carregar dados', 'error');
       } finally {
@@ -199,6 +204,7 @@ export default function CadastrarLocacaoPage() {
         start_date: data.start_date,
         end_date: data.end_date,
         rent_amount: parseMoney(data.rent_amount || 0),
+        adjustment_index_id: data.adjustment_index_id || null,
         condo_fee: data.condo_fee ? parseMoney(data.condo_fee) : null,
         property_tax: data.property_tax ? parseMoney(data.property_tax) : null,
         extra_charges: data.extra_charges ? parseMoney(data.extra_charges) : null,
@@ -308,6 +314,8 @@ export default function CadastrarLocacaoPage() {
           { field: 'commission_category_display', label: 'Categoria de Comissão', type: 'text', required: true, full: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione uma imobiliária', className: 'col-span-full' },
           { field: 'financial_institution_id', label: 'Instituição Financeira', type: 'select', required: true, options: [{ label: 'Selecione...', value: '' }, ...institutions.map((i) => ({ label: i.name, value: i.id }))], icon: <CreditCard size={20} />, className: 'col-span-full' },
           { field: 'rent_amount', label: 'Valor do Aluguel', type: 'text', required: true, placeholder: 'R$ 0,00', icon: <DollarSign size={20} />, mask: 'money' },
+          // Etapa 4, item 1.2: logo APÓS o Valor do Aluguel.
+          { field: 'adjustment_index_id', label: 'Índice de Reajuste', type: 'select', options: [{ label: 'Nenhum', value: '' }, ...adjustmentIndexes], icon: <TrendingUp size={20} /> },
           { field: 'condo_fee', label: 'Valor do Condomínio', type: 'text', placeholder: 'R$ 0,00', icon: <Building size={20} />, mask: 'money' },
           { field: 'property_tax', label: 'Valor do IPTU (Base)', type: 'text', required: false, placeholder: 'R$ 0,00', icon: <File size={20} />, mask: 'money' },
           { field: 'extra_charges', label: 'Taxas Extras', type: 'text', placeholder: 'R$ 0,00', icon: <Calculator size={20} />, mask: 'money' },
@@ -596,7 +604,7 @@ export default function CadastrarLocacaoPage() {
         ],
       }
     ];
-  }, [properties, tenants, agencies, institutions, loadingData]);
+  }, [properties, tenants, agencies, institutions, adjustmentIndexes, loadingData]);
 
   const onSubmitSuccess = (result?: any) => {
     showMessage('Locação cadastrada com sucesso!', 'success');

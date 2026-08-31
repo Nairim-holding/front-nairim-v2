@@ -12,6 +12,7 @@ import ModalShell, { InvestmentInfoBox, modalInputClass, modalLabelClass } from 
 import ContributionFormModal from './ContributionFormModal';
 import { MONTH_NAMES_FULL, formatAmount, formatDateBR } from './format';
 import type { InvestmentRow, InvestmentTransactionEntry } from './types';
+import Select from '@/components/ui/Select';
 
 /**
  * Modal "Gerenciar Aportes e Resgates".
@@ -120,28 +121,18 @@ export default function ContributionsModal({ investment, year, month, onClose, o
           </button>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <select
+          <Select
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className={modalInputClass}
-          >
-            {MONTH_NAMES_FULL.map((name, index) => (
-              <option key={name} value={index + 1}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <select
+            onChange={(value) => setSelectedMonth(Number(value))}
+            options={MONTH_NAMES_FULL.map((name, index) => ({ label: name, value: index + 1 }))}
+            full
+          />
+          <Select
             value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className={modalInputClass}
-          >
-            {years.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedYear(Number(value))}
+            options={years.map((value) => ({ label: String(value), value }))}
+            full
+          />
         </div>
 
         <div className="rounded-lg border border-ui-border-soft overflow-hidden">

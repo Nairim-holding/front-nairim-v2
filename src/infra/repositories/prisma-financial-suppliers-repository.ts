@@ -12,6 +12,7 @@ import type {
 } from '@/core/entities/financial-supplier';
 import { NotFoundError } from '@/core/errors/domain-errors';
 import { throwDuplicatedDocument } from '@/core/use-cases/financial-supplier/crud';
+import { buildContactCreateData } from './shared/contact-channels';
 
 /**
  * Implementação Prisma de {@link SuppliersRepository}.
@@ -190,7 +191,7 @@ function sortSuppliers(suppliers: SupplierRow[], sortOptions: Record<string, str
 
 const SUPPLIER_INCLUDE = {
   addresses: { where: { deleted_at: null }, include: { address: true } },
-  contacts: { where: { deleted_at: null } },
+  contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } },
 };
 
 export class PrismaFinancialSuppliersRepository implements SuppliersRepository {
@@ -513,12 +514,7 @@ export class PrismaFinancialSuppliersRepository implements SuppliersRepository {
     contacts?: SupplierContactInput[],
   ): Promise<void> {
     for (const contact of contacts ?? []) {
-      await tx.contact.create({
-        data: {
-          ...contact,
-          supplier_id: supplierId,
-        },
-      });
+      await tx.contact.create({ data: buildContactCreateData(contact, { supplier_id: supplierId }) });
     }
   }
 

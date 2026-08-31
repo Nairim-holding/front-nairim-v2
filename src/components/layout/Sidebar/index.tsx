@@ -31,7 +31,8 @@ import {
   FileClock,
   FileBarChart2,
   SearchCheck,
-  TrendingUp
+  TrendingUp,
+  Percent
 } from "lucide-react";
 import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
@@ -160,6 +161,7 @@ export default function Aside({
           { href: "/dashboard/inquilinos", icon: UserCheck, label: "Inquilinos", resource: resourceForHref("/dashboard/inquilinos") },
           { href: "/dashboard/proprietarios", icon: UserCircle, label: "Proprietários", resource: resourceForHref("/dashboard/proprietarios") },
           { href: "/dashboard/tipo-imovel", icon: Tag, label: "Tipo Imóvel", resource: resourceForHref("/dashboard/tipo-imovel") },
+          { href: "/dashboard/indices-reajuste", icon: Percent, label: "Índices de Reajuste", resource: resourceForHref("/dashboard/indices-reajuste") },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       {

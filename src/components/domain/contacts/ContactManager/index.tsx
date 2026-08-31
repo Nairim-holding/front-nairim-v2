@@ -1,8 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { Plus, Trash2, Search, User, Phone, Mail, Smartphone, X, Edit2, Loader2, Check } from 'lucide-react';
 import { maskPhone } from '@/utils/masks';
+import ContactChannelFields from '../ContactChannelFields';
+import {
+  hasAnyValue,
+  toFormValue,
+  toPersistedValue,
+  type ContactChannel as ContactChannelEntry,
+  type ContactFormValue,
+} from '@/core/entities/contact-channel';
 import { getOwnerContactSuggestionsAction } from '@/server/actions/owner';
 import { getTenantContactSuggestionsAction } from '@/server/actions/tenant';
 import { getAgencyContactSuggestionsAction } from '@/server/actions/agency';
@@ -13,6 +22,8 @@ interface Contact {
   phone?: string;
   cellphone?: string;
   email?: string;
+  /** Telefones/e-mails adicionais (Etapa 3). O principal segue nos campos acima. */
+  channels?: ContactChannelEntry[];
 }
 
 interface ContactManagerProps {
@@ -36,12 +47,10 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   const [contacts, setContacts] = useState<Contact[]>(value || []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const [tempContact, setTempContact] = useState<Contact>({
-    contact: '',
-    phone: '',
-    cellphone: '',
-    email: ''
-  });
+  // O formulário edita LISTAS; a conversão para principal + canais acontece
+  // só no salvar, em `toPersistedValue`.
+  const emptyForm: ContactFormValue = { contact: '', cellphones: [''], phones: [''], emails: [''] };
+  const [tempContact, setTempContact] = useState<ContactFormValue>(emptyForm);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [availableContacts, setAvailableContacts] = useState<Contact[]>([]);
@@ -91,11 +100,11 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
     
     if (mode === 'edit' && index !== undefined) {
       setEditingIndex(index);
-      setTempContact({ ...contacts[index] });
+      setTempContact(toFormValue(contacts[index]));
       setActiveTab('new');
     } else {
       setEditingIndex(null);
-      setTempContact({ contact: '', phone: '', cellphone: '', email: '' });
+      setTempContact(emptyForm);
       setActiveTab('new');
     }
     setIsModalOpen(true);
@@ -104,21 +113,20 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingIndex(null);
-    setTempContact({ contact: '', phone: '', cellphone: '', email: '' });
+    setTempContact(emptyForm);
     setSearchTerm('');
   };
 
   const handleSaveContact = () => {
-    if (!tempContact.contact && !tempContact.email && !tempContact.phone && !tempContact.cellphone) {
-      return; 
-    }
+    if (!hasAnyValue(tempContact)) return;
 
     const newContacts = [...contacts];
+    const persisted = toPersistedValue(tempContact) as Contact;
 
     if (editingIndex !== null) {
-      newContacts[editingIndex] = tempContact;
+      newContacts[editingIndex] = persisted;
     } else {
-      newContacts.push(tempContact);
+      newContacts.push(persisted);
     }
 
     setContacts(newContacts);
@@ -131,7 +139,8 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
       contact: contact.contact,
       phone: contact.phone,
       cellphone: contact.cellphone,
-      email: contact.email
+      email: contact.email,
+      channels: contact.channels ?? [],
     };
     
     const newContacts = [...contacts, newContactToAdd];
@@ -196,24 +205,44 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
               )}
             </div>
             
+            {/* Mostra TODOS os meios de contato, não só o principal: com a
+                Etapa 3 um contato pode ter vários celulares/fixos/e-mails, e
+                exibir só o primeiro esconderia o que o usuário acabou de
+                cadastrar. */}
             <div className="space-y-2 mt-auto">
-              {(c.cellphone || c.phone) && (
-                <div className={`text-xs text-content-muted flex items-start gap-2 p-2 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'} min-w-0`}>
-                  <div className="shrink-0 mt-0.5">
-                    {c.cellphone ? <Smartphone size={13} className="text-content-placeholder" /> : <Phone size={13} className="text-content-placeholder" />}
+              {(() => {
+                const view = toFormValue(c);
+                const lines: Array<{ key: string; icon: ReactNode; text: string; title?: string }> = [
+                  ...view.cellphones.map((value, i) => ({
+                    key: `cel-${i}`,
+                    icon: <Smartphone size={13} className="text-content-placeholder" />,
+                    text: maskPhone(value),
+                  })),
+                  ...view.phones.map((value, i) => ({
+                    key: `tel-${i}`,
+                    icon: <Phone size={13} className="text-content-placeholder" />,
+                    text: maskPhone(value),
+                  })),
+                  ...view.emails.map((value, i) => ({
+                    key: `mail-${i}`,
+                    icon: <Mail size={13} className="text-content-placeholder" />,
+                    text: value,
+                    title: value,
+                  })),
+                ];
+
+                return lines.map((line) => (
+                  <div
+                    key={line.key}
+                    className={`text-xs text-content-muted flex items-start gap-2 p-2 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'} min-w-0`}
+                  >
+                    <div className="shrink-0 mt-0.5">{line.icon}</div>
+                    <span className="break-all whitespace-normal leading-tight" title={line.title}>
+                      {line.text}
+                    </span>
                   </div>
-                  <span className="break-all whitespace-normal leading-tight">
-                    {c.cellphone ? maskPhone(c.cellphone) : maskPhone(c.phone || '')}
-                  </span>
-                </div>
-              )}
-              
-              {c.email && (
-                <div className={`text-xs text-content-muted flex items-start gap-2 p-2 rounded ${readOnly ? 'bg-surface/50' : 'bg-surface-subtle'} min-w-0`}>
-                  <Mail size={13} className="text-content-placeholder shrink-0 mt-0.5" />
-                  <span className="break-all whitespace-normal leading-tight" title={c.email}>{c.email}</span>
-                </div>
-              )}
+                ));
+              })()}
             </div>
           </div>
         ))}
@@ -297,42 +326,47 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                       <input
                         type="text"
                         value={tempContact.contact || ''}
-                        onChange={(e) => setTempContact({...tempContact, contact: e.target.value})}
+                        onChange={(e) => setTempContact({ ...tempContact, contact: e.target.value })}
                         className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="Ex: Maria Silva"
                         autoFocus
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-content-secondary mb-1.5">Celular</label>
-                      <input
+                      <ContactChannelFields
+                        label="Celular"
+                        icon={<Smartphone size={13} className="text-content-placeholder" />}
+                        values={tempContact.cellphones}
+                        onChange={(cellphones) => setTempContact({ ...tempContact, cellphones })}
+                        mask={maskPhoneInput}
                         type="tel"
-                        value={maskPhoneInput(tempContact.cellphone || '')}
-                        onChange={(e) => setTempContact({...tempContact, cellphone: maskPhoneInput(e.target.value)})}
-                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-                        placeholder="(00) 00000-0000"
                         maxLength={15}
+                        placeholder="(00) 00000-0000"
+                        addLabel="Adicionar celular"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-content-secondary mb-1.5">Telefone Fixo</label>
-                      <input
+                      <ContactChannelFields
+                        label="Telefone Fixo"
+                        icon={<Phone size={13} className="text-content-placeholder" />}
+                        values={tempContact.phones}
+                        onChange={(phones) => setTempContact({ ...tempContact, phones })}
+                        mask={maskPhoneInput}
                         type="tel"
-                        value={maskPhoneInput(tempContact.phone || '')}
-                        onChange={(e) => setTempContact({...tempContact, phone: maskPhoneInput(e.target.value)})}
-                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-                        placeholder="(00) 0000-0000"
                         maxLength={14}
+                        placeholder="(00) 0000-0000"
+                        addLabel="Adicionar telefone"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-content-secondary mb-1.5">E-mail</label>
-                      <input
+                      <ContactChannelFields
+                        label="E-mail"
+                        icon={<Mail size={13} className="text-content-placeholder" />}
+                        values={tempContact.emails}
+                        onChange={(emails) => setTempContact({ ...tempContact, emails })}
                         type="email"
-                        value={tempContact.email || ''}
-                        onChange={(e) => setTempContact({...tempContact, email: e.target.value})}
-                        className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                         placeholder="email@exemplo.com"
+                        addLabel="Adicionar e-mail"
                       />
                     </div>
                   </div>

@@ -242,6 +242,7 @@ export type ContactWhereInput = {
   owner?: Prisma.XOR<Prisma.OwnerNullableScalarRelationFilter, Prisma.OwnerWhereInput> | null
   supplier?: Prisma.XOR<Prisma.SupplierNullableScalarRelationFilter, Prisma.SupplierWhereInput> | null
   tenant?: Prisma.XOR<Prisma.TenantNullableScalarRelationFilter, Prisma.TenantWhereInput> | null
+  channels?: Prisma.ContactChannelListRelationFilter
 }
 
 export type ContactOrderByWithRelationInput = {
@@ -261,6 +262,7 @@ export type ContactOrderByWithRelationInput = {
   owner?: Prisma.OwnerOrderByWithRelationInput
   supplier?: Prisma.SupplierOrderByWithRelationInput
   tenant?: Prisma.TenantOrderByWithRelationInput
+  channels?: Prisma.ContactChannelOrderByRelationAggregateInput
 }
 
 export type ContactWhereUniqueInput = Prisma.AtLeast<{
@@ -283,6 +285,7 @@ export type ContactWhereUniqueInput = Prisma.AtLeast<{
   owner?: Prisma.XOR<Prisma.OwnerNullableScalarRelationFilter, Prisma.OwnerWhereInput> | null
   supplier?: Prisma.XOR<Prisma.SupplierNullableScalarRelationFilter, Prisma.SupplierWhereInput> | null
   tenant?: Prisma.XOR<Prisma.TenantNullableScalarRelationFilter, Prisma.TenantWhereInput> | null
+  channels?: Prisma.ContactChannelListRelationFilter
 }, "id">
 
 export type ContactOrderByWithAggregationInput = {
@@ -334,6 +337,7 @@ export type ContactCreateInput = {
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
+  channels?: Prisma.ContactChannelCreateNestedManyWithoutContactInput
 }
 
 export type ContactUncheckedCreateInput = {
@@ -349,6 +353,7 @@ export type ContactUncheckedCreateInput = {
   owner_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
+  channels?: Prisma.ContactChannelUncheckedCreateNestedManyWithoutContactInput
 }
 
 export type ContactUpdateInput = {
@@ -364,6 +369,7 @@ export type ContactUpdateInput = {
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
+  channels?: Prisma.ContactChannelUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateInput = {
@@ -379,6 +385,7 @@ export type ContactUncheckedUpdateInput = {
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  channels?: Prisma.ContactChannelUncheckedUpdateManyWithoutContactNestedInput
 }
 
 export type ContactCreateManyInput = {
@@ -475,6 +482,11 @@ export type ContactMinOrderByAggregateInput = {
   owner_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
   supplier_id?: Prisma.SortOrder
+}
+
+export type ContactScalarRelationFilter = {
+  is?: Prisma.ContactWhereInput
+  isNot?: Prisma.ContactWhereInput
 }
 
 export type ContactCreateNestedManyWithoutAgencyInput = {
@@ -645,6 +657,20 @@ export type ContactUncheckedUpdateManyWithoutSupplierNestedInput = {
   deleteMany?: Prisma.ContactScalarWhereInput | Prisma.ContactScalarWhereInput[]
 }
 
+export type ContactCreateNestedOneWithoutChannelsInput = {
+  create?: Prisma.XOR<Prisma.ContactCreateWithoutChannelsInput, Prisma.ContactUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.ContactCreateOrConnectWithoutChannelsInput
+  connect?: Prisma.ContactWhereUniqueInput
+}
+
+export type ContactUpdateOneRequiredWithoutChannelsNestedInput = {
+  create?: Prisma.XOR<Prisma.ContactCreateWithoutChannelsInput, Prisma.ContactUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.ContactCreateOrConnectWithoutChannelsInput
+  upsert?: Prisma.ContactUpsertWithoutChannelsInput
+  connect?: Prisma.ContactWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ContactUpdateToOneWithWhereWithoutChannelsInput, Prisma.ContactUpdateWithoutChannelsInput>, Prisma.ContactUncheckedUpdateWithoutChannelsInput>
+}
+
 export type ContactCreateWithoutAgencyInput = {
   id?: string
   contact?: string | null
@@ -657,6 +683,7 @@ export type ContactCreateWithoutAgencyInput = {
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
+  channels?: Prisma.ContactChannelCreateNestedManyWithoutContactInput
 }
 
 export type ContactUncheckedCreateWithoutAgencyInput = {
@@ -671,6 +698,7 @@ export type ContactUncheckedCreateWithoutAgencyInput = {
   owner_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
+  channels?: Prisma.ContactChannelUncheckedCreateNestedManyWithoutContactInput
 }
 
 export type ContactCreateOrConnectWithoutAgencyInput = {
@@ -729,6 +757,7 @@ export type ContactCreateWithoutOwnerInput = {
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
+  channels?: Prisma.ContactChannelCreateNestedManyWithoutContactInput
 }
 
 export type ContactUncheckedCreateWithoutOwnerInput = {
@@ -743,6 +772,7 @@ export type ContactUncheckedCreateWithoutOwnerInput = {
   agency_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
+  channels?: Prisma.ContactChannelUncheckedCreateNestedManyWithoutContactInput
 }
 
 export type ContactCreateOrConnectWithoutOwnerInput = {
@@ -783,6 +813,7 @@ export type ContactCreateWithoutTenantInput = {
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
+  channels?: Prisma.ContactChannelCreateNestedManyWithoutContactInput
 }
 
 export type ContactUncheckedCreateWithoutTenantInput = {
@@ -797,6 +828,7 @@ export type ContactUncheckedCreateWithoutTenantInput = {
   agency_id?: string | null
   owner_id?: string | null
   supplier_id?: string | null
+  channels?: Prisma.ContactChannelUncheckedCreateNestedManyWithoutContactInput
 }
 
 export type ContactCreateOrConnectWithoutTenantInput = {
@@ -837,6 +869,7 @@ export type ContactCreateWithoutSupplierInput = {
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
+  channels?: Prisma.ContactChannelCreateNestedManyWithoutContactInput
 }
 
 export type ContactUncheckedCreateWithoutSupplierInput = {
@@ -851,6 +884,7 @@ export type ContactUncheckedCreateWithoutSupplierInput = {
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
+  channels?: Prisma.ContactChannelUncheckedCreateNestedManyWithoutContactInput
 }
 
 export type ContactCreateOrConnectWithoutSupplierInput = {
@@ -879,6 +913,82 @@ export type ContactUpdateManyWithWhereWithoutSupplierInput = {
   data: Prisma.XOR<Prisma.ContactUpdateManyMutationInput, Prisma.ContactUncheckedUpdateManyWithoutSupplierInput>
 }
 
+export type ContactCreateWithoutChannelsInput = {
+  id?: string
+  contact?: string | null
+  phone?: string | null
+  email?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cellphone?: string | null
+  agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
+  owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
+  supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
+  tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
+}
+
+export type ContactUncheckedCreateWithoutChannelsInput = {
+  id?: string
+  contact?: string | null
+  phone?: string | null
+  email?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cellphone?: string | null
+  agency_id?: string | null
+  owner_id?: string | null
+  tenant_id?: string | null
+  supplier_id?: string | null
+}
+
+export type ContactCreateOrConnectWithoutChannelsInput = {
+  where: Prisma.ContactWhereUniqueInput
+  create: Prisma.XOR<Prisma.ContactCreateWithoutChannelsInput, Prisma.ContactUncheckedCreateWithoutChannelsInput>
+}
+
+export type ContactUpsertWithoutChannelsInput = {
+  update: Prisma.XOR<Prisma.ContactUpdateWithoutChannelsInput, Prisma.ContactUncheckedUpdateWithoutChannelsInput>
+  create: Prisma.XOR<Prisma.ContactCreateWithoutChannelsInput, Prisma.ContactUncheckedCreateWithoutChannelsInput>
+  where?: Prisma.ContactWhereInput
+}
+
+export type ContactUpdateToOneWithWhereWithoutChannelsInput = {
+  where?: Prisma.ContactWhereInput
+  data: Prisma.XOR<Prisma.ContactUpdateWithoutChannelsInput, Prisma.ContactUncheckedUpdateWithoutChannelsInput>
+}
+
+export type ContactUpdateWithoutChannelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  contact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
+  owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
+  supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
+  tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
+}
+
+export type ContactUncheckedUpdateWithoutChannelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  contact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
 export type ContactCreateManyAgencyInput = {
   id?: string
   contact?: string | null
@@ -905,6 +1015,7 @@ export type ContactUpdateWithoutAgencyInput = {
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
+  channels?: Prisma.ContactChannelUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateWithoutAgencyInput = {
@@ -919,6 +1030,7 @@ export type ContactUncheckedUpdateWithoutAgencyInput = {
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  channels?: Prisma.ContactChannelUncheckedUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateManyWithoutAgencyInput = {
@@ -961,6 +1073,7 @@ export type ContactUpdateWithoutOwnerInput = {
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
+  channels?: Prisma.ContactChannelUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateWithoutOwnerInput = {
@@ -975,6 +1088,7 @@ export type ContactUncheckedUpdateWithoutOwnerInput = {
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  channels?: Prisma.ContactChannelUncheckedUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateManyWithoutOwnerInput = {
@@ -1017,6 +1131,7 @@ export type ContactUpdateWithoutTenantInput = {
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
+  channels?: Prisma.ContactChannelUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateWithoutTenantInput = {
@@ -1031,6 +1146,7 @@ export type ContactUncheckedUpdateWithoutTenantInput = {
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  channels?: Prisma.ContactChannelUncheckedUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateManyWithoutTenantInput = {
@@ -1073,6 +1189,7 @@ export type ContactUpdateWithoutSupplierInput = {
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
+  channels?: Prisma.ContactChannelUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateWithoutSupplierInput = {
@@ -1087,6 +1204,7 @@ export type ContactUncheckedUpdateWithoutSupplierInput = {
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  channels?: Prisma.ContactChannelUncheckedUpdateManyWithoutContactNestedInput
 }
 
 export type ContactUncheckedUpdateManyWithoutSupplierInput = {
@@ -1103,6 +1221,35 @@ export type ContactUncheckedUpdateManyWithoutSupplierInput = {
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
+
+/**
+ * Count Type ContactCountOutputType
+ */
+
+export type ContactCountOutputType = {
+  channels: number
+}
+
+export type ContactCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  channels?: boolean | ContactCountOutputTypeCountChannelsArgs
+}
+
+/**
+ * ContactCountOutputType without action
+ */
+export type ContactCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ContactCountOutputType
+   */
+  select?: Prisma.ContactCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ContactCountOutputType without action
+ */
+export type ContactCountOutputTypeCountChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ContactChannelWhereInput
+}
 
 
 export type ContactSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1122,6 +1269,8 @@ export type ContactSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   owner?: boolean | Prisma.Contact$ownerArgs<ExtArgs>
   supplier?: boolean | Prisma.Contact$supplierArgs<ExtArgs>
   tenant?: boolean | Prisma.Contact$tenantArgs<ExtArgs>
+  channels?: boolean | Prisma.Contact$channelsArgs<ExtArgs>
+  _count?: boolean | Prisma.ContactCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["contact"]>
 
 export type ContactSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1183,6 +1332,8 @@ export type ContactInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   owner?: boolean | Prisma.Contact$ownerArgs<ExtArgs>
   supplier?: boolean | Prisma.Contact$supplierArgs<ExtArgs>
   tenant?: boolean | Prisma.Contact$tenantArgs<ExtArgs>
+  channels?: boolean | Prisma.Contact$channelsArgs<ExtArgs>
+  _count?: boolean | Prisma.ContactCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ContactIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   agency?: boolean | Prisma.Contact$agencyArgs<ExtArgs>
@@ -1204,6 +1355,11 @@ export type $ContactPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     owner: Prisma.$OwnerPayload<ExtArgs> | null
     supplier: Prisma.$SupplierPayload<ExtArgs> | null
     tenant: Prisma.$TenantPayload<ExtArgs> | null
+    /**
+     * Telefones/e-mails adicionais (Etapa 3). Os campos `phone`/`cellphone`/
+     * `email` acima seguem sendo o contato principal.
+     */
+    channels: Prisma.$ContactChannelPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1616,6 +1772,7 @@ export interface Prisma__ContactClient<T, Null = never, ExtArgs extends runtime.
   owner<T extends Prisma.Contact$ownerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Contact$ownerArgs<ExtArgs>>): Prisma.Prisma__OwnerClient<runtime.Types.Result.GetResult<Prisma.$OwnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   supplier<T extends Prisma.Contact$supplierArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Contact$supplierArgs<ExtArgs>>): Prisma.Prisma__SupplierClient<runtime.Types.Result.GetResult<Prisma.$SupplierPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   tenant<T extends Prisma.Contact$tenantArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Contact$tenantArgs<ExtArgs>>): Prisma.Prisma__TenantClient<runtime.Types.Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  channels<T extends Prisma.Contact$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Contact$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContactChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2131,6 +2288,30 @@ export type Contact$tenantArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   include?: Prisma.TenantInclude<ExtArgs> | null
   where?: Prisma.TenantWhereInput
+}
+
+/**
+ * Contact.channels
+ */
+export type Contact$channelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ContactChannel
+   */
+  select?: Prisma.ContactChannelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ContactChannel
+   */
+  omit?: Prisma.ContactChannelOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ContactChannelInclude<ExtArgs> | null
+  where?: Prisma.ContactChannelWhereInput
+  orderBy?: Prisma.ContactChannelOrderByWithRelationInput | Prisma.ContactChannelOrderByWithRelationInput[]
+  cursor?: Prisma.ContactChannelWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ContactChannelScalarFieldEnum | Prisma.ContactChannelScalarFieldEnum[]
 }
 
 /**

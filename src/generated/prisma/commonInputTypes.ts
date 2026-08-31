@@ -461,6 +461,13 @@ export type EnumLeaseStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel> | $Enums.LeaseStatus
 }
 
+export type EnumLeaseOverdueStatusNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseOverdueStatus | Prisma.EnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel> | $Enums.LeaseOverdueStatus | null
+}
+
 export type DecimalWithAggregatesFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel>
@@ -485,6 +492,16 @@ export type EnumLeaseStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel>
+}
+
+export type EnumLeaseOverdueStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseOverdueStatus | Prisma.EnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumLeaseOverdueStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.LeaseOverdueStatus | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel>
 }
 
 export type EnumPropertyStatusFilter<$PrismaModel = never> = {
@@ -682,6 +699,57 @@ export type EnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
+}
+
+export type EnumContactChannelKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.ContactChannelKind | Prisma.EnumContactChannelKindFieldRefInput<$PrismaModel>
+  in?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel> | $Enums.ContactChannelKind
+}
+
+export type EnumContactChannelKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ContactChannelKind | Prisma.EnumContactChannelKindFieldRefInput<$PrismaModel>
+  in?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumContactChannelKindWithAggregatesFilter<$PrismaModel> | $Enums.ContactChannelKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel>
+}
+
+export type EnumHolidayScopeFilter<$PrismaModel = never> = {
+  equals?: $Enums.HolidayScope | Prisma.EnumHolidayScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel> | $Enums.HolidayScope
+}
+
+export type EnumHolidayScopeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.HolidayScope | Prisma.EnumHolidayScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHolidayScopeWithAggregatesFilter<$PrismaModel> | $Enums.HolidayScope
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel>
+}
+
+export type EnumLeaseNotificationChannelFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseNotificationChannel | Prisma.EnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel> | $Enums.LeaseNotificationChannel
+}
+
+export type EnumLeaseNotificationChannelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseNotificationChannel | Prisma.EnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumLeaseNotificationChannelWithAggregatesFilter<$PrismaModel> | $Enums.LeaseNotificationChannel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel>
 }
 
 export type NestedStringFilter<$PrismaModel = never> = {
@@ -1079,6 +1147,13 @@ export type NestedEnumLeaseStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel> | $Enums.LeaseStatus
 }
 
+export type NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseOverdueStatus | Prisma.EnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel> | $Enums.LeaseOverdueStatus | null
+}
+
 export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel>
@@ -1103,6 +1178,16 @@ export type NestedEnumLeaseStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumLeaseStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumLeaseOverdueStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseOverdueStatus | Prisma.EnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.LeaseOverdueStatus[] | Prisma.ListEnumLeaseOverdueStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumLeaseOverdueStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.LeaseOverdueStatus | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumLeaseOverdueStatusNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumPropertyStatusFilter<$PrismaModel = never> = {
@@ -1289,6 +1374,57 @@ export type NestedEnumInvestmentTransactionTypeWithAggregatesFilter<$PrismaModel
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumInvestmentTransactionTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumContactChannelKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.ContactChannelKind | Prisma.EnumContactChannelKindFieldRefInput<$PrismaModel>
+  in?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel> | $Enums.ContactChannelKind
+}
+
+export type NestedEnumContactChannelKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ContactChannelKind | Prisma.EnumContactChannelKindFieldRefInput<$PrismaModel>
+  in?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ContactChannelKind[] | Prisma.ListEnumContactChannelKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumContactChannelKindWithAggregatesFilter<$PrismaModel> | $Enums.ContactChannelKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumContactChannelKindFilter<$PrismaModel>
+}
+
+export type NestedEnumHolidayScopeFilter<$PrismaModel = never> = {
+  equals?: $Enums.HolidayScope | Prisma.EnumHolidayScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel> | $Enums.HolidayScope
+}
+
+export type NestedEnumHolidayScopeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.HolidayScope | Prisma.EnumHolidayScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HolidayScope[] | Prisma.ListEnumHolidayScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHolidayScopeWithAggregatesFilter<$PrismaModel> | $Enums.HolidayScope
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumHolidayScopeFilter<$PrismaModel>
+}
+
+export type NestedEnumLeaseNotificationChannelFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseNotificationChannel | Prisma.EnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel> | $Enums.LeaseNotificationChannel
+}
+
+export type NestedEnumLeaseNotificationChannelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.LeaseNotificationChannel | Prisma.EnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.LeaseNotificationChannel[] | Prisma.ListEnumLeaseNotificationChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumLeaseNotificationChannelWithAggregatesFilter<$PrismaModel> | $Enums.LeaseNotificationChannel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumLeaseNotificationChannelFilter<$PrismaModel>
 }
 
 

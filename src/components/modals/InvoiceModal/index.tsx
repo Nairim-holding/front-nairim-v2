@@ -4,6 +4,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { X, CreditCard, Calendar, DollarSign, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Option } from "@/types/types";
+import Select from "@/components/ui/Select";
 
 // Format currency to BRL
 const formatCurrency = (value: number): string => {
@@ -201,21 +202,15 @@ export default function InvoiceModal({
           <div className="grid grid-cols-12 gap-4">
             {/* Card Select */}
             <div className="col-span-5 space-y-1">
-              <label className="text-sm font-medium text-content-secondary">
-                Cartão de crédito *
-              </label>
-              <select
+              <Select
+                label="Cartão de crédito"
+                required
                 value={selectedCard}
-                onChange={(e) => setSelectedCard(e.target.value)}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-              >
-                <option value="">Selecione</option>
-                {cards.map((card) => (
-                  <option key={card.value} value={card.value}>
-                    {card.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setSelectedCard(String(value))}
+                options={[{ label: "Selecione", value: "" }, ...cards]}
+                searchable
+                full
+              />
             </div>
 
             {/* Month/Year Input */}
@@ -315,18 +310,13 @@ export default function InvoiceModal({
                     Inst. Financeira
                     <span className="text-content-muted" title="Instituição para pagamento">ⓘ</span>
                   </label>
-                  <select
+                  <Select
                     value={institution}
-                    onChange={(e) => setInstitution(e.target.value)}
-                    className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none text-sm bg-surface text-content"
-                  >
-                    <option value="">Selecione</option>
-                    {institutions?.map((inst) => (
-                      <option key={inst.value} value={inst.value}>
-                        {inst.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setInstitution(String(value))}
+                    options={[{ label: "Selecione", value: "" }, ...(institutions ?? [])]}
+                    searchable
+                    full
+                  />
                 </div>
 
                 {/* Status */}

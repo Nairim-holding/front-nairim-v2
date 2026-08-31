@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, HelpCircle } from 'lucide-react';
+import { X, HelpCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ColumnConfig {
   key: string;
@@ -21,6 +21,9 @@ interface ColumnConfig {
 /** Agrupa as linhas da tabela por um campo, com um cabeçalho de subtotal por grupo. */
 interface GroupByConfig {
   key: string;
+  /** Extrai o rótulo do grupo quando o campo não é uma string (ex.: `agency` é um objeto). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  label?: (row: any) => string;
   /** Ordem explícita dos valores do grupo (ex.: faixas do gráfico); os demais entram depois, em ordem alfabética. */
   order?: string[];
   /** Rótulo do subtotal do grupo, ex.: (n) => `Total de ${n} locações`. */
@@ -132,6 +135,25 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
     };
   }, [isOpen]);
 
+  // Grupos recolhidos (só com `groupBy`). Guarda os FECHADOS, e não os
+  // abertos: assim um grupo novo que apareça depois já entra expandido.
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
+
+  const toggleGroup = useCallback((groupKey: string) => {
+    setCollapsedGroups((previous) => {
+      const next = new Set(previous);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+  }, []);
+
+  // Reabre tudo ao reabrir o modal, senão o estado de um detalhe anterior
+  // vazaria para o próximo gráfico aberto.
+  useEffect(() => {
+    if (!isOpen) setCollapsedGroups(new Set());
+  }, [isOpen]);
+
   const normalizedColumns = useMemo<ColumnConfig[]>(() => {
     if (!columns) {
       return data.length > 0
@@ -160,7 +182,7 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
 
     const map = new Map<string, typeof data>();
     for (const row of data) {
-      const groupKey = String(row[groupBy.key] ?? '—');
+      const groupKey = groupBy.label ? groupBy.label(row) : String(row[groupBy.key] ?? '—');
       if (!map.has(groupKey)) map.set(groupKey, []);
       map.get(groupKey)!.push(row);
     }
@@ -261,13 +283,25 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
                             <tr key={`group-${group.key}`} className="bg-surface-subtle">
                               <td
                                 colSpan={normalizedColumns.length}
-                                className="px-6 py-2 text-xs font-semibold text-content uppercase tracking-wide"
+                                className="px-0 py-0 text-xs font-semibold text-content uppercase tracking-wide"
                               >
-                                {group.key} —{' '}
-                                {groupBy?.unitLabel ? groupBy.unitLabel(group.rows.length) : `Total de ${group.rows.length}`}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleGroup(group.key)}
+                                  aria-expanded={!collapsedGroups.has(group.key)}
+                                  className="w-full flex items-center gap-2 px-6 py-2 text-left uppercase tracking-wide hover:bg-surface-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                                >
+                                  {collapsedGroups.has(group.key)
+                                    ? <ChevronRight size={14} className="shrink-0" />
+                                    : <ChevronDown size={14} className="shrink-0" />}
+                                  <span>
+                                    {group.key} —{' '}
+                                    {groupBy?.unitLabel ? groupBy.unitLabel(group.rows.length) : `Total de ${group.rows.length}`}
+                                  </span>
+                                </button>
                               </td>
                             </tr>,
-                            ...group.rows.map((row, idx) => (
+                            ...(collapsedGroups.has(group.key) ? [] : group.rows.map((row, idx) => (
                               <tr key={row.id ?? `${group.key}-${idx}`} className="hover:bg-surface-subtle">
                                 {normalizedColumns.map((col) => (
                                   <td
@@ -278,7 +312,7 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
                                   </td>
                                 ))}
                               </tr>
-                            )),
+                            ))),
                           ])
                         : data.map((row, idx) => (
                             <tr key={row.id ?? idx} className="hover:bg-surface-subtle">

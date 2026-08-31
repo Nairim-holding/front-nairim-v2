@@ -164,3 +164,36 @@ export const InvestmentTransactionType = {
 } as const
 
 export type InvestmentTransactionType = (typeof InvestmentTransactionType)[keyof typeof InvestmentTransactionType]
+
+
+export const ContactChannelKind = {
+  CELLPHONE: 'CELLPHONE',
+  PHONE: 'PHONE',
+  EMAIL: 'EMAIL'
+} as const
+
+export type ContactChannelKind = (typeof ContactChannelKind)[keyof typeof ContactChannelKind]
+
+
+export const HolidayScope = {
+  NATIONAL: 'NATIONAL',
+  MUNICIPAL: 'MUNICIPAL'
+} as const
+
+export type HolidayScope = (typeof HolidayScope)[keyof typeof HolidayScope]
+
+
+export const LeaseNotificationChannel = {
+  EMAIL: 'EMAIL',
+  WHATSAPP: 'WHATSAPP'
+} as const
+
+export type LeaseNotificationChannel = (typeof LeaseNotificationChannel)[keyof typeof LeaseNotificationChannel]
+
+
+export const LeaseOverdueStatus = {
+  NOTIFIED: 'NOTIFIED',
+  NEGOTIATING: 'NEGOTIATING'
+} as const
+
+export type LeaseOverdueStatus = (typeof LeaseOverdueStatus)[keyof typeof LeaseOverdueStatus]

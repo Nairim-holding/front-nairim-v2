@@ -9,6 +9,7 @@ import type {
   Tenant,
   UpdateTenantData,
 } from '@/core/entities/tenant';
+import { buildContactCreateData } from './shared/contact-channels';
 
 /**
  * Implementação Prisma de {@link TenantsRepository}.
@@ -27,7 +28,7 @@ const SORTABLE_DIRECT = [...DIRECT_FIELDS, 'created_at', 'updated_at'];
 
 const LIST_INCLUDE = {
   addresses: { where: { deleted_at: null }, include: { address: true } },
-  contacts: { where: { deleted_at: null } },
+  contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } },
   leases: true,
 } as const;
 
@@ -241,7 +242,7 @@ export class PrismaTenantsRepository implements TenantsRepository {
   async findById(id: string): Promise<Tenant | null> {
     const tenant = await prisma.tenant.findFirst({
       where: { id, deleted_at: null },
-      include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null } }, leases: true },
+      include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } }, leases: true },
     });
     return (tenant as Tenant) ?? null;
   }
@@ -312,7 +313,7 @@ export class PrismaTenantsRepository implements TenantsRepository {
       });
 
       for (const contact of data.contacts ?? []) {
-        await tx.contact.create({ data: { contact: contact.contact || null, phone: contact.phone || null, cellphone: contact.cellphone || null, email: contact.email || null, tenant_id: newTenant.id } });
+        await tx.contact.create({ data: buildContactCreateData(contact, { tenant_id: newTenant.id }) });
       }
       for (const address of data.addresses ?? []) {
         const newAddress = await tx.address.create({
@@ -346,7 +347,7 @@ export class PrismaTenantsRepository implements TenantsRepository {
       if (data.contacts !== undefined) {
         await tx.contact.updateMany({ where: { tenant_id: id, deleted_at: null }, data: { deleted_at: new Date() } });
         for (const contact of data.contacts ?? []) {
-          await tx.contact.create({ data: { contact: contact.contact || null, phone: contact.phone || null, cellphone: contact.cellphone || null, email: contact.email || null, tenant_id: id } });
+          await tx.contact.create({ data: buildContactCreateData(contact, { tenant_id: id }) });
         }
       }
       if (data.addresses !== undefined) {

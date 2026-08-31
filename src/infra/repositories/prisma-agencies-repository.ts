@@ -9,6 +9,7 @@ import type {
   PaginatedAgencies,
   UpdateAgencyData,
 } from '@/core/entities/agency';
+import { buildContactCreateData } from './shared/contact-channels';
 
 /**
  * Implementação Prisma de {@link AgenciesRepository}.
@@ -29,7 +30,7 @@ const SORTABLE_DIRECT = [...DIRECT_FIELDS, 'created_at', 'updated_at'];
 
 const LIST_INCLUDE = {
   addresses: { where: { deleted_at: null }, include: { address: true } },
-  contacts: { where: { deleted_at: null } },
+  contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } },
   commission_category: true,
   commission_subcategory: true,
 } as const;
@@ -281,7 +282,7 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
   async findById(id: string): Promise<Agency | null> {
     const agency = await prisma.agency.findFirst({
       where: { id, deleted_at: null },
-      include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null } } },
+      include: { addresses: { where: { deleted_at: null }, include: { address: true } }, contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } } },
     });
     if (agency && (agency as any).commission_percentage != null) {
       (agency as any).commission_percentage = Number((agency as any).commission_percentage);
@@ -322,15 +323,7 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
       });
 
       for (const contact of data.contacts ?? []) {
-        await tx.contact.create({
-          data: {
-            contact: contact.contact || null,
-            phone: contact.phone || null,
-            cellphone: contact.cellphone || null,
-            email: contact.email || null,
-            agency_id: newAgency.id,
-          },
-        });
+        await tx.contact.create({ data: buildContactCreateData(contact, { agency_id: newAgency.id }) });
       }
 
       for (const address of data.addresses ?? []) {
@@ -373,15 +366,7 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
       if (data.contacts !== undefined) {
         await tx.contact.updateMany({ where: { agency_id: id, deleted_at: null }, data: { deleted_at: new Date() } });
         for (const contact of data.contacts ?? []) {
-          await tx.contact.create({
-            data: {
-              contact: contact.contact || null,
-              phone: contact.phone || null,
-              cellphone: contact.cellphone || null,
-              email: contact.email || null,
-              agency_id: id,
-            },
-          });
+          await tx.contact.create({ data: buildContactCreateData(contact, { agency_id: id }) });
         }
       }
 

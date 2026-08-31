@@ -12,6 +12,7 @@ import { listSubcategoriesAction } from '@/server/actions/financial-subcategory'
 import { listFinancialInstitutionsAction } from '@/server/actions/financial-institution';
 import { listCentersAction } from '@/server/actions/financial-center';
 import { listSuppliersAction } from '@/server/actions/financial-supplier';
+import Select from '@/components/ui/Select';
 
 interface Option {
   label: string;
@@ -253,19 +254,15 @@ export default function LeaseCancellationModal({
     { required = false, emptyLabel = 'Selecione...' }: { required?: boolean; emptyLabel?: string } = {},
   ) => (
     <div className="flex flex-col gap-1">
-      <label className="text-[13px] font-medium text-content-secondary">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <select
+      <Select
+        label={label}
+        required={required}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2 h-9 text-[13px] border border-ui-border rounded-lg outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-surface"
-      >
-        <option value="">{emptyLabel}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+        onChange={(selected) => onChange(String(selected))}
+        options={[{ label: emptyLabel, value: '' }, ...options]}
+        placeholder={emptyLabel}
+        full
+      />
     </div>
   );
 

@@ -21,9 +21,22 @@ export interface SelectProps {
   tabIndex?: number;
   disabled?: boolean;
   placeholder?: string;
+  /** Habilita busca/typeahead. Se omitido, liga sozinho quando a lista é longa. */
   searchable?: boolean;
   autoOpen?: boolean;
+  /**
+   * Ocupa a largura do container em vez da largura mínima padrão.
+   * Mesma semântica do `full` do Input, para os dois se comportarem igual
+   * dentro das linhas `flex-wrap` do DynamicForm.
+   */
+  full?: boolean;
 }
+
+// Acima deste número de opções o campo passa a aceitar digitação
+// automaticamente. O corte é baixo de propósito: a busca é o padrão do
+// sistema, e só listas triviais (Sim/Não, 2–3 status) ficam sem a caixa de
+// pesquisa, que ali só ocuparia espaço. `searchable` explícito sempre vence.
+const SEARCHABLE_THRESHOLD = 4;
 
 // Função auxiliar para remover acentos e caracteres especiais (ex: ç -> c, á -> a)
 const normalizeText = (text: string) => {
@@ -43,8 +56,9 @@ export default function Select({
   disabled,
   value,
   placeholder = "Selecione...",
-  searchable = false,
+  searchable,
   autoOpen = false,
+  full,
   ...props
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -88,18 +102,22 @@ export default function Select({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Quando `searchable` não é informado, liga o typeahead automaticamente em listas
+  // grandes o suficiente para que rolar seja pior do que digitar.
+  const isSearchable = searchable ?? options.length > SEARCHABLE_THRESHOLD;
+
   useEffect(() => {
-    if (isOpen && searchable && searchInputRef.current) {
+    if (isOpen && isSearchable && searchInputRef.current) {
       searchInputRef.current.focus();
     }
-  }, [isOpen, searchable]);
+  }, [isOpen, isSearchable]);
 
   // Aplica o filtro ignorando acentos e case sensitive
   const filteredOptions = useMemo(() => {
-    if (!searchable || !searchTerm) return options;
+    if (!isSearchable || !searchTerm) return options;
     const normalizedSearch = normalizeText(searchTerm);
     return options.filter(opt => normalizeText(opt.label).includes(normalizedSearch));
-  }, [options, searchable, searchTerm]);
+  }, [options, isSearchable, searchTerm]);
 
   const handleOptionSelect = (option: Option) => {
     setSelectedValue(option.value);
@@ -140,7 +158,7 @@ export default function Select({
     if (e.key === 'Tab' && isOpen) {
       e.preventDefault(); 
       if (filteredOptions.length > 0) {
-        if (searchable && searchInputRef.current) {
+        if (isSearchable && searchInputRef.current) {
           searchInputRef.current.focus();
         } else {
           optionRefs.current[0]?.focus();
@@ -155,7 +173,7 @@ export default function Select({
       e.preventDefault();
       if (!isOpen) setIsOpen(true);
       setTimeout(() => {
-        if (searchable && searchInputRef.current) searchInputRef.current.focus();
+        if (isSearchable && searchInputRef.current) searchInputRef.current.focus();
         else optionRefs.current[0]?.focus();
       }, 0);
     }
@@ -188,7 +206,7 @@ export default function Select({
       if (prevIndex >= 0) {
         optionRefs.current[prevIndex]?.focus();
       } else {
-        if (searchable && searchInputRef.current) searchInputRef.current.focus();
+        if (isSearchable && searchInputRef.current) searchInputRef.current.focus();
         else containerRef.current?.focus();
       }
     }
@@ -199,7 +217,7 @@ export default function Select({
   };
 
   return (
-    <div className="relative font-poppins w-full flex-1">
+    <div className={`relative font-poppins w-full flex-1 ${full ? '' : 'min-w-[300px]'}`}>
       <Label id={id} label={label} required={required} svg={svg} />
       
       <div
@@ -214,16 +232,16 @@ export default function Select({
         onKeyDown={handleContainerKeyDown}
         onFocus={handleFocus} 
       >
-        <span className="truncate">{selectedLabel}</span>
+        <span className="truncate" title={selectedLabel}>{selectedLabel}</span>
         <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {isOpen && !disabled && (
         <div
           ref={optionsListRef as React.RefObject<HTMLDivElement>}
-          className="absolute top-full left-0 right-0 z-[999] min-w-full w-full bg-surface border border-ui-border rounded-lg mt-1 shadow-2xl max-h-60 flex flex-col overflow-hidden"
+          className="absolute top-full left-0 z-[999] min-w-full w-max max-w-[min(32rem,90vw)] bg-surface border border-ui-border rounded-lg mt-1 shadow-2xl max-h-60 flex flex-col overflow-hidden"
         >
-          {searchable && (
+          {isSearchable && (
             <div className="p-2 border-b border-ui-border-soft sticky top-0 bg-surface z-10 flex items-center gap-2">
               <Search size={16} className="text-content-placeholder shrink-0" />
               <input
@@ -254,7 +272,7 @@ export default function Select({
                   key={`${option.value}-${index}`}
                   ref={(el) => { optionRefs.current[index] = el; }}
                   className={`
-                    py-2 px-4 cursor-pointer outline-none text-[14px] whitespace-normal break-words
+                    py-2 px-4 cursor-pointer outline-none text-[14px] whitespace-nowrap
                     ${String(selectedValue) === String(option.value) ? 'bg-surface-subtle text-brand-hover font-semibold' : ''}
                     hover:bg-surface-subtle focus:bg-surface-subtle focus:text-brand-hover
                   `}

@@ -198,6 +198,14 @@ export default function ClientsDashboardGrid({
                   data={metrics?.propertiesByAgency ?? []}
                   label="Imóveis por Imobiliárias"
                   detailColumns={COLS_PROPERTIES_BY_AGENCY}
+                  detailGroupBy={{
+                    // `agency` vem como objeto no detalhe, então o rótulo do
+                    // grupo sai do nome fantasia (com fallback na razão social).
+                    key: 'agency',
+                    label: (row) => row?.agency?.tradeName || row?.agency?.legalName || '—',
+                    unitLabel: (n) => `Total de ${n} ${n === 1 ? 'imóvel' : 'imóveis'}`,
+                  }}
+                  detailTotalLabel="imóveis"
                   dragHandleClassName={DRAG_HANDLE_CLASS}
                 />
               </SelfFramedWidget>

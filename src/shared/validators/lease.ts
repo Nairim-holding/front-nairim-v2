@@ -24,6 +24,8 @@ export const createLeaseSchema = z.object({
   tenant_id: z.string().trim().min(1, 'ID do inquilino é obrigatório'),
   agency_id: z.string().nullish(),
   financial_institution_id: z.string().nullish(),
+  /** Índice de reajuste do contrato (Etapa 4). Opcional. */
+  adjustment_index_id: z.string().nullish(),
   contract_number: z.string().trim().min(1, 'Número do contrato é obrigatório'),
   start_date: z.union([z.string(), z.date()]),
   end_date: z.union([z.string(), z.date()]),

@@ -273,3 +273,34 @@ export type InvestmentMonthBalance = Prisma.InvestmentMonthBalanceModel
  * é Rendimento Mensal ÷ esse valor.
  */
 export type InvestmentSettings = Prisma.InvestmentSettingsModel
+/**
+ * Model ContactChannel
+ * Telefones e e-mails adicionais de um Contact.
+ * 
+ * O Contact original mantém `phone`/`cellphone`/`email` como o contato
+ * PRINCIPAL (nada some, nenhuma tela quebra). Os canais extras entram aqui,
+ * um registro por valor, para que um mesmo contato tenha N celulares, N
+ * telefones fixos e N e-mails sem precisar ser cadastrado várias vezes.
+ */
+export type ContactChannel = Prisma.ContactChannelModel
+/**
+ * Model AdjustmentIndex
+ * Indexador de reajuste de aluguel (IGP-M, IPCA, INPC, IVAR).
+ */
+export type AdjustmentIndex = Prisma.AdjustmentIndexModel
+/**
+ * Model AdjustmentIndexValue
+ * Valor mensal publicado de um indexador.
+ */
+export type AdjustmentIndexValue = Prisma.AdjustmentIndexValueModel
+/**
+ * Model Holiday
+ * Feriado nacional ou municipal, usado para achar o próximo dia útil
+ * financeiro na conciliação de créditos de locação.
+ */
+export type Holiday = Prisma.HolidayModel
+/**
+ * Model LeaseNotification
+ * Histórico de avisos de atraso enviados à imobiliária.
+ */
+export type LeaseNotification = Prisma.LeaseNotificationModel

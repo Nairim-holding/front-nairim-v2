@@ -922,7 +922,12 @@ export default function DynamicFormManager({
               placeholder={field.placeholder || "Selecione..."}
               svg={field.icon}
               tabIndex={field.tabIndex}
-              searchable={(field as any).searchable}
+              // Campo terminado em `_id` é lookup de relacionamento (inquilino,
+              // imóvel, imobiliária, categoria...): a lista vem do banco e pode
+              // crescer, então SEMPRE tem busca, mesmo que hoje tenha 3 itens.
+              // Enum fixo (marital_status, furnished) segue a regra por tamanho.
+              searchable={(field as any).searchable ?? (field.field.endsWith('_id') || undefined)}
+              full={(field as any).full}
             />
             {(field as any).renderBottom && (field as any).renderBottom(value, formValues, handleChange)}
             {error && <p className="text-state-error text-sm mt-1">{error}</p>}

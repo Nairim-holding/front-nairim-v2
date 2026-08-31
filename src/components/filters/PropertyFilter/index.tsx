@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
+import Select from "@/components/ui/Select";
+import { BRAZILIAN_STATE_OPTIONS } from "@/utils/brazilianStates";
 import { useFilters, type PropertyFiltersState } from "@/contexts/filter-context";
 import {
   getPublicPropertiesAction,
@@ -147,12 +149,6 @@ export default function PropertyFilter() {
     handleSearch();
     setIsFilterOpen(false);
   };
-
-  const estadosBrasileiros = [
-    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA",
-    "MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN",
-    "RS","RO","RR","SC","SP","SE","TO",
-  ];
 
   // ─── SelectInput ──────────────────────────────────────────────────────────
 
@@ -537,18 +533,14 @@ export default function PropertyFilter() {
                     onChange={(e) => handleFilterChange("endereco", e.target.value)}
                     className="w-full px-3 py-2.5 text-sm border border-ui-border text-content rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-surface"
                   />
-                  <select
+                  <Select
                     id="uf"
-                    name="uf"
                     value={filters.uf}
-                    onChange={(e) => handleFilterChange("uf", e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-ui-border text-content rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-surface"
-                  >
-                    <option value="">Estado (UF)</option>
-                    {estadosBrasileiros.map((uf) => (
-                      <option key={uf} value={uf}>{uf}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => handleFilterChange("uf", String(value))}
+                    options={[{ label: "Estado (UF)", value: "" }, ...BRAZILIAN_STATE_OPTIONS]}
+                    placeholder="Estado (UF)"
+                    full
+                  />
                 </div>
               </div>
 

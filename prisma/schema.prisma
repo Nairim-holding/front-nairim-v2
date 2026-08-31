@@ -41,6 +41,9 @@ model Company {
   plannings               Planning[]
   investments             Investment[]
   investment_settings     InvestmentSettings?
+  adjustment_indexes      AdjustmentIndex[]
+  holidays                Holiday[]
+  lease_notifications     LeaseNotification[]
   documents               Document[]
   favorites               Favorite[]
   user_column_preferences UserColumnPreference[]
@@ -273,6 +276,7 @@ model User {
   /// intervalos em `access_schedules`, no fuso America/Sao_Paulo.
   has_time_restriction Boolean              @default(false)
   access_schedules     UserAccessSchedule[]
+  lease_notifications  LeaseNotification[]
 
   // Auditoria do próprio usuário (auto-relação)
   created_by String?
@@ -578,11 +582,19 @@ model Lease {
   type                            PropertyType      @relation(fields: [type_id], references: [id])
   agency                          Agency?               @relation(fields: [agency_id], references: [id])
   financial_institution           FinancialInstitution? @relation(fields: [financial_institution_id], references: [id])
+  /// Indexador de reajuste do contrato (Etapa 4), escolhido na aba
+  /// "Valores da Locação" logo depois do Valor do Aluguel.
+  adjustment_index_id             String?
+  adjustment_index                AdjustmentIndex?  @relation(fields: [adjustment_index_id], references: [id])
+  /// Marcação manual do acompanhamento do atraso (Etapa 8).
+  overdue_status                  LeaseOverdueStatus?
+  notifications                   LeaseNotification[]
   transactions                    Transaction[]
   documents                       Document[]
   company                         Company          @relation(fields: [company_id], references: [id])
 
   @@index([property_id])
+  @@index([adjustment_index_id])
   @@index([tenant_id])
   @@index([agency_id])
   @@index([financial_institution_id])
@@ -666,6 +678,9 @@ model Contact {
   owner       Owner?    @relation(fields: [owner_id], references: [id])
   supplier    Supplier? @relation(fields: [supplier_id], references: [id])
   tenant      Tenant?   @relation(fields: [tenant_id], references: [id])
+  /// Telefones/e-mails adicionais (Etapa 3). Os campos `phone`/`cellphone`/
+  /// `email` acima seguem sendo o contato principal.
+  channels    ContactChannel[]
 
   @@index([agency_id])
   @@index([owner_id])
@@ -1289,4 +1304,156 @@ enum InvestmentProductType {
 enum InvestmentTransactionType {
   CONTRIBUTION
   REDEMPTION
+}
+
+// ─── Etapa 3 — Múltiplos contatos por pessoa ────────────────────────────────
+
+/// Telefones e e-mails adicionais de um Contact.
+///
+/// O Contact original mantém `phone`/`cellphone`/`email` como o contato
+/// PRINCIPAL (nada some, nenhuma tela quebra). Os canais extras entram aqui,
+/// um registro por valor, para que um mesmo contato tenha N celulares, N
+/// telefones fixos e N e-mails sem precisar ser cadastrado várias vezes.
+model ContactChannel {
+  id         String             @id @default(uuid())
+  contact_id String
+  kind       ContactChannelKind
+  /// Número ou e-mail, já normalizado pela aplicação.
+  value      String
+  /// Rótulo livre opcional ("Comercial", "Recado", ...).
+  label      String?
+  /// Ordem de exibição dentro do mesmo `kind`.
+  display_order Int             @default(0)
+  created_at DateTime           @default(now())
+  updated_at DateTime           @updatedAt
+  deleted_at DateTime?
+  contact    Contact            @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+
+  @@index([contact_id])
+  @@index([contact_id, kind])
+}
+
+enum ContactChannelKind {
+  CELLPHONE
+  PHONE
+  EMAIL
+}
+
+// ─── Etapa 4 — Índices de reajuste (SGS/Banco Central) ──────────────────────
+
+/// Indexador de reajuste de aluguel (IGP-M, IPCA, INPC, IVAR).
+model AdjustmentIndex {
+  id          String                 @id @default(uuid())
+  company_id  String
+  /// Sigla exibida no ComboBox da locação (ex.: "IGP-M").
+  code        String
+  description String
+  /// Código da série no SGS do Banco Central, usado pela atualização
+  /// automática. Nulo em indexador criado à mão, que só é alimentado manualmente.
+  sgs_code    Int?
+  /// Série do SGS com o acumulado em 12 meses, quando o BCB publica uma
+  /// série separada para isso (ex.: IPCA mensal 433, acumulado 13522).
+  sgs_code_12m Int?
+  is_active   Boolean                @default(true)
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
+  deleted_at  DateTime?
+  company     Company                @relation(fields: [company_id], references: [id])
+  values      AdjustmentIndexValue[]
+  leases      Lease[]
+
+  @@unique([company_id, code])
+  @@index([company_id])
+}
+
+/// Valor mensal publicado de um indexador.
+model AdjustmentIndexValue {
+  id                  String          @id @default(uuid())
+  adjustment_index_id String
+  /// Mês de referência (1–12) e ano da publicação.
+  reference_month     Int
+  reference_year      Int
+  /// Variação do mês, em % (ex.: 0.42 = 0,42%).
+  monthly_rate        Decimal         @db.Decimal(10, 4)
+  /// Acumulado em 12 meses, em %. Nulo quando a fonte não publica.
+  accumulated_12m     Decimal?        @db.Decimal(10, 4)
+  /// Quando o valor entrou/foi atualizado no sistema.
+  synced_at           DateTime        @default(now())
+  /// `true` quando veio da API do BCB; `false` se foi digitado na tela.
+  from_api            Boolean         @default(false)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  deleted_at          DateTime?
+  adjustment_index    AdjustmentIndex @relation(fields: [adjustment_index_id], references: [id], onDelete: Cascade)
+
+  @@unique([adjustment_index_id, reference_year, reference_month])
+  @@index([adjustment_index_id])
+}
+
+// ─── Etapa 7 — Feriados (cálculo de dias úteis) ─────────────────────────────
+
+/// Feriado nacional ou municipal, usado para achar o próximo dia útil
+/// financeiro na conciliação de créditos de locação.
+model Holiday {
+  id         String      @id @default(uuid())
+  company_id String
+  date       DateTime    @db.Date
+  description String
+  scope      HolidayScope @default(NATIONAL)
+  /// Município do feriado, quando `scope` é MUNICIPAL.
+  city       String?
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  deleted_at DateTime?
+  company    Company     @relation(fields: [company_id], references: [id])
+
+  @@unique([company_id, date, description])
+  @@index([company_id])
+  @@index([company_id, date])
+}
+
+enum HolidayScope {
+  NATIONAL
+  MUNICIPAL
+}
+
+// ─── Etapa 8 — Notificações de locação atrasada ─────────────────────────────
+
+/// Histórico de avisos de atraso enviados à imobiliária.
+model LeaseNotification {
+  id         String                   @id @default(uuid())
+  company_id String
+  lease_id   String
+  channel    LeaseNotificationChannel
+  /// Destinatário efetivo (e-mail ou telefone) no momento do envio.
+  recipient  String?
+  /// Corpo enviado, guardado para auditoria.
+  message    String?
+  /// Competência do aluguel em atraso que originou o aviso.
+  reference_month Int
+  reference_year  Int
+  /// Dias de atraso no momento do envio.
+  days_overdue    Int?
+  sent_at    DateTime                 @default(now())
+  /// Usuário que disparou o aviso.
+  sent_by_id String?
+  created_at DateTime                 @default(now())
+  updated_at DateTime                 @updatedAt
+  deleted_at DateTime?
+  company    Company                  @relation(fields: [company_id], references: [id])
+  lease      Lease                    @relation(fields: [lease_id], references: [id])
+  sent_by    User?                    @relation(fields: [sent_by_id], references: [id])
+
+  @@index([company_id])
+  @@index([lease_id])
+}
+
+enum LeaseNotificationChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum LeaseOverdueStatus {
+  NOTIFIED
+  NEGOTIATING
 }

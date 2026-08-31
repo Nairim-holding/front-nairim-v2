@@ -260,6 +260,9 @@ export type CompanyWhereInput = {
   plannings?: Prisma.PlanningListRelationFilter
   investments?: Prisma.InvestmentListRelationFilter
   investment_settings?: Prisma.XOR<Prisma.InvestmentSettingsNullableScalarRelationFilter, Prisma.InvestmentSettingsWhereInput> | null
+  adjustment_indexes?: Prisma.AdjustmentIndexListRelationFilter
+  holidays?: Prisma.HolidayListRelationFilter
+  lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
   user_column_preferences?: Prisma.UserColumnPreferenceListRelationFilter
@@ -300,6 +303,9 @@ export type CompanyOrderByWithRelationInput = {
   plannings?: Prisma.PlanningOrderByRelationAggregateInput
   investments?: Prisma.InvestmentOrderByRelationAggregateInput
   investment_settings?: Prisma.InvestmentSettingsOrderByWithRelationInput
+  adjustment_indexes?: Prisma.AdjustmentIndexOrderByRelationAggregateInput
+  holidays?: Prisma.HolidayOrderByRelationAggregateInput
+  lease_notifications?: Prisma.LeaseNotificationOrderByRelationAggregateInput
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   favorites?: Prisma.FavoriteOrderByRelationAggregateInput
   user_column_preferences?: Prisma.UserColumnPreferenceOrderByRelationAggregateInput
@@ -343,6 +349,9 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   plannings?: Prisma.PlanningListRelationFilter
   investments?: Prisma.InvestmentListRelationFilter
   investment_settings?: Prisma.XOR<Prisma.InvestmentSettingsNullableScalarRelationFilter, Prisma.InvestmentSettingsWhereInput> | null
+  adjustment_indexes?: Prisma.AdjustmentIndexListRelationFilter
+  holidays?: Prisma.HolidayListRelationFilter
+  lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
   user_column_preferences?: Prisma.UserColumnPreferenceListRelationFilter
@@ -413,6 +422,9 @@ export type CompanyCreateInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -453,6 +465,9 @@ export type CompanyUncheckedCreateInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -493,6 +508,9 @@ export type CompanyUpdateInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -533,6 +551,9 @@ export type CompanyUncheckedUpdateInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1060,6 +1081,48 @@ export type CompanyUpdateOneRequiredWithoutInvestment_settingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutInvestment_settingsInput, Prisma.CompanyUpdateWithoutInvestment_settingsInput>, Prisma.CompanyUncheckedUpdateWithoutInvestment_settingsInput>
 }
 
+export type CompanyCreateNestedOneWithoutAdjustment_indexesInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedCreateWithoutAdjustment_indexesInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutAdjustment_indexesInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutAdjustment_indexesNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedCreateWithoutAdjustment_indexesInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutAdjustment_indexesInput
+  upsert?: Prisma.CompanyUpsertWithoutAdjustment_indexesInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutAdjustment_indexesInput, Prisma.CompanyUpdateWithoutAdjustment_indexesInput>, Prisma.CompanyUncheckedUpdateWithoutAdjustment_indexesInput>
+}
+
+export type CompanyCreateNestedOneWithoutHolidaysInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutHolidaysInput, Prisma.CompanyUncheckedCreateWithoutHolidaysInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutHolidaysInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutHolidaysNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutHolidaysInput, Prisma.CompanyUncheckedCreateWithoutHolidaysInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutHolidaysInput
+  upsert?: Prisma.CompanyUpsertWithoutHolidaysInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutHolidaysInput, Prisma.CompanyUpdateWithoutHolidaysInput>, Prisma.CompanyUncheckedUpdateWithoutHolidaysInput>
+}
+
+export type CompanyCreateNestedOneWithoutLease_notificationsInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutLease_notificationsInput, Prisma.CompanyUncheckedCreateWithoutLease_notificationsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutLease_notificationsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutLease_notificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutLease_notificationsInput, Prisma.CompanyUncheckedCreateWithoutLease_notificationsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutLease_notificationsInput
+  upsert?: Prisma.CompanyUpsertWithoutLease_notificationsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutLease_notificationsInput, Prisma.CompanyUpdateWithoutLease_notificationsInput>, Prisma.CompanyUncheckedUpdateWithoutLease_notificationsInput>
+}
+
 export type CompanyCreateWithoutBrandingInput = {
   id?: string
   name: string
@@ -1088,6 +1151,9 @@ export type CompanyCreateWithoutBrandingInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1127,6 +1193,9 @@ export type CompanyUncheckedCreateWithoutBrandingInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -1182,6 +1251,9 @@ export type CompanyUpdateWithoutBrandingInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -1221,6 +1293,9 @@ export type CompanyUncheckedUpdateWithoutBrandingInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1260,6 +1335,9 @@ export type CompanyCreateWithoutAgenciesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1299,6 +1377,9 @@ export type CompanyUncheckedCreateWithoutAgenciesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -1354,6 +1435,9 @@ export type CompanyUpdateWithoutAgenciesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -1393,6 +1477,9 @@ export type CompanyUncheckedUpdateWithoutAgenciesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1432,6 +1519,9 @@ export type CompanyCreateWithoutPropertiesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1471,6 +1561,9 @@ export type CompanyUncheckedCreateWithoutPropertiesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -1526,6 +1619,9 @@ export type CompanyUpdateWithoutPropertiesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -1565,6 +1661,9 @@ export type CompanyUncheckedUpdateWithoutPropertiesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1604,6 +1703,9 @@ export type CompanyCreateWithoutUsersInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1643,6 +1745,9 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -1698,6 +1803,9 @@ export type CompanyUpdateWithoutUsersInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -1737,6 +1845,9 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1777,6 +1888,9 @@ export type CompanyCreateWithoutUser_access_schedulesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1816,6 +1930,9 @@ export type CompanyUncheckedCreateWithoutUser_access_schedulesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -1871,6 +1988,9 @@ export type CompanyUpdateWithoutUser_access_schedulesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -1910,6 +2030,9 @@ export type CompanyUncheckedUpdateWithoutUser_access_schedulesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1949,6 +2072,9 @@ export type CompanyCreateWithoutUser_groupsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -1988,6 +2114,9 @@ export type CompanyUncheckedCreateWithoutUser_groupsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -2043,6 +2172,9 @@ export type CompanyUpdateWithoutUser_groupsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -2082,6 +2214,9 @@ export type CompanyUncheckedUpdateWithoutUser_groupsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2121,6 +2256,9 @@ export type CompanyCreateWithoutUser_group_permissionsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -2160,6 +2298,9 @@ export type CompanyUncheckedCreateWithoutUser_group_permissionsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -2215,6 +2356,9 @@ export type CompanyUpdateWithoutUser_group_permissionsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -2254,6 +2398,9 @@ export type CompanyUncheckedUpdateWithoutUser_group_permissionsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2293,6 +2440,9 @@ export type CompanyCreateWithoutAudit_logsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -2332,6 +2482,9 @@ export type CompanyUncheckedCreateWithoutAudit_logsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -2387,6 +2540,9 @@ export type CompanyUpdateWithoutAudit_logsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -2426,6 +2582,9 @@ export type CompanyUncheckedUpdateWithoutAudit_logsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2465,6 +2624,9 @@ export type CompanyCreateWithoutUser_column_preferencesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
@@ -2504,6 +2666,9 @@ export type CompanyUncheckedCreateWithoutUser_column_preferencesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
@@ -2559,6 +2724,9 @@ export type CompanyUpdateWithoutUser_column_preferencesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
@@ -2598,6 +2766,9 @@ export type CompanyUncheckedUpdateWithoutUser_column_preferencesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2637,6 +2808,9 @@ export type CompanyCreateWithoutUser_dashboard_layoutsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -2676,6 +2850,9 @@ export type CompanyUncheckedCreateWithoutUser_dashboard_layoutsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -2731,6 +2908,9 @@ export type CompanyUpdateWithoutUser_dashboard_layoutsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -2770,6 +2950,9 @@ export type CompanyUncheckedUpdateWithoutUser_dashboard_layoutsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2809,6 +2992,9 @@ export type CompanyCreateWithoutDocumentsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
@@ -2848,6 +3034,9 @@ export type CompanyUncheckedCreateWithoutDocumentsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
@@ -2903,6 +3092,9 @@ export type CompanyUpdateWithoutDocumentsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
@@ -2942,6 +3134,9 @@ export type CompanyUncheckedUpdateWithoutDocumentsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2980,6 +3175,9 @@ export type CompanyCreateWithoutOwnersInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3019,6 +3217,9 @@ export type CompanyUncheckedCreateWithoutOwnersInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3074,6 +3275,9 @@ export type CompanyUpdateWithoutOwnersInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3113,6 +3317,9 @@ export type CompanyUncheckedUpdateWithoutOwnersInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3152,6 +3359,9 @@ export type CompanyCreateWithoutTenantsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3191,6 +3401,9 @@ export type CompanyUncheckedCreateWithoutTenantsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3246,6 +3459,9 @@ export type CompanyUpdateWithoutTenantsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3285,6 +3501,9 @@ export type CompanyUncheckedUpdateWithoutTenantsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3324,6 +3543,9 @@ export type CompanyCreateWithoutLeasesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3363,6 +3585,9 @@ export type CompanyUncheckedCreateWithoutLeasesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3418,6 +3643,9 @@ export type CompanyUpdateWithoutLeasesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3457,6 +3685,9 @@ export type CompanyUncheckedUpdateWithoutLeasesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3496,6 +3727,9 @@ export type CompanyCreateWithoutProperty_typesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3535,6 +3769,9 @@ export type CompanyUncheckedCreateWithoutProperty_typesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3590,6 +3827,9 @@ export type CompanyUpdateWithoutProperty_typesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3629,6 +3869,9 @@ export type CompanyUncheckedUpdateWithoutProperty_typesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3669,6 +3912,9 @@ export type CompanyCreateWithoutFavoritesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
@@ -3708,6 +3954,9 @@ export type CompanyUncheckedCreateWithoutFavoritesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
@@ -3763,6 +4012,9 @@ export type CompanyUpdateWithoutFavoritesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
@@ -3802,6 +4054,9 @@ export type CompanyUncheckedUpdateWithoutFavoritesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
   user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3840,6 +4095,9 @@ export type CompanyCreateWithoutFinancial_institutionsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3879,6 +4137,9 @@ export type CompanyUncheckedCreateWithoutFinancial_institutionsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3934,6 +4195,9 @@ export type CompanyUpdateWithoutFinancial_institutionsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3973,6 +4237,9 @@ export type CompanyUncheckedUpdateWithoutFinancial_institutionsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4012,6 +4279,9 @@ export type CompanyCreateWithoutCategoriesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4051,6 +4321,9 @@ export type CompanyUncheckedCreateWithoutCategoriesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4106,6 +4379,9 @@ export type CompanyUpdateWithoutCategoriesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -4145,6 +4421,9 @@ export type CompanyUncheckedUpdateWithoutCategoriesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4184,6 +4463,9 @@ export type CompanyCreateWithoutSubcategoriesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4223,6 +4505,9 @@ export type CompanyUncheckedCreateWithoutSubcategoriesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4278,6 +4563,9 @@ export type CompanyUpdateWithoutSubcategoriesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -4317,6 +4605,9 @@ export type CompanyUncheckedUpdateWithoutSubcategoriesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4357,6 +4648,9 @@ export type CompanyCreateWithoutIptu_audit_settingsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4396,6 +4690,9 @@ export type CompanyUncheckedCreateWithoutIptu_audit_settingsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4451,6 +4748,9 @@ export type CompanyUpdateWithoutIptu_audit_settingsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -4490,6 +4790,9 @@ export type CompanyUncheckedUpdateWithoutIptu_audit_settingsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4528,6 +4831,9 @@ export type CompanyCreateWithoutCardsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4567,6 +4873,9 @@ export type CompanyUncheckedCreateWithoutCardsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4622,6 +4931,9 @@ export type CompanyUpdateWithoutCardsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -4661,6 +4973,9 @@ export type CompanyUncheckedUpdateWithoutCardsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4700,6 +5015,9 @@ export type CompanyCreateWithoutCentersInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4739,6 +5057,9 @@ export type CompanyUncheckedCreateWithoutCentersInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4794,6 +5115,9 @@ export type CompanyUpdateWithoutCentersInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -4833,6 +5157,9 @@ export type CompanyUncheckedUpdateWithoutCentersInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4872,6 +5199,9 @@ export type CompanyCreateWithoutSuppliersInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -4911,6 +5241,9 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -4966,6 +5299,9 @@ export type CompanyUpdateWithoutSuppliersInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5005,6 +5341,9 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5044,6 +5383,9 @@ export type CompanyCreateWithoutTransactionsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5083,6 +5425,9 @@ export type CompanyUncheckedCreateWithoutTransactionsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5138,6 +5483,9 @@ export type CompanyUpdateWithoutTransactionsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5177,6 +5525,9 @@ export type CompanyUncheckedUpdateWithoutTransactionsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5216,6 +5567,9 @@ export type CompanyCreateWithoutInvoicesInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5255,6 +5609,9 @@ export type CompanyUncheckedCreateWithoutInvoicesInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5310,6 +5667,9 @@ export type CompanyUpdateWithoutInvoicesInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5349,6 +5709,9 @@ export type CompanyUncheckedUpdateWithoutInvoicesInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5388,6 +5751,9 @@ export type CompanyCreateWithoutRecurring_configsInput = {
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5427,6 +5793,9 @@ export type CompanyUncheckedCreateWithoutRecurring_configsInput = {
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5482,6 +5851,9 @@ export type CompanyUpdateWithoutRecurring_configsInput = {
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5521,6 +5893,9 @@ export type CompanyUncheckedUpdateWithoutRecurring_configsInput = {
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5560,6 +5935,9 @@ export type CompanyCreateWithoutPlanningsInput = {
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5599,6 +5977,9 @@ export type CompanyUncheckedCreateWithoutPlanningsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5654,6 +6035,9 @@ export type CompanyUpdateWithoutPlanningsInput = {
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5693,6 +6077,9 @@ export type CompanyUncheckedUpdateWithoutPlanningsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5732,6 +6119,9 @@ export type CompanyCreateWithoutInvestmentsInput = {
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5771,6 +6161,9 @@ export type CompanyUncheckedCreateWithoutInvestmentsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5826,6 +6219,9 @@ export type CompanyUpdateWithoutInvestmentsInput = {
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -5865,6 +6261,9 @@ export type CompanyUncheckedUpdateWithoutInvestmentsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5904,6 +6303,9 @@ export type CompanyCreateWithoutInvestment_settingsInput = {
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
   plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -5943,6 +6345,9 @@ export type CompanyUncheckedCreateWithoutInvestment_settingsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
   plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -5998,6 +6403,9 @@ export type CompanyUpdateWithoutInvestment_settingsInput = {
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
   plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -6037,6 +6445,561 @@ export type CompanyUncheckedUpdateWithoutInvestment_settingsInput = {
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
   plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutAdjustment_indexesInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutAdjustment_indexesInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutAdjustment_indexesInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedCreateWithoutAdjustment_indexesInput>
+}
+
+export type CompanyUpsertWithoutAdjustment_indexesInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedUpdateWithoutAdjustment_indexesInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedCreateWithoutAdjustment_indexesInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutAdjustment_indexesInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutAdjustment_indexesInput, Prisma.CompanyUncheckedUpdateWithoutAdjustment_indexesInput>
+}
+
+export type CompanyUpdateWithoutAdjustment_indexesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutAdjustment_indexesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutHolidaysInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutHolidaysInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutHolidaysInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutHolidaysInput, Prisma.CompanyUncheckedCreateWithoutHolidaysInput>
+}
+
+export type CompanyUpsertWithoutHolidaysInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutHolidaysInput, Prisma.CompanyUncheckedUpdateWithoutHolidaysInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutHolidaysInput, Prisma.CompanyUncheckedCreateWithoutHolidaysInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutHolidaysInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutHolidaysInput, Prisma.CompanyUncheckedUpdateWithoutHolidaysInput>
+}
+
+export type CompanyUpdateWithoutHolidaysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutHolidaysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutLease_notificationsInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutLease_notificationsInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutLease_notificationsInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutLease_notificationsInput, Prisma.CompanyUncheckedCreateWithoutLease_notificationsInput>
+}
+
+export type CompanyUpsertWithoutLease_notificationsInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutLease_notificationsInput, Prisma.CompanyUncheckedUpdateWithoutLease_notificationsInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutLease_notificationsInput, Prisma.CompanyUncheckedCreateWithoutLease_notificationsInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutLease_notificationsInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutLease_notificationsInput, Prisma.CompanyUncheckedUpdateWithoutLease_notificationsInput>
+}
+
+export type CompanyUpdateWithoutLease_notificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  audit_logs?: Prisma.AuditLogUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutLease_notificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6072,6 +7035,9 @@ export type CompanyCountOutputType = {
   recurring_configs: number
   plannings: number
   investments: number
+  adjustment_indexes: number
+  holidays: number
+  lease_notifications: number
   documents: number
   favorites: number
   user_column_preferences: number
@@ -6101,6 +7067,9 @@ export type CompanyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   recurring_configs?: boolean | CompanyCountOutputTypeCountRecurring_configsArgs
   plannings?: boolean | CompanyCountOutputTypeCountPlanningsArgs
   investments?: boolean | CompanyCountOutputTypeCountInvestmentsArgs
+  adjustment_indexes?: boolean | CompanyCountOutputTypeCountAdjustment_indexesArgs
+  holidays?: boolean | CompanyCountOutputTypeCountHolidaysArgs
+  lease_notifications?: boolean | CompanyCountOutputTypeCountLease_notificationsArgs
   documents?: boolean | CompanyCountOutputTypeCountDocumentsArgs
   favorites?: boolean | CompanyCountOutputTypeCountFavoritesArgs
   user_column_preferences?: boolean | CompanyCountOutputTypeCountUser_column_preferencesArgs
@@ -6250,6 +7219,27 @@ export type CompanyCountOutputTypeCountInvestmentsArgs<ExtArgs extends runtime.T
 /**
  * CompanyCountOutputType without action
  */
+export type CompanyCountOutputTypeCountAdjustment_indexesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AdjustmentIndexWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
+export type CompanyCountOutputTypeCountHolidaysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.HolidayWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
+export type CompanyCountOutputTypeCountLease_notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeaseNotificationWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
 export type CompanyCountOutputTypeCountDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.DocumentWhereInput
 }
@@ -6333,6 +7323,9 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   plannings?: boolean | Prisma.Company$planningsArgs<ExtArgs>
   investments?: boolean | Prisma.Company$investmentsArgs<ExtArgs>
   investment_settings?: boolean | Prisma.Company$investment_settingsArgs<ExtArgs>
+  adjustment_indexes?: boolean | Prisma.Company$adjustment_indexesArgs<ExtArgs>
+  holidays?: boolean | Prisma.Company$holidaysArgs<ExtArgs>
+  lease_notifications?: boolean | Prisma.Company$lease_notificationsArgs<ExtArgs>
   documents?: boolean | Prisma.Company$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Company$favoritesArgs<ExtArgs>
   user_column_preferences?: boolean | Prisma.Company$user_column_preferencesArgs<ExtArgs>
@@ -6400,6 +7393,9 @@ export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   plannings?: boolean | Prisma.Company$planningsArgs<ExtArgs>
   investments?: boolean | Prisma.Company$investmentsArgs<ExtArgs>
   investment_settings?: boolean | Prisma.Company$investment_settingsArgs<ExtArgs>
+  adjustment_indexes?: boolean | Prisma.Company$adjustment_indexesArgs<ExtArgs>
+  holidays?: boolean | Prisma.Company$holidaysArgs<ExtArgs>
+  lease_notifications?: boolean | Prisma.Company$lease_notificationsArgs<ExtArgs>
   documents?: boolean | Prisma.Company$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Company$favoritesArgs<ExtArgs>
   user_column_preferences?: boolean | Prisma.Company$user_column_preferencesArgs<ExtArgs>
@@ -6437,6 +7433,9 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     plannings: Prisma.$PlanningPayload<ExtArgs>[]
     investments: Prisma.$InvestmentPayload<ExtArgs>[]
     investment_settings: Prisma.$InvestmentSettingsPayload<ExtArgs> | null
+    adjustment_indexes: Prisma.$AdjustmentIndexPayload<ExtArgs>[]
+    holidays: Prisma.$HolidayPayload<ExtArgs>[]
+    lease_notifications: Prisma.$LeaseNotificationPayload<ExtArgs>[]
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     favorites: Prisma.$FavoritePayload<ExtArgs>[]
     user_column_preferences: Prisma.$UserColumnPreferencePayload<ExtArgs>[]
@@ -6873,6 +7872,9 @@ export interface Prisma__CompanyClient<T, Null = never, ExtArgs extends runtime.
   plannings<T extends Prisma.Company$planningsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$planningsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlanningPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   investments<T extends Prisma.Company$investmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$investmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   investment_settings<T extends Prisma.Company$investment_settingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$investment_settingsArgs<ExtArgs>>): Prisma.Prisma__InvestmentSettingsClient<runtime.Types.Result.GetResult<Prisma.$InvestmentSettingsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  adjustment_indexes<T extends Prisma.Company$adjustment_indexesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$adjustment_indexesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdjustmentIndexPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  holidays<T extends Prisma.Company$holidaysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$holidaysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HolidayPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lease_notifications<T extends Prisma.Company$lease_notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$lease_notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseNotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   documents<T extends Prisma.Company$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   favorites<T extends Prisma.Company$favoritesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user_column_preferences<T extends Prisma.Company$user_column_preferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$user_column_preferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserColumnPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -7779,6 +8781,78 @@ export type Company$investment_settingsArgs<ExtArgs extends runtime.Types.Extens
    */
   include?: Prisma.InvestmentSettingsInclude<ExtArgs> | null
   where?: Prisma.InvestmentSettingsWhereInput
+}
+
+/**
+ * Company.adjustment_indexes
+ */
+export type Company$adjustment_indexesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AdjustmentIndex
+   */
+  select?: Prisma.AdjustmentIndexSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AdjustmentIndex
+   */
+  omit?: Prisma.AdjustmentIndexOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AdjustmentIndexInclude<ExtArgs> | null
+  where?: Prisma.AdjustmentIndexWhereInput
+  orderBy?: Prisma.AdjustmentIndexOrderByWithRelationInput | Prisma.AdjustmentIndexOrderByWithRelationInput[]
+  cursor?: Prisma.AdjustmentIndexWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AdjustmentIndexScalarFieldEnum | Prisma.AdjustmentIndexScalarFieldEnum[]
+}
+
+/**
+ * Company.holidays
+ */
+export type Company$holidaysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Holiday
+   */
+  select?: Prisma.HolidaySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Holiday
+   */
+  omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
+  where?: Prisma.HolidayWhereInput
+  orderBy?: Prisma.HolidayOrderByWithRelationInput | Prisma.HolidayOrderByWithRelationInput[]
+  cursor?: Prisma.HolidayWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.HolidayScalarFieldEnum | Prisma.HolidayScalarFieldEnum[]
+}
+
+/**
+ * Company.lease_notifications
+ */
+export type Company$lease_notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LeaseNotification
+   */
+  select?: Prisma.LeaseNotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LeaseNotification
+   */
+  omit?: Prisma.LeaseNotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeaseNotificationInclude<ExtArgs> | null
+  where?: Prisma.LeaseNotificationWhereInput
+  orderBy?: Prisma.LeaseNotificationOrderByWithRelationInput | Prisma.LeaseNotificationOrderByWithRelationInput[]
+  cursor?: Prisma.LeaseNotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeaseNotificationScalarFieldEnum | Prisma.LeaseNotificationScalarFieldEnum[]
 }
 
 /**

@@ -25,6 +25,8 @@ export interface Lease {
   tenant_id: string;
   agency_id?: string | null;
   financial_institution_id?: string | null;
+  /** Índice de reajuste do contrato (Etapa 4). */
+  adjustment_index_id?: string | null;
   contract_number: string;
   start_date: Date;
   end_date: Date;
@@ -79,6 +81,8 @@ export interface CreateLeaseData {
   tenant_id: string;
   agency_id?: string | null;
   financial_institution_id?: string | null;
+  /** Índice de reajuste do contrato (Etapa 4). */
+  adjustment_index_id?: string | null;
   contract_number: string;
   start_date: string | Date;
   end_date: string | Date;

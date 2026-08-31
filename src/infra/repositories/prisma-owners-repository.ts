@@ -9,6 +9,7 @@ import type {
   PaginatedOwners,
   UpdateOwnerData,
 } from '@/core/entities/owner';
+import { buildContactCreateData } from './shared/contact-channels';
 
 /**
  * Implementação Prisma de {@link OwnersRepository}.
@@ -27,14 +28,14 @@ const SORTABLE_DIRECT = [...DIRECT_FIELDS, 'created_at', 'updated_at'];
 
 const LIST_INCLUDE = {
   addresses: { where: { deleted_at: null }, include: { address: true } },
-  contacts: { where: { deleted_at: null } },
+  contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } },
   properties: { where: { deleted_at: null }, select: { id: true, title: true } },
   leases: { where: { deleted_at: null }, select: { id: true, contract_number: true } },
 } as const;
 
 const DETAIL_INCLUDE = {
   addresses: { where: { deleted_at: null }, include: { address: true } },
-  contacts: { where: { deleted_at: null } },
+  contacts: { where: { deleted_at: null }, include: { channels: { where: { deleted_at: null }, orderBy: { display_order: 'asc' as const } } } },
   properties: {
     where: { deleted_at: null },
     include: { type: true, addresses: { where: { deleted_at: null }, include: { address: true } } },
@@ -316,7 +317,7 @@ export class PrismaOwnersRepository implements OwnersRepository {
       });
 
       for (const contact of data.contacts ?? []) {
-        await tx.contact.create({ data: { contact: contact.contact || null, phone: contact.phone || null, cellphone: contact.cellphone || null, email: contact.email || null, owner_id: newOwner.id } });
+        await tx.contact.create({ data: buildContactCreateData(contact, { owner_id: newOwner.id }) });
       }
       for (const address of data.addresses ?? []) {
         const newAddress = await tx.address.create({
@@ -346,7 +347,7 @@ export class PrismaOwnersRepository implements OwnersRepository {
       if (data.contacts !== undefined) {
         await tx.contact.updateMany({ where: { owner_id: id, deleted_at: null }, data: { deleted_at: new Date() } });
         for (const contact of data.contacts ?? []) {
-          await tx.contact.create({ data: { contact: contact.contact || null, phone: contact.phone || null, cellphone: contact.cellphone || null, email: contact.email || null, owner_id: id } });
+          await tx.contact.create({ data: buildContactCreateData(contact, { owner_id: id }) });
         }
       }
       if (data.addresses !== undefined) {

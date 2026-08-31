@@ -129,7 +129,7 @@ export default function PlanningPageContent() {
         subcategory_id: params.subcategoryId,
         status: 'COMPLETED',
         effective_date: JSON.stringify({ from, to }),
-        limit: '200',
+        limit: '150',
       };
       const result = await listFinancialTransactionsAction(qs);
       if (!result.ok) throw new Error(result.error ?? 'Falha ao carregar os lançamentos');

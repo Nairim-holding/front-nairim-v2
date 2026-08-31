@@ -108,6 +108,8 @@ export type LeaseMinAggregateOutputType = {
   insurance_company: string | null
   insurance_type: string | null
   insurance_policy: string | null
+  adjustment_index_id: string | null
+  overdue_status: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseMaxAggregateOutputType = {
@@ -152,6 +154,8 @@ export type LeaseMaxAggregateOutputType = {
   insurance_company: string | null
   insurance_type: string | null
   insurance_policy: string | null
+  adjustment_index_id: string | null
+  overdue_status: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCountAggregateOutputType = {
@@ -199,6 +203,8 @@ export type LeaseCountAggregateOutputType = {
   insurance_type: number
   insurance_policy: number
   guarantors: number
+  adjustment_index_id: number
+  overdue_status: number
   _all: number
 }
 
@@ -285,6 +291,8 @@ export type LeaseMinAggregateInputType = {
   insurance_company?: true
   insurance_type?: true
   insurance_policy?: true
+  adjustment_index_id?: true
+  overdue_status?: true
 }
 
 export type LeaseMaxAggregateInputType = {
@@ -329,6 +337,8 @@ export type LeaseMaxAggregateInputType = {
   insurance_company?: true
   insurance_type?: true
   insurance_policy?: true
+  adjustment_index_id?: true
+  overdue_status?: true
 }
 
 export type LeaseCountAggregateInputType = {
@@ -376,6 +386,8 @@ export type LeaseCountAggregateInputType = {
   insurance_type?: true
   insurance_policy?: true
   guarantors?: true
+  adjustment_index_id?: true
+  overdue_status?: true
   _all?: true
 }
 
@@ -510,6 +522,8 @@ export type LeaseGroupByOutputType = {
   insurance_type: string | null
   insurance_policy: string | null
   guarantors: runtime.JsonValue | null
+  adjustment_index_id: string | null
+  overdue_status: $Enums.LeaseOverdueStatus | null
   _count: LeaseCountAggregateOutputType | null
   _avg: LeaseAvgAggregateOutputType | null
   _sum: LeaseSumAggregateOutputType | null
@@ -580,12 +594,16 @@ export type LeaseWhereInput = {
   insurance_type?: Prisma.StringNullableFilter<"Lease"> | string | null
   insurance_policy?: Prisma.StringNullableFilter<"Lease"> | string | null
   guarantors?: Prisma.JsonNullableFilter<"Lease">
+  adjustment_index_id?: Prisma.StringNullableFilter<"Lease"> | string | null
+  overdue_status?: Prisma.EnumLeaseOverdueStatusNullableFilter<"Lease"> | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.XOR<Prisma.OwnerScalarRelationFilter, Prisma.OwnerWhereInput>
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
   type?: Prisma.XOR<Prisma.PropertyTypeScalarRelationFilter, Prisma.PropertyTypeWhereInput>
   agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   financial_institution?: Prisma.XOR<Prisma.FinancialInstitutionNullableScalarRelationFilter, Prisma.FinancialInstitutionWhereInput> | null
+  adjustment_index?: Prisma.XOR<Prisma.AdjustmentIndexNullableScalarRelationFilter, Prisma.AdjustmentIndexWhereInput> | null
+  notifications?: Prisma.LeaseNotificationListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
@@ -636,12 +654,16 @@ export type LeaseOrderByWithRelationInput = {
   insurance_type?: Prisma.SortOrderInput | Prisma.SortOrder
   insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
   guarantors?: Prisma.SortOrderInput | Prisma.SortOrder
+  adjustment_index_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  overdue_status?: Prisma.SortOrderInput | Prisma.SortOrder
   owner?: Prisma.OwnerOrderByWithRelationInput
   property?: Prisma.PropertyOrderByWithRelationInput
   tenant?: Prisma.TenantOrderByWithRelationInput
   type?: Prisma.PropertyTypeOrderByWithRelationInput
   agency?: Prisma.AgencyOrderByWithRelationInput
   financial_institution?: Prisma.FinancialInstitutionOrderByWithRelationInput
+  adjustment_index?: Prisma.AdjustmentIndexOrderByWithRelationInput
+  notifications?: Prisma.LeaseNotificationOrderByRelationAggregateInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   company?: Prisma.CompanyOrderByWithRelationInput
@@ -695,12 +717,16 @@ export type LeaseWhereUniqueInput = Prisma.AtLeast<{
   insurance_type?: Prisma.StringNullableFilter<"Lease"> | string | null
   insurance_policy?: Prisma.StringNullableFilter<"Lease"> | string | null
   guarantors?: Prisma.JsonNullableFilter<"Lease">
+  adjustment_index_id?: Prisma.StringNullableFilter<"Lease"> | string | null
+  overdue_status?: Prisma.EnumLeaseOverdueStatusNullableFilter<"Lease"> | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.XOR<Prisma.OwnerScalarRelationFilter, Prisma.OwnerWhereInput>
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
   type?: Prisma.XOR<Prisma.PropertyTypeScalarRelationFilter, Prisma.PropertyTypeWhereInput>
   agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   financial_institution?: Prisma.XOR<Prisma.FinancialInstitutionNullableScalarRelationFilter, Prisma.FinancialInstitutionWhereInput> | null
+  adjustment_index?: Prisma.XOR<Prisma.AdjustmentIndexNullableScalarRelationFilter, Prisma.AdjustmentIndexWhereInput> | null
+  notifications?: Prisma.LeaseNotificationListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
@@ -751,6 +777,8 @@ export type LeaseOrderByWithAggregationInput = {
   insurance_type?: Prisma.SortOrderInput | Prisma.SortOrder
   insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
   guarantors?: Prisma.SortOrderInput | Prisma.SortOrder
+  adjustment_index_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  overdue_status?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.LeaseCountOrderByAggregateInput
   _avg?: Prisma.LeaseAvgOrderByAggregateInput
   _max?: Prisma.LeaseMaxOrderByAggregateInput
@@ -806,6 +834,8 @@ export type LeaseScalarWhereWithAggregatesInput = {
   insurance_type?: Prisma.StringNullableWithAggregatesFilter<"Lease"> | string | null
   insurance_policy?: Prisma.StringNullableWithAggregatesFilter<"Lease"> | string | null
   guarantors?: Prisma.JsonNullableWithAggregatesFilter<"Lease">
+  adjustment_index_id?: Prisma.StringNullableWithAggregatesFilter<"Lease"> | string | null
+  overdue_status?: Prisma.EnumLeaseOverdueStatusNullableWithAggregatesFilter<"Lease"> | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateInput = {
@@ -846,12 +876,15 @@ export type LeaseCreateInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -902,6 +935,9 @@ export type LeaseUncheckedCreateInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -944,12 +980,15 @@ export type LeaseUpdateInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -1000,6 +1039,9 @@ export type LeaseUncheckedUpdateInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -1049,6 +1091,8 @@ export type LeaseCreateManyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateManyMutationInput = {
@@ -1089,6 +1133,7 @@ export type LeaseUpdateManyMutationInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUncheckedUpdateManyInput = {
@@ -1136,6 +1181,8 @@ export type LeaseUncheckedUpdateManyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseListRelationFilter = {
@@ -1198,6 +1245,8 @@ export type LeaseCountOrderByAggregateInput = {
   insurance_type?: Prisma.SortOrder
   insurance_policy?: Prisma.SortOrder
   guarantors?: Prisma.SortOrder
+  adjustment_index_id?: Prisma.SortOrder
+  overdue_status?: Prisma.SortOrder
 }
 
 export type LeaseAvgOrderByAggregateInput = {
@@ -1262,6 +1311,8 @@ export type LeaseMaxOrderByAggregateInput = {
   insurance_company?: Prisma.SortOrder
   insurance_type?: Prisma.SortOrder
   insurance_policy?: Prisma.SortOrder
+  adjustment_index_id?: Prisma.SortOrder
+  overdue_status?: Prisma.SortOrder
 }
 
 export type LeaseMinOrderByAggregateInput = {
@@ -1306,6 +1357,8 @@ export type LeaseMinOrderByAggregateInput = {
   insurance_company?: Prisma.SortOrder
   insurance_type?: Prisma.SortOrder
   insurance_policy?: Prisma.SortOrder
+  adjustment_index_id?: Prisma.SortOrder
+  overdue_status?: Prisma.SortOrder
 }
 
 export type LeaseSumOrderByAggregateInput = {
@@ -1326,6 +1379,11 @@ export type LeaseSumOrderByAggregateInput = {
   property_tax_second_installment?: Prisma.SortOrder
   iptu_year?: Prisma.SortOrder
   iptu_installments_count?: Prisma.SortOrder
+}
+
+export type LeaseScalarRelationFilter = {
+  is?: Prisma.LeaseWhereInput
+  isNot?: Prisma.LeaseWhereInput
 }
 
 export type LeaseCreateNestedManyWithoutCompanyInput = {
@@ -1566,6 +1624,10 @@ export type EnumLeaseStatusFieldUpdateOperationsInput = {
   set?: $Enums.LeaseStatus
 }
 
+export type NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput = {
+  set?: $Enums.LeaseOverdueStatus | null
+}
+
 export type LeaseCreateNestedManyWithoutTypeInput = {
   create?: Prisma.XOR<Prisma.LeaseCreateWithoutTypeInput, Prisma.LeaseUncheckedCreateWithoutTypeInput> | Prisma.LeaseCreateWithoutTypeInput[] | Prisma.LeaseUncheckedCreateWithoutTypeInput[]
   connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutTypeInput | Prisma.LeaseCreateOrConnectWithoutTypeInput[]
@@ -1666,6 +1728,62 @@ export type LeaseUpdateOneWithoutTransactionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.LeaseUpdateToOneWithWhereWithoutTransactionsInput, Prisma.LeaseUpdateWithoutTransactionsInput>, Prisma.LeaseUncheckedUpdateWithoutTransactionsInput>
 }
 
+export type LeaseCreateNestedManyWithoutAdjustment_indexInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput> | Prisma.LeaseCreateWithoutAdjustment_indexInput[] | Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput[]
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput | Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput[]
+  createMany?: Prisma.LeaseCreateManyAdjustment_indexInputEnvelope
+  connect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+}
+
+export type LeaseUncheckedCreateNestedManyWithoutAdjustment_indexInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput> | Prisma.LeaseCreateWithoutAdjustment_indexInput[] | Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput[]
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput | Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput[]
+  createMany?: Prisma.LeaseCreateManyAdjustment_indexInputEnvelope
+  connect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+}
+
+export type LeaseUpdateManyWithoutAdjustment_indexNestedInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput> | Prisma.LeaseCreateWithoutAdjustment_indexInput[] | Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput[]
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput | Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput[]
+  upsert?: Prisma.LeaseUpsertWithWhereUniqueWithoutAdjustment_indexInput | Prisma.LeaseUpsertWithWhereUniqueWithoutAdjustment_indexInput[]
+  createMany?: Prisma.LeaseCreateManyAdjustment_indexInputEnvelope
+  set?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  disconnect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  delete?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  connect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  update?: Prisma.LeaseUpdateWithWhereUniqueWithoutAdjustment_indexInput | Prisma.LeaseUpdateWithWhereUniqueWithoutAdjustment_indexInput[]
+  updateMany?: Prisma.LeaseUpdateManyWithWhereWithoutAdjustment_indexInput | Prisma.LeaseUpdateManyWithWhereWithoutAdjustment_indexInput[]
+  deleteMany?: Prisma.LeaseScalarWhereInput | Prisma.LeaseScalarWhereInput[]
+}
+
+export type LeaseUncheckedUpdateManyWithoutAdjustment_indexNestedInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput> | Prisma.LeaseCreateWithoutAdjustment_indexInput[] | Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput[]
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput | Prisma.LeaseCreateOrConnectWithoutAdjustment_indexInput[]
+  upsert?: Prisma.LeaseUpsertWithWhereUniqueWithoutAdjustment_indexInput | Prisma.LeaseUpsertWithWhereUniqueWithoutAdjustment_indexInput[]
+  createMany?: Prisma.LeaseCreateManyAdjustment_indexInputEnvelope
+  set?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  disconnect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  delete?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  connect?: Prisma.LeaseWhereUniqueInput | Prisma.LeaseWhereUniqueInput[]
+  update?: Prisma.LeaseUpdateWithWhereUniqueWithoutAdjustment_indexInput | Prisma.LeaseUpdateWithWhereUniqueWithoutAdjustment_indexInput[]
+  updateMany?: Prisma.LeaseUpdateManyWithWhereWithoutAdjustment_indexInput | Prisma.LeaseUpdateManyWithWhereWithoutAdjustment_indexInput[]
+  deleteMany?: Prisma.LeaseScalarWhereInput | Prisma.LeaseScalarWhereInput[]
+}
+
+export type LeaseCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutNotificationsInput, Prisma.LeaseUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.LeaseWhereUniqueInput
+}
+
+export type LeaseUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.LeaseCreateWithoutNotificationsInput, Prisma.LeaseUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.LeaseCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.LeaseUpsertWithoutNotificationsInput
+  connect?: Prisma.LeaseWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.LeaseUpdateToOneWithWhereWithoutNotificationsInput, Prisma.LeaseUpdateWithoutNotificationsInput>, Prisma.LeaseUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type LeaseCreateWithoutCompanyInput = {
   id?: string
   contract_number: string
@@ -1704,12 +1822,15 @@ export type LeaseCreateWithoutCompanyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
 }
@@ -1758,6 +1879,9 @@ export type LeaseUncheckedCreateWithoutCompanyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -1836,6 +1960,8 @@ export type LeaseScalarWhereInput = {
   insurance_type?: Prisma.StringNullableFilter<"Lease"> | string | null
   insurance_policy?: Prisma.StringNullableFilter<"Lease"> | string | null
   guarantors?: Prisma.JsonNullableFilter<"Lease">
+  adjustment_index_id?: Prisma.StringNullableFilter<"Lease"> | string | null
+  overdue_status?: Prisma.EnumLeaseOverdueStatusNullableFilter<"Lease"> | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateWithoutAgencyInput = {
@@ -1876,11 +2002,14 @@ export type LeaseCreateWithoutAgencyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -1930,6 +2059,9 @@ export type LeaseUncheckedCreateWithoutAgencyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -1998,11 +2130,14 @@ export type LeaseCreateWithoutPropertyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -2052,6 +2187,9 @@ export type LeaseUncheckedCreateWithoutPropertyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -2120,12 +2258,15 @@ export type LeaseCreateWithoutDocumentsInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
 }
@@ -2175,6 +2316,9 @@ export type LeaseUncheckedCreateWithoutDocumentsInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
 }
 
@@ -2232,12 +2376,15 @@ export type LeaseUpdateWithoutDocumentsInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
 }
@@ -2287,6 +2434,9 @@ export type LeaseUncheckedUpdateWithoutDocumentsInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
 }
 
@@ -2328,11 +2478,14 @@ export type LeaseCreateWithoutOwnerInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -2382,6 +2535,9 @@ export type LeaseUncheckedCreateWithoutOwnerInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -2450,11 +2606,14 @@ export type LeaseCreateWithoutTenantInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -2504,6 +2663,9 @@ export type LeaseUncheckedCreateWithoutTenantInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -2572,11 +2734,14 @@ export type LeaseCreateWithoutTypeInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -2626,6 +2791,9 @@ export type LeaseUncheckedCreateWithoutTypeInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -2694,11 +2862,14 @@ export type LeaseCreateWithoutFinancial_institutionInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
@@ -2748,6 +2919,9 @@ export type LeaseUncheckedCreateWithoutFinancial_institutionInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
@@ -2816,12 +2990,15 @@ export type LeaseCreateWithoutTransactionsInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
   owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
   property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
   tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
   agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
   financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
   company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
 }
@@ -2871,6 +3048,9 @@ export type LeaseUncheckedCreateWithoutTransactionsInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
 }
 
@@ -2928,12 +3108,15 @@ export type LeaseUpdateWithoutTransactionsInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
 }
@@ -2983,6 +3166,357 @@ export type LeaseUncheckedUpdateWithoutTransactionsInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
+}
+
+export type LeaseCreateWithoutAdjustment_indexInput = {
+  id?: string
+  contract_number: string
+  start_date: Date | string
+  end_date: Date | string
+  rent_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day: number
+  tax_due_day?: number | null
+  condo_due_day?: number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  canceled_at?: Date | string | null
+  cancellation_justification?: string | null
+  cancellation_penalty?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: $Enums.LeaseStatus
+  payment_condition?: $Enums.PaymentCondition | null
+  property_tax_cash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Date | string | null
+  property_tax_first_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Date | string | null
+  property_tax_second_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Date | string | null
+  iptu_year?: number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: number | null
+  insurance_company?: string | null
+  insurance_type?: string | null
+  insurance_policy?: string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
+  property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
+  tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
+  type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
+  financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutLeaseInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
+  company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
+}
+
+export type LeaseUncheckedCreateWithoutAdjustment_indexInput = {
+  id?: string
+  company_id: string
+  property_id: string
+  type_id: string
+  owner_id: string
+  tenant_id: string
+  agency_id?: string | null
+  financial_institution_id?: string | null
+  contract_number: string
+  start_date: Date | string
+  end_date: Date | string
+  rent_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day: number
+  tax_due_day?: number | null
+  condo_due_day?: number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  canceled_at?: Date | string | null
+  cancellation_justification?: string | null
+  cancellation_penalty?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: $Enums.LeaseStatus
+  payment_condition?: $Enums.PaymentCondition | null
+  property_tax_cash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Date | string | null
+  property_tax_first_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Date | string | null
+  property_tax_second_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Date | string | null
+  iptu_year?: number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: number | null
+  insurance_company?: string | null
+  insurance_type?: string | null
+  insurance_policy?: string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutLeaseInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
+}
+
+export type LeaseCreateOrConnectWithoutAdjustment_indexInput = {
+  where: Prisma.LeaseWhereUniqueInput
+  create: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput>
+}
+
+export type LeaseCreateManyAdjustment_indexInputEnvelope = {
+  data: Prisma.LeaseCreateManyAdjustment_indexInput | Prisma.LeaseCreateManyAdjustment_indexInput[]
+  skipDuplicates?: boolean
+}
+
+export type LeaseUpsertWithWhereUniqueWithoutAdjustment_indexInput = {
+  where: Prisma.LeaseWhereUniqueInput
+  update: Prisma.XOR<Prisma.LeaseUpdateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedUpdateWithoutAdjustment_indexInput>
+  create: Prisma.XOR<Prisma.LeaseCreateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedCreateWithoutAdjustment_indexInput>
+}
+
+export type LeaseUpdateWithWhereUniqueWithoutAdjustment_indexInput = {
+  where: Prisma.LeaseWhereUniqueInput
+  data: Prisma.XOR<Prisma.LeaseUpdateWithoutAdjustment_indexInput, Prisma.LeaseUncheckedUpdateWithoutAdjustment_indexInput>
+}
+
+export type LeaseUpdateManyWithWhereWithoutAdjustment_indexInput = {
+  where: Prisma.LeaseScalarWhereInput
+  data: Prisma.XOR<Prisma.LeaseUpdateManyMutationInput, Prisma.LeaseUncheckedUpdateManyWithoutAdjustment_indexInput>
+}
+
+export type LeaseCreateWithoutNotificationsInput = {
+  id?: string
+  contract_number: string
+  start_date: Date | string
+  end_date: Date | string
+  rent_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day: number
+  tax_due_day?: number | null
+  condo_due_day?: number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  canceled_at?: Date | string | null
+  cancellation_justification?: string | null
+  cancellation_penalty?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: $Enums.LeaseStatus
+  payment_condition?: $Enums.PaymentCondition | null
+  property_tax_cash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Date | string | null
+  property_tax_first_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Date | string | null
+  property_tax_second_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Date | string | null
+  iptu_year?: number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: number | null
+  insurance_company?: string | null
+  insurance_type?: string | null
+  insurance_policy?: string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  owner: Prisma.OwnerCreateNestedOneWithoutLeasesInput
+  property: Prisma.PropertyCreateNestedOneWithoutLeasesInput
+  tenant: Prisma.TenantCreateNestedOneWithoutLeasesInput
+  type: Prisma.PropertyTypeCreateNestedOneWithoutLeasesInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutLeasesInput
+  financial_institution?: Prisma.FinancialInstitutionCreateNestedOneWithoutLeasesInput
+  adjustment_index?: Prisma.AdjustmentIndexCreateNestedOneWithoutLeasesInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutLeaseInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutLeaseInput
+  company: Prisma.CompanyCreateNestedOneWithoutLeasesInput
+}
+
+export type LeaseUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  company_id: string
+  property_id: string
+  type_id: string
+  owner_id: string
+  tenant_id: string
+  agency_id?: string | null
+  financial_institution_id?: string | null
+  contract_number: string
+  start_date: Date | string
+  end_date: Date | string
+  rent_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day: number
+  tax_due_day?: number | null
+  condo_due_day?: number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  canceled_at?: Date | string | null
+  cancellation_justification?: string | null
+  cancellation_penalty?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: $Enums.LeaseStatus
+  payment_condition?: $Enums.PaymentCondition | null
+  property_tax_cash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Date | string | null
+  property_tax_first_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Date | string | null
+  property_tax_second_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Date | string | null
+  iptu_year?: number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: number | null
+  insurance_company?: string | null
+  insurance_type?: string | null
+  insurance_policy?: string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLeaseInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutLeaseInput
+}
+
+export type LeaseCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.LeaseWhereUniqueInput
+  create: Prisma.XOR<Prisma.LeaseCreateWithoutNotificationsInput, Prisma.LeaseUncheckedCreateWithoutNotificationsInput>
+}
+
+export type LeaseUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.LeaseUpdateWithoutNotificationsInput, Prisma.LeaseUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.LeaseCreateWithoutNotificationsInput, Prisma.LeaseUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.LeaseWhereInput
+}
+
+export type LeaseUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.LeaseWhereInput
+  data: Prisma.XOR<Prisma.LeaseUpdateWithoutNotificationsInput, Prisma.LeaseUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type LeaseUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  contract_number?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rent_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day?: Prisma.IntFieldUpdateOperationsInput | number
+  tax_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  condo_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  canceled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancellation_justification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellation_penalty?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: Prisma.EnumLeaseStatusFieldUpdateOperationsInput | $Enums.LeaseStatus
+  payment_condition?: Prisma.NullableEnumPaymentConditionFieldUpdateOperationsInput | $Enums.PaymentCondition | null
+  property_tax_cash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_first_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_second_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  iptu_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  insurance_company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
+  property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
+  tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
+  type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
+  financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
+}
+
+export type LeaseUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  property_id?: Prisma.StringFieldUpdateOperationsInput | string
+  type_id?: Prisma.StringFieldUpdateOperationsInput | string
+  owner_id?: Prisma.StringFieldUpdateOperationsInput | string
+  tenant_id?: Prisma.StringFieldUpdateOperationsInput | string
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financial_institution_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contract_number?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rent_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day?: Prisma.IntFieldUpdateOperationsInput | number
+  tax_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  condo_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  canceled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancellation_justification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellation_penalty?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: Prisma.EnumLeaseStatusFieldUpdateOperationsInput | $Enums.LeaseStatus
+  payment_condition?: Prisma.NullableEnumPaymentConditionFieldUpdateOperationsInput | $Enums.PaymentCondition | null
+  property_tax_cash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_first_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_second_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  iptu_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  insurance_company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
 
@@ -3030,6 +3564,8 @@ export type LeaseCreateManyCompanyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutCompanyInput = {
@@ -3070,12 +3606,15 @@ export type LeaseUpdateWithoutCompanyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
 }
@@ -3124,6 +3663,9 @@ export type LeaseUncheckedUpdateWithoutCompanyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -3172,6 +3714,8 @@ export type LeaseUncheckedUpdateManyWithoutCompanyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyAgencyInput = {
@@ -3218,6 +3762,8 @@ export type LeaseCreateManyAgencyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutAgencyInput = {
@@ -3258,11 +3804,14 @@ export type LeaseUpdateWithoutAgencyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -3312,6 +3861,9 @@ export type LeaseUncheckedUpdateWithoutAgencyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -3360,6 +3912,8 @@ export type LeaseUncheckedUpdateManyWithoutAgencyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyPropertyInput = {
@@ -3406,6 +3960,8 @@ export type LeaseCreateManyPropertyInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutPropertyInput = {
@@ -3446,11 +4002,14 @@ export type LeaseUpdateWithoutPropertyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -3500,6 +4059,9 @@ export type LeaseUncheckedUpdateWithoutPropertyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -3548,6 +4110,8 @@ export type LeaseUncheckedUpdateManyWithoutPropertyInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyOwnerInput = {
@@ -3594,6 +4158,8 @@ export type LeaseCreateManyOwnerInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutOwnerInput = {
@@ -3634,11 +4200,14 @@ export type LeaseUpdateWithoutOwnerInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -3688,6 +4257,9 @@ export type LeaseUncheckedUpdateWithoutOwnerInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -3736,6 +4308,8 @@ export type LeaseUncheckedUpdateManyWithoutOwnerInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyTenantInput = {
@@ -3782,6 +4356,8 @@ export type LeaseCreateManyTenantInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutTenantInput = {
@@ -3822,11 +4398,14 @@ export type LeaseUpdateWithoutTenantInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -3876,6 +4455,9 @@ export type LeaseUncheckedUpdateWithoutTenantInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -3924,6 +4506,8 @@ export type LeaseUncheckedUpdateManyWithoutTenantInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyTypeInput = {
@@ -3970,6 +4554,8 @@ export type LeaseCreateManyTypeInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutTypeInput = {
@@ -4010,11 +4596,14 @@ export type LeaseUpdateWithoutTypeInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
   financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -4064,6 +4653,9 @@ export type LeaseUncheckedUpdateWithoutTypeInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -4112,6 +4704,8 @@ export type LeaseUncheckedUpdateManyWithoutTypeInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseCreateManyFinancial_institutionInput = {
@@ -4158,6 +4752,8 @@ export type LeaseCreateManyFinancial_institutionInput = {
   insurance_type?: string | null
   insurance_policy?: string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: string | null
+  overdue_status?: $Enums.LeaseOverdueStatus | null
 }
 
 export type LeaseUpdateWithoutFinancial_institutionInput = {
@@ -4198,11 +4794,14 @@ export type LeaseUpdateWithoutFinancial_institutionInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
   owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
   tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
+  adjustment_index?: Prisma.AdjustmentIndexUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
@@ -4252,6 +4851,9 @@ export type LeaseUncheckedUpdateWithoutFinancial_institutionInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
 }
@@ -4300,6 +4902,206 @@ export type LeaseUncheckedUpdateManyWithoutFinancial_institutionInput = {
   insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  adjustment_index_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+}
+
+export type LeaseCreateManyAdjustment_indexInput = {
+  id?: string
+  company_id: string
+  property_id: string
+  type_id: string
+  owner_id: string
+  tenant_id: string
+  agency_id?: string | null
+  financial_institution_id?: string | null
+  contract_number: string
+  start_date: Date | string
+  end_date: Date | string
+  rent_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day: number
+  tax_due_day?: number | null
+  condo_due_day?: number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  canceled_at?: Date | string | null
+  cancellation_justification?: string | null
+  cancellation_penalty?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: $Enums.LeaseStatus
+  payment_condition?: $Enums.PaymentCondition | null
+  property_tax_cash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Date | string | null
+  property_tax_first_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Date | string | null
+  property_tax_second_installment?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Date | string | null
+  iptu_year?: number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: number | null
+  insurance_company?: string | null
+  insurance_type?: string | null
+  insurance_policy?: string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: $Enums.LeaseOverdueStatus | null
+}
+
+export type LeaseUpdateWithoutAdjustment_indexInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  contract_number?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rent_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day?: Prisma.IntFieldUpdateOperationsInput | number
+  tax_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  condo_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  canceled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancellation_justification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellation_penalty?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: Prisma.EnumLeaseStatusFieldUpdateOperationsInput | $Enums.LeaseStatus
+  payment_condition?: Prisma.NullableEnumPaymentConditionFieldUpdateOperationsInput | $Enums.PaymentCondition | null
+  property_tax_cash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_first_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_second_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  iptu_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  insurance_company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  owner?: Prisma.OwnerUpdateOneRequiredWithoutLeasesNestedInput
+  property?: Prisma.PropertyUpdateOneRequiredWithoutLeasesNestedInput
+  tenant?: Prisma.TenantUpdateOneRequiredWithoutLeasesNestedInput
+  type?: Prisma.PropertyTypeUpdateOneRequiredWithoutLeasesNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutLeasesNestedInput
+  financial_institution?: Prisma.FinancialInstitutionUpdateOneWithoutLeasesNestedInput
+  notifications?: Prisma.LeaseNotificationUpdateManyWithoutLeaseNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutLeaseNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutLeaseNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutLeasesNestedInput
+}
+
+export type LeaseUncheckedUpdateWithoutAdjustment_indexInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  property_id?: Prisma.StringFieldUpdateOperationsInput | string
+  type_id?: Prisma.StringFieldUpdateOperationsInput | string
+  owner_id?: Prisma.StringFieldUpdateOperationsInput | string
+  tenant_id?: Prisma.StringFieldUpdateOperationsInput | string
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financial_institution_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contract_number?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rent_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day?: Prisma.IntFieldUpdateOperationsInput | number
+  tax_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  condo_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  canceled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancellation_justification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellation_penalty?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: Prisma.EnumLeaseStatusFieldUpdateOperationsInput | $Enums.LeaseStatus
+  payment_condition?: Prisma.NullableEnumPaymentConditionFieldUpdateOperationsInput | $Enums.PaymentCondition | null
+  property_tax_cash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_first_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_second_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  iptu_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  insurance_company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
+  notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutLeaseNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutLeaseNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutLeaseNestedInput
+}
+
+export type LeaseUncheckedUpdateManyWithoutAdjustment_indexInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  property_id?: Prisma.StringFieldUpdateOperationsInput | string
+  type_id?: Prisma.StringFieldUpdateOperationsInput | string
+  owner_id?: Prisma.StringFieldUpdateOperationsInput | string
+  tenant_id?: Prisma.StringFieldUpdateOperationsInput | string
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financial_institution_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contract_number?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rent_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  condo_fee?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  discount_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  commission_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  agency_commission?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  rent_due_day?: Prisma.IntFieldUpdateOperationsInput | number
+  tax_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  condo_due_day?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  canceled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancellation_justification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellation_penalty?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  other_cancellation_amounts?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  status?: Prisma.EnumLeaseStatusFieldUpdateOperationsInput | $Enums.LeaseStatus
+  payment_condition?: Prisma.NullableEnumPaymentConditionFieldUpdateOperationsInput | $Enums.PaymentCondition | null
+  property_tax_cash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_cash_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_first_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_first_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  property_tax_second_installment?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  property_tax_second_installment_due_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  iptu_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  iptu_installments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_due_dates?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  iptu_installments_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  insurance_company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guarantors?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  overdue_status?: Prisma.NullableEnumLeaseOverdueStatusFieldUpdateOperationsInput | $Enums.LeaseOverdueStatus | null
 }
 
 
@@ -4308,11 +5110,13 @@ export type LeaseUncheckedUpdateManyWithoutFinancial_institutionInput = {
  */
 
 export type LeaseCountOutputType = {
+  notifications: number
   transactions: number
   documents: number
 }
 
 export type LeaseCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  notifications?: boolean | LeaseCountOutputTypeCountNotificationsArgs
   transactions?: boolean | LeaseCountOutputTypeCountTransactionsArgs
   documents?: boolean | LeaseCountOutputTypeCountDocumentsArgs
 }
@@ -4325,6 +5129,13 @@ export type LeaseCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extens
    * Select specific fields to fetch from the LeaseCountOutputType
    */
   select?: Prisma.LeaseCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * LeaseCountOutputType without action
+ */
+export type LeaseCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeaseNotificationWhereInput
 }
 
 /**
@@ -4387,12 +5198,16 @@ export type LeaseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   insurance_type?: boolean
   insurance_policy?: boolean
   guarantors?: boolean
+  adjustment_index_id?: boolean
+  overdue_status?: boolean
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
+  notifications?: boolean | Prisma.Lease$notificationsArgs<ExtArgs>
   transactions?: boolean | Prisma.Lease$transactionsArgs<ExtArgs>
   documents?: boolean | Prisma.Lease$documentsArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
@@ -4444,12 +5259,15 @@ export type LeaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   insurance_type?: boolean
   insurance_policy?: boolean
   guarantors?: boolean
+  adjustment_index_id?: boolean
+  overdue_status?: boolean
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["lease"]>
 
@@ -4498,12 +5316,15 @@ export type LeaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   insurance_type?: boolean
   insurance_policy?: boolean
   guarantors?: boolean
+  adjustment_index_id?: boolean
+  overdue_status?: boolean
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["lease"]>
 
@@ -4552,9 +5373,11 @@ export type LeaseSelectScalar = {
   insurance_type?: boolean
   insurance_policy?: boolean
   guarantors?: boolean
+  adjustment_index_id?: boolean
+  overdue_status?: boolean
 }
 
-export type LeaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "property_id" | "type_id" | "owner_id" | "tenant_id" | "agency_id" | "financial_institution_id" | "contract_number" | "start_date" | "end_date" | "rent_amount" | "condo_fee" | "property_tax" | "extra_charges" | "discount_amount" | "commission_amount" | "agency_commission" | "rent_due_day" | "tax_due_day" | "condo_due_day" | "created_at" | "updated_at" | "deleted_at" | "canceled_at" | "cancellation_justification" | "cancellation_penalty" | "other_cancellation_amounts" | "status" | "payment_condition" | "property_tax_cash" | "property_tax_cash_due_date" | "property_tax_first_installment" | "property_tax_first_installment_due_date" | "property_tax_second_installment" | "property_tax_second_installment_due_date" | "iptu_year" | "iptu_installments" | "iptu_installments_due_dates" | "iptu_installments_count" | "insurance_company" | "insurance_type" | "insurance_policy" | "guarantors", ExtArgs["result"]["lease"]>
+export type LeaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "property_id" | "type_id" | "owner_id" | "tenant_id" | "agency_id" | "financial_institution_id" | "contract_number" | "start_date" | "end_date" | "rent_amount" | "condo_fee" | "property_tax" | "extra_charges" | "discount_amount" | "commission_amount" | "agency_commission" | "rent_due_day" | "tax_due_day" | "condo_due_day" | "created_at" | "updated_at" | "deleted_at" | "canceled_at" | "cancellation_justification" | "cancellation_penalty" | "other_cancellation_amounts" | "status" | "payment_condition" | "property_tax_cash" | "property_tax_cash_due_date" | "property_tax_first_installment" | "property_tax_first_installment_due_date" | "property_tax_second_installment" | "property_tax_second_installment_due_date" | "iptu_year" | "iptu_installments" | "iptu_installments_due_dates" | "iptu_installments_count" | "insurance_company" | "insurance_type" | "insurance_policy" | "guarantors" | "adjustment_index_id" | "overdue_status", ExtArgs["result"]["lease"]>
 export type LeaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
@@ -4562,6 +5385,8 @@ export type LeaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
+  notifications?: boolean | Prisma.Lease$notificationsArgs<ExtArgs>
   transactions?: boolean | Prisma.Lease$transactionsArgs<ExtArgs>
   documents?: boolean | Prisma.Lease$documentsArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
@@ -4574,6 +5399,7 @@ export type LeaseIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }
 export type LeaseIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4583,6 +5409,7 @@ export type LeaseIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
   agency?: boolean | Prisma.Lease$agencyArgs<ExtArgs>
   financial_institution?: boolean | Prisma.Lease$financial_institutionArgs<ExtArgs>
+  adjustment_index?: boolean | Prisma.Lease$adjustment_indexArgs<ExtArgs>
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }
 
@@ -4595,6 +5422,8 @@ export type $LeasePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     type: Prisma.$PropertyTypePayload<ExtArgs>
     agency: Prisma.$AgencyPayload<ExtArgs> | null
     financial_institution: Prisma.$FinancialInstitutionPayload<ExtArgs> | null
+    adjustment_index: Prisma.$AdjustmentIndexPayload<ExtArgs> | null
+    notifications: Prisma.$LeaseNotificationPayload<ExtArgs>[]
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     company: Prisma.$CompanyPayload<ExtArgs>
@@ -4649,6 +5478,15 @@ export type $LeasePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     insurance_type: string | null
     insurance_policy: string | null
     guarantors: runtime.JsonValue | null
+    /**
+     * Indexador de reajuste do contrato (Etapa 4), escolhido na aba
+     * "Valores da Locação" logo depois do Valor do Aluguel.
+     */
+    adjustment_index_id: string | null
+    /**
+     * Marcação manual do acompanhamento do atraso (Etapa 8).
+     */
+    overdue_status: $Enums.LeaseOverdueStatus | null
   }, ExtArgs["result"]["lease"]>
   composites: {}
 }
@@ -5049,6 +5887,8 @@ export interface Prisma__LeaseClient<T, Null = never, ExtArgs extends runtime.Ty
   type<T extends Prisma.PropertyTypeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PropertyTypeDefaultArgs<ExtArgs>>): Prisma.Prisma__PropertyTypeClient<runtime.Types.Result.GetResult<Prisma.$PropertyTypePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   agency<T extends Prisma.Lease$agencyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$agencyArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   financial_institution<T extends Prisma.Lease$financial_institutionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$financial_institutionArgs<ExtArgs>>): Prisma.Prisma__FinancialInstitutionClient<runtime.Types.Result.GetResult<Prisma.$FinancialInstitutionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  adjustment_index<T extends Prisma.Lease$adjustment_indexArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$adjustment_indexArgs<ExtArgs>>): Prisma.Prisma__AdjustmentIndexClient<runtime.Types.Result.GetResult<Prisma.$AdjustmentIndexPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  notifications<T extends Prisma.Lease$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseNotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transactions<T extends Prisma.Lease$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   documents<T extends Prisma.Lease$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Lease$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   company<T extends Prisma.CompanyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CompanyDefaultArgs<ExtArgs>>): Prisma.Prisma__CompanyClient<runtime.Types.Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
@@ -5125,6 +5965,8 @@ export interface LeaseFieldRefs {
   readonly insurance_type: Prisma.FieldRef<"Lease", 'String'>
   readonly insurance_policy: Prisma.FieldRef<"Lease", 'String'>
   readonly guarantors: Prisma.FieldRef<"Lease", 'Json'>
+  readonly adjustment_index_id: Prisma.FieldRef<"Lease", 'String'>
+  readonly overdue_status: Prisma.FieldRef<"Lease", 'LeaseOverdueStatus'>
 }
     
 
@@ -5561,6 +6403,49 @@ export type Lease$financial_institutionArgs<ExtArgs extends runtime.Types.Extens
    */
   include?: Prisma.FinancialInstitutionInclude<ExtArgs> | null
   where?: Prisma.FinancialInstitutionWhereInput
+}
+
+/**
+ * Lease.adjustment_index
+ */
+export type Lease$adjustment_indexArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AdjustmentIndex
+   */
+  select?: Prisma.AdjustmentIndexSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AdjustmentIndex
+   */
+  omit?: Prisma.AdjustmentIndexOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AdjustmentIndexInclude<ExtArgs> | null
+  where?: Prisma.AdjustmentIndexWhereInput
+}
+
+/**
+ * Lease.notifications
+ */
+export type Lease$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LeaseNotification
+   */
+  select?: Prisma.LeaseNotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LeaseNotification
+   */
+  omit?: Prisma.LeaseNotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeaseNotificationInclude<ExtArgs> | null
+  where?: Prisma.LeaseNotificationWhereInput
+  orderBy?: Prisma.LeaseNotificationOrderByWithRelationInput | Prisma.LeaseNotificationOrderByWithRelationInput[]
+  cursor?: Prisma.LeaseNotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeaseNotificationScalarFieldEnum | Prisma.LeaseNotificationScalarFieldEnum[]
 }
 
 /**

@@ -25,6 +25,15 @@ interface BarCardProps {
   loading?: boolean;
   colors?: string[];
   detailColumns?: Array<{ key: string; label: string; format?: (value: any) => string; summable?: boolean }>;
+  /** Agrupa as linhas do modal de detalhes por um campo, com subtotal por grupo. */
+  detailGroupBy?: {
+    key: string;
+    order?: string[];
+    label?: (row: any) => string;
+    unitLabel?: (count: number) => string;
+  };
+  /** Unidade do rodapé "Total: N ..." do modal de detalhes. */
+  detailTotalLabel?: string;
   /** Quando dentro de um grid arrastável, a barra do título vira a alça de arrastar. */
   dragHandleClassName?: string;
 }
@@ -34,6 +43,8 @@ export default function EChartsBar({
   label = "Comparativo",
   colors = [],
   detailColumns = [],
+  detailGroupBy,
+  detailTotalLabel,
   dragHandleClassName
 }: BarCardProps) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -240,7 +251,15 @@ export default function EChartsBar({
         </div>
       </div>
 
-      <DataModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle} data={modalData} columns={detailColumns} />
+      <DataModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        data={modalData}
+        columns={detailColumns}
+        groupBy={detailGroupBy}
+        totalLabel={detailTotalLabel}
+      />
 
       {isFullscreenModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9990] flex items-center justify-center bg-layer-overlay-strong backdrop-blur-xs p-2 sm:p-4" onClick={() => setIsFullscreenModalOpen(false)}>
