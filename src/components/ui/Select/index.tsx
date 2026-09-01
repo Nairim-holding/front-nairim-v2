@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Label from '../Label';
 import { ChevronDown, Search } from 'lucide-react';
 
@@ -65,6 +66,9 @@ export default function Select({
   const [selectedValue, setSelectedValue] = useState<string | number>(value || defaultValue || '');
   const [selectedLabel, setSelectedLabel] = useState<string>(placeholder);
   const [searchTerm, setSearchTerm] = useState('');
+  // Lista de opções em portal (ver comentário acima do JSX): precisa da
+  // posição em coordenadas de viewport, medida do próprio gatilho.
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const optionsListRef = useRef<HTMLDivElement>(null);
@@ -87,9 +91,9 @@ export default function Select({
   }, [value, defaultValue, options, placeholder]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => { 
+    const handleClickOutside = (event: MouseEvent) => {
       if (
-        containerRef.current && 
+        containerRef.current &&
         !containerRef.current.contains(event.target as Node) &&
         optionsListRef.current &&
         !optionsListRef.current.contains(event.target as Node)
@@ -101,6 +105,32 @@ export default function Select({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  /**
+   * A lista de opções é desenhada em portal no `body` (ver JSX abaixo) — sem
+   * isso, um `Select` dentro de um modal com `overflow-y-auto` (ex.: mês/ano
+   * em "Gerenciar Aportes e Resgates") tem a lista recortada nas bordas do
+   * modal em vez de flutuar por cima, mesmo problema que `HoverTooltip.tsx`
+   * já resolveu para os balões de observação. Precisa da posição em
+   * coordenadas de viewport, recalculada enquanto aberto porque o gatilho
+   * pode rolar (scroll do modal/da página) sem o portal se mover sozinho.
+   */
+  const updateDropdownRect = useCallback(() => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    updateDropdownRect();
+    window.addEventListener('scroll', updateDropdownRect, true);
+    window.addEventListener('resize', updateDropdownRect);
+    return () => {
+      window.removeEventListener('scroll', updateDropdownRect, true);
+      window.removeEventListener('resize', updateDropdownRect);
+    };
+  }, [isOpen, updateDropdownRect]);
 
   // Quando `searchable` não é informado, liga o typeahead automaticamente em listas
   // grandes o suficiente para que rolar seja pior do que digitar.
@@ -236,10 +266,11 @@ export default function Select({
         <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
-      {isOpen && !disabled && (
+      {isOpen && !disabled && dropdownRect && typeof document !== 'undefined' && createPortal(
         <div
           ref={optionsListRef as React.RefObject<HTMLDivElement>}
-          className="absolute top-full left-0 z-[999] min-w-full w-max max-w-[min(32rem,90vw)] bg-surface border border-ui-border rounded-lg mt-1 shadow-2xl max-h-60 flex flex-col overflow-hidden"
+          style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, minWidth: dropdownRect.width }}
+          className="z-[9999] w-max max-w-[min(32rem,90vw)] bg-surface border border-ui-border rounded-lg shadow-2xl max-h-60 flex flex-col overflow-hidden"
         >
           {isSearchable && (
             <div className="p-2 border-b border-ui-border-soft sticky top-0 bg-surface z-10 flex items-center gap-2">
@@ -292,7 +323,8 @@ export default function Select({
               </li>
             )}
           </ul>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

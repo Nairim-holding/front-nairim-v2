@@ -2,6 +2,7 @@
 
 import { Fragment, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Pencil, Plus, StickyNote } from 'lucide-react';
+import Checkbox from '@/components/ui/Checkbox';
 import HoverTooltip from './HoverTooltip';
 import type { InvestmentDashboardResponse, InvestmentRow, MonthCellTarget } from './types';
 import { formatCell, formatDateBR, formatMonthHeader, formatPercent } from './format';
@@ -52,7 +53,7 @@ export interface InvestmentsTableHandle {
 interface Props {
   data: InvestmentDashboardResponse;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | null) => void;
   /** Duplo clique na linha / botão editar da barra. */
   onEditInvestment: (investment: InvestmentRow) => void;
   onEditNotes: (investment: InvestmentRow) => void;
@@ -60,6 +61,9 @@ interface Props {
   onAddContribution: (target: MonthCellTarget) => void;
   onManageContributions: (target: MonthCellTarget) => void;
   onEditIndependenceReference: () => void;
+  /** Meses marcados para "Gerenciar selecionados" — sempre de um único investimento. */
+  monthSelection: { investmentId: string; months: Set<string> } | null;
+  onToggleMonthSelection: (investmentId: string, year: number, month: number) => void;
 }
 
 const statLabelStyle = { backgroundColor: TEAL };
@@ -75,6 +79,8 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
     onAddContribution,
     onManageContributions,
     onEditIndependenceReference,
+    monthSelection,
+    onToggleMonthSelection,
   },
   ref,
 ) {
@@ -171,7 +177,10 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
               name="investment-selection"
               aria-label={`Selecionar ${investment.product}`}
               checked={isSelected}
-              onChange={() => onSelect(investment.id)}
+              // Radio nativo não desmarca sozinho ao clicar no já marcado — o
+              // toggle é feito aqui no click, antes do onChange do browser.
+              onClick={() => onSelect(isSelected ? null : investment.id)}
+              onChange={() => {}}
               className="w-3.5 h-3.5 accent-[color:var(--color-brand-primary)] cursor-pointer"
             />
           </td>
@@ -229,13 +238,28 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
           >
             Aplicado
           </td>
-          {investment.months.map((cell) => (
+          {investment.months.map((cell) => {
+            const monthKey = `${cell.year}-${String(cell.month).padStart(2, '0')}`;
+            const isMonthChecked =
+              monthSelection?.investmentId === investment.id && monthSelection.months.has(monthKey);
+            return (
             <td
               key={`applied-${cell.year}-${cell.month}`}
               className="group/cell relative border-l border-ui-border-soft px-3 py-1 text-[11px] text-right whitespace-nowrap text-content"
               style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 6%, transparent)' }}
             >
-              <span>{formatCell(cell.applied)}</span>
+              {/* Marcar o mês para "Gerenciar selecionados" (item 4) — sempre
+                  visível (não só no hover), senão fica escondido demais para
+                  o usuário descobrir que dá para marcar vários meses. */}
+              <span className="absolute inset-y-0 left-1 flex items-center">
+                <Checkbox
+                  checked={isMonthChecked}
+                  onChange={() => onToggleMonthSelection(investment.id, cell.year, cell.month)}
+                  ariaLabel={`Selecionar ${formatMonthHeader(cell.month, cell.year)}`}
+                  className="!w-3.5 !h-3.5"
+                />
+              </span>
+              <span className="pl-4">{formatCell(cell.applied)}</span>
               {/* Aporte novo (+) e gestão dos aportes do mês (lápis). */}
               <span className="absolute inset-y-0 right-1 hidden items-center gap-0.5 group-hover/cell:flex">
                 <button
@@ -260,7 +284,8 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
                 </button>
               </span>
             </td>
-          ))}
+            );
+          })}
         </tr>
 
         {/* Linha 2 — Saldo Total. */}

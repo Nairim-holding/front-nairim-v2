@@ -2,14 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowDownToLine,
   ArrowUpDown,
   Calendar,
   FileSpreadsheet,
   FileText,
   Filter,
+  ListChecks,
   Pencil,
   Plus,
   RefreshCw,
+  Repeat,
+  Trash2,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -18,8 +22,12 @@ import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
 import DynamicFilterModal from '@/components/filters/DynamicFilterModal';
 import { useDynamicFilters, type DynamicFiltersResponse } from '@/hooks/useDynamicFilters';
-import { useMessageContext } from '@/contexts';
-import { getInvestmentDashboardAction, getInvestmentFiltersAction } from '@/server/actions/investment';
+import { useMessageContext, usePopupContext } from '@/contexts';
+import {
+  deleteInvestmentAction,
+  getInvestmentDashboardAction,
+  getInvestmentFiltersAction,
+} from '@/server/actions/investment';
 import InvestmentsTable, {
   LEFT_PANEL_WIDTH,
   STATS_BLOCK_HEIGHT,
@@ -32,8 +40,10 @@ import MonthBalanceModal from '@/components/investimentos/MonthBalanceModal';
 import NotesModal from '@/components/investimentos/NotesModal';
 import ContributionsModal from '@/components/investimentos/ContributionsModal';
 import ContributionFormModal from '@/components/investimentos/ContributionFormModal';
+import RedemptionModal from '@/components/investimentos/RedemptionModal';
 import { formatCurrencyBRL, formatDateBR, getDefaultDateRange, toMonthOf } from '@/components/investimentos/format';
 import type {
+  GridMonth,
   InvestmentDashboardResponse,
   InvestmentRow,
   MonthCellTarget,
@@ -57,13 +67,16 @@ type ModalState =
   | { kind: 'contribution'; target: MonthCellTarget }
   | { kind: 'contributions'; target: MonthCellTarget }
   | { kind: 'order' }
-  | { kind: 'independence' };
+  | { kind: 'independence' }
+  | { kind: 'redeem'; investment: InvestmentRow }
+  | { kind: 'contributions-multi'; investmentId: string; months: GridMonth[] };
 
 const iconButtonClass =
   'p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors';
 
 export default function InvestmentsPageContent() {
   const { showMessage } = useMessageContext();
+  const { showPopup } = usePopupContext();
   const defaults = useMemo(() => getDefaultDateRange(), []);
 
   const [dateRange, setDateRange] = useState(defaults);
@@ -72,6 +85,26 @@ export default function InvestmentsPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
+
+  // Seleção de meses para "Gerenciar selecionados" (item 4): sempre de UM
+  // investimento por vez — marcar um mês de outro investimento reinicia a
+  // seleção, para nunca misturar dois papéis no mesmo modal.
+  const [monthSelection, setMonthSelection] = useState<{ investmentId: string; months: Set<string> } | null>(null);
+
+  const toggleMonthSelection = useCallback((investmentId: string, year: number, month: number) => {
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    setMonthSelection((prev) => {
+      if (!prev || prev.investmentId !== investmentId) {
+        return { investmentId, months: new Set([key]) };
+      }
+      const next = new Set(prev.months);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next.size ? { investmentId, months: next } : null;
+    });
+  }, []);
+
+  const clearMonthSelection = useCallback(() => setMonthSelection(null), []);
 
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -164,6 +197,46 @@ export default function InvestmentsPageContent() {
     setModal({ kind: 'edit', investment: selectedInvestment });
   }, [selectedInvestment, showMessage]);
 
+  // Botão fixo na toolbar (ao lado do Resgate) — mesmo modal que o lápis da
+  // célula abre, só que sem precisar passar o mouse numa célula específica.
+  // Mês/ano inicial = mês corrente; o próprio modal deixa trocar sem fechar.
+  const handleManageSelected = useCallback(() => {
+    if (!selectedInvestment) return;
+    const now = new Date();
+    setModal({
+      kind: 'contributions',
+      target: { investmentId: selectedInvestment.id, year: now.getFullYear(), month: now.getMonth() + 1 },
+    });
+  }, [selectedInvestment]);
+
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+
+  // Mesma confirmação e mesma action de exclusão do InvestmentFormModal — o
+  // "+" da toolbar vira lixeira quando há um investimento marcado na grid,
+  // para excluir sem precisar abrir o modal de edição.
+  const handleDeleteSelected = useCallback(() => {
+    if (!selectedInvestment) return;
+    showPopup(
+      'Excluir Investimento',
+      `Tem certeza que deseja excluir o investimento "${selectedInvestment.product}"? Os aportes e saldos mensais também serão removidos.`,
+      async () => {
+        setIsDeletingSelected(true);
+        try {
+          const result = await deleteInvestmentAction(selectedInvestment.id);
+          if (!result.ok) throw new Error(result.error);
+          showMessage('Investimento excluído com sucesso', 'success');
+          setSelectedId(null);
+          fetchDashboard();
+        } catch (error) {
+          showMessage(error instanceof Error ? error.message : 'Erro ao excluir o investimento', 'error');
+        } finally {
+          setIsDeletingSelected(false);
+        }
+      },
+      () => {},
+    );
+  }, [selectedInvestment, showMessage, showPopup, fetchDashboard]);
+
   const handleExportExcel = useCallback(() => {
     const tableEl = tableRef.current?.getTableElement();
     if (!tableEl) return showMessage('Não há dados para exportar', 'error');
@@ -188,9 +261,21 @@ export default function InvestmentsPageContent() {
 
   const toolbar = (
     <>
-      <button type="button" onClick={() => setModal({ kind: 'create' })} className={iconButtonClass} title="Novo investimento">
-        <Plus size={16} />
-      </button>
+      {selectedInvestment ? (
+        <button
+          type="button"
+          onClick={handleDeleteSelected}
+          disabled={isDeletingSelected}
+          className={iconButtonClass}
+          title="Excluir investimento selecionado"
+        >
+          <Trash2 size={16} />
+        </button>
+      ) : (
+        <button type="button" onClick={() => setModal({ kind: 'create' })} className={iconButtonClass} title="Novo investimento">
+          <Plus size={16} />
+        </button>
+      )}
       <button
         type="button"
         onClick={handleEditSelected}
@@ -222,6 +307,45 @@ export default function InvestmentsPageContent() {
           </span>
         )}
       </button>
+      <button
+        type="button"
+        onClick={() => selectedInvestment && setModal({ kind: 'redeem', investment: selectedInvestment })}
+        disabled={!selectedInvestment}
+        className={iconButtonClass}
+        title="Resgate do investimento selecionado"
+      >
+        <ArrowDownToLine size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={handleManageSelected}
+        disabled={!selectedInvestment}
+        className={iconButtonClass}
+        title="Gerenciar aportes e resgates do investimento selecionado"
+      >
+        <Repeat size={16} />
+      </button>
+      {monthSelection && monthSelection.months.size > 1 && (
+        <button
+          type="button"
+          onClick={() => {
+            const months: GridMonth[] = [...monthSelection.months]
+              .map((key) => {
+                const [year, month] = key.split('-').map(Number);
+                return { year, month };
+              })
+              .sort((a, b) => (a.year - b.year) || (a.month - b.month));
+            setModal({ kind: 'contributions-multi', investmentId: monthSelection.investmentId, months });
+          }}
+          className={`relative ${iconButtonClass}`}
+          title={`Gerenciar selecionados (${monthSelection.months.size})`}
+        >
+          <ListChecks size={16} />
+          <span className="absolute -top-1 -right-1 bg-brand text-content-inverse text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+            {monthSelection.months.size}
+          </span>
+        </button>
+      )}
       <button
         type="button"
         onClick={handleExportExcel}
@@ -336,6 +460,8 @@ export default function InvestmentsPageContent() {
                 onAddContribution={(target) => setModal({ kind: 'contribution', target })}
                 onManageContributions={(target) => setModal({ kind: 'contributions', target })}
                 onEditIndependenceReference={() => setModal({ kind: 'independence' })}
+                monthSelection={monthSelection}
+                onToggleMonthSelection={toggleMonthSelection}
               />
             </div>
           </div>
@@ -404,8 +530,31 @@ export default function InvestmentsPageContent() {
           );
         })()}
 
+      {modal.kind === 'contributions-multi' &&
+        (() => {
+          const investment = investments.find((item) => item.id === modal.investmentId) ?? null;
+          if (!investment) return null;
+          return (
+            <ContributionsModal
+              investment={investment}
+              year={modal.months[0].year}
+              month={modal.months[0].month}
+              months={modal.months}
+              onClose={() => {
+                closeModal();
+                clearMonthSelection();
+              }}
+              onChanged={fetchDashboard}
+            />
+          );
+        })()}
+
       {modal.kind === 'order' && (
         <InvestmentOrderModal investments={investments} onClose={closeModal} onSaved={reloadAndClose} />
+      )}
+
+      {modal.kind === 'redeem' && (
+        <RedemptionModal investment={modal.investment} onClose={closeModal} onSaved={reloadAndClose} />
       )}
 
       {modal.kind === 'independence' && (

@@ -23,6 +23,7 @@ import ModalShell, {
   modalLabelClass,
 } from './ModalShell';
 import FieldLabel, { INVESTMENT_FIELD_HINTS } from './FieldLabel';
+import FinancialInstitutionFormModal from './FinancialInstitutionFormModal';
 import type { Investment, InvestmentProductType } from './types';
 
 /**
@@ -88,6 +89,9 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [quickCreateName, setQuickCreateName] = useState<string | null>(null);
+  // Fallback quando o cadastro rápido (só nome) falha — abre o cadastro
+  // completo em vez de deixar o usuário travado num erro genérico.
+  const [institutionFormFallback, setInstitutionFormFallback] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(() =>
     investment
       ? {
@@ -155,7 +159,10 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
     if (!name) return;
     const result = await quickCreateFinancialInstitutionAction({ name });
     if (!result.ok) {
-      showMessage(result.errors?.join('; ') || result.error, 'error');
+      // O modo rápido só manda o nome — se falhar (ex.: erro do servidor),
+      // abre o cadastro completo com os mesmos campos da tela de Instituições
+      // Financeiras em vez de deixar o usuário travado no erro genérico.
+      setInstitutionFormFallback(name);
       return;
     }
     await loadInstitutions();
@@ -163,6 +170,16 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
     setQuickCreateName(null);
     showMessage('Instituição financeira cadastrada', 'success');
   }, [quickCreateName, loadInstitutions, set, showMessage]);
+
+  const handleInstitutionFormSaved = useCallback(
+    async (created: { id: string }) => {
+      await loadInstitutions();
+      set('financial_institution_id', created.id);
+      setInstitutionFormFallback(null);
+      setQuickCreateName(null);
+    },
+    [loadInstitutions, set],
+  );
 
   const institutionOptions = useMemo(
     () => institutions.map((item) => ({ value: item.id, label: `${item.name} - ${form.partition || 'Principal'}` })),
@@ -443,6 +460,14 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
           placeholder="Objetivo A"
         />
       </div>
+
+      {institutionFormFallback !== null && (
+        <FinancialInstitutionFormModal
+          initialName={institutionFormFallback}
+          onClose={() => setInstitutionFormFallback(null)}
+          onSaved={handleInstitutionFormSaved}
+        />
+      )}
     </ModalShell>
   );
 }

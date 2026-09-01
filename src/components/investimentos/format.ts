@@ -74,12 +74,12 @@ function toISODate(date: Date): string {
 }
 
 /**
- * Janela padrão da tela: os 6 meses terminando no mês corrente, em datas
+ * Janela padrão da tela: os 12 meses terminando no mês corrente, em datas
  * completas — o filtro é o mesmo `CalendarPicker` de Planejamento e Controle.
  */
 export function getDefaultDateRange(): { from: string; to: string } {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
   return { from: toISODate(start), to: toISODate(now) };
 }
 
