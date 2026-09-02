@@ -60,7 +60,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     <div className="min-h-screen bg-page text-content relative flex">
       {/* Menu encolhido: sobra apenas o seletor de acionamento. */}
       {isMounted && !isOpen && (
-        <div className="fixed top-3 left-4 z-[900] flex items-center animate-fade-in">
+        <div className="fixed top-2 left-4 z-[900] flex items-center animate-fade-in">
           <button
             onClick={handleToggle}
             className="p-2.5 rounded-xl bg-surface/90 backdrop-blur-md border border-ui-border-soft shadow-md text-content-secondary hover:text-content hover:bg-surface-subtle transition-all duration-300 focus:outline-none"

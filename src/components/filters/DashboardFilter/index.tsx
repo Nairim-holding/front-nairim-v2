@@ -17,7 +17,7 @@ export default function DashboardFilter({
 }) {
   return (
     <div className="flex flex-col justify-center mb-2 w-full">
-      <div className="flex justify-start items-center gap-5 mb-5 pl-4 sm:pl-10">
+      <div className="flex justify-start items-center gap-5 mb-5 pl-10 sm:pl-[var(--page-header-offset,2.75rem)] transition-[padding] duration-300">
         <span className="text-2xl sm:text-3xl font-normal font-poppins">
           {filter === 'financial' && 'Painel Financeiro'}
           {filter === 'portfolio' && 'Imóveis'}

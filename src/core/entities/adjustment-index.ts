@@ -26,11 +26,26 @@ export const SGS_SERIES: Record<AdjustmentIndexCode, { monthly: number; accumula
   'IGP-M': { monthly: 189 },
   IPCA: { monthly: 433, accumulated12m: 13522 },
   INPC: { monthly: 188 },
-  // O código 28892 (informado na especificação) responde "Requisição
-  // inválida!" no endpoint do SGS — verificado em 29/08/2026, inclusive sem
-  // intervalo de datas. Enquanto não houver uma série válida, o IVAR fica
-  // como indexador de preenchimento MANUAL: aparece no ComboBox da locação e
-  // aceita valores digitados, mas é pulado pela atualização automática.
+  // O IVAR é apurado pela FGV/IBRE e o Banco Central NÃO o espelha no SGS.
+  //
+  // O código 28892 (que a especificação repete, citando a API do BCB) NÃO
+  // EXISTE. Medido em 02/09/2026, com e sem `dataInicial/dataFinal`:
+  //   28892  -> 30s de espera, HTTP 200, text/html, "Requisição inválida!"
+  //   999999 -> 30s de espera, HTTP 200, text/html, "Requisição inválida!"
+  //   189    -> 0,3s, HTTP 200, application/json
+  //   13522  -> 0,1s, HTTP 200, application/json
+  // Ou seja: 28892 responde exatamente como um código inventado. Atenção ao
+  // tentar reconferir — o erro leva ~30s para voltar, então um timeout curto
+  // faz parecer instabilidade de rede quando na verdade a série não existe.
+  //
+  // Também não é caso de "código errado, achar o certo": o catálogo de dados
+  // abertos do BCB não tem nenhuma série de aluguel residencial. Buscas por
+  // IVAR/aluguel/alugueis/locação só trazem "Aluguel de equipamentos" (balanço
+  // de pagamentos) e o IVG-R (21340), que mede garantia de imóvel FINANCIADO.
+  //
+  // A série histórica da FGV é paga (FGVDados), então não há fonte automática
+  // gratuita: o IVAR fica como indexador de preenchimento MANUAL — aparece no
+  // ComboBox da locação e aceita valores digitados, mas é pulado pelo sync.
   IVAR: null,
 };
 

@@ -18,7 +18,7 @@ describe('séries do SGS', () => {
     expect(SGS_SERIES.INPC?.monthly).toBe(188);
   });
 
-  it('mantém o IVAR como manual: o código 28892 da especificação não responde JSON no SGS', () => {
+  it('mantém o IVAR como manual: o BCB não publica série de aluguéis residenciais no SGS', () => {
     expect(SGS_SERIES.IVAR).toBeNull();
     expect(AUTO_UPDATABLE_CODES).toEqual(['IGP-M', 'IPCA', 'INPC']);
   });
