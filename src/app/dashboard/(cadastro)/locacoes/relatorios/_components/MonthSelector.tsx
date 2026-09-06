@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReferenceMonth } from '@/core/entities/lease-report';
-import { MONTH_ABBR, monthKey, sortMonths } from '../_lib/referencePeriod';
+import { currentReferenceMonth, MONTH_ABBR, monthKey, sortMonths } from '../_lib/referencePeriod';
 
 interface MonthSelectorProps {
   selected: ReferenceMonth[];
@@ -38,16 +38,25 @@ export default function MonthSelector({ selected, onChange, max = 36 }: MonthSel
 
   const selectYear = () => {
     const all = Array.from({ length: 12 }, (_, i) => ({ year, month: i + 1 }));
-    const merged = [...selected.filter((m) => m.year !== year), ...all];
-    onChange(sortMonths(merged).slice(0, max));
+    const remaining = selected.filter((m) => m.year !== year).slice(0, Math.max(0, max - all.length));
+    onChange(sortMonths([...all, ...remaining]));
   };
 
-  const clearYear = () => onChange(selected.filter((m) => m.year !== year));
+  const selectCurrentMonth = () => {
+    const current = currentReferenceMonth();
+    setYear(current.year);
+    onChange([current]);
+  };
 
   const isYearFull = useMemo(
     () => Array.from({ length: 12 }, (_, i) => i + 1).every((month) => selectedKeys.has(monthKey({ year, month }))),
     [selectedKeys, year],
   );
+
+  const isCurrentMonthOnly = useMemo(() => {
+    if (selected.length !== 1) return false;
+    return monthKey(selected[0]) === monthKey(currentReferenceMonth());
+  }, [selected]);
 
   return (
     <div className="rounded-xl border border-ui-border-soft bg-surface p-3">
@@ -97,14 +106,25 @@ export default function MonthSelector({ selected, onChange, max = 36 }: MonthSel
         })}
       </div>
 
-      <div className="flex items-center justify-between mt-3 pt-2 border-t border-ui-border-soft text-[11px]">
-        <button
-          type="button"
-          onClick={isYearFull ? clearYear : selectYear}
-          className="text-brand hover:underline font-medium"
-        >
-          {isYearFull ? 'Limpar o ano' : 'Selecionar o ano todo'}
-        </button>
+      <div className="mt-3 pt-2 border-t border-ui-border-soft text-[11px] space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={selectYear}
+            disabled={isYearFull}
+            className="text-brand hover:underline font-medium disabled:text-content-muted disabled:no-underline disabled:cursor-default"
+          >
+            {isYearFull ? 'Ano todo selecionado' : 'Selecionar o ano todo'}
+          </button>
+          <button
+            type="button"
+            onClick={selectCurrentMonth}
+            disabled={isCurrentMonthOnly}
+            className="text-brand hover:underline font-medium disabled:text-content-muted disabled:no-underline disabled:cursor-default"
+          >
+            Voltar ao mês atual
+          </button>
+        </div>
         <span className="text-content-muted">
           {selected.length} {selected.length === 1 ? 'mês' : 'meses'}
         </span>

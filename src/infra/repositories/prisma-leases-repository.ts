@@ -11,7 +11,7 @@ import type {
   PaginatedLeases,
   UpdateLeaseData,
 } from '@/core/entities/lease';
-import { parseLocalDate } from '@/shared/utils/date-utils';
+import { buildDateOnlyCondition, buildDateTimeCondition, parseLocalDate } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link LeasesRepository}.
@@ -119,24 +119,13 @@ function safeGet(obj: any, path: string): unknown {
   return path.split('.').reduce((acc: any, part) => (acc === null || acc === undefined ? undefined : acc[part]), obj);
 }
 
-function buildDateCondition(value: unknown): Record<string, Date> {
-  if (typeof value === 'object' && value && 'from' in value && 'to' in value) {
-    const range = value as { from: string; to: string };
-    const fromDate = new Date(range.from);
-    const toDate = new Date(range.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      return { gte: startOfDay, lte: endOfDay };
-    }
-  }
-  return {};
+/**
+ * Condição para colunas PostgreSQL `date` (sem horário).
+ * `new Date('AAAA-MM-DD')` combinado com `setHours` deslocava as bordas no
+ * fuso local. `parseLocalDate` mantém cada dia exatamente à meia-noite UTC.
+ */
+export function buildDateCondition(value: unknown): Record<string, Date> {
+  return buildDateOnlyCondition(value);
 }
 
 function buildFilterConditions(filters: Record<string, unknown>): Record<string, any> {
@@ -152,8 +141,10 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
     } else if (['rent_amount', 'condo_fee', 'property_tax', 'property_tax_cash', 'property_tax_first_installment', 'property_tax_second_installment', 'extra_charges', 'discount_amount', 'commission_amount'].includes(key)) {
       const n = parseFloat(String(value));
       if (!isNaN(n)) conditions[key] = n;
-    } else if (['start_date', 'end_date', 'canceled_at', 'created_at'].includes(key)) {
-      conditions[key] = buildDateCondition(value);
+    } else if (key === 'start_date' || key === 'end_date') {
+      conditions[key] = buildDateOnlyCondition(value);
+    } else if (key === 'canceled_at' || key === 'created_at') {
+      conditions[key] = buildDateTimeCondition(value);
     } else if (key === 'property_title') {
       if (!conditions.property) conditions.property = {};
       conditions.property.title = { contains: String(value), mode: 'insensitive' };
@@ -315,16 +306,10 @@ export class PrismaLeasesRepository implements LeasesRepository {
   }
 
   async getFilters(filters: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const where: Record<string, any> = { deleted_at: null };
-    Object.entries(filters ?? {}).forEach(([key, value]) => {
-      if (!value || value === '') return;
-      if (key === 'contract_number') where.contract_number = { contains: String(value), mode: 'insensitive' };
-      else if (key === 'property_title') where.property = { title: { contains: String(value), mode: 'insensitive' } };
-      else if (key === 'owner_name') where.owner = { name: { contains: String(value), mode: 'insensitive' } };
-      else if (key === 'tenant_name') where.tenant = { name: { contains: String(value), mode: 'insensitive' } };
-      else if (key === 'status') where.status = value;
-      else if (key === 'payment_condition') where.payment_condition = value;
-    });
+    // Usa exatamente as mesmas regras da listagem. Antes esta consulta
+    // reconstruía apenas parte dos filtros e ignorava os intervalos de
+    // start_date/end_date, deixando as opções do modal fora de sincronia.
+    const where = buildWhere(filters) as Record<string, any>;
 
     const [leases, properties, propertyTypes, owners, tenants, dateRange] = await Promise.all([
       prisma.lease.findMany({ where: where as never, select: { contract_number: true, rent_amount: true, rent_due_day: true } }),

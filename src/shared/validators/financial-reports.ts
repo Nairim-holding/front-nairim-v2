@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 /**
  * Schemas Zod dos endpoints de relatório financeiro (Módulo 9g/11).
@@ -21,20 +22,30 @@ export const monthlySummaryQuerySchema = z
 
 export const monthlySummaryMultiQuerySchema = z.object({}).passthrough();
 
+const dateField = z.string().refine(isValidIsoDateString, 'Informe uma data válida no formato YYYY-MM-DD');
+
 export const expenseByCategoryQuerySchema = z
   .object({
-    startDate: z.string().min(1, 'startDate é obrigatório'),
-    endDate: z.string().min(1, 'endDate é obrigatório'),
+    startDate: dateField,
+    endDate: dateField,
   })
-  .passthrough();
+  .passthrough()
+  .refine((value) => value.startDate <= value.endDate, {
+    message: 'startDate não pode ser maior que endDate',
+    path: ['startDate'],
+  });
 
 export const subcategoryBreakdownQuerySchema = z
   .object({
     categoryId: z.string().min(1, 'categoryId é obrigatório'),
-    startDate: z.string().min(1, 'startDate é obrigatório'),
-    endDate: z.string().min(1, 'endDate é obrigatório'),
+    startDate: dateField,
+    endDate: dateField,
   })
-  .passthrough();
+  .passthrough()
+  .refine((value) => value.startDate <= value.endDate, {
+    message: 'startDate não pode ser maior que endDate',
+    path: ['startDate'],
+  });
 
 /** Extrai os anos de `?years=2024&years=2025` ou `?year=` repetido. */
 export function parseMultiYears(raw: Record<string, unknown>): number[] {

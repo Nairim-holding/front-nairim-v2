@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, type ReactNode } from "react";
 import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
@@ -508,6 +508,13 @@ interface InlineEditableTableProps {
   showTotals?: boolean;
   /** Exibe o painel lateral retrátil de "Resumo" (somente Lançamentos). */
   summaryPanel?: boolean;
+  /** Ação contextual exibida na barra fixa, ao lado da paginação. */
+  footerAction?: {
+    label: string;
+    onClick: () => void;
+    icon?: ReactNode;
+    title?: string;
+  };
   onColumnsChange?: (columns: ColumnDef[]) => void;
   onColumnWidthsChange?: (widths: Record<string, number>) => void;
   savedColumnWidths?: Record<string, number>;
@@ -631,6 +638,7 @@ export default function InlineEditableTable({
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
   onAppliedFiltersChange,
+  footerAction,
   resolveQuickCreates,
   dataFetcher,
   filtersFetcher,
@@ -1916,8 +1924,8 @@ export default function InlineEditableTable({
       
       {/* Rodapé fixo na parte inferior da tela */}
       <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-ui-border-soft px-3 sm:px-4 py-2 z-50 shadow-lg">
-        <div className="flex flex-wrap justify-between items-center gap-2 max-w-[1400px] mx-auto">
-          <p className="text-[13px] text-content-secondary">
+        <div className="flex items-center justify-between gap-2 max-w-[1400px] mx-auto min-w-0">
+          <p className="min-w-0 truncate text-[11px] sm:text-[13px] text-content-secondary" title={meta ? `Total de registros: ${meta.total}` : undefined}>
             {meta && meta.total > 0 ? (
               activeTab === 'ALL'
                 ? `Total de registros: ${meta.total} (Exibindo ${tableData.start} a ${tableData.end})`
@@ -1925,8 +1933,22 @@ export default function InlineEditableTable({
             ) : 'Nenhum registro encontrado'}
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {meta?.totalPages > 1 && <Pagination currentPage={meta.page} totalPage={meta.totalPages} onPageChange={p => updateState({ page: p })} />}
+            {footerAction && (
+              <>
+                {meta?.totalPages > 1 && <span className="hidden sm:block h-6 w-px bg-ui-border-soft" aria-hidden="true" />}
+                <button
+                  type="button"
+                  onClick={footerAction.onClick}
+                  title={footerAction.title || footerAction.label}
+                  className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand px-2.5 text-xs font-medium text-white transition-opacity hover:opacity-90 sm:px-3"
+                >
+                  {footerAction.icon}
+                  <span className="hidden md:inline">{footerAction.label}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

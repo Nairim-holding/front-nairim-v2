@@ -13,6 +13,7 @@ import type {
 import { NotFoundError } from '@/core/errors/domain-errors';
 import { throwDuplicatedDocument } from '@/core/use-cases/financial-supplier/crud';
 import { buildContactCreateData } from './shared/contact-channels';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link SuppliersRepository}.
@@ -75,28 +76,6 @@ function safeGetProperty(obj: unknown, path: string): unknown {
     .reduce((acc: unknown, part) => (acc && (acc as Record<string, unknown>)[part] !== undefined ? (acc as Record<string, unknown>)[part] : undefined), obj);
 }
 
-function buildDateCondition(value: unknown): Record<string, unknown> {
-  if (typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
-    const dateRange = value as { from: string; to: string };
-    const fromDate = new Date(dateRange.from);
-    const toDate = new Date(dateRange.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
-      return { gte: fromDate, lte: toDate };
-    }
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
-      return { gte: start, lte: end };
-    }
-  }
-  return {};
-}
-
 function buildFilterConditions(filters: Record<string, unknown>): Record<string, unknown> {
   const conditions: Record<string, unknown> = {};
 
@@ -117,7 +96,7 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
       if (!conditions.contacts) conditions.contacts = { some: {} };
       (conditions.contacts as Record<string, unknown>).some = { [key]: { contains: String(value), mode: 'insensitive' } };
     } else if (key === 'created_at') {
-      conditions.created_at = buildDateCondition(value);
+      conditions.created_at = buildDateTimeCondition(value);
     }
   });
 

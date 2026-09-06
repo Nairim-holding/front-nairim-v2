@@ -47,7 +47,6 @@ type TransactionKind = 'rent' | 'commission' | 'iptu' | 'penalty' | 'other';
 
 interface RawLeaseTransaction {
   amount: unknown;
-  status: string;
   description: string;
   is_cancellation_charge: boolean;
   lease_id: string | null;
@@ -129,7 +128,6 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         },
         select: {
           amount: true,
-          status: true,
           description: true,
           is_cancellation_charge: true,
           lease_id: true,
@@ -175,12 +173,17 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         }
 
         const amount = Number(tx.amount ?? 0);
-        const isCompleted = tx.status === 'COMPLETED';
 
         switch (classify(tx as RawLeaseTransaction)) {
           case 'rent': {
             row.gross_revenue = round2(row.gross_revenue + amount);
-            if (isCompleted) row.received_amount = round2(row.received_amount + amount);
+            // O lançamento gerado pela locação nasce como PENDING e permanece
+            // assim até uma baixa manual no Financeiro. O relatório de Locações,
+            // porém, usa esse lançamento como a fonte do "Valor Recebido"; filtrar
+            // pelo status fazia a coluna inteira ficar zerada nas bases em que as
+            // baixas ainda não foram registradas. A situação do lançamento continua
+            // disponível no Financeiro, mas não elimina o valor deste relatório.
+            row.received_amount = round2(row.received_amount + amount);
             revenueByMonth.set(key, round2((revenueByMonth.get(key) ?? 0) + amount));
             if (row.has_withholding) {
               withholdingBaseByMonth.set(key, round2((withholdingBaseByMonth.get(key) ?? 0) + amount));

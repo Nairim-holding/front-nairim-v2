@@ -40,6 +40,16 @@ import {
   getSubcategoryBreakdownData,
   getTransactionDocumentsData,
 } from '@/server/queries/financial-reports';
+import { leaseCreditReconciliationUseCases } from '@/infra/factories/lease-credit-reconciliation-factory';
+import {
+  completeCreditReconciliationSchema,
+  creditReconciliationSearchSchema,
+} from '@/shared/validators/credit-reconciliation';
+import { withPermission } from '@/infra/auth/session';
+import type {
+  CompleteCreditReconciliationResult,
+  CreditCandidate,
+} from '@/core/entities/credit-reconciliation';
 
 /**
  * Server Actions do módulo Lançamentos financeiros.
@@ -122,6 +132,28 @@ export async function getTransactionFiltersAction(
 
 export async function getRelatedTransactionsAction(id: string): Promise<ActionResult<RelatedTransactionsResult>> {
   return runAction(() => getRelatedTransactionsData(id));
+}
+
+// ─── Identificação de crédito de locação ───────────────────────────────────
+
+export async function searchLeaseCreditCandidatesAction(
+  raw: Record<string, unknown>,
+): Promise<ActionResult<CreditCandidate[]>> {
+  return runAction(async () => {
+    const input = creditReconciliationSearchSchema.parse(raw);
+    return withPermission('financial-transactions', 'view', (session) =>
+      leaseCreditReconciliationUseCases.search.execute(session.company_id, input));
+  });
+}
+
+export async function completeLeaseCreditReconciliationAction(
+  raw: Record<string, unknown>,
+): Promise<ActionResult<CompleteCreditReconciliationResult>> {
+  return runAction(async () => {
+    const input = completeCreditReconciliationSchema.parse(raw);
+    return withPermission('financial-transactions', 'edit', (session) =>
+      leaseCreditReconciliationUseCases.complete.execute(session.company_id, input));
+  });
 }
 
 // ─── Relatórios (Dashboard/Financeiro) ──────────────────────────────────────

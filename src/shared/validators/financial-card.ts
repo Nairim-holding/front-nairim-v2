@@ -59,14 +59,19 @@ export const quickCreateFinancialCardSchema = z.object({
   name: z.string().trim().min(1, 'Nome é obrigatório'),
 });
 
-export const cardUsageSummarySchema = z.object({
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-  category_id: z.array(z.string()).optional(),
-  subcategory_id: z.array(z.string()).optional(),
-  financial_institution_id: z.array(z.string()).optional(),
-  card_id: z.array(z.string()).optional(),
-  center_id: z.array(z.string()).optional(),
-  supplier_id: z.array(z.string()).optional(),
-  description: z.array(z.string()).optional(),
-});
+export const cardUsageSummarySchema = z
+  .object({
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    category_id: z.array(z.string()).optional(),
+    subcategory_id: z.array(z.string()).optional(),
+    financial_institution_id: z.array(z.string()).optional(),
+    card_id: z.array(z.string()).optional(),
+    center_id: z.array(z.string()).optional(),
+    supplier_id: z.array(z.string()).optional(),
+    description: z.array(z.string()).optional(),
+  })
+  .refine((value) => value.startDate <= value.endDate, {
+    message: 'A data inicial não pode ser maior que a data final',
+    path: ['startDate'],
+  });

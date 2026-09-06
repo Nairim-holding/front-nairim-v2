@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 /**
  * Validação do módulo Auditoria de IPTU.
@@ -13,13 +14,18 @@ export const iptuAuditSettingsSchema = z.object({
   expense_subcategory_id: z.string().nullish(),
 });
 
-export const iptuAuditQuerySchema = z.object({
-  startDate: z.string().min(1, 'startDate e endDate são obrigatórios'),
-  endDate: z.string().min(1, 'startDate e endDate são obrigatórios'),
-  /** Filtro de imóveis da tela — ausente/vazio significa "todos". */
-  propertyIds: z
-    .union([z.array(z.string()), z.string()])
-    .optional()
-    .transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]))
-    .pipe(z.array(z.string().trim().min(1)).optional()),
-});
+export const iptuAuditQuerySchema = z
+  .object({
+    startDate: z.string().refine(isValidIsoDateString, 'Informe uma data inicial válida'),
+    endDate: z.string().refine(isValidIsoDateString, 'Informe uma data final válida'),
+    /** Filtro de imóveis da tela — ausente/vazio significa "todos". */
+    propertyIds: z
+      .union([z.array(z.string()), z.string()])
+      .optional()
+      .transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]))
+      .pipe(z.array(z.string().trim().min(1)).optional()),
+  })
+  .refine((value) => value.startDate <= value.endDate, {
+    message: 'A data inicial não pode ser maior que a data final',
+    path: ['startDate'],
+  });

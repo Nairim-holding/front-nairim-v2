@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from "react-l
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getThemeTokens } from "@/utils";
+import { getThemeTokens, getThemedTileUrl, getTileAttribution } from "@/utils";
 
 // Ícone personalizado (Pin Roxo)
 const customIcon = new L.Icon({
@@ -108,9 +108,8 @@ export default function EChartsMap({ data = [], loading = false }: LeafletMapPro
   // Controle de Foco do Input
   const [isFocused, setIsFocused] = useState(false);
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  const tileUrl = getThemedTileUrl(isDark);
+  const tileAttribution = getTileAttribution();
 
   // Carrega GeoJSON do Mundo
   useEffect(() => {
@@ -208,7 +207,7 @@ export default function EChartsMap({ data = [], loading = false }: LeafletMapPro
       >
         <TileLayer
           key={`echarts-map-${theme}`}
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          attribution={tileAttribution}
           url={tileUrl}
         />
 

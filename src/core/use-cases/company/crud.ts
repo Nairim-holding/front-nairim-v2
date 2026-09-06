@@ -22,12 +22,23 @@ export class CheckSlugAvailabilityUseCase {
 /** Lista empresas paginadas. Origem: listCompanies. */
 export class ListCompaniesUseCase {
   constructor(private readonly companies: CompaniesRepository) {}
-  async execute(params: { page?: number; limit?: number; search?: string; includeInactive?: boolean }): Promise<CompanyListResult> {
+  async execute(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeInactive?: boolean;
+    name?: string;
+    slug?: string;
+    is_active?: boolean;
+  }): Promise<CompanyListResult> {
     return this.companies.list({
       page: params.page ?? 1,
       limit: params.limit ?? 150,
       search: params.search ?? '',
       includeInactive: params.includeInactive ?? false,
+      name: params.name,
+      slug: params.slug,
+      is_active: params.is_active,
     });
   }
 }

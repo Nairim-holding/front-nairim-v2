@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 /**
  * Schemas Zod do módulo Planejamento (Módulo 10).
@@ -36,9 +37,13 @@ export const planningDashboardQuerySchema = z
   .object({
     startDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate deve estar no formato YYYY-MM-DD'),
+      .refine(isValidIsoDateString, 'startDate deve ser uma data válida no formato YYYY-MM-DD'),
     endDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate deve estar no formato YYYY-MM-DD'),
+      .refine(isValidIsoDateString, 'endDate deve ser uma data válida no formato YYYY-MM-DD'),
   })
-  .passthrough();
+  .passthrough()
+  .refine((value) => value.startDate <= value.endDate, {
+    message: 'startDate não pode ser maior que endDate',
+    path: ['startDate'],
+  });

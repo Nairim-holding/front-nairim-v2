@@ -35,7 +35,7 @@ export interface LeaseReportRow {
   property_title: string;
   /** Valor bruto da locação no período (CR). */
   gross_revenue: number;
-  /** O que efetivamente entrou no financeiro (lançamentos confirmados) (CR). */
+  /** Valor recebido informado pelo lançamento de aluguel da locação (CR). */
   received_amount: number;
   /** Desconto ou despesa informada na locação (DB). */
   discount_expense: number;

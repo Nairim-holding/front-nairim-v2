@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 /**
  * Schemas Zod das métricas do Dashboard (Módulo 11).
@@ -22,9 +23,7 @@ import { z } from 'zod';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isValidDateString(value: string): boolean {
-  if (!DATE_RE.test(value)) return false;
-  const date = new Date(value);
-  return date instanceof Date && !Number.isNaN(date.getTime());
+  return DATE_RE.test(value) && isValidIsoDateString(value);
 }
 
 export const dashboardParamsSchema = z

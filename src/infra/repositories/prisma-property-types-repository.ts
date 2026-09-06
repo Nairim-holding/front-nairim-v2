@@ -7,6 +7,7 @@ import type {
   PropertyType,
   UpdatePropertyTypeData,
 } from '@/core/entities/property-type';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link PropertyTypesRepository}.
@@ -25,26 +26,6 @@ function normalizeDirection(direction: string): 'asc' | 'desc' {
   return String(direction).toLowerCase() === 'desc' ? 'desc' : 'asc';
 }
 
-function buildDateCondition(value: unknown): Record<string, Date> {
-  if (typeof value === 'object' && value && 'from' in value && 'to' in value) {
-    const range = value as { from: string; to: string };
-    const fromDate = new Date(range.from);
-    const toDate = new Date(range.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      return { gte: startOfDay, lte: endOfDay };
-    }
-  }
-  return {};
-}
-
 function buildWhere(filters: Record<string, unknown>, includeInactive: boolean): Record<string, unknown> {
   const where: Record<string, unknown> = {};
   if (!includeInactive) where.deleted_at = null;
@@ -52,7 +33,7 @@ function buildWhere(filters: Record<string, unknown>, includeInactive: boolean):
   Object.entries(filters).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
     if (key === 'description') conditions[key] = { contains: String(value), mode: 'insensitive' };
-    else if (key === 'created_at') conditions[key] = buildDateCondition(value);
+    else if (key === 'created_at') conditions[key] = buildDateTimeCondition(value);
   });
   if (Object.keys(conditions).length > 0) where.AND = [conditions];
   return where;
@@ -106,8 +87,7 @@ export class PrismaPropertyTypesRepository implements PropertyTypesRepository {
   }
 
   async getFilters(filters: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const where: Record<string, unknown> = { deleted_at: null };
-    if (filters.description) where.description = { contains: String(filters.description), mode: 'insensitive' };
+    const where = buildWhere(filters ?? {}, false);
 
     const [types, dateRange] = await Promise.all([
       prisma.propertyType.findMany({ where: where as never, select: { description: true }, distinct: ['description'], orderBy: { description: 'asc' } }),

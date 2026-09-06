@@ -74,18 +74,27 @@ export function nextBusinessDay(date: Date, holidays: HolidayDate[]): Date {
  *  - crédito 13/10/2026 (terça, com 12/10 feriado) → dias 10, 11, 12 e 13.
  */
 export function dueDaysSettledOn(creditDate: Date, holidays: HolidayDate[]): number[] {
-  const credit = new Date(creditDate.getFullYear(), creditDate.getMonth(), creditDate.getDate());
+  return dueDatesSettledOn(creditDate, holidays).map((date) => date.getDate());
+}
+
+/**
+ * Datas completas cujos vencimentos chegam ao banco na data informada.
+ * Diferentemente de `dueDaysSettledOn`, preserva mês e ano — necessário para
+ * créditos no começo do mês (ex.: 31/12 liquidado em 02/01).
+ */
+export function dueDatesSettledOn(creditDate: Date, holidays: HolidayDate[]): Date[] {
+  const credit = new Date(creditDate.getFullYear(), creditDate.getMonth(), creditDate.getDate(), 12);
   if (!isBusinessDay(credit, holidays)) return [];
 
-  const days = [credit.getDate()];
+  const dates = [new Date(credit)];
   const cursor = new Date(credit.getTime() - MS_PER_DAY);
   // Só recua enquanto o dia anterior for não útil; ao achar um dia útil, para
   // — aquele dia liquida a si mesmo, não este crédito.
   for (let i = 0; i < 30 && !isBusinessDay(cursor, holidays); i += 1) {
-    days.push(cursor.getDate());
+    dates.push(new Date(cursor));
     cursor.setTime(cursor.getTime() - MS_PER_DAY);
   }
-  return days.sort((a, b) => a - b);
+  return dates.sort((a, b) => a.getTime() - b.getTime());
 }
 
 // ─── Valor líquido esperado da locação ──────────────────────────────────────
@@ -138,8 +147,32 @@ export interface CreditCandidate {
   condo_due_day: number | null;
   /** Líquido calculado pela fórmula acima. */
   net_amount: number;
+  gross_amount: number;
+  property_tax_refund: number;
+  income_tax_withheld: number;
+  agency_commission: number;
+  /** Vencimento do aluguel que foi deslocado para a data do crédito. */
+  rent_due_date: string;
+  /** Lançamentos pendentes que serão concluídos ao confirmar. */
+  pending_transaction_ids: string[];
   /** `true` quando o líquido bate com o valor do crédito informado. */
   amount_matches: boolean;
+}
+
+export interface CreditReconciliationSearchInput {
+  credit_date: string;
+  credited_amount: number;
+  financial_institution_id: string;
+  agency_ids: string[];
+}
+
+export interface CompleteCreditReconciliationInput extends CreditReconciliationSearchInput {
+  lease_id: string;
+}
+
+export interface CompleteCreditReconciliationResult {
+  lease_id: string;
+  updated_transactions: number;
 }
 
 /**

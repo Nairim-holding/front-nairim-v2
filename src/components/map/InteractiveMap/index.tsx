@@ -8,7 +8,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Maximize2, X } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getThemeTokens } from "@/utils";
+import { getThemeTokens, getThemedTileUrl, getTileAttribution } from "@/utils";
 
 const createPinIcon = (fillColor: string) => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
@@ -45,9 +45,6 @@ interface MapThemeColors {
   mapMaskStroke: string;
   mapOcean: string;
 }
-
-const LIGHT_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
 // Sede da empresa (Garça/SP) — usado como fallback de centro/zoom quando não
 // há nenhum imóvel com coordenadas no período (Tarefa 1.4 do guia de
@@ -143,10 +140,8 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
   const tokens = getThemeTokens();
   const isDark = theme === "dark";
 
-  const tileUrl = isDark ? DARK_TILE_URL : LIGHT_TILE_URL;
-  const tileAttribution = isDark
-    ? '&copy; <a href="https://carto.com/">CARTO</a>'
-    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const tileUrl = getThemedTileUrl(isDark);
+  const tileAttribution = getTileAttribution();
 
   // Carrega as fronteiras do mundo para fazer o efeito de máscara
   useEffect(() => {

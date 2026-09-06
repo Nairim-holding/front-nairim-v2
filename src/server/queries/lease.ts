@@ -8,23 +8,32 @@ import type { CancellationPreview, Lease, PaginatedLeases } from '@/core/entitie
  * Queries (leitura) do módulo Leases — para Server Components.
  * Guarda: `withTenant`. Camada: server. Origem: LeaseController.ts (GETs).
  */
-function splitListParams(raw: Record<string, unknown>) {
+export function splitListParams(raw: Record<string, unknown>) {
   const sortOptions: Record<string, string> = {};
   const filters: Record<string, unknown> = {};
 
   Object.entries(raw ?? {}).forEach(([key, value]) => {
-    if (typeof value !== 'string') return;
     const sortMatch = key.match(/^sort\[(.+)\]$/);
     if (sortMatch) {
+      if (typeof value !== 'string') return;
       const dir = value.toLowerCase();
       if (dir === 'asc' || dir === 'desc') sortOptions[sortMatch[1]] = dir;
       return;
     }
-    if (['limit', 'page', 'search'].includes(key) || value.trim() === '') return;
+    if (
+      ['limit', 'page', 'search'].includes(key)
+      || value === undefined
+      || value === null
+      || (typeof value === 'string' && value.trim() === '')
+    ) return;
 
     const filterMatch = key.match(/^filter\[(.+)\]$/);
     const filterKey = filterMatch ? filterMatch[1] : key;
     if (key !== 'sort' && !key.startsWith('sort[')) {
+      if (typeof value !== 'string') {
+        filters[filterKey] = value;
+        return;
+      }
       try {
         filters[filterKey] = JSON.parse(value);
       } catch {

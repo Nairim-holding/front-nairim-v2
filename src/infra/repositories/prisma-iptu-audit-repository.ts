@@ -66,7 +66,6 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
 
     const start = parseLocalDate(params.startDate);
     const end = parseLocalDate(params.endDate);
-    end.setHours(23, 59, 59, 999);
 
     // 1. Busca TODOS os imóveis ativos do tenant para garantir apuração completa
     const allProperties = await prisma.property.findMany({

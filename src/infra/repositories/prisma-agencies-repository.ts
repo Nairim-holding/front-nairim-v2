@@ -10,6 +10,7 @@ import type {
   UpdateAgencyData,
 } from '@/core/entities/agency';
 import { buildContactCreateData } from './shared/contact-channels';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link AgenciesRepository}.
@@ -50,26 +51,6 @@ function normalizeDirection(direction: string): 'asc' | 'desc' {
   return String(direction).toLowerCase() === 'desc' ? 'desc' : 'asc';
 }
 
-function buildDateCondition(value: unknown): Record<string, Date> {
-  if (typeof value === 'object' && value && 'from' in value && 'to' in value) {
-    const range = value as { from: string; to: string };
-    const fromDate = new Date(range.from);
-    const toDate = new Date(range.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      return { gte: startOfDay, lte: endOfDay };
-    }
-  }
-  return {};
-}
-
 /** Condições de filtro: direto / endereço (relation) / contato (relation) / data. */
 function buildFilterConditions(filters: Record<string, unknown>): Record<string, any> {
   const conditions: Record<string, any> = {};
@@ -88,7 +69,7 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
       if (!conditions.contacts) conditions.contacts = { some: {} };
       conditions.contacts.some[key] = { contains: String(value), mode: 'insensitive' };
     } else if (key === 'created_at') {
-      conditions.created_at = buildDateCondition(value);
+      conditions.created_at = buildDateTimeCondition(value);
     }
   });
   return conditions;
@@ -211,21 +192,7 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
   }
 
   async getFilters(filters: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const where: Record<string, any> = { deleted_at: null };
-    const andFilters: any[] = [];
-    Object.entries(filters ?? {}).forEach(([key, value]) => {
-      if (!value || value === '') return;
-      if (DIRECT_FIELDS.includes(key)) {
-        andFilters.push({ [key]: { contains: String(value), mode: 'insensitive' } });
-      } else if (ADDRESS_FIELDS.includes(key)) {
-        andFilters.push({ addresses: { some: { address: { [key]: { contains: String(value), mode: 'insensitive' } } } } });
-      } else if (key === 'contact_name') {
-        andFilters.push({ contacts: { some: { contact: { contains: String(value), mode: 'insensitive' } } } });
-      } else if (['phone', 'cellphone', 'email'].includes(key)) {
-        andFilters.push({ contacts: { some: { [key]: { contains: String(value), mode: 'insensitive' } } } });
-      }
-    });
-    if (andFilters.length > 0) where.AND = andFilters;
+    const where = buildWhere(filters ?? {}, false) as Record<string, any>;
 
     const [agencies, addresses, contacts, dateRange] = await Promise.all([
       prisma.agency.findMany({

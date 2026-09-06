@@ -10,6 +10,7 @@ import type {
   UpdateCardData,
 } from '@/core/entities/financial-card';
 import { ConflictError, NotFoundError } from '@/core/errors/domain-errors';
+import { buildDateTimeCondition, parseLocalDate } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link CardsRepository}.
@@ -82,6 +83,8 @@ function buildWhere(filters: Record<string, unknown>, includeInactive: boolean):
           where.limit = numericValue;
         }
       }
+    } else if (key === 'created_at') {
+      where.created_at = buildDateTimeCondition(value);
     }
   });
   return where;
@@ -294,10 +297,8 @@ export class PrismaFinancialCardsRepository implements CardsRepository {
   }
 
   async getUsageSummary(startDate: Date, endDate: Date, filters: CardUsageFilters): Promise<CardUsageItem[]> {
-    const start = new Date(startDate);
-    if (!isNaN(start.getTime())) start.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    if (!isNaN(end.getTime())) end.setHours(23, 59, 59, 999);
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
 
     const cards = await prisma.card.findMany({
       where: { deleted_at: null, is_active: true },

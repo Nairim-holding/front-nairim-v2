@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   amountMatches,
   computeLeaseNetAmount,
+  dueDatesSettledOn,
   dueDaysSettledOn,
   isBusinessDay,
   nextBusinessDay,
@@ -59,6 +60,16 @@ describe('vencimentos liquidados na data do crédito', () => {
   it('não liquida nada quando a data do crédito não é dia útil', () => {
     expect(dueDaysSettledOn(d(2026, 6, 20), noHolidays)).toEqual([]);
   });
+
+  it('preserva mês e ano ao recuar no começo do mês', () => {
+    // 31/12/2022 é sábado e 01/01/2023 é domingo; ambos liquidam em 02/01.
+    const dates = dueDatesSettledOn(d(2023, 1, 2), noHolidays);
+    expect(dates.map((date) => [date.getFullYear(), date.getMonth() + 1, date.getDate()])).toEqual([
+      [2022, 12, 31],
+      [2023, 1, 1],
+      [2023, 1, 2],
+    ]);
+  });
 });
 
 describe('valor líquido da locação', () => {
@@ -85,7 +96,18 @@ describe('valor líquido da locação', () => {
 
 describe('ordenação dos candidatos', () => {
   it('coloca quem bate no valor à frente', () => {
-    const base = { rent_due_day: 10, tax_due_day: null, condo_due_day: null, net_amount: 0 };
+    const base = {
+      rent_due_day: 10,
+      tax_due_day: null,
+      condo_due_day: null,
+      net_amount: 0,
+      gross_amount: 0,
+      property_tax_refund: 0,
+      income_tax_withheld: 0,
+      agency_commission: 0,
+      rent_due_date: '2026-06-10',
+      pending_transaction_ids: [],
+    };
     const candidates: CreditCandidate[] = [
       { ...base, lease_id: 'a', property_title: 'Imóvel A', tenant_name: 'X', agency_name: 'Alfa', amount_matches: false },
       { ...base, lease_id: 'b', property_title: 'Imóvel B', tenant_name: 'Y', agency_name: 'Beta', amount_matches: true },

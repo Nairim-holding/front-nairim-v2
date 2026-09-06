@@ -19,6 +19,7 @@ import { listUsersAction, deleteUserAction, getUserFiltersAction } from '@/serve
 import { listCompaniesAction, deleteCompanyAction, getCompanyFiltersAction } from '@/server/actions/company';
 import { listAuditLogsAction, getAuditLogFiltersAction } from '@/server/actions/audit-log';
 import { listUserGroupsAction, deleteUserGroupAction, getUserGroupFiltersAction } from '@/server/actions/user-group';
+import { serializeTableFilters } from '@/shared/utils/table-filter-utils';
 
 interface TableListFetcher {
   (state: any): Promise<any>;
@@ -41,13 +42,13 @@ interface TableDataSource {
 }
 
 /** Converte o estado da tabela para o formato `raw` aceito pelas actions de listagem. */
-function stateToRawListParams(state: any): Record<string, unknown> {
+export function stateToRawListParams(state: any): Record<string, unknown> {
   const raw: Record<string, unknown> = { page: state.page, limit: state.limit };
   if (state.search) raw.search = state.search;
   Object.entries(state.sort || {}).forEach(([key, value]) => {
     if (value === 'asc' || value === 'desc') raw[`sort[${key}]`] = value;
   });
-  Object.entries(state.filters || {}).forEach(([key, value]) => {
+  Object.entries(serializeTableFilters(state.filters || {})).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
     raw[key] = value;
   });
@@ -66,7 +67,7 @@ function listFetcher(action: (raw: Record<string, unknown>) => Promise<any>): Ta
 /** Envolve uma action de filtros no contrato do fetcher do useDynamicFilters. */
 function filtersFetcher(action: (raw: Record<string, unknown>) => Promise<any>): TableFiltersFetcher {
   return async (applied?: Record<string, any>) => {
-    const result = await action(applied ?? {});
+    const result = await action(serializeTableFilters(applied ?? {}));
     if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
     return result.data;
   };

@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Section from '@/components/layout/PageSection';
 import InlineEditableTable from '@/components/table/InlineEditableTable';
 import TransferDestinationModal from '@/components/domain/financial/TransferDestinationModal';
+import LeaseCreditReconciliationModal from '@/components/domain/financial/LeaseCreditReconciliationModal';
+import { SearchCheck } from 'lucide-react';
 import type { ColumnDef } from '@/types/types';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { isQuickCreateSentinel, extractQuickCreateName } from '@/components/ui/QuickCreateAutocomplete';
@@ -124,6 +126,8 @@ export default function LancamentosPage() {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LANCAMENTOS_COLUMNS.map(c => c.field));
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isCreditReconciliationOpen, setIsCreditReconciliationOpen] = useState(false);
+  const [tableRefreshKey, setTableRefreshKey] = useState(0);
 
   // Categorias internas de transferência (is_system + nome). Quando o lançamento
   // usa uma delas, ao salvar abrimos o modal pedindo a conta de destino.
@@ -665,6 +669,7 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
   return (
     <Section title={pageTitle} fill>
       <InlineEditableTable
+        key={tableRefreshKey}
         resource="financial-transaction"
         title="Lançamentos"
         columns={columns}
@@ -672,6 +677,12 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
         enableCreate
         enableDelete
         summaryPanel
+        footerAction={{
+          label: 'Identificar crédito',
+          title: 'Identificar crédito de locação',
+          icon: <SearchCheck size={16} />,
+          onClick: () => setIsCreditReconciliationOpen(true),
+        }}
         defaultLimit={150}
         formOptions={options}
         onRowSave={handleRowSave}
@@ -705,6 +716,18 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
             resolveTransferModal({ destinationId, destinationCenterId })
           }
           onCancel={() => resolveTransferModal(null)}
+        />
+      )}
+
+      {isCreditReconciliationOpen && (
+        <LeaseCreditReconciliationModal
+          institutions={options.institutions}
+          onClose={() => setIsCreditReconciliationOpen(false)}
+          onCompleted={(updated) => {
+            setIsCreditReconciliationOpen(false);
+            setTableRefreshKey((current) => current + 1);
+            showMessage(`${updated} lançamento${updated === 1 ? '' : 's'} concluído${updated === 1 ? '' : 's'} com sucesso.`, 'success');
+          }}
         />
       )}
     </Section>

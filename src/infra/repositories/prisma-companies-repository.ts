@@ -34,6 +34,31 @@ globalForCache.brandingCache = brandingCache;
 function invalidateBySlug(slug: string) {
   brandingCache.delete(slug);
 }
+
+type CompanyListParams = {
+  page: number;
+  limit: number;
+  search: string;
+  includeInactive: boolean;
+  name?: string;
+  slug?: string;
+  is_active?: boolean;
+};
+
+export function buildCompanyListWhere(params: CompanyListParams): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+  if (!params.includeInactive && params.is_active !== false) where.deleted_at = null;
+  if (params.search.trim()) {
+    where.OR = [
+      { name: { contains: params.search, mode: 'insensitive' } },
+      { slug: { contains: params.search, mode: 'insensitive' } },
+    ];
+  }
+  if (params.name) where.name = { contains: params.name, mode: 'insensitive' };
+  if (params.slug) where.slug = { contains: params.slug, mode: 'insensitive' };
+  if (params.is_active !== undefined) where.is_active = params.is_active;
+  return where;
+}
 async function invalidateByCompanyId(companyId: string) {
   const company = await prisma.company.findUnique({ where: { id: companyId }, select: { slug: true } });
   if (company?.slug) invalidateBySlug(company.slug);
@@ -98,18 +123,11 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
   }
 
   // ─── CRUD ───────────────────────────────────────────────────────────────
-  async list(params: { page: number; limit: number; search: string; includeInactive: boolean }): Promise<CompanyListResult> {
+  async list(params: CompanyListParams): Promise<CompanyListResult> {
     const take = Math.max(1, Math.min(params.limit, 100));
     const skip = (Math.max(1, params.page) - 1) * take;
 
-    const where: any = {};
-    if (!params.includeInactive) where.deleted_at = null;
-    if (params.search.trim()) {
-      where.OR = [
-        { name: { contains: params.search, mode: 'insensitive' } },
-        { slug: { contains: params.search, mode: 'insensitive' } },
-      ];
-    }
+    const where = buildCompanyListWhere(params);
 
     const [data, count] = await Promise.all([
       prisma.company.findMany({

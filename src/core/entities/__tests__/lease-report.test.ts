@@ -115,7 +115,7 @@ describe('valor líquido', () => {
     expect(net).toBe(865.5);
   });
 
-  it('usa o valor recebido, não a receita bruta — parcela em aberto não entra no líquido', () => {
+  it('usa o valor recebido, não a receita bruta, quando o recebido é zero', () => {
     const net = computeNetAmount({
       gross_revenue: 1000,
       received_amount: 0,

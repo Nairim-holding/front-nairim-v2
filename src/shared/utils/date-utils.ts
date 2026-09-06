@@ -51,3 +51,59 @@ export function displayDate(date: Date | string | null): string {
 export function createDateLocal(year: number, month: number, day: number): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
+
+/** Valida formato e calendário real (por exemplo, rejeita 2026-02-31). */
+export function isValidIsoDateString(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+type DateRangeValue = { from?: unknown; to?: unknown };
+
+function validDatePart(value: unknown): string | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(value)) return null;
+  const datePart = value.split('T')[0];
+  return isValidIsoDateString(datePart) ? datePart : null;
+}
+
+/** Condição Prisma para colunas SQL `DATE`. */
+export function buildDateOnlyCondition(value: unknown): Record<string, Date> {
+  if (value && typeof value === 'object') {
+    const range = value as DateRangeValue;
+    const from = validDatePart(range.from);
+    const to = validDatePart(range.to);
+    return {
+      ...(from ? { gte: parseLocalDate(from) } : {}),
+      ...(to ? { lte: parseLocalDate(to) } : {}),
+    };
+  }
+
+  const date = validDatePart(value);
+  return date ? { equals: parseLocalDate(date) } : {};
+}
+
+/** Condição Prisma para `DateTime`, cobrindo integralmente os dias escolhidos. */
+export function buildDateTimeCondition(value: unknown): Record<string, Date> {
+  if (value && typeof value === 'object') {
+    const range = value as DateRangeValue;
+    const from = validDatePart(range.from);
+    const to = validDatePart(range.to);
+    const condition: Record<string, Date> = {};
+    if (from) condition.gte = parseLocalDate(from);
+    if (to) {
+      const end = parseLocalDate(to);
+      end.setUTCHours(23, 59, 59, 999);
+      condition.lte = end;
+    }
+    return condition;
+  }
+
+  const date = validDatePart(value);
+  if (!date) return {};
+  const start = parseLocalDate(date);
+  const end = parseLocalDate(date);
+  end.setUTCHours(23, 59, 59, 999);
+  return { gte: start, lte: end };
+}

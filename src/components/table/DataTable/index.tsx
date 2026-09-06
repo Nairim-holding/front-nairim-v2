@@ -26,6 +26,7 @@ import { getColumnPreferencesAction, saveColumnPreferencesAction } from "@/serve
 import { ColumnDef } from "@/types/types";
 import ModalSelectTypeOwner from "@/components/modals/OwnerTypeModal";
 import { useRouter } from "next/navigation";
+import { matchesTableFilter } from "@/shared/utils/table-filter-utils";
 
 interface DynamicTableManagerProps {
   resource: string;
@@ -376,49 +377,9 @@ export default function DynamicTableManager({
       
       if (appliedFilters && Object.keys(appliedFilters).length > 0) {
         filteredData = localData.filter((item: any) => {
-          return Object.entries(appliedFilters).every(([field, filterValue]) => {
-            if (filterValue === null || filterValue === undefined || filterValue === '') return true;
-            
-            const itemValue = item[field];
-            
-            // Filtro de range (date/number between)
-            if (typeof filterValue === 'object' && filterValue !== null && 'from' in filterValue && 'to' in filterValue) {
-              const from = filterValue.from;
-              const to = filterValue.to;
-              if (from && to) {
-                const val = Number(itemValue) || 0;
-                return val >= Number(from) && val <= Number(to);
-              }
-              if (from) {
-                const val = Number(itemValue) || 0;
-                return val >= Number(from);
-              }
-              if (to) {
-                const val = Number(itemValue) || 0;
-                return val <= Number(to);
-              }
-              return true;
-            }
-            
-            // Filtro de array (select com múltiplos valores)
-            if (Array.isArray(filterValue)) {
-              return filterValue.some(v => String(itemValue) === String(v));
-            }
-            
-            // Filtro de valor simples - comparação string
-            const strItemValue = String(itemValue ?? '').toLowerCase();
-            const strFilterValue = String(filterValue).toLowerCase();
-            
-            if (strItemValue === strFilterValue) return true;
-            if (strItemValue.includes(strFilterValue)) return true;
-            
-            // Comparação numérica
-            const numItem = Number(itemValue);
-            const numFilter = Number(filterValue);
-            if (!isNaN(numItem) && !isNaN(numFilter) && numItem === numFilter) return true;
-            
-            return false;
-          });
+          return Object.entries(appliedFilters).every(([field, filterValue]) =>
+            matchesTableFilter(item[field], filterValue),
+          );
         });
       }
       

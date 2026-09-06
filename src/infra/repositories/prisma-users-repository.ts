@@ -12,6 +12,7 @@ import type {
   UserDetail,
   UserProfile,
 } from '@/core/entities/user';
+import { buildDateOnlyCondition, buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link UsersRepository}.
@@ -137,27 +138,6 @@ function buildOrderBy(sortOptions: Record<string, 'asc' | 'desc'>): Record<strin
   return orderBy;
 }
 
-/** Condição de data: aceita range `{from,to}` ou data única (dia inteiro). */
-function buildDateCondition(value: unknown): Record<string, Date> {
-  if (typeof value === 'object' && value && 'from' in value && 'to' in value) {
-    const range = value as { from: string; to: string };
-    const fromDate = new Date(range.from);
-    const toDate = new Date(range.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      return { gte: startOfDay, lte: endOfDay };
-    }
-  }
-  return {};
-}
-
 /** Traduz os filtros do DataTable em condições Prisma. */
 function buildFilterConditions(filters: Record<string, unknown>): Record<string, unknown> {
   const conditions: Record<string, unknown> = {};
@@ -168,8 +148,10 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
       conditions[key] = { contains: String(value), mode: 'insensitive' };
     } else if (['gender', 'role'].includes(key)) {
       conditions[key] = { equals: String(value).toUpperCase() };
-    } else if (['birth_date', 'created_at', 'updated_at'].includes(key)) {
-      conditions[key] = buildDateCondition(value);
+    } else if (key === 'birth_date') {
+      conditions[key] = buildDateOnlyCondition(value);
+    } else if (key === 'created_at' || key === 'updated_at') {
+      conditions[key] = buildDateTimeCondition(value);
     }
   });
   return conditions;
@@ -289,7 +271,7 @@ export class PrismaUsersRepository implements UsersRepository {
       } else if (key === 'gender' || key === 'role') {
         where[key] = value;
       } else if (['birth_date', 'created_at', 'updated_at'].includes(key)) {
-        const condition = buildDateCondition(value);
+        const condition = key === 'birth_date' ? buildDateOnlyCondition(value) : buildDateTimeCondition(value);
         if (Object.keys(condition).length > 0) where[key] = condition;
       }
     });

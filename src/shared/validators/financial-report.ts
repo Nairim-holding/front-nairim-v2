@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 /**
  * Validação dos Relatórios Financeiros — porte de `lib/validators/reports.ts`.
@@ -20,9 +21,7 @@ import { z } from 'zod';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isValidDateString(value: string): boolean {
-  if (!DATE_RE.test(value)) return false;
-  const date = new Date(value);
-  return date instanceof Date && !Number.isNaN(date.getTime());
+  return DATE_RE.test(value) && isValidIsoDateString(value);
 }
 
 export const REPORT_GROUP_BY = ['description', 'day', 'category', 'subcategory', 'contact', 'center'] as const;

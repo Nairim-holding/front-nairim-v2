@@ -11,7 +11,7 @@ import { buildRedemptionRows, type InvestmentRedemptionInput, type LeaseReportRe
 import MonthSelector from './_components/MonthSelector';
 import LeaseReportTable from './_components/LeaseReportTable';
 import TaxPanels from './_components/TaxPanels';
-import { describeSelectedMonths, exportFilename, selectionDateRange } from './_lib/referencePeriod';
+import { currentReferenceMonth, describeSelectedMonths, exportFilename, selectionDateRange } from './_lib/referencePeriod';
 
 /**
  * Tela do Relatório de Locações (menu Locações > Relatórios).
@@ -25,18 +25,11 @@ import { describeSelectedMonths, exportFilename, selectionDateRange } from './_l
  * quem emitiu, quando) sair idêntico nos dois módulos.
  */
 
-/** Mês anterior ao atual: é o último mês de referência já fechado. */
-function defaultMonth(): ReferenceMonth {
-  const today = new Date();
-  const reference = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  return { year: reference.getFullYear(), month: reference.getMonth() + 1 };
-}
-
 export default function LeaseReportsPageContent() {
   const { user } = useAuth();
   const { showMessage } = useMessageContext();
 
-  const [months, setMonths] = useState<ReferenceMonth[]>(() => [defaultMonth()]);
+  const [months, setMonths] = useState<ReferenceMonth[]>(() => [currentReferenceMonth()]);
   const [redemptions, setRedemptions] = useState<InvestmentRedemptionInput[]>([]);
   const [data, setData] = useState<LeaseReportResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -108,10 +101,6 @@ export default function LeaseReportsPageContent() {
         <aside className="w-full lg:w-[260px] shrink-0 space-y-3">
           <div>
             <h2 className="text-sm font-semibold text-content mb-1">Mês de referência</h2>
-            <p className="text-[11px] text-content-muted leading-snug mb-2">
-              Selecione o mês da locação. Os valores considerados são os creditados no mês seguinte —
-              dezembro/2025 cai na conta em janeiro/2026.
-            </p>
           </div>
 
           <MonthSelector selected={months} onChange={setMonths} />

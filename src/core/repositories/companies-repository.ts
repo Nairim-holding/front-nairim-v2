@@ -38,7 +38,15 @@ export interface CompaniesRepository {
 
   // ─── CRUD ───────────────────────────────────────────────────────────────
   /** Lista paginada (formato flat do DataTable). */
-  list(params: { page: number; limit: number; search: string; includeInactive: boolean }): Promise<CompanyListResult>;
+  list(params: {
+    page: number;
+    limit: number;
+    search: string;
+    includeInactive: boolean;
+    name?: string;
+    slug?: string;
+    is_active?: boolean;
+  }): Promise<CompanyListResult>;
   /** Empresa por ID com branding, ou `null`. */
   findByIdWithBranding(id: string): Promise<CompanyWithBranding | null>;
   /** Cria empresa (+ branding aninhado, se houver). */

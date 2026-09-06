@@ -26,6 +26,12 @@ const FILTER_FIELDS = [
   'application_date',
 ] as const;
 
+export function normalizeInvestmentFilterValues(value: unknown): string[] {
+  return (Array.isArray(value) ? value : [value])
+    .map((item) => item !== null && typeof item === 'object' ? JSON.stringify(item) : String(item))
+    .filter(Boolean);
+}
+
 export async function getInvestmentDashboardData(
   raw: Record<string, unknown>,
 ): Promise<InvestmentDashboardResponse> {
@@ -35,7 +41,7 @@ export async function getInvestmentDashboardData(
   for (const field of FILTER_FIELDS) {
     const value = raw[field];
     if (value === undefined) continue;
-    const values = (Array.isArray(value) ? value : [value]).map(String).filter(Boolean);
+    const values = normalizeInvestmentFilterValues(value);
     if (values.length > 0) filters[field] = values;
   }
 

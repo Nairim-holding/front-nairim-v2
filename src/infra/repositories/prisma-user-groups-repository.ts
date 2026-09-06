@@ -9,6 +9,7 @@ import type {
   UserGroup,
 } from '@/core/entities/user-group';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link UserGroupsRepository}.
@@ -142,31 +143,11 @@ export class PrismaUserGroupsRepository implements UserGroupsRepository {
       if (key === 'description') {
         conditions[key] = { contains: String(value), mode: 'insensitive' };
       } else if (key === 'created_at' || key === 'updated_at') {
-        conditions[key] = this.buildDateCondition(value);
+        conditions[key] = buildDateTimeCondition(value);
       }
     });
 
     return conditions;
-  }
-
-  private buildDateCondition(value: unknown) {
-    if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
-      const range = value as { from: string; to: string };
-      const fromDate = new Date(range.from);
-      const toDate = new Date(range.to);
-      toDate.setHours(23, 59, 59, 999);
-      if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-    } else if (typeof value === 'string') {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        const start = new Date(date);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(date);
-        end.setHours(23, 59, 59, 999);
-        return { gte: start, lte: end };
-      }
-    }
-    return {};
   }
 
   private buildOrderBy(sortOptions: Record<string, string>) {
@@ -191,13 +172,7 @@ export class PrismaUserGroupsRepository implements UserGroupsRepository {
   }
 
   async getFilters(filters: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
-    const where: Record<string, unknown> = { deleted_at: null };
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== '' && key === 'description') {
-        where[key] = { contains: String(value), mode: 'insensitive' };
-      }
-    });
+    const where = this.buildWhereClauseWithoutSearch(filters, false);
 
     const groups = await prisma.userGroup.findMany({
       where,

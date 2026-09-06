@@ -185,7 +185,6 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
 
     const start = parseLocalDate(params.startDate);
     const end = parseLocalDate(params.endDate);
-    end.setHours(23, 59, 59, 999);
 
     const where: Record<string, unknown> = {
       deleted_at: null,

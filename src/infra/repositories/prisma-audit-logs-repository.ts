@@ -18,6 +18,7 @@ import {
   MODEL_LABELS,
   sortAuditFields,
 } from '@/shared/utils/audit-models';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
  * Implementação Prisma de {@link AuditLogsRepository}.
@@ -963,24 +964,8 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
       } else if (key === 'table_name') {
         where.table_name = String(value);
       } else if (key === 'created_at') {
-        if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
-          const range = value as { from: string; to: string };
-          const fromDate = new Date(range.from);
-          const toDate = new Date(range.to);
-          toDate.setHours(23, 59, 59, 999);
-          if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
-            where.created_at = { gte: fromDate, lte: toDate };
-          }
-        } else if (typeof value === 'string') {
-          const date = new Date(value);
-          if (!isNaN(date.getTime())) {
-            const start = new Date(date);
-            start.setHours(0, 0, 0, 0);
-            const end = new Date(date);
-            end.setHours(23, 59, 59, 999);
-            where.created_at = { gte: start, lte: end };
-          }
-        }
+        const condition = buildDateTimeCondition(value);
+        if (Object.keys(condition).length > 0) where.created_at = condition;
       }
     });
 

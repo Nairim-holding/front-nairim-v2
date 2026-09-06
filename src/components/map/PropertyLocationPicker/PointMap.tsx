@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { getTileUrl, getTileAttribution } from '@/utils';
 
 const icon = L.divIcon({
   className: '',
@@ -32,7 +33,7 @@ function Controls({ point, readOnly, onChange }: Props) {
 export default function PointMap(props: Props) {
   return <div className="relative z-0 h-80 overflow-hidden rounded-lg" aria-label="Mapa para conferir a localização do imóvel">
     <MapContainer center={props.point ?? [-22.2106, -49.6561]} zoom={props.point ? 17 : 14} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'} />
+      <TileLayer url={getTileUrl('light_all')} attribution={getTileAttribution()} />
       <Controls {...props} />
       {props.point && <Marker position={props.point} icon={icon} draggable={!props.readOnly} eventHandlers={{ dragend: e => {
         const p = (e.target as L.Marker).getLatLng(); props.onChange(p.lat, p.lng);

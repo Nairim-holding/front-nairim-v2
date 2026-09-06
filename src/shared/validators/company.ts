@@ -32,6 +32,12 @@ export const listCompaniesQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(150).default(150),
   search: z.string().optional().default(''),
+  name: z.string().trim().optional(),
+  slug: z.string().trim().optional(),
+  is_active: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => value === undefined ? undefined : value === true || value === 'true'),
   // Aceita boolean real ou a string 'true' (compat com query string).
   includeInactive: z
     .union([z.boolean(), z.string()])

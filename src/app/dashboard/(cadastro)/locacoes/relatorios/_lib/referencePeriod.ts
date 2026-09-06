@@ -20,6 +20,12 @@ export const parseMonthKey = (key: string): ReferenceMonth => {
   return { year: Number(year), month: Number(month) };
 };
 
+/** Mês corrente no calendário local do usuário. */
+export const currentReferenceMonth = (today = new Date()): ReferenceMonth => ({
+  year: today.getFullYear(),
+  month: today.getMonth() + 1,
+});
+
 /** "Dezembro de 2025". */
 export const monthLabel = ({ year, month }: ReferenceMonth): string => `${MONTH_NAMES[month - 1]} de ${year}`;
 

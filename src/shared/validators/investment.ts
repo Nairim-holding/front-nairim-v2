@@ -56,7 +56,11 @@ export const investmentDashboardQuerySchema = z
     startMonth: z.string().regex(ISO_MONTH, 'O mês inicial deve estar no formato AAAA-MM'),
     endMonth: z.string().regex(ISO_MONTH, 'O mês final deve estar no formato AAAA-MM'),
   })
-  .passthrough();
+  .passthrough()
+  .refine((value) => value.startMonth <= value.endMonth, {
+    message: 'O mês inicial não pode ser maior que o mês final',
+    path: ['startMonth'],
+  });
 
 export const investmentReorderSchema = z.object({
   ordered_ids: z.array(z.string().min(1)).min(1, 'Informe a nova ordem dos investimentos'),

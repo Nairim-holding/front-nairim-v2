@@ -1,5 +1,6 @@
 import prisma from '@/infra/database/prisma';
 import { resolveLocation, type LocationAddress } from '@/shared/utils/property-location';
+import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 import type { PropertiesRepository } from '@/core/repositories/properties-repository';
 import type {
   CreateUnifiedPropertyData,
@@ -139,26 +140,6 @@ function safeGet(obj: any, path: string): unknown {
   return path.split('.').reduce((acc: any, part) => (acc === null || acc === undefined ? undefined : acc[part]), obj);
 }
 
-function buildDateCondition(value: unknown): Record<string, Date> {
-  if (typeof value === 'object' && value && 'from' in value && 'to' in value) {
-    const range = value as { from: string; to: string };
-    const fromDate = new Date(range.from);
-    const toDate = new Date(range.to);
-    toDate.setHours(23, 59, 59, 999);
-    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) return { gte: fromDate, lte: toDate };
-  } else if (typeof value === 'string') {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      return { gte: startOfDay, lte: endOfDay };
-    }
-  }
-  return {};
-}
-
 /** Filtros de WHERE — `status` (disponibilidade) NÃO entra aqui, é aplicado em memória sobre values[0]. */
 function buildFilterConditions(filters: Record<string, unknown>): Record<string, any> {
   const conditions: Record<string, any> = {};
@@ -181,7 +162,7 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
       if (!conditions.addresses) conditions.addresses = { some: { address: {} } };
       conditions.addresses.some.address[key] = { contains: String(value), mode: 'insensitive' };
     } else if (key === 'created_at') {
-      conditions.created_at = buildDateCondition(value);
+      conditions.created_at = buildDateTimeCondition(value);
     }
   });
   return conditions;
@@ -363,16 +344,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
   }
 
   async getFilters(filters: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const where: Record<string, any> = { deleted_at: null };
-    Object.entries(filters ?? {}).forEach(([key, value]) => {
-      if (!value || value === '') return;
-      if (['owner_id', 'type_id', 'agency_id', 'center_id'].includes(key)) where[key] = value;
-      else if (['city', 'state', 'district', 'street'].includes(key)) {
-        where.addresses = { some: { address: { [key]: { contains: String(value), mode: 'insensitive' } } } };
-      } else if (['title', 'tax_registration', 'notes'].includes(key)) {
-        where[key] = { contains: String(value), mode: 'insensitive' };
-      }
-    });
+    const where = buildWhere(filters ?? {}, false) as Record<string, any>;
 
     const [properties, owners, propertyTypes, agencies, centers, addresses, dateRange] = await Promise.all([
       prisma.property.findMany({ where: where as never, select: { title: true, bedrooms: true, bathrooms: true, garage_spaces: true, tax_registration: true, notes: true } }),

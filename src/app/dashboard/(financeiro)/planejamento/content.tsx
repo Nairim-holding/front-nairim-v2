@@ -92,9 +92,20 @@ export default function PlanningPageContent() {
   const filtersFetcher = useCallback(async (applied?: Record<string, unknown>) => {
     const result = await getTransactionFiltersAction(applied ?? {});
     if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
+    const supportedFields = new Set([
+      'category_id',
+      'subcategory_id',
+      'financial_institution_id',
+      'card_id',
+      'center_id',
+      'supplier_id',
+      'description',
+    ]);
     return {
       ...result.data,
-      filters: (result.data.filters ?? []).map((f) => ({ ...f, description: f.description ?? '' })),
+      filters: (result.data.filters ?? [])
+        .filter((filter) => supportedFields.has(filter.field))
+        .map((filter) => ({ ...filter, description: filter.description ?? '' })),
     };
   }, []);
   const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters, filtersFetcher);
