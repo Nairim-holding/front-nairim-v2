@@ -654,6 +654,7 @@ model Address {
   lot               String?
   latitude          Float?
   longitude         Float?
+  location_confirmation String?
   agencyAddresses   AgencyAddress[]
   ownerAddresses    OwnerAddress[]
   propertyAddresses PropertyAddress[]

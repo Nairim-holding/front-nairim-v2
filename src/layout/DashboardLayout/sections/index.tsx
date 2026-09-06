@@ -275,13 +275,26 @@ export function ClientsSection({
 }
 
 export function MapSection({ data }: { data: MapCoordinate[] }) {
+  const confirmed = data.filter((p): p is MapCoordinate & { lat: number; lng: number } =>
+    p.confirmed === true && p.lat !== null && p.lng !== null && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  const pending = data.filter(p => !confirmed.includes(p as MapCoordinate & { lat: number; lng: number }));
   // Tarefa 2: sem filtro de período no topo do mapa — os alfinetes são
   // sempre de TODOS os imóveis, independentemente de ano/mês. O status
   // (locado/disponível) já reflete o período de análise das outras abas,
   // calculado no backend (getGeolocation), sem precisar de um seletor aqui.
   return (
     <SectionShell>
-      <LeafletMap data={data} />
+      <p className="text-sm text-content-secondary mb-3">{confirmed.length} localização(ões) confirmada(s). O mapa exibe apenas pontos conferidos no cadastro.</p>
+      {pending.length > 0 && <details className="mb-4 rounded-lg border border-ui-border-soft bg-surface p-4" open={confirmed.length === 0}>
+        <summary className="cursor-pointer font-medium">{pending.length} imóvel(is) com localização pendente — revisar</summary>
+        <p className="text-sm text-content-secondary my-2">Confira o pin na etapa Endereço e salve o cadastro. Coordenadas antigas não são consideradas confirmadas automaticamente.</p>
+        <ul className="max-h-64 overflow-auto space-y-2">
+          {pending.map((p, i) => <li key={`${p.propertyId}-${i}`} className="text-sm">
+            {p.propertyId ? <a className="text-brand underline" href={`/dashboard/imoveis/editar/${encodeURIComponent(p.propertyId)}`}>{p.info} — Revisar localização</a> : p.info}
+          </li>)}
+        </ul>
+      </details>}
+      <LeafletMap data={confirmed} />
     </SectionShell>
   );
 }

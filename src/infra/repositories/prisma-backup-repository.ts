@@ -286,8 +286,8 @@ export class PrismaBackupRepository implements BackupRepository {
         for (const address of data.addresses as any[]) {
           await tx.address.upsert({
             where: { id: address.id },
-            update: address,
-            create: address,
+            update: { ...address, location_confirmation: address.location_confirmation ?? null },
+            create: { ...address, location_confirmation: address.location_confirmation ?? null },
           });
         }
       }

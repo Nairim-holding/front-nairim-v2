@@ -182,6 +182,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     country:    address.country ?? 'Brasil',
     latitude:   address.latitude ?? '',
     longitude:  address.longitude ?? '',
+    location: { latitude: address.latitude ?? null, longitude: address.longitude ?? null, location_confirmation: address.location_confirmation ?? null },
 
     purchase_date:  values.purchase_date ? formatLocalDate(values.purchase_date) : '',
     purchase_value: formatMoney(values.purchase_value ?? ''),
@@ -266,8 +267,10 @@ export function buildPropertyFormData(
     city:       data.city,
     state:      data.state,
     country:    data.country || 'Brasil',
-    latitude:   data.latitude || null,
-    longitude:  data.longitude || null,
+    latitude:   data.location ? (data.location.latitude ?? null) : (data.latitude ?? null),
+    longitude:  data.location ? (data.location.longitude ?? null) : (data.longitude ?? null),
+    location_confirmation: data.location?.location_confirmation ?? null,
+    location_update: !!data.location,
   }));
 
   fd.append('valuesData', JSON.stringify({

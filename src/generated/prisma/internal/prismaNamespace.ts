@@ -4393,7 +4393,8 @@ export const AddressScalarFieldEnum = {
   complement: 'complement',
   lot: 'lot',
   latitude: 'latitude',
-  longitude: 'longitude'
+  longitude: 'longitude',
+  location_confirmation: 'location_confirmation'
 } as const
 
 export type AddressScalarFieldEnum = (typeof AddressScalarFieldEnum)[keyof typeof AddressScalarFieldEnum]

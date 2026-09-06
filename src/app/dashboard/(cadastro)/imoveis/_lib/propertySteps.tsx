@@ -5,6 +5,7 @@
 
 import type { FormStep } from '@/types/types';
 import IptuManager from '@/components/domain/financial/IptuManager';
+import PropertyLocationPicker from '@/components/map/PropertyLocationPicker';
 import { parseMoney } from './propertyTransform';
 import {
   Home, MapPin, DollarSign, Upload, Building2,
@@ -46,7 +47,6 @@ export function buildPropertySteps({
   subcategoryOptions = [],
   subcategoriesRaw = [],
   readOnly = false,
-  isManualAddress = false,
   activeLease,
 }: PropertyStepsConfig): FormStep[] {
   const hasActiveLease = !!activeLease;
@@ -55,10 +55,8 @@ export function buildPropertySteps({
   // Shorthand for read-only fields
   const ro = readOnly ? { disabled: true as const, readOnly: true as const } : {};
 
-  // Address auto-fill fields: readonly unless user explicitly triggered manual mode
-  const autoFilled = readOnly
-    ? { disabled: true as const, readOnly: true as const }
-    : { disabled: !isManualAddress, readOnly: !isManualAddress };
+  // Postal data is a suggestion; users must be able to correct the address.
+  const autoFilled = ro;
 
   const steps: FormStep[] = [
     {
@@ -102,6 +100,8 @@ export function buildPropertySteps({
         { field: 'country', label: 'País', type: 'text', required: true, placeholder: 'Brasil', defaultValue: 'Brasil', icon: <Globe size={20} />, ...autoFilled },
         { field: 'latitude', label: 'Latitude', type: 'text', hidden: true },
         { field: 'longitude', label: 'Longitude', type: 'text', hidden: true },
+        { field: 'location', label: 'Localização do imóvel', type: 'custom', className: 'col-span-full',
+          render: (value, formValues, onChange) => <PropertyLocationPicker value={value} address={formValues} onChange={onChange} readOnly={readOnly} /> },
       ],
     },
     {

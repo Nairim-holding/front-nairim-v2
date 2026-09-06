@@ -26,6 +26,8 @@ export interface PropertyAddressInput {
   country?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  location_confirmation?: string | null;
+  location_update?: boolean;
 }
 
 /** Dados financeiros/status do imóvel (PropertyValue). */

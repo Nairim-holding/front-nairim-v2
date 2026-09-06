@@ -7,6 +7,11 @@ import { z } from 'zod';
  * Camada: shared. Origem: api-nairim-v2/src/lib/validators/property.ts.
  */
 
+const locationCoordinate = (limit: number) => z.preprocess(
+  value => value === '' || value === undefined || value === null ? null : typeof value === 'string' ? Number(value) : value,
+  z.number().finite().min(-limit).max(limit).nullable(),
+);
+
 const addressSchema = z.object({
   zip_code: z.string().trim().min(1, 'CEP é obrigatório'),
   street: z.string().trim().min(1, 'Rua é obrigatória'),
@@ -18,8 +23,12 @@ const addressSchema = z.object({
   city: z.string().trim().min(1, 'Cidade é obrigatória'),
   state: z.string().trim().min(1, 'Estado é obrigatório'),
   country: z.string().nullish(),
-  latitude: z.union([z.number(), z.string()]).nullish(),
-  longitude: z.union([z.number(), z.string()]).nullish(),
+  latitude: locationCoordinate(90),
+  longitude: locationCoordinate(180),
+  location_confirmation: z.string().max(4000).nullish(),
+  location_update: z.boolean().optional(),
+}).refine(address => (address.latitude === null) === (address.longitude === null), {
+  message: 'Informe latitude e longitude juntas ou remova o ponto.', path: ['latitude'],
 });
 
 const valuesSchema = z.object({

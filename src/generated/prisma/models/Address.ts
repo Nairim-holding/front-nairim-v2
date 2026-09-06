@@ -53,6 +53,7 @@ export type AddressMinAggregateOutputType = {
   lot: string | null
   latitude: number | null
   longitude: number | null
+  location_confirmation: string | null
 }
 
 export type AddressMaxAggregateOutputType = {
@@ -72,6 +73,7 @@ export type AddressMaxAggregateOutputType = {
   lot: string | null
   latitude: number | null
   longitude: number | null
+  location_confirmation: string | null
 }
 
 export type AddressCountAggregateOutputType = {
@@ -91,6 +93,7 @@ export type AddressCountAggregateOutputType = {
   lot: number
   latitude: number
   longitude: number
+  location_confirmation: number
   _all: number
 }
 
@@ -122,6 +125,7 @@ export type AddressMinAggregateInputType = {
   lot?: true
   latitude?: true
   longitude?: true
+  location_confirmation?: true
 }
 
 export type AddressMaxAggregateInputType = {
@@ -141,6 +145,7 @@ export type AddressMaxAggregateInputType = {
   lot?: true
   latitude?: true
   longitude?: true
+  location_confirmation?: true
 }
 
 export type AddressCountAggregateInputType = {
@@ -160,6 +165,7 @@ export type AddressCountAggregateInputType = {
   lot?: true
   latitude?: true
   longitude?: true
+  location_confirmation?: true
   _all?: true
 }
 
@@ -266,6 +272,7 @@ export type AddressGroupByOutputType = {
   lot: string | null
   latitude: number | null
   longitude: number | null
+  location_confirmation: string | null
   _count: AddressCountAggregateOutputType | null
   _avg: AddressAvgAggregateOutputType | null
   _sum: AddressSumAggregateOutputType | null
@@ -308,6 +315,7 @@ export type AddressWhereInput = {
   lot?: Prisma.StringNullableFilter<"Address"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Address"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Address"> | number | null
+  location_confirmation?: Prisma.StringNullableFilter<"Address"> | string | null
   agencyAddresses?: Prisma.AgencyAddressListRelationFilter
   ownerAddresses?: Prisma.OwnerAddressListRelationFilter
   propertyAddresses?: Prisma.PropertyAddressListRelationFilter
@@ -332,6 +340,7 @@ export type AddressOrderByWithRelationInput = {
   lot?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_confirmation?: Prisma.SortOrderInput | Prisma.SortOrder
   agencyAddresses?: Prisma.AgencyAddressOrderByRelationAggregateInput
   ownerAddresses?: Prisma.OwnerAddressOrderByRelationAggregateInput
   propertyAddresses?: Prisma.PropertyAddressOrderByRelationAggregateInput
@@ -359,6 +368,7 @@ export type AddressWhereUniqueInput = Prisma.AtLeast<{
   lot?: Prisma.StringNullableFilter<"Address"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Address"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Address"> | number | null
+  location_confirmation?: Prisma.StringNullableFilter<"Address"> | string | null
   agencyAddresses?: Prisma.AgencyAddressListRelationFilter
   ownerAddresses?: Prisma.OwnerAddressListRelationFilter
   propertyAddresses?: Prisma.PropertyAddressListRelationFilter
@@ -383,6 +393,7 @@ export type AddressOrderByWithAggregationInput = {
   lot?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_confirmation?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.AddressCountOrderByAggregateInput
   _avg?: Prisma.AddressAvgOrderByAggregateInput
   _max?: Prisma.AddressMaxOrderByAggregateInput
@@ -410,6 +421,7 @@ export type AddressScalarWhereWithAggregatesInput = {
   lot?: Prisma.StringNullableWithAggregatesFilter<"Address"> | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"Address"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Address"> | number | null
+  location_confirmation?: Prisma.StringNullableWithAggregatesFilter<"Address"> | string | null
 }
 
 export type AddressCreateInput = {
@@ -429,6 +441,7 @@ export type AddressCreateInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressCreateNestedManyWithoutAddressInput
@@ -453,6 +466,7 @@ export type AddressUncheckedCreateInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -477,6 +491,7 @@ export type AddressUpdateInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUpdateManyWithoutAddressNestedInput
@@ -501,6 +516,7 @@ export type AddressUncheckedUpdateInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -525,6 +541,7 @@ export type AddressCreateManyInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
 }
 
 export type AddressUpdateManyMutationInput = {
@@ -544,6 +561,7 @@ export type AddressUpdateManyMutationInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type AddressUncheckedUpdateManyInput = {
@@ -563,6 +581,7 @@ export type AddressUncheckedUpdateManyInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type AddressCountOrderByAggregateInput = {
@@ -582,6 +601,7 @@ export type AddressCountOrderByAggregateInput = {
   lot?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  location_confirmation?: Prisma.SortOrder
 }
 
 export type AddressAvgOrderByAggregateInput = {
@@ -606,6 +626,7 @@ export type AddressMaxOrderByAggregateInput = {
   lot?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  location_confirmation?: Prisma.SortOrder
 }
 
 export type AddressMinOrderByAggregateInput = {
@@ -625,6 +646,7 @@ export type AddressMinOrderByAggregateInput = {
   lot?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  location_confirmation?: Prisma.SortOrder
 }
 
 export type AddressSumOrderByAggregateInput = {
@@ -732,6 +754,7 @@ export type AddressCreateWithoutAgencyAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   ownerAddresses?: Prisma.OwnerAddressCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressCreateNestedManyWithoutAddressInput
@@ -755,6 +778,7 @@ export type AddressUncheckedCreateWithoutAgencyAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   ownerAddresses?: Prisma.OwnerAddressUncheckedCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -794,6 +818,7 @@ export type AddressUpdateWithoutAgencyAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownerAddresses?: Prisma.OwnerAddressUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUpdateManyWithoutAddressNestedInput
@@ -817,6 +842,7 @@ export type AddressUncheckedUpdateWithoutAgencyAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownerAddresses?: Prisma.OwnerAddressUncheckedUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -840,6 +866,7 @@ export type AddressCreateWithoutPropertyAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressCreateNestedManyWithoutAddressInput
@@ -863,6 +890,7 @@ export type AddressUncheckedCreateWithoutPropertyAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -902,6 +930,7 @@ export type AddressUpdateWithoutPropertyAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUpdateManyWithoutAddressNestedInput
@@ -925,6 +954,7 @@ export type AddressUncheckedUpdateWithoutPropertyAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -948,6 +978,7 @@ export type AddressCreateWithoutOwnerAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressCreateNestedManyWithoutAddressInput
@@ -971,6 +1002,7 @@ export type AddressUncheckedCreateWithoutOwnerAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutAddressInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -1010,6 +1042,7 @@ export type AddressUpdateWithoutOwnerAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUpdateManyWithoutAddressNestedInput
@@ -1033,6 +1066,7 @@ export type AddressUncheckedUpdateWithoutOwnerAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutAddressNestedInput
   supplierAddresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -1056,6 +1090,7 @@ export type AddressCreateWithoutTenantAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressCreateNestedManyWithoutAddressInput
@@ -1079,6 +1114,7 @@ export type AddressUncheckedCreateWithoutTenantAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -1118,6 +1154,7 @@ export type AddressUpdateWithoutTenantAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUpdateManyWithoutAddressNestedInput
@@ -1141,6 +1178,7 @@ export type AddressUncheckedUpdateWithoutTenantAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -1164,6 +1202,7 @@ export type AddressCreateWithoutSupplierAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressCreateNestedManyWithoutAddressInput
@@ -1187,6 +1226,7 @@ export type AddressUncheckedCreateWithoutSupplierAddressesInput = {
   lot?: string | null
   latitude?: number | null
   longitude?: number | null
+  location_confirmation?: string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedCreateNestedManyWithoutAddressInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedCreateNestedManyWithoutAddressInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutAddressInput
@@ -1226,6 +1266,7 @@ export type AddressUpdateWithoutSupplierAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUpdateManyWithoutAddressNestedInput
@@ -1249,6 +1290,7 @@ export type AddressUncheckedUpdateWithoutSupplierAddressesInput = {
   lot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  location_confirmation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agencyAddresses?: Prisma.AgencyAddressUncheckedUpdateManyWithoutAddressNestedInput
   ownerAddresses?: Prisma.OwnerAddressUncheckedUpdateManyWithoutAddressNestedInput
   propertyAddresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutAddressNestedInput
@@ -1339,6 +1381,7 @@ export type AddressSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   lot?: boolean
   latitude?: boolean
   longitude?: boolean
+  location_confirmation?: boolean
   agencyAddresses?: boolean | Prisma.Address$agencyAddressesArgs<ExtArgs>
   ownerAddresses?: boolean | Prisma.Address$ownerAddressesArgs<ExtArgs>
   propertyAddresses?: boolean | Prisma.Address$propertyAddressesArgs<ExtArgs>
@@ -1364,6 +1407,7 @@ export type AddressSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   lot?: boolean
   latitude?: boolean
   longitude?: boolean
+  location_confirmation?: boolean
 }, ExtArgs["result"]["address"]>
 
 export type AddressSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1383,6 +1427,7 @@ export type AddressSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   lot?: boolean
   latitude?: boolean
   longitude?: boolean
+  location_confirmation?: boolean
 }, ExtArgs["result"]["address"]>
 
 export type AddressSelectScalar = {
@@ -1402,9 +1447,10 @@ export type AddressSelectScalar = {
   lot?: boolean
   latitude?: boolean
   longitude?: boolean
+  location_confirmation?: boolean
 }
 
-export type AddressOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "zip_code" | "street" | "number" | "district" | "city" | "state" | "country" | "created_at" | "updated_at" | "deleted_at" | "block" | "complement" | "lot" | "latitude" | "longitude", ExtArgs["result"]["address"]>
+export type AddressOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "zip_code" | "street" | "number" | "district" | "city" | "state" | "country" | "created_at" | "updated_at" | "deleted_at" | "block" | "complement" | "lot" | "latitude" | "longitude" | "location_confirmation", ExtArgs["result"]["address"]>
 export type AddressInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   agencyAddresses?: boolean | Prisma.Address$agencyAddressesArgs<ExtArgs>
   ownerAddresses?: boolean | Prisma.Address$ownerAddressesArgs<ExtArgs>
@@ -1442,6 +1488,7 @@ export type $AddressPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     lot: string | null
     latitude: number | null
     longitude: number | null
+    location_confirmation: string | null
   }, ExtArgs["result"]["address"]>
   composites: {}
 }
@@ -1886,6 +1933,7 @@ export interface AddressFieldRefs {
   readonly lot: Prisma.FieldRef<"Address", 'String'>
   readonly latitude: Prisma.FieldRef<"Address", 'Float'>
   readonly longitude: Prisma.FieldRef<"Address", 'Float'>
+  readonly location_confirmation: Prisma.FieldRef<"Address", 'String'>
 }
     
 

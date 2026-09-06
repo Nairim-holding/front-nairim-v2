@@ -1,3 +1,4 @@
+import { isLocationConfirmed, coordinate } from '@/shared/utils/property-location';
 import prisma from '@/infra/database/prisma';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
 import type { ChartData, ClientsMetrics, FinancialMetrics, GeolocationResponse, PortfolioMetrics } from '@/core/entities/dashboard';
@@ -556,28 +557,24 @@ export class PrismaDashboardRepository implements DashboardRepository {
       },
     });
 
-    const coordinates = properties
-      .flatMap((p) => {
-        const isLeased = p.leases.length > 0 || p.values[0]?.status === 'OCCUPIED';
-        const statusLabel = isLeased ? 'Locado' : 'Disponível';
-
-        return p.addresses.map((a) => {
-          const lat = a.address.latitude;
-          const lng = a.address.longitude;
-
-          if (lat != null && lng != null) {
-            return {
-              lat,
-              lng,
-              info: `${p.title} (${statusLabel}) - ${a.address.city}/${a.address.state}`,
-              isLeased,
-              status: (isLeased ? 'OCCUPIED' : 'AVAILABLE') as 'OCCUPIED' | 'AVAILABLE',
-            };
-          }
-          return null;
-        });
-      })
-      .filter((coord): coord is { lat: number; lng: number; info: string; isLeased: boolean; status: 'OCCUPIED' | 'AVAILABLE' } => coord !== null);
+    const coordinates = properties.flatMap((p) => {
+      const isLeased = p.leases.length > 0 || p.values[0]?.status === 'OCCUPIED';
+      const status = (isLeased ? 'OCCUPIED' : 'AVAILABLE') as 'OCCUPIED' | 'AVAILABLE';
+      const addresses = p.addresses.filter(a => !a.address.deleted_at);
+      if (!addresses.length) return [{ lat: null, lng: null, info: p.title, propertyId: p.id, confirmed: false, isLeased, status }];
+      return addresses.map(({ address }) => {
+        const confirmed = isLocationConfirmed(address);
+        return {
+          lat: confirmed ? coordinate(address.latitude, 90) : null,
+          lng: confirmed ? coordinate(address.longitude, 180) : null,
+          info: [p.title, address.street + ', ' + address.number, address.district, address.city + '/' + address.state].filter(Boolean).join(' - '),
+          propertyId: p.id,
+          confirmed,
+          isLeased,
+          status,
+        };
+      });
+    });
 
     return { coordinates };
   }

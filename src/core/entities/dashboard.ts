@@ -58,9 +58,11 @@ export interface ClientsMetrics {
 }
 
 export interface GeolocationPoint {
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   info: string;
+  propertyId?: string;
+  confirmed?: boolean;
   isLeased?: boolean;
   status?: 'OCCUPIED' | 'AVAILABLE';
 }

@@ -1,4 +1,5 @@
 import prisma from '@/infra/database/prisma';
+import { resolveLocation, type LocationAddress } from '@/shared/utils/property-location';
 import type { PropertiesRepository } from '@/core/repositories/properties-repository';
 import type {
   CreateUnifiedPropertyData,
@@ -260,7 +261,7 @@ function sortPropertyDocuments(documents: any[]): any[] {
   });
 }
 
-function buildAddressCreateData(address: NonNullable<CreateUnifiedPropertyData['address']>) {
+function buildAddressCreateData(address: NonNullable<CreateUnifiedPropertyData['address']>, previous?: LocationAddress) {
   return {
     zip_code: address.zip_code,
     street: address.street,
@@ -272,8 +273,7 @@ function buildAddressCreateData(address: NonNullable<CreateUnifiedPropertyData['
     city: address.city,
     state: address.state,
     country: address.country || 'Brasil',
-    latitude: address.latitude != null && (address.latitude as unknown) !== '' ? Number(address.latitude) : null,
-    longitude: address.longitude != null && (address.longitude as unknown) !== '' ? Number(address.longitude) : null,
+    ...resolveLocation(address, previous),
   };
 }
 
@@ -544,7 +544,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
         if (data.address) {
           const propertyAddress = await tx.propertyAddress.findFirst({ where: { property_id: id, deleted_at: null }, include: { address: true } });
           if (propertyAddress) {
-            await tx.address.update({ where: { id: propertyAddress.address.id }, data: buildAddressCreateData(data.address) });
+            await tx.address.update({ where: { id: propertyAddress.address.id }, data: buildAddressCreateData(data.address, propertyAddress.address) });
           } else {
             const newAddress = await tx.address.create({ data: buildAddressCreateData(data.address) });
             await tx.propertyAddress.create({ data: { property_id: property.id, address_id: newAddress.id } });
