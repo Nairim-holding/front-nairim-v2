@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isValidCPF, isValidCNPJ, emailContactSchema } from './br-documents';
+import { isValidCPF, isValidCNPJ, emailContactSchema, contactChannelSchema } from './br-documents';
 
 /**
  * Schemas Zod do módulo Tenants — substituem `lib/validators/tenant.ts`.
@@ -25,6 +25,7 @@ const tenantContactSchema = z.object({
   phone: z.string().nullish(),
   cellphone: z.string().nullish(),
   email: emailContactSchema,
+  channels: z.array(contactChannelSchema).optional(),
 });
 
 const tenantAddressSchema = z.object({

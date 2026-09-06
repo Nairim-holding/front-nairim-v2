@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contactChannelSchema } from './br-documents';
 
 /**
  * Schemas Zod do módulo Fornecedor — substituem
@@ -38,6 +39,7 @@ const contactSchema = z.object({
   phone: nullableString.optional(),
   cellphone: nullableString.optional(),
   email: nullableString.optional(),
+  channels: z.array(contactChannelSchema).optional(),
 });
 
 export const createFinancialSupplierSchema = z.object({

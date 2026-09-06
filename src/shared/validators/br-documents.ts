@@ -64,3 +64,19 @@ export function isValidCNPJ(cnpj: string): boolean {
 export const cpfSchema = z.string().refine(isValidCPF, 'CPF inválido');
 export const cnpjSchema = z.string().refine(isValidCNPJ, 'CNPJ inválido');
 export const emailContactSchema = z.string().email('Email inválido').nullish().or(z.literal(''));
+
+/**
+ * Telefones/e-mails extras de um contato (Etapa 3).
+ *
+ * Precisa estar declarado no schema de contato de proprietário, inquilino,
+ * imobiliária e fornecedor: o Zod descarta chave desconhecida no `.parse()`,
+ * então sem isto os canais chegam do formulário e são apagados antes de
+ * alcançar o repositório — o contato salva só com o número principal.
+ */
+export const contactChannelSchema = z.object({
+  id: z.string().optional(),
+  kind: z.enum(['CELLPHONE', 'PHONE', 'EMAIL']),
+  value: z.string(),
+  label: z.string().nullish(),
+  display_order: z.number().optional(),
+});

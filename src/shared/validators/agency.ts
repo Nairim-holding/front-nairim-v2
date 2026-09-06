@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contactChannelSchema } from './br-documents';
 
 /**
  * Schemas Zod do módulo Agencies — substituem `lib/validators/agency.ts`.
@@ -20,6 +21,7 @@ const contactSchema = z.object({
   phone: z.string().nullish(),
   cellphone: z.string().nullish(),
   email: z.string().email('Email inválido').nullish().or(z.literal('')),
+  channels: z.array(contactChannelSchema).optional(),
 });
 
 const addressSchema = z.object({
