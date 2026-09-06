@@ -183,6 +183,7 @@ export default function IptuManager({ value = [], onChange, readOnly = false, ac
       const firstInstallment = Number(tempIptu.property_tax_first_installment);
       if (!firstInstallment || firstInstallment <= 0) return setErrorMsg('Informe o valor da 1ª parcela.');
       if (!tempIptu.property_tax_first_installment_due_date) return setErrorMsg('Informe a data de vencimento da 1ª parcela.');
+      // 2ª cota fica opcional: costuma ser preenchida depois, quando sai o valor.
     }
     else if (tempIptu.payment_condition === 'INSTALLMENTS') {
       const sum = (tempIptu.iptu_installments || []).reduce((acc, curr) => acc + Number(curr.value || 0), 0);

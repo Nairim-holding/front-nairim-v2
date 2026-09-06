@@ -47,6 +47,7 @@ export default function VisualizarProprietarioPage() {
         phone: c.contact?.phone || c.phone || '',
         cellphone: c.contact?.cellphone || c.cellphone || '',
         email: c.contact?.email || c.email || '',
+        channels: c.contact?.channels || c.channels || [],
       })) || []
     };
   }, []);

@@ -45,6 +45,11 @@ export default function ContactChannelFields({
   // o usuário não teria onde clicar para começar.
   const rows = values.length > 0 ? values : [''];
 
+  // O banco guarda telefone só com dígitos. Mascarar apenas no onChange
+  // deixava o valor carregado cru até o usuário mexer no campo, então a
+  // máscara é aplicada na exibição — vale para valor vindo da API e digitado.
+  const display = (value: string) => (mask ? mask(value) : value);
+
   const updateAt = (index: number, raw: string) => {
     const next = [...rows];
     next[index] = mask ? mask(raw) : raw;
@@ -72,7 +77,7 @@ export default function ContactChannelFields({
           <div key={index} className="flex items-center gap-2">
             <input
               type={type}
-              value={value}
+              value={display(value)}
               onChange={(e) => updateAt(index, e.target.value)}
               disabled={readOnly}
               className="w-full p-3 border border-ui-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all disabled:bg-surface-muted disabled:cursor-not-allowed"

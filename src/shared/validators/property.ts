@@ -62,21 +62,28 @@ const iptuSchema = z
     iptu_installments: z.array(z.unknown()).nullish(),
   })
   .superRefine((iptu, ctx) => {
+    // O erro chega ao usuário como "iptus.0.<campo>: <mensagem>", e "0" não diz
+    // qual linha da aba IPTU está incompleta. Prefixar o ano faz a mensagem
+    // apontar sozinha para a linha a corrigir.
+    const year = String(iptu.year ?? '').trim();
+    const at = (message: string) => (year ? `IPTU ${year} — ${message}` : message);
+
     if (!iptu.year || isNaN(parseInt(String(iptu.year)))) {
       ctx.addIssue({ code: 'custom', message: 'O ano é obrigatório', path: ['year'] });
     }
     if (iptu.payment_condition === 'IN_FULL_15_DISCOUNT') {
-      if (!iptu.property_tax_cash) ctx.addIssue({ code: 'custom', message: 'Valor da cota única é obrigatório', path: ['property_tax_cash'] });
-      if (!iptu.property_tax_cash_due_date) ctx.addIssue({ code: 'custom', message: 'Data de vencimento da cota única é obrigatória', path: ['property_tax_cash_due_date'] });
+      if (!iptu.property_tax_cash) ctx.addIssue({ code: 'custom', message: at('Valor da cota única é obrigatório'), path: ['property_tax_cash'] });
+      if (!iptu.property_tax_cash_due_date) ctx.addIssue({ code: 'custom', message: at('Data de vencimento da cota única é obrigatória'), path: ['property_tax_cash_due_date'] });
     } else if (iptu.payment_condition === 'SECOND_INSTALLMENT_10_DISCOUNT') {
-      if (!iptu.property_tax_first_installment) ctx.addIssue({ code: 'custom', message: 'Valor da 1ª parcela é obrigatório', path: ['property_tax_first_installment'] });
-      if (!iptu.property_tax_first_installment_due_date) ctx.addIssue({ code: 'custom', message: 'Data de vencimento da 1ª parcela é obrigatória', path: ['property_tax_first_installment_due_date'] });
-      if (!iptu.property_tax_second_installment) ctx.addIssue({ code: 'custom', message: 'Valor da 2ª cota é obrigatório', path: ['property_tax_second_installment'] });
-      if (!iptu.property_tax_second_installment_due_date) ctx.addIssue({ code: 'custom', message: 'Data de vencimento da 2ª cota é obrigatória', path: ['property_tax_second_installment_due_date'] });
+      if (!iptu.property_tax_first_installment) ctx.addIssue({ code: 'custom', message: at('Valor da 1ª parcela é obrigatório'), path: ['property_tax_first_installment'] });
+      if (!iptu.property_tax_first_installment_due_date) ctx.addIssue({ code: 'custom', message: at('Data de vencimento da 1ª parcela é obrigatória'), path: ['property_tax_first_installment_due_date'] });
+      // A 2ª cota é opcional de propósito: quando o IPTU é lançado, ela ainda
+      // não é conhecida, e exigi-la travava QUALQUER edição do imóvel (até
+      // mudar só o status) por causa de um lançamento antigo incompleto.
     } else if (iptu.payment_condition === 'INSTALLMENTS') {
-      if (!iptu.iptu_installments_count) ctx.addIssue({ code: 'custom', message: 'Quantidade de parcelas é obrigatória', path: ['iptu_installments_count'] });
+      if (!iptu.iptu_installments_count) ctx.addIssue({ code: 'custom', message: at('Quantidade de parcelas é obrigatória'), path: ['iptu_installments_count'] });
       if (!Array.isArray(iptu.iptu_installments) || iptu.iptu_installments.length === 0) {
-        ctx.addIssue({ code: 'custom', message: 'Parcelas são obrigatórias', path: ['iptu_installments'] });
+        ctx.addIssue({ code: 'custom', message: at('Parcelas são obrigatórias'), path: ['iptu_installments'] });
       }
     }
   });

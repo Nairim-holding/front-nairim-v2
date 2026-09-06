@@ -10,11 +10,15 @@
  * api-nairim-v2/src/services/OwnerService.ts.
  */
 
+import type { ContactChannel } from './contact-channel';
+
 export interface OwnerContactInput {
   contact?: string | null;
   phone?: string | null;
   cellphone?: string | null;
   email?: string | null;
+  /** Telefones/e-mails adicionais (Etapa 3). O principal fica nos campos acima. */
+  channels?: ContactChannel[];
 }
 
 export interface OwnerAddressInput {

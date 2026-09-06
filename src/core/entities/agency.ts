@@ -6,12 +6,16 @@
  * (prisma/schema.prisma) e api-nairim-v2/src/services/AgencyService.ts.
  */
 
+import type { ContactChannel } from './contact-channel';
+
 /** Contato de uma imobiliária. */
 export interface AgencyContactInput {
   contact?: string | null;
   phone?: string | null;
   cellphone?: string | null;
   email?: string | null;
+  /** Telefones/e-mails adicionais (Etapa 3). O principal fica nos campos acima. */
+  channels?: ContactChannel[];
 }
 
 /** Endereço enviado no cadastro/edição. */
