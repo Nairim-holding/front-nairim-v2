@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   amountMatches,
+  addBusinessDays,
   computeLeaseNetAmount,
   dueDatesSettledOn,
   dueDaysSettledOn,
   isBusinessDay,
   nextBusinessDay,
+  holidaysForCity,
   sortCandidates,
   type CreditCandidate,
 } from '@/core/entities/credit-reconciliation';
@@ -38,6 +40,23 @@ describe('dias úteis', () => {
     expect(nextBusinessDay(d(2026, 6, 20), noHolidays).getDate()).toBe(22);
     // Já sendo dia útil, devolve a própria data.
     expect(nextBusinessDay(d(2026, 6, 22), noHolidays).getDate()).toBe(22);
+  });
+
+  it('cobra um dia útil depois do repasse esperado, pulando fim de semana', () => {
+    // Vencimento sexta 19/06; um dia útil depois é segunda 22/06.
+    expect(addBusinessDays(d(2026, 6, 19), 1, noHolidays).getDate()).toBe(22);
+  });
+
+  it('pula também o feriado cadastrado ao contar o primeiro dia de cobrança', () => {
+    const holidays = [{ date: d(2026, 10, 12) }];
+    // Sexta 09/10; segunda é feriado, então a cobrança começa terça 13/10.
+    expect(addBusinessDays(d(2026, 10, 9), 1, holidays).getDate()).toBe(13);
+  });
+
+  it('aplica feriado municipal somente ao município do imóvel', () => {
+    const registered = [{ date: new Date(Date.UTC(2026, 5, 24)), scope: 'MUNICIPAL', city: 'São João del-Rei' }];
+    expect(holidaysForCity(registered, 'Sao Joao del-Rei', [2026]).some((h) => h.date.getMonth() === 5 && h.date.getDate() === 24)).toBe(true);
+    expect(holidaysForCity(registered, 'Belo Horizonte', [2026]).some((h) => h.date.getMonth() === 5 && h.date.getDate() === 24)).toBe(false);
   });
 });
 

@@ -2,6 +2,8 @@ import prisma from '@/infra/database/prisma';
 import type { LeaseCreditReconciliationRepository } from '@/core/repositories/lease-credit-reconciliation-repository';
 import {
   amountMatches,
+  fromDatabaseDate,
+  holidaysForCity,
   computeLeaseNetAmount,
   nextBusinessDay,
   round2,
@@ -9,7 +11,6 @@ import {
   type CompleteCreditReconciliationInput,
   type CreditCandidate,
   type CreditReconciliationSearchInput,
-  type HolidayDate,
 } from '@/core/entities/credit-reconciliation';
 import { WITHHOLDING_TOTAL_RATE } from '@/core/entities/lease-report';
 import { createDateLocal } from '@/shared/utils/date-utils';
@@ -35,10 +36,6 @@ function parseCalendarDate(value: string): Date {
   return new Date(year, month - 1, day, 12);
 }
 
-function fromDatabaseDate(value: Date): Date {
-  return new Date(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate(), 12);
-}
-
 function dateKey(value: Date): string {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 }
@@ -46,25 +43,6 @@ function dateKey(value: Date): string {
 function safeDueDate(year: number, monthIndex: number, dueDay: number): Date {
   const lastDay = new Date(year, monthIndex + 1, 0, 12).getDate();
   return new Date(year, monthIndex, Math.min(Math.max(dueDay, 1), lastDay), 12);
-}
-
-function fixedNationalHolidays(year: number): HolidayDate[] {
-  // Feriados nacionais de data fixa. Datas móveis e feriados locais continuam
-  // vindo do cadastro Holiday da empresa.
-  return [[1, 1], [4, 21], [5, 1], [9, 7], [10, 12], [11, 2], [11, 15], [11, 20], [12, 25]]
-    .map(([month, day]) => ({ date: new Date(year, month - 1, day, 12) }));
-}
-
-function holidaysForCity(
-  registered: Array<{ date: Date; scope: string; city: string | null }>,
-  city: string | null,
-  years: number[],
-): HolidayDate[] {
-  const normalizedCity = normalize(city);
-  const saved = registered
-    .filter((holiday) => holiday.scope === 'NATIONAL' || (holiday.scope === 'MUNICIPAL' && normalize(holiday.city) === normalizedCity))
-    .map((holiday) => ({ date: fromDatabaseDate(holiday.date) }));
-  return [...saved, ...years.flatMap(fixedNationalHolidays)];
 }
 
 function isWithinLease(date: Date, start: Date, end: Date): boolean {

@@ -15,7 +15,10 @@ export type LeaseNotificationChannel = 'EMAIL' | 'WHATSAPP';
 
 /** Uma locação atrasada, como a tela precisa exibir. */
 export interface OverdueLease {
+  /** Lançamento financeiro mensal que está pendente. */
+  transaction_id: string;
   lease_id: string;
+  contract_number: string;
   property_title: string;
   tenant_name: string;
   agency_name: string;
@@ -23,6 +26,8 @@ export interface OverdueLease {
   rent_due_day: number;
   /** Data do vencimento em atraso. */
   due_date: Date;
+  /** Primeiro dia em que a cobrança pode ser disparada automaticamente. */
+  automatic_notification_date: Date;
   /** Dias corridos entre o vencimento e hoje. */
   days_overdue: number;
   amount: number;
@@ -35,14 +40,35 @@ export interface OverdueLease {
   agency_phone: string | null;
   /** Quando o último aviso foi enviado, se houve. */
   last_notified_at: Date | null;
+  /** Quantos avisos já foram registrados para esta competência. */
+  notification_count: number;
+  whatsapp_notification_count: number;
+  last_notification_channel: LeaseNotificationChannel | null;
 }
 
 const MS_PER_DAY = 86_400_000;
 
+/**
+ * Datas `@db.Date` chegam do Prisma à meia-noite UTC; datas criadas pela tela
+ * costumam estar à meia-noite local. Esta distinção preserva o dia civil nos
+ * dois casos sem o conhecido deslocamento de um dia no fuso brasileiro.
+ */
+function calendarParts(date: Date): { year: number; month: number; day: number } {
+  const isUtcDateOnly = date.getUTCHours() === 0
+    && date.getUTCMinutes() === 0
+    && date.getUTCSeconds() === 0
+    && date.getUTCMilliseconds() === 0;
+  return isUtcDateOnly
+    ? { year: date.getUTCFullYear(), month: date.getUTCMonth(), day: date.getUTCDate() }
+    : { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
+}
+
 /** Diferença em dias corridos, ignorando hora. */
 export function daysBetween(from: Date, to: Date): number {
-  const a = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
-  const b = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  const fromParts = calendarParts(from);
+  const toParts = calendarParts(to);
+  const a = Date.UTC(fromParts.year, fromParts.month, fromParts.day);
+  const b = Date.UTC(toParts.year, toParts.month, toParts.day);
   return Math.round((b - a) / MS_PER_DAY);
 }
 
@@ -90,14 +116,12 @@ export function overdueTotal(leases: OverdueLease[]): number {
 const currency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const shortDate = (date: Date) =>
-  `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+const shortDate = (date: Date) => {
+  const parts = calendarParts(date);
+  return `${String(parts.day).padStart(2, '0')}/${String(parts.month + 1).padStart(2, '0')}/${parts.year}`;
+};
 
-/**
- * Texto padrão do aviso à imobiliária. Mesmo corpo para e-mail e WhatsApp: o
- * conteúdo é o mesmo, muda só o transporte, e uma mensagem só evita os dois
- * textos divergirem com o tempo.
- */
+/** Texto padrão da cobrança enviada à imobiliária pelo WhatsApp. */
 export function buildNotificationMessage(lease: OverdueLease): string {
   return [
     `Prezados, ${lease.agency_name},`,
@@ -125,9 +149,4 @@ export function buildWhatsAppLink(lease: OverdueLease): string | null {
   if (digits.length < 10) return null;
   const withCountryCode = digits.startsWith('55') ? digits : `55${digits}`;
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(buildNotificationMessage(lease))}`;
-}
-
-/** Assunto do e-mail de cobrança. */
-export function buildNotificationSubject(lease: OverdueLease): string {
-  return `Repasse pendente — ${lease.property_title} (${lease.days_overdue} dias em atraso)`;
 }

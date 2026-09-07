@@ -77,6 +77,49 @@ export function dueDaysSettledOn(creditDate: Date, holidays: HolidayDate[]): num
   return dueDatesSettledOn(creditDate, holidays).map((date) => date.getDate());
 }
 
+/** Avança uma quantidade de dias úteis, sem contar a própria data. */
+export function addBusinessDays(date: Date, amount: number, holidays: HolidayDate[]): Date {
+  const cursor = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+  let remaining = Math.max(0, Math.trunc(amount));
+  for (let i = 0; remaining > 0 && i < 370; i += 1) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (isBusinessDay(cursor, holidays)) remaining -= 1;
+  }
+  return cursor;
+}
+
+/** Converte um DATE do Prisma em data civil local, sem deslocar o dia. */
+export function fromDatabaseDate(value: Date): Date {
+  return new Date(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate(), 12);
+}
+
+/** Feriados nacionais fixos reconhecidos sem depender de cadastro manual. */
+export function fixedNationalHolidays(year: number): HolidayDate[] {
+  return [[1, 1], [4, 21], [5, 1], [9, 7], [10, 12], [11, 2], [11, 15], [11, 20], [12, 25]]
+    .map(([month, day]) => ({ date: new Date(year, month - 1, day, 12) }));
+}
+
+const HOLIDAY_COMBINING_MARKS = /[̀-ͯ]/g;
+const normalizeCity = (value: string | null | undefined) =>
+  String(value ?? '').normalize('NFD').replace(HOLIDAY_COMBINING_MARKS, '').toLowerCase().trim();
+
+/**
+ * Mescla feriados fixos, nacionais cadastrados e municipais do imóvel. Esta é
+ * a fonte comum da conciliação e das cobranças automáticas.
+ */
+export function holidaysForCity(
+  registered: Array<{ date: Date; scope: string; city: string | null }>,
+  city: string | null,
+  years: number[],
+): HolidayDate[] {
+  const normalizedCity = normalizeCity(city);
+  const saved = registered
+    .filter((holiday) => holiday.scope === 'NATIONAL'
+      || (holiday.scope === 'MUNICIPAL' && normalizeCity(holiday.city) === normalizedCity))
+    .map((holiday) => ({ date: fromDatabaseDate(holiday.date) }));
+  return [...saved, ...years.flatMap(fixedNationalHolidays)];
+}
+
 /**
  * Datas completas cujos vencimentos chegam ao banco na data informada.
  * Diferentemente de `dueDaysSettledOn`, preserva mês e ano — necessário para

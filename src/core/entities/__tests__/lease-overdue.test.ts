@@ -11,12 +11,15 @@ import {
 } from '@/core/entities/lease-overdue';
 
 const lease = (overrides: Partial<OverdueLease> = {}): OverdueLease => ({
+  transaction_id: 't1',
   lease_id: 'l1',
+  contract_number: 'CT-001',
   property_title: 'Imóvel A',
   tenant_name: 'Inquilino A',
   agency_name: 'Imobiliária A',
   rent_due_day: 10,
   due_date: new Date(2026, 7, 10),
+  automatic_notification_date: new Date(2026, 7, 11),
   days_overdue: 5,
   amount: 1500,
   reference_month: 8,
@@ -25,6 +28,9 @@ const lease = (overrides: Partial<OverdueLease> = {}): OverdueLease => ({
   agency_email: 'contato@imob.com',
   agency_phone: '(11) 3000-0000',
   last_notified_at: null,
+  notification_count: 0,
+  whatsapp_notification_count: 0,
+  last_notification_channel: null,
   ...overrides,
 });
 
@@ -85,4 +91,5 @@ describe('mensagem de cobrança', () => {
     expect(buildWhatsAppLink(lease({ agency_phone: null }))).toBeNull();
     expect(buildWhatsAppLink(lease({ agency_phone: '123' }))).toBeNull();
   });
+
 });

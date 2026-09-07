@@ -1,3 +1,6 @@
+include:
+  - path: docker-compose.evolution.yml
+
 services:
   # ==========================================
   # FRONTEND - PRODUÇÃO
@@ -15,6 +18,10 @@ services:
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000
+      # Dentro do compose, usa o DNS interno do serviço em vez da porta do host.
+      - EVOLUTION_API_URL=http://evolution-api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
     env_file:
       - .env
     volumes:
@@ -22,6 +29,7 @@ services:
     depends_on:
       - postgres
       - minio
+      - evolution-api
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -108,7 +116,8 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=3000
     env_file:
-      - .env.test
+      - path: .env.test
+        required: false
     depends_on:
       - postgres-test-2
       - minio
@@ -163,7 +172,8 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=3000
     env_file:
-      - .env.homolog
+      - path: .env.homolog
+        required: false
     depends_on:
       - postgres-homolog
       - minio

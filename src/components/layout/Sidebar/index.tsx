@@ -32,7 +32,8 @@ import {
   FileBarChart2,
   SearchCheck,
   TrendingUp,
-  Percent
+  Percent,
+  BellRing
 } from "lucide-react";
 import Logo from "../Logo";
 import CompanySwitcher from "../CompanySwitcher";
@@ -41,6 +42,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { normalizeDashboardPathname, resourceForHref } from "@/utils/permissionResource";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { LucideIcon } from "lucide-react";
+import LeaseOverdueBell from '@/components/domain/lease-overdue/LeaseOverdueBell';
 
 interface SubmenuItem {
   href: string;
@@ -170,6 +172,7 @@ export default function Aside({
         label: "Locações",
         submenu: ([
           { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
+          { href: "/dashboard/locacoes/atrasadas", icon: BellRing, label: "Alertas de atrasos", resource: resourceForHref("/dashboard/locacoes/atrasadas") },
           { href: "/dashboard/locacoes/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/locacoes/relatorios"), isSeparatorBefore: true },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
@@ -290,6 +293,11 @@ export default function Aside({
             <CompanySwitcher isOpen={isOpen} onNavigate={() => { if (!isPinned) handleToggle(); }} />
           </div>
         )}
+
+        {/* Atalho sempre visível, separado do logo para não ser comprimido. */}
+        <div className="px-3 pt-3">
+          <LeaseOverdueBell placement="sidebar" />
+        </div>
 
         {/* Lista de Navegação */}
         <div className="flex-1 w-full overflow-hidden py-3 px-3">

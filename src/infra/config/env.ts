@@ -45,6 +45,11 @@ export const env = {
   MINIO_BUCKET: process.env.MINIO_BUCKET ?? 'imagens',
   MINIO_REGION: process.env.MINIO_REGION ?? 'us-east-1',
 
+  // WhatsApp automático via Evolution API (self-hosted / Baileys).
+  EVOLUTION_API_URL: process.env.EVOLUTION_API_URL ?? '',
+  EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY ?? '',
+  EVOLUTION_INSTANCE: process.env.EVOLUTION_INSTANCE ?? '',
+
   // Rate limiting de login.
   RATE_LIMIT_WINDOW_MS: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 5 * 60 * 1000),
   RATE_LIMIT_MAX_REQUESTS: Number(process.env.RATE_LIMIT_MAX_REQUESTS ?? 10000),

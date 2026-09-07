@@ -15,3 +15,4 @@ export {
   OSM_ATTRIBUTION,
 } from './mapTiles';
 export type { CartoBasemap } from './mapTiles';
+export { formatCurrency, formatDate } from './formatters';

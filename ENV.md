@@ -22,6 +22,12 @@ Atualizado durante o **Módulo 1 (Fundação)**. Novas variáveis serão adicion
 | `MINIO_SECRET_KEY` | (upload) | — | Credencial secreta do MinIO. | `env.ts` |
 | `MINIO_BUCKET` | (upload) | `imagens` | Bucket de destino dos arquivos. | `env.ts` |
 | `MINIO_REGION` | (upload) | `us-east-1` | Região S3 (formalidade para o SDK). | `env.ts` |
+| `EVOLUTION_API_URL` | (WhatsApp) | — | URL interna/pública da instalação self-hosted da Evolution API. | `evolution-whatsapp-client.ts` |
+| `EVOLUTION_API_KEY` | (WhatsApp) | — | Chave enviada no header `apikey` da Evolution API. | `evolution-whatsapp-client.ts` |
+| `EVOLUTION_INSTANCE` | (WhatsApp) | — | Nome da instância conectada ao número remetente. | `evolution-whatsapp-client.ts` |
+| `EVOLUTION_DB_PASSWORD` | (WhatsApp/Docker) | — | Senha do PostgreSQL exclusivo da Evolution API. | `docker-compose.evolution.yml` |
+| `EVOLUTION_PUBLIC_URL` | (WhatsApp/Docker) | `http://localhost:8081` | Endereço público informado à Evolution; em produção, use o domínio HTTPS do serviço. | `docker-compose.evolution.yml` |
+| `CRON_SECRET` | (automações) | — | Protege as rotas chamadas pelo agendador. | `/api/cron/*` |
 
 ## Client-side (já existentes no front — `NEXT_PUBLIC_*`)
 
@@ -42,3 +48,6 @@ Atualizado durante o **Módulo 1 (Fundação)**. Novas variáveis serão adicion
 ## Notas por runtime
 
 - Todo Route Handler que ler `env`, usar Prisma multi-tenant ou `AsyncLocalStorage` **deve** declarar `export const runtime = 'nodejs'` (não roda no Edge).
+- A cobrança automática deve chamar diariamente `GET /api/cron/lease-overdue-notifications` com `Authorization: Bearer $CRON_SECRET`. Para executar às 10h de Brasília em um cron configurado em UTC, use `0 13 * * *`.
+- A Evolution API precisa estar conectada antes do primeiro disparo. A aplicação usa `POST /message/sendText/{instância}` e só grava o histórico depois de uma resposta de sucesso.
+- Para subir somente o WhatsApp local: `docker compose -f docker-compose.evolution.yml up -d`. O compose principal inclui essa pilha e `front-nairim` depende de `evolution-api`, portanto `docker compose up -d front-nairim` também a inicia.
