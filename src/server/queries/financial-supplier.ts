@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialSupplierUseCases } from '@/infra/factories/financial-supplier-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialSuppliersQuerySchema } from '@/shared/validators/financial-supplier';
 import type { PaginatedSuppliers, Supplier } from '@/core/entities/financial-supplier';
 
@@ -40,16 +40,16 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialSuppliersData(raw: Record<string, unknown>): Promise<PaginatedSuppliers> {
   const { limit, page, search, includeInactive } = listFinancialSuppliersQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-suppliers', 'view', () =>
     financialSupplierUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getSupplierByIdData(id: string): Promise<Supplier> {
-  return withTenant(() => financialSupplierUseCases.getById.execute(id));
+  return withPermission('financial-suppliers', 'view', () => financialSupplierUseCases.getById.execute(id));
 }
 
 export async function getSupplierFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   void raw;
-  return withTenant(() => financialSupplierUseCases.getFilters.execute());
+  return withPermission('financial-suppliers', 'view', () => financialSupplierUseCases.getFilters.execute());
 }

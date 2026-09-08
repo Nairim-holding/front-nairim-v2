@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { isTrustedApiUrl } from '@/utils/trusted-api-url';
 
 function getAuthTokenFromCookie(): string | null {
   if (typeof document === 'undefined') return null;
@@ -40,7 +41,7 @@ export function FetchInterceptor() {
           ? input.href
           : (input as Request).url;
 
-      if (!url.startsWith(API_BASE)) {
+      if (!isTrustedApiUrl(url, API_BASE, window.location.href)) {
         return originalFetch(input, init);
       }
 
@@ -48,7 +49,7 @@ export function FetchInterceptor() {
       let response: Response;
 
       if (token) {
-        const headers = new Headers(init?.headers);
+        const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
         if (!headers.has('Authorization')) {
           headers.set('Authorization', `Bearer ${token}`);
         }

@@ -9,7 +9,6 @@ import {
   updateFinancialTransactionSchema,
 } from '@/shared/validators/financial-transaction';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
 import type {
   AvailableYearsResult,
   ExpenseByCategoryResult,
@@ -45,7 +44,7 @@ import {
   completeCreditReconciliationSchema,
   creditReconciliationSearchSchema,
 } from '@/shared/validators/credit-reconciliation';
-import { withPermission } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type {
   CompleteCreditReconciliationResult,
   CreditCandidate,
@@ -62,7 +61,7 @@ export async function createFinancialTransactionAction(
 ): Promise<ActionResult<Transaction>> {
   return runAction(async () => {
     const data = createFinancialTransactionSchema.parse(input);
-    return withTenant(() => financialTransactionUseCases.create.execute(data));
+    return withPermissionInput('financial-transactions', 'create', input, () => financialTransactionUseCases.create.execute(data));
   });
 }
 
@@ -72,25 +71,25 @@ export async function updateFinancialTransactionAction(
 ): Promise<ActionResult<Transaction>> {
   return runAction(async () => {
     const data = updateFinancialTransactionSchema.parse(input);
-    return withTenant(() => financialTransactionUseCases.update.execute(id, data));
+    return withPermissionInput('financial-transactions', 'edit', input, () => financialTransactionUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialTransactionAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialTransactionUseCases.remove.execute(id));
+    await withPermission('financial-transactions', 'delete', () => financialTransactionUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialTransactionAction(id: string): Promise<ActionResult<Transaction>> {
-  return runAction(() => withTenant(() => financialTransactionUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-transactions', 'edit', () => financialTransactionUseCases.restore.execute(id)));
 }
 
 export async function createTransferAction(input: Record<string, unknown>): Promise<ActionResult<TransferResult>> {
   return runAction(async () => {
     const data = createTransferSchema.parse(input);
-    return withTenant(() => financialTransactionUseCases.createTransfer.execute(data));
+    return withPermissionInput('financial-transactions', 'create', input, () => financialTransactionUseCases.createTransfer.execute(data));
   });
 }
 
@@ -99,7 +98,7 @@ export async function createInstallmentsAction(
 ): Promise<ActionResult<InstallmentsResult>> {
   return runAction(async () => {
     const data = createInstallmentsSchema.parse(input);
-    return withTenant(() => financialTransactionUseCases.createInstallments.execute(data));
+    return withPermissionInput('financial-transactions', 'create', input, () => financialTransactionUseCases.createInstallments.execute(data));
   });
 }
 
@@ -108,7 +107,7 @@ export async function createRecurrenceAction(
 ): Promise<ActionResult<RecurrenceResult>> {
   return runAction(async () => {
     const data = createRecurrenceSchema.parse(input);
-    return withTenant(() => financialTransactionUseCases.createRecurrence.execute(data));
+    return withPermissionInput('financial-transactions', 'create', input, () => financialTransactionUseCases.createRecurrence.execute(data));
   });
 }
 
@@ -204,7 +203,7 @@ export async function uploadTransactionDocumentsAction(
   formData: FormData,
 ): Promise<ActionResult<TransactionDocument[]>> {
   return runAction(async () => {
-    const userId = await withTenant((session) => Promise.resolve(session.id));
+    const userId = await withPermission('financial-transactions', 'edit', (session) => Promise.resolve(session.id));
     const files: TransactionAttachmentFile[] = [];
     for (const entry of formData.getAll('attachments')) {
       if (!(entry instanceof File)) continue;
@@ -214,7 +213,7 @@ export async function uploadTransactionDocumentsAction(
         contentType: entry.type || 'application/octet-stream',
       });
     }
-    return withTenant(() => financialTransactionUseCases.uploadDocuments.execute(transactionId, userId, files));
+    return withPermission('financial-transactions', 'edit', () => financialTransactionUseCases.uploadDocuments.execute(transactionId, userId, files));
   });
 }
 
@@ -224,7 +223,7 @@ export async function deleteTransactionDocumentAction(
   documentId: string,
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialTransactionUseCases.removeDocument.execute(transactionId, documentId));
+    await withPermission('financial-transactions', 'delete', () => financialTransactionUseCases.removeDocument.execute(transactionId, documentId));
     return null;
   });
 }

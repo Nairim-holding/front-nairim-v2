@@ -2,7 +2,7 @@
 
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { iptuAuditUseCases } from '@/infra/factories/iptu-audit-factory';
-import { withPermission } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import { iptuAuditSettingsSchema } from '@/shared/validators/iptu-audit';
 import type { IptuAuditReport, IptuAuditSettings } from '@/core/entities/iptu-audit';
 import { getIptuAuditSettingsData, getIptuAuditData } from '@/server/queries/iptu-audit';
@@ -17,7 +17,7 @@ import { getIptuAuditSettingsData, getIptuAuditData } from '@/server/queries/ipt
 export async function saveIptuAuditSettingsAction(input: Record<string, unknown>): Promise<ActionResult<IptuAuditSettings>> {
   return runAction(async () => {
     const data = iptuAuditSettingsSchema.parse(input);
-    return withPermission('financial-audit', 'edit', (session) => iptuAuditUseCases.saveSettings.execute(session.company_id, data));
+    return withPermissionInput('financial-audit', 'edit', input, (session) => iptuAuditUseCases.saveSettings.execute(session.company_id, data));
   });
 }
 

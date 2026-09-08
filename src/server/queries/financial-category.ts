@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialCategoryUseCases } from '@/infra/factories/financial-category-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialCategoriesQuerySchema } from '@/shared/validators/financial-category';
 import type { Category, PaginatedCategories } from '@/core/entities/category';
 
@@ -40,15 +40,15 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialCategoriesData(raw: Record<string, unknown>): Promise<PaginatedCategories> {
   const { limit, page, search, includeInactive } = listFinancialCategoriesQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-categories', 'view', () =>
     financialCategoryUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getCategoryByIdData(id: string): Promise<Category> {
-  return withTenant(() => financialCategoryUseCases.getById.execute(id));
+  return withPermission('financial-categories', 'view', () => financialCategoryUseCases.getById.execute(id));
 }
 
 export async function getCategoryFiltersData(): Promise<Record<string, unknown>> {
-  return withTenant(() => financialCategoryUseCases.getFilters.execute());
+  return withPermission('financial-categories', 'view', () => financialCategoryUseCases.getFilters.execute());
 }

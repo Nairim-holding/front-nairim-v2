@@ -7,7 +7,7 @@ import {
   updateFinancialSupplierSchema,
 } from '@/shared/validators/financial-supplier';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { PaginatedSuppliers, Supplier } from '@/core/entities/financial-supplier';
 import {
   getSupplierByIdData,
@@ -24,32 +24,32 @@ import {
 export async function createFinancialSupplierAction(input: Record<string, unknown>): Promise<ActionResult<Supplier>> {
   return runAction(async () => {
     const data = createFinancialSupplierSchema.parse(input);
-    return withTenant(() => financialSupplierUseCases.create.execute(data));
+    return withPermissionInput('financial-suppliers', 'create', input, () => financialSupplierUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialSupplierAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Supplier>> {
   return runAction(async () => {
     const data = updateFinancialSupplierSchema.parse(input);
-    return withTenant(() => financialSupplierUseCases.update.execute(id, data));
+    return withPermissionInput('financial-suppliers', 'edit', input, () => financialSupplierUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialSupplierAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialSupplierUseCases.remove.execute(id));
+    await withPermission('financial-suppliers', 'delete', () => financialSupplierUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialSupplierAction(id: string): Promise<ActionResult<Supplier>> {
-  return runAction(() => withTenant(() => financialSupplierUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-suppliers', 'edit', () => financialSupplierUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialSupplierAction(input: Record<string, unknown>): Promise<ActionResult<Supplier>> {
   return runAction(async () => {
     const data = quickCreateFinancialSupplierSchema.parse(input);
-    return withTenant(() => financialSupplierUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-suppliers', 'create', input, () => financialSupplierUseCases.quickCreate.execute(data));
   });
 }
 

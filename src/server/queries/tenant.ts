@@ -1,6 +1,6 @@
 import 'server-only';
 import { tenantUseCases } from '@/infra/factories/tenant-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listTenantsQuerySchema } from '@/shared/validators/tenant';
 import type { ContactSuggestion } from '@/core/entities/agency';
 import type { PaginatedTenants, Tenant } from '@/core/entities/tenant';
@@ -41,20 +41,20 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listTenantsData(raw: Record<string, unknown>): Promise<PaginatedTenants> {
   const { limit, page, search, includeInactive } = listTenantsQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => tenantUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
+  return withPermission('tenants', 'view', () => tenantUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
 }
 
 export async function getTenantByIdData(id: string): Promise<Tenant> {
-  return withTenant(() => tenantUseCases.getById.execute(id));
+  return withPermission('tenants', 'view', () => tenantUseCases.getById.execute(id));
 }
 
 export async function getTenantFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => tenantUseCases.getFilters.execute(filters));
+  return withPermission('tenants', 'view', () => tenantUseCases.getFilters.execute(filters));
 }
 
 export async function getTenantContactSuggestionsData(search: string): Promise<ContactSuggestion[]> {
-  return withTenant(() => tenantUseCases.getContactSuggestions.execute(search));
+  return withPermission('tenants', 'view', () => tenantUseCases.getContactSuggestions.execute(search));
 }
 
 /**
@@ -62,5 +62,5 @@ export async function getTenantContactSuggestionsData(search: string): Promise<C
  * Origem: GET /tenants/next-internal-code (TenantController.getNextInternalCode).
  */
 export async function getNextTenantInternalCodeData(): Promise<string> {
-  return withTenant(() => tenantUseCases.getNextInternalCode.execute());
+  return withPermission('tenants', 'view', () => tenantUseCases.getNextInternalCode.execute());
 }

@@ -8,7 +8,7 @@ import {
   updateInvoiceStatusSchema,
 } from '@/shared/validators/financial-invoice';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type {
   InvoiceByCardItem,
   InvoiceTransaction,
@@ -30,7 +30,7 @@ import {
 export async function createInvoiceAction(input: Record<string, unknown>): Promise<ActionResult<InvoiceWithRelations>> {
   return runAction(async () => {
     const data = createInvoiceSchema.parse(input);
-    return withTenant(() => financialInvoiceUseCases.create.execute(data));
+    return withPermissionInput('financial-transactions', 'create', input, () => financialInvoiceUseCases.create.execute(data));
   });
 }
 
@@ -40,7 +40,7 @@ export async function updateInvoiceStatusAction(
 ): Promise<ActionResult<UpdateInvoiceStatusResult>> {
   return runAction(async () => {
     const data = updateInvoiceStatusSchema.parse(input);
-    return withTenant(() => financialInvoiceUseCases.updateStatus.execute(id, data));
+    return withPermissionInput('financial-transactions', 'edit', input, () => financialInvoiceUseCases.updateStatus.execute(id, data));
   });
 }
 

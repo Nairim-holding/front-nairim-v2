@@ -10,6 +10,7 @@ import {
 } from '@/shared/validators/user';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { withTenant, withPermission } from '@/infra/auth/session';
+import { assertCanManageUser, assertUserGroupInTenant } from '@/infra/auth/user-management';
 import { ForbiddenError, ValidationError } from '@/core/errors/domain-errors';
 import type { AccessScheduleRow, PaginatedUsers, UserDetail, UserProfile } from '@/core/entities/user';
 import { listUsersData, getUserByIdData, getUserFiltersData } from '@/server/queries/user';
@@ -17,8 +18,8 @@ import { listUsersData, getUserByIdData, getUserFiltersData } from '@/server/que
 /**
  * Server Actions do módulo Users. Substituem os endpoints de `/users`.
  *
- * Guarda: `withTenant` (autenticado + empresa) — igual ao backend, onde `/users`
- * fica atrás de `authenticateJWT + requireTenant`, SEM exigir admin.
+ * Escritas exigem permissões de Users e administrador; contas SUPER_ADMIN
+ * só podem ser modificadas por outro SUPER_ADMIN.
  *
  * Camada: server (apresentação SSR).
  * Origem: api-nairim-v2/src/controllers/UserController.ts.
@@ -28,7 +29,14 @@ import { listUsersData, getUserByIdData, getUserFiltersData } from '@/server/que
 export async function createUserAction(input: Record<string, unknown>): Promise<ActionResult<UserProfile>> {
   return runAction(async () => {
     const data = createUserSchema.parse(input);
-    return withTenant(() => userUseCases.create.execute(data));
+    return withPermission('users', 'create', async (session) => {
+      await assertCanManageUser(session);
+      if (data.role && data.role !== 'DEFAULT' && session.role !== 'SUPER_ADMIN') {
+        throw new ForbiddenError('Apenas super administrador pode atribuir papéis administrativos.');
+      }
+      await assertUserGroupInTenant(data.user_group_id);
+      return userUseCases.create.execute({ ...data, created_by: session.id });
+    });
   });
 }
 
@@ -39,23 +47,31 @@ export async function createUserAction(input: Record<string, unknown>): Promise<
 export async function updateUserAction(id: string, input: Record<string, unknown>): Promise<ActionResult<UserProfile>> {
   return runAction(async () => {
     const data = updateUserSchema.parse(input);
-    return withTenant((session) => {
+    return withPermission('users', 'edit', async (session) => {
+      await assertCanManageUser(session, id);
       if (data.role !== undefined && session.role !== 'SUPER_ADMIN') {
         throw new ForbiddenError('Apenas super administrador pode alterar a role');
       }
-      return userUseCases.update.execute(id, data);
+      await assertUserGroupInTenant(data.user_group_id);
+      return userUseCases.update.execute(id, { ...data, updated_by: session.id });
     });
   });
 }
 
 /** Soft-delete de usuário. Origem: DELETE /users/:id. */
 export async function deleteUserAction(id: string): Promise<ActionResult<{ name: string }>> {
-  return runAction(() => withTenant(() => userUseCases.remove.execute(id)));
+  return runAction(() => withPermission('users', 'delete', async (session) => {
+    await assertCanManageUser(session, id);
+    return userUseCases.remove.execute(id);
+  }));
 }
 
 /** Restaura usuário excluído. Origem: PATCH /users/:id/restore. */
 export async function restoreUserAction(id: string): Promise<ActionResult<{ name: string }>> {
-  return runAction(() => withTenant(() => userUseCases.restore.execute(id)));
+  return runAction(() => withPermission('users', 'edit', async (session) => {
+    await assertCanManageUser(session, id);
+    return userUseCases.restore.execute(id);
+  }));
 }
 
 /**
@@ -68,7 +84,10 @@ export async function changeUserPasswordAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const data = changeUserPasswordSchema.parse(input);
-    await withTenant(() => authUseCases.changePassword.execute({ userId: id, ...data }));
+    await withTenant((session) => {
+      if (session.id !== id) throw new ForbiddenError('Você só pode trocar a própria senha.');
+      return authUseCases.changePassword.execute({ userId: id, ...data });
+    });
     return null;
   });
 }
@@ -101,9 +120,10 @@ export async function setActiveUserAction(id: string, isActive: boolean): Promis
     if (typeof isActive !== 'boolean') {
       throw new ValidationError('O campo "is_active" deve ser booleano');
     }
-    return withPermission('users', 'edit', (session) =>
-      userUseCases.setActive.execute(id, isActive, session.id),
-    );
+    return withPermission('users', 'edit', async (session) => {
+      await assertCanManageUser(session, id);
+      return userUseCases.setActive.execute(id, isActive, session.id);
+    });
   });
 }
 
@@ -122,9 +142,10 @@ export async function uploadUserPhotoAction(id: string, formData: FormData): Pro
     const buffer = Buffer.from(await file.arrayBuffer());
     const input = { buffer, filename: file.name, contentType: file.type, size: file.size };
 
-    return withPermission('users', 'edit', (session) =>
-      userUseCases.uploadPhoto.execute(id, input, session.id),
-    );
+    return withPermission('users', 'edit', async (session) => {
+      await assertCanManageUser(session, id);
+      return userUseCases.uploadPhoto.execute(id, input, session.id);
+    });
   });
 }
 
@@ -146,6 +167,9 @@ export async function setUserScheduleAction(
     if (!validation.isValid) {
       throw new ValidationError(validation.errors.join('; '));
     }
-    return withPermission('users', 'edit', () => userUseCases.setSchedule.execute(id, schedules));
+    return withPermission('users', 'edit', async (session) => {
+      await assertCanManageUser(session, id);
+      return userUseCases.setSchedule.execute(id, schedules);
+    });
   });
 }

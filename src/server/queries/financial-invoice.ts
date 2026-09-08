@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialInvoiceUseCases } from '@/infra/factories/financial-invoice-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import type {
   InvoiceByCardItem,
   InvoiceTransaction,
@@ -17,13 +17,13 @@ export async function getInvoiceByCardAndMonthData(
   month: number,
   year: number,
 ): Promise<InvoiceWithRelations | null> {
-  return withTenant(() => financialInvoiceUseCases.getByCardAndMonth.execute({ cardId, month, year }));
+  return withPermission('financial-transactions', 'view', () => financialInvoiceUseCases.getByCardAndMonth.execute({ cardId, month, year }));
 }
 
 export async function getInvoiceTransactionsData(invoiceId: string): Promise<InvoiceTransaction[]> {
-  return withTenant(() => financialInvoiceUseCases.getTransactions.execute(invoiceId));
+  return withPermission('financial-transactions', 'view', () => financialInvoiceUseCases.getTransactions.execute(invoiceId));
 }
 
 export async function getInvoicesByCardData(cardId: string, year?: number): Promise<InvoiceByCardItem[]> {
-  return withTenant(() => financialInvoiceUseCases.getByCard.execute(cardId, year));
+  return withPermission('financial-transactions', 'view', () => financialInvoiceUseCases.getByCard.execute(cardId, year));
 }

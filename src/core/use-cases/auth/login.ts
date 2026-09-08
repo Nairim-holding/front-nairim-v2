@@ -69,6 +69,7 @@ export class LoginUseCase {
 
     const token = this.tokenSigner.sign(
       {
+        type: 'session',
         id: user.id,
         name: user.name,
         email: user.email,

@@ -1,6 +1,6 @@
 import 'server-only';
 import { dashboardUseCases } from '@/infra/factories/dashboard-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { dashboardParamsSchema } from '@/shared/validators/dashboard';
 import { ValidationError } from '@/core/errors/domain-errors';
 import type {
@@ -27,7 +27,7 @@ export async function getDashboardSectionData(
   raw: Record<string, unknown>,
 ): Promise<FinancialMetrics | PortfolioMetrics | ClientsMetrics | GeolocationResponse> {
   const { startDate, endDate } = parseAndValidate(raw);
-  return withTenant(async () => {
+  return withPermission('dashboard', 'view', async () => {
     switch (section) {
       case 'financial':
         return await dashboardUseCases.getFinancial.execute(startDate, endDate);

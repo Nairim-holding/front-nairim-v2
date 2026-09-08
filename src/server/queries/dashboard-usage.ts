@@ -4,7 +4,7 @@ import path from 'path';
 import prisma from '@/infra/database/prisma';
 import { minioStorage } from '@/infra/storage/minio-storage';
 import { env } from '@/infra/config/env';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
 import {
   classifyTenureBucket,
@@ -42,7 +42,7 @@ export async function getTenantTenureDistributionData(
   startDate: Date,
   endDate: Date,
 ): Promise<TenantTenureDistribution> {
-  return withTenant(async () => {
+  return withPermission('dashboard', 'view', async () => {
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
@@ -225,14 +225,14 @@ async function getUsageRows(): Promise<UsageRow[]> {
 }
 
 export async function getDatabaseUsageData(): Promise<DatabaseUsageResult> {
-  return withTenant(async () => {
+  return withPermission('dashboard', 'view', async (session) => {
     const companyId = getCurrentCompanyId();
     if (!companyId) throw new Error('Contexto de empresa não identificado.');
 
     const [rows, companies] = await Promise.all([
       getUsageRows(),
       prisma.company.findMany({
-        where: { deleted_at: null },
+        where: { deleted_at: null, ...(session.role === 'SUPER_ADMIN' ? {} : { id: companyId }) },
         select: { id: true, name: true, db_quota_mb: true },
         orderBy: { name: 'asc' },
       }),
@@ -365,7 +365,7 @@ function localPathFromUrl(url: string): string | null {
 }
 
 export async function getStorageUsageData(): Promise<StorageUsageResult> {
-  return withTenant(async () => {
+  return withPermission('dashboard', 'view', async () => {
     const companyId = getCurrentCompanyId();
     if (!companyId) throw new Error('Contexto de empresa não identificado.');
 

@@ -1,5 +1,6 @@
 import type { TokenSigner, DecodedSessionToken } from '@/core/cryptography/token-signer';
 import { UnauthorizedError } from '@/core/errors/domain-errors';
+import { assertSessionClaims } from '@/core/cryptography/session-claims';
 
 /** Saída do refresh. */
 export interface RefreshTokenOutput {
@@ -44,8 +45,10 @@ export class RefreshTokenUseCase {
       }
     }
 
+    assertSessionClaims(decoded);
     const token = this.tokenSigner.sign(
       {
+        type: 'session',
         id: decoded.id,
         name: decoded.name,
         email: decoded.email,

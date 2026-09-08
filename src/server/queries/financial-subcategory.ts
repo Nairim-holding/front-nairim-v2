@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialSubcategoryUseCases } from '@/infra/factories/financial-subcategory-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialSubcategoriesQuerySchema } from '@/shared/validators/financial-subcategory';
 import type { PaginatedSubcategories, Subcategory } from '@/core/entities/subcategory';
 
@@ -40,16 +40,16 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialSubcategoriesData(raw: Record<string, unknown>): Promise<PaginatedSubcategories> {
   const { limit, page, search, includeInactive } = listFinancialSubcategoriesQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-categories', 'view', () =>
     financialSubcategoryUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getSubcategoryByIdData(id: string): Promise<Subcategory> {
-  return withTenant(() => financialSubcategoryUseCases.getById.execute(id));
+  return withPermission('financial-categories', 'view', () => financialSubcategoryUseCases.getById.execute(id));
 }
 
 export async function getSubcategoryFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   void raw;
-  return withTenant(() => financialSubcategoryUseCases.getFilters.execute());
+  return withPermission('financial-categories', 'view', () => financialSubcategoryUseCases.getFilters.execute());
 }

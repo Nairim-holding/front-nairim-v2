@@ -8,7 +8,7 @@ import {
   upsertAdjustmentIndexValueSchema,
 } from '@/shared/validators/adjustment-index';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type {
   AdjustmentIndex,
   PaginatedAdjustmentIndexes,
@@ -48,7 +48,7 @@ export async function createAdjustmentIndexAction(
 ): Promise<ActionResult<AdjustmentIndex>> {
   return runAction(async () => {
     const data = createAdjustmentIndexSchema.parse(input);
-    return withTenant(() => adjustmentIndexUseCases.create.execute(data));
+    return withPermissionInput('adjustment-indexes', 'create', input, () => adjustmentIndexUseCases.create.execute(data));
   });
 }
 
@@ -58,12 +58,12 @@ export async function updateAdjustmentIndexAction(
 ): Promise<ActionResult<AdjustmentIndex>> {
   return runAction(async () => {
     const data = updateAdjustmentIndexSchema.parse(input);
-    return withTenant(() => adjustmentIndexUseCases.update.execute(id, data));
+    return withPermissionInput('adjustment-indexes', 'edit', input, () => adjustmentIndexUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteAdjustmentIndexAction(id: string): Promise<ActionResult<AdjustmentIndex>> {
-  return runAction(() => withTenant(() => adjustmentIndexUseCases.remove.execute(id)));
+  return runAction(() => withPermission('adjustment-indexes', 'delete', () => adjustmentIndexUseCases.remove.execute(id)));
 }
 
 /** Valor mensal digitado na tela (ou corrigido à mão). */
@@ -72,14 +72,14 @@ export async function upsertAdjustmentIndexValueAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const data = upsertAdjustmentIndexValueSchema.parse(input);
-    await withTenant(() => adjustmentIndexUseCases.upsertValue.execute(data));
+    await withPermissionInput('adjustment-indexes', 'edit', input, () => adjustmentIndexUseCases.upsertValue.execute(data));
     return null;
   });
 }
 
 export async function deleteAdjustmentIndexValueAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => adjustmentIndexUseCases.deleteValue.execute(id));
+    await withPermission('adjustment-indexes', 'delete', () => adjustmentIndexUseCases.deleteValue.execute(id));
     return null;
   });
 }
@@ -90,6 +90,6 @@ export async function syncAdjustmentIndexesAction(
 ): Promise<ActionResult<SyncResult>> {
   return runAction(async () => {
     const { months } = syncAdjustmentIndexesSchema.parse(input);
-    return withTenant(() => adjustmentIndexUseCases.sync.execute({ months }));
+    return withPermission('adjustment-indexes', 'edit', () => adjustmentIndexUseCases.sync.execute({ months }));
   });
 }

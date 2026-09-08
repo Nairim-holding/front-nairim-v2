@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialCardUseCases } from '@/infra/factories/financial-card-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialCardsQuerySchema } from '@/shared/validators/financial-card';
 import type { Card, CardUsageFilters, CardUsageItem, PaginatedCards } from '@/core/entities/financial-card';
 
@@ -40,18 +40,18 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialCardsData(raw: Record<string, unknown>): Promise<PaginatedCards> {
   const { limit, page, search, includeInactive } = listFinancialCardsQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-cards', 'view', () =>
     financialCardUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getCardByIdData(id: string): Promise<Card> {
-  return withTenant(() => financialCardUseCases.getById.execute(id));
+  return withPermission('financial-cards', 'view', () => financialCardUseCases.getById.execute(id));
 }
 
 export async function getCardFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   void raw;
-  return withTenant(() => financialCardUseCases.getFilters.execute());
+  return withPermission('financial-cards', 'view', () => financialCardUseCases.getFilters.execute());
 }
 
 export async function getCardUsageSummaryData(
@@ -59,5 +59,5 @@ export async function getCardUsageSummaryData(
   endDate: Date,
   filters: CardUsageFilters,
 ): Promise<CardUsageItem[]> {
-  return withTenant(() => financialCardUseCases.getUsageSummary.execute(startDate, endDate, filters));
+  return withPermission('financial-cards', 'view', () => financialCardUseCases.getUsageSummary.execute(startDate, endDate, filters));
 }

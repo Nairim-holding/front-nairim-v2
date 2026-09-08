@@ -17,7 +17,10 @@ import {
   getRequestIp,
 } from '@/infra/auth/session';
 import { loginRateLimiter } from '@/infra/security/login-rate-limiter';
-import { InvalidCredentialsError } from '@/core/errors/domain-errors';
+import { InvalidCredentialsError, ForbiddenError } from '@/core/errors/domain-errors';
+import { validateLiveSession } from '@/infra/auth/live-session';
+import { jwtService } from '@/infra/auth/jwt-service';
+import { env } from '@/infra/config/env';
 import type { LoginActionResult, RefreshActionResult } from './auth-types';
 
 /**
@@ -32,7 +35,7 @@ import type { LoginActionResult, RefreshActionResult } from './auth-types';
 
 /**
  * Autentica e grava o cookie de sessão no servidor.
- * Preserva o rate limit por (email:ip): 5 falhas → bloqueio de 5 min.
+ * Limita por conta: 5 falhas → bloqueio de 5 min, mesmo se o IP informado mudar.
  * Origem: POST /auth/login.
  */
 export async function loginAction(input: { email: string; password: string }): Promise<LoginActionResult> {
@@ -51,6 +54,7 @@ export async function loginAction(input: { email: string; password: string }): P
     if (blockedMessage) return { ok: false, message: blockedMessage };
 
     const result = await authUseCases.login.execute(parsed.data);
+    await validateLiveSession(jwtService.verify(result.token));
     loginRateLimiter.reset(emailKey, ip);
     await setSessionCookie(result.token, result.user.company_slug || undefined);
     return { ok: true, token: result.token, user: result.user, slug: result.user.company_slug };
@@ -93,7 +97,11 @@ export async function refreshSessionAction(): Promise<RefreshActionResult> {
   const current = await getSessionToken();
   if (!current) return { ok: false, message: 'Sessão ausente' };
   try {
-    const { token } = await authUseCases.refreshToken.execute(current);
+    // First enforce expiration/grace and token purpose; then reload authority.
+    const refreshed = await authUseCases.refreshToken.execute(current);
+    const session = await validateLiveSession(jwtService.verify(refreshed.token));
+    const { iat: _iat, exp: _exp, ...payload } = session;
+    const token = jwtService.sign(payload, { expiresIn: env.JWT_EXPIRES_IN });
     await setSessionCookie(token);
     return { ok: true, token };
   } catch (err) {
@@ -122,7 +130,8 @@ export async function changePasswordAction(
   input: { oldPassword: string; newPassword: string },
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await requireSession();
+    const session = await requireSession();
+    if (session.id !== userId) throw new ForbiddenError('Você só pode trocar a própria senha.');
     const data = changePasswordSchema.parse(input);
     await authUseCases.changePassword.execute({ userId, ...data });
     return null;

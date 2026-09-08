@@ -71,7 +71,7 @@ export class FakeTokenSigner implements TokenSigner {
 
   sign(payload: Record<string, unknown>, _options?: { expiresIn?: string }): string {
     const exp = Math.floor(Date.now() / 1000) + 3600;
-    return 'tok:' + JSON.stringify({ ...payload, exp });
+    return 'tok:' + JSON.stringify({ iat: Math.floor(Date.now() / 1000), ...payload, exp });
   }
   verify<T = unknown>(token: string): T {
     if (this.expired.has(token)) throw new NamedError('TokenExpiredError');

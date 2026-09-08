@@ -160,7 +160,11 @@ describe('Company use-cases', () => {
   });
 
   describe('SwitchCompanyUseCase', () => {
-    const user = { id: 'u1', name: 'M', email: 'm@x', role: 'administrador' };
+    const user = { id: 'u1', name: 'M', email: 'm@x', role: 'SUPER_ADMIN' };
+    it.each(['DEFAULT', 'ADMIN', 'administrador', 'usuário'])('recusa troca de empresa por %s', async (role) => {
+      const uc = new SwitchCompanyUseCase(repo, new FakeTokenSigner(), '12h');
+      await expect(uc.execute({ ...user, role }, 'destino')).rejects.toMatchObject({ statusCode: 403 });
+    });
     it('emite novo token com a empresa destino', async () => {
       repo.companies.push({ id: 'c9', name: 'Destino', slug: 'destino', is_active: true, created_at: new Date(), updated_at: new Date(), deleted_at: null, branding: null });
       const uc = new SwitchCompanyUseCase(repo, new FakeTokenSigner(), '12h');

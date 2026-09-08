@@ -1,6 +1,6 @@
 import 'server-only';
 import { investmentUseCases } from '@/infra/factories/investment-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { investmentDashboardQuerySchema } from '@/shared/validators/investment';
 import type {
   Investment,
@@ -45,17 +45,17 @@ export async function getInvestmentDashboardData(
     if (values.length > 0) filters[field] = values;
   }
 
-  return withTenant(() => investmentUseCases.getDashboard.execute({ startMonth, endMonth, filters }));
+  return withPermission('investments', 'view', () => investmentUseCases.getDashboard.execute({ startMonth, endMonth, filters }));
 }
 
 export async function listInvestmentsData(): Promise<Investment[]> {
-  return withTenant(() => investmentUseCases.list.execute());
+  return withPermission('investments', 'view', () => investmentUseCases.list.execute());
 }
 
 export async function getInvestmentFiltersData(): Promise<Record<string, unknown>> {
-  return withTenant(() => investmentUseCases.getFilters.execute());
+  return withPermission('investments', 'view', () => investmentUseCases.getFilters.execute());
 }
 
 export async function getInvestmentSettingsData(): Promise<InvestmentSettings> {
-  return withTenant(() => investmentUseCases.getSettings.execute());
+  return withPermission('investments', 'view', () => investmentUseCases.getSettings.execute());
 }

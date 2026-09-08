@@ -57,6 +57,9 @@ export class UploadBrandingAssetUseCase {
   ) {}
 
   async execute({ companyId, file, field, maxSizeMB }: UploadBrandingAssetInput): Promise<{ url: string }> {
+    if (!['logo_url', 'favicon_url', 'logo_sidebar_url', 'logo_dark_url', 'og_image_url'].includes(field)) {
+      throw new ValidationError('Campo de imagem inválido');
+    }
     if (!file.contentType.startsWith('image/')) {
       throw new ValidationError('Arquivo deve ser uma imagem');
     }

@@ -7,7 +7,7 @@ import {
   updateFinancialCategorySchema,
 } from '@/shared/validators/financial-category';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { Category, PaginatedCategories } from '@/core/entities/category';
 import {
   getCategoryByIdData,
@@ -24,32 +24,32 @@ import {
 export async function createFinancialCategoryAction(input: Record<string, unknown>): Promise<ActionResult<Category>> {
   return runAction(async () => {
     const data = createFinancialCategorySchema.parse(input);
-    return withTenant(() => financialCategoryUseCases.create.execute(data));
+    return withPermissionInput('financial-categories', 'create', input, () => financialCategoryUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialCategoryAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Category>> {
   return runAction(async () => {
     const data = updateFinancialCategorySchema.parse(input);
-    return withTenant(() => financialCategoryUseCases.update.execute(id, data));
+    return withPermissionInput('financial-categories', 'edit', input, () => financialCategoryUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialCategoryAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialCategoryUseCases.remove.execute(id));
+    await withPermission('financial-categories', 'delete', () => financialCategoryUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialCategoryAction(id: string): Promise<ActionResult<Category>> {
-  return runAction(() => withTenant(() => financialCategoryUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-categories', 'edit', () => financialCategoryUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialCategoryAction(input: Record<string, unknown>): Promise<ActionResult<Category>> {
   return runAction(async () => {
     const data = quickCreateFinancialCategorySchema.parse(input);
-    return withTenant(() => financialCategoryUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-categories', 'create', input, () => financialCategoryUseCases.quickCreate.execute(data));
   });
 }
 

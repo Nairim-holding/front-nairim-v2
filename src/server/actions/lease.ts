@@ -3,7 +3,7 @@
 import { leaseUseCases } from '@/infra/factories/lease-factory';
 import { createLeaseSchema, updateLeaseSchema, validateLeaseBusinessRules } from '@/shared/validators/lease';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import { readJsonField, readStringField } from '@/shared/http/form-data';
 import type { LeaseDocumentFile } from '@/core/use-cases/lease/documents';
 import type {
@@ -44,7 +44,7 @@ export async function createLeaseAction(input: Record<string, unknown>): Promise
     const data = createLeaseSchema.parse(input) as unknown as CreateLeaseData;
     const businessWarnings = validateLeaseBusinessRules(input, false);
 
-    const lease = await withTenant(() => leaseUseCases.create.execute(data));
+    const lease = await withPermissionInput('leases', 'create', input, () => leaseUseCases.create.execute(data));
 
     const warnings = [...businessWarnings];
     if (lease.finance_warning) warnings.push(lease.finance_warning);
@@ -62,7 +62,7 @@ export async function updateLeaseAction(id: string, input: Record<string, unknow
     const data = updateLeaseSchema.parse(input) as unknown as UpdateLeaseData;
     const businessWarnings = validateLeaseBusinessRules(input, true);
 
-    const lease = await withTenant(() => leaseUseCases.update.execute(id, data));
+    const lease = await withPermissionInput('leases', 'edit', input, () => leaseUseCases.update.execute(id, data));
 
     const warnings = [...businessWarnings];
     if (lease.finance_warning) warnings.push(lease.finance_warning);
@@ -73,17 +73,17 @@ export async function updateLeaseAction(id: string, input: Record<string, unknow
 
 /** Soft-delete (marca CANCELED + soft-delete). Origem: DELETE /leases/:id. */
 export async function deleteLeaseAction(id: string): Promise<ActionResult<Lease>> {
-  return runAction(() => withTenant(() => leaseUseCases.remove.execute(id)));
+  return runAction(() => withPermission('leases', 'delete', () => leaseUseCases.remove.execute(id)));
 }
 
 /** Exclusão definitiva (hard delete + lançamentos). Origem: DELETE /leases/:id/permanently. */
 export async function permanentlyDeleteLeaseAction(id: string): Promise<ActionResult<Lease>> {
-  return runAction(() => withTenant(() => leaseUseCases.permanentlyRemove.execute(id)));
+  return runAction(() => withPermission('leases', 'delete', () => leaseUseCases.permanentlyRemove.execute(id)));
 }
 
 /** Restaura locação soft-deletada. Origem: PATCH /leases/:id/restore. */
 export async function restoreLeaseAction(id: string): Promise<ActionResult<Lease>> {
-  return runAction(() => withTenant(() => leaseUseCases.restore.execute(id)));
+  return runAction(() => withPermission('leases', 'edit', () => leaseUseCases.restore.execute(id)));
 }
 
 /**
@@ -94,7 +94,7 @@ export async function restoreLeaseAction(id: string): Promise<ActionResult<Lease
  */
 export async function cancelLeaseAction(id: string, input: CancelLeaseInput): Promise<ActionResult<CancelLeaseResult>> {
   return runAction(() =>
-    withTenant((session) => leaseUseCases.cancel.execute(id, input, session.company_id)),
+    withPermissionInput('leases', 'edit', input, (session) => leaseUseCases.cancel.execute(id, input, session.company_id)),
   );
 }
 
@@ -123,7 +123,7 @@ export async function updateLeaseDocumentsAction(id: string, formData: FormData)
       });
     }
 
-    return withTenant(async () => {
+    return withPermission('leases', 'edit', async () => {
       await leaseUseCases.updateDocuments.execute({ leaseId: id, userId, removedDocumentIds, newFiles });
       return leaseUseCases.getById.execute(id);
     });

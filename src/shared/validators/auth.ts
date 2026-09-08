@@ -16,8 +16,8 @@ import { z } from 'zod';
 
 /** Mensagens iguais às do backend (o front pode exibi-las diretamente). */
 export const loginSchema = z.object({
-  email: z.string().trim().min(1, 'Email é obrigatório'),
-  password: z.string().trim().min(1, 'Senha é obrigatória'),
+  email: z.string().trim().min(1, 'Email é obrigatório').max(254).email('Email inválido'),
+  password: z.string().trim().min(1, 'Senha é obrigatória').max(1024),
 });
 export type LoginBody = z.infer<typeof loginSchema>;
 

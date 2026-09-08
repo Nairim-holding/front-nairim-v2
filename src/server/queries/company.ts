@@ -1,6 +1,6 @@
 import 'server-only';
 import { companyUseCases } from '@/infra/factories/company-factory';
-import { requireSession, assertAdmin, assertSuperAdmin } from '@/infra/auth/session';
+import { requireSession, assertSuperAdmin } from '@/infra/auth/session';
 import { listCompaniesQuerySchema } from '@/shared/validators/company';
 import type { CompanyBranding, CompanyListResult, CompanyWithBranding, PublicBranding } from '@/core/entities/company';
 
@@ -34,7 +34,7 @@ export async function checkSlugAvailabilityData(slug: string): Promise<{ availab
 /** Lista de empresas (admin). Origem: GET /companies | GET /company/list. */
 export async function listCompaniesData(params: Record<string, unknown>): Promise<CompanyListResult> {
   const session = await requireSession();
-  assertAdmin(session);
+  assertSuperAdmin(session);
   const parsed = listCompaniesQuerySchema.parse(params);
   return companyUseCases.list.execute(parsed);
 }
@@ -42,7 +42,7 @@ export async function listCompaniesData(params: Record<string, unknown>): Promis
 /** Empresa por ID (admin). Origem: GET /company/:id | GET /companies/:id. */
 export async function getCompanyByIdData(id: string): Promise<CompanyWithBranding> {
   const session = await requireSession();
-  assertAdmin(session);
+  assertSuperAdmin(session);
   return companyUseCases.getById.execute(id);
 }
 
@@ -52,7 +52,7 @@ export async function getCompanyByIdData(id: string): Promise<CompanyWithBrandin
  */
 export async function getCompanyFiltersData(): Promise<Record<string, unknown>> {
   const session = await requireSession();
-  assertAdmin(session);
+  assertSuperAdmin(session);
   return {
     filters: [
       { field: 'name', type: 'string', label: 'Nome', searchable: true },

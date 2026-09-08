@@ -13,18 +13,6 @@ import { getCurrentCompanyId } from '@/infra/database/tenant-context';
  * Camada: infra.
  */
 
-/** Janela do cache. Rede de segurança se o app rodar em mais de uma instância:
- *  a invalidação explícita só limpa a memória da instância local. */
-const CACHE_TTL_MS = 60_000;
-
-interface CacheEntry {
-  /** null = usuário sem grupo → sem restrição (comportamento anterior às diretivas). */
-  perms: ResolvedPermissions | null;
-  expires: number;
-}
-
-const cache = new Map<string, CacheEntry>();
-
 function companyId(): string {
   const id = getCurrentCompanyId();
   if (!id) throw new Error('Company context not found');
@@ -33,7 +21,7 @@ function companyId(): string {
 
 export class PrismaUserGroupPermissionsRepository implements UserGroupPermissionsRepository {
   invalidateCache(): void {
-    cache.clear();
+    // Permissions are read fresh so group changes take effect on every instance.
   }
 
   getResourceCatalog(): ResourceCatalogItem[] {
@@ -101,30 +89,30 @@ export class PrismaUserGroupPermissionsRepository implements UserGroupPermission
   }
 
   async resolveForUser(userId: string): Promise<ResolvedPermissions | null> {
-    // Chave inclui company_id: o mesmo userId pode trocar de empresa em
-    // runtime (CompanySwitcher, sem re-login) — sem isso, o cache devolvia
-    // as permissões da empresa anterior por até CACHE_TTL_MS após a troca.
-    const cacheKey = `${companyId()}:${userId}`;
-    const hit = cache.get(cacheKey);
-    if (hit && hit.expires > Date.now()) return hit.perms;
+    // Resolve against the current company on every call. No cross-request
+    // cache: assigning/revoking a group must apply to the next request.
 
     // findFirst é escopado por empresa pela extensão do Prisma.
     const user = await prisma.user.findFirst({
       where: { id: userId, deleted_at: null },
       select: {
         user_group_id: true,
-        group: { select: { deleted_at: true, permissions: true } },
+        group: { select: { company_id: true, deleted_at: true, permissions: true } },
       },
     });
 
     let perms: ResolvedPermissions | null;
 
-    if (!user?.user_group_id || !user.group || user.group.deleted_at) {
-      // Sem grupo (ou grupo excluído) → mantém o comportamento anterior às permissões.
+    if (!user || (user.user_group_id && (!user.group || user.group.deleted_at || user.group.company_id !== companyId()))) {
+      // A missing user or invalid group must never grant unrestricted access.
+      perms = new Map();
+    } else if (!user.user_group_id) {
+      // Preserve the explicit legacy policy for existing users without a group.
       perms = null;
     } else {
       perms = new Map<string, Set<PermissionAction>>();
-      for (const row of user.group.permissions) {
+      for (const row of user.group!.permissions) {
+        if (row.company_id !== companyId()) continue;
         const granted = new Set<PermissionAction>();
         for (const action of PERMISSION_ACTIONS) {
           if (row[ACTION_COLUMN[action] as keyof typeof row] === true) granted.add(action);
@@ -133,7 +121,6 @@ export class PrismaUserGroupPermissionsRepository implements UserGroupPermission
       }
     }
 
-    cache.set(cacheKey, { perms, expires: Date.now() + CACHE_TTL_MS });
     return perms;
   }
 }

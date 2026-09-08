@@ -1,6 +1,6 @@
 import 'server-only';
 import { planningUseCases } from '@/infra/factories/planning-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { planningDashboardQuerySchema } from '@/shared/validators/planning';
 import type {
   PlanningDashboardFilters,
@@ -37,5 +37,5 @@ export async function getPlanningDashboardData(
     if (values.length > 0) filters[field] = values;
   }
 
-  return withTenant(() => planningUseCases.getDashboard.execute(startDate, endDate, filters));
+  return withPermission('planning', 'view', () => planningUseCases.getDashboard.execute(startDate, endDate, filters));
 }

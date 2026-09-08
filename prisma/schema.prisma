@@ -253,13 +253,13 @@ model User {
   dashboardLayouts  UserDashboardLayout[]
   company           Company               @relation(fields: [company_id], references: [id])
 
-  // Grupo ao qual o usuário pertence. Nulo = sem grupo, sem restrição de
-  // diretivas de acesso (mantém o comportamento anterior às permissões).
+  // Grupo ao qual o usuário pertence. Usuários DEFAULT sem grupo não têm
+  // permissões; administradores sem grupo mantêm acesso à própria empresa.
   user_group_id String?
   group         UserGroup? @relation("UserGroupMembers", fields: [user_group_id], references: [id])
 
   /// Situação do usuário. Distinto de `deleted_at`: inativo continua existindo,
-  /// excluído sai da listagem. Não bloqueia login (campo cadastral).
+  /// excluído sai da listagem. Contas inativas são recusadas na validação de sessão.
   is_active Boolean @default(true)
 
   /// URL da foto, no mesmo esquema de armazenamento do branding da empresa.

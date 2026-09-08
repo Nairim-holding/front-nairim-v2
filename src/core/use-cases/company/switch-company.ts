@@ -1,6 +1,6 @@
 import type { CompaniesRepository } from '@/core/repositories/companies-repository';
 import type { TokenSigner } from '@/core/cryptography/token-signer';
-import { ValidationError, NotFoundError } from '@/core/errors/domain-errors';
+import { ValidationError, NotFoundError, ForbiddenError } from '@/core/errors/domain-errors';
 
 /** Dados do usuário atual necessários para reemitir o token. */
 export interface SwitchCompanyUser {
@@ -32,6 +32,9 @@ export class SwitchCompanyUseCase {
   ) {}
 
   async execute(currentUser: SwitchCompanyUser, slug: string): Promise<SwitchCompanyOutput> {
+    if (currentUser.role !== 'SUPER_ADMIN') {
+      throw new ForbiddenError('Apenas super administrador pode trocar de empresa.');
+    }
     if (!slug?.trim()) throw new ValidationError('"slug" é obrigatório');
 
     // Company não é tenant-scoped → busca ignora o filtro de empresa. Exige ativa.

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { BRANDING_FIELDS, type BrandingData } from '@/core/entities/company';
+import { isSafeBrandingColor } from './branding-color';
+import { ValidationError } from '@/core/errors/domain-errors';
 
 /**
  * Validação e seleção de campos do módulo Company.
@@ -15,6 +17,9 @@ export function pickBrandingFields(body: Record<string, unknown>): BrandingData 
   const data: Record<string, unknown> = {};
   for (const field of BRANDING_FIELDS) {
     const value = body[field];
+    if (field.includes('color') && value != null && value !== '' && !isSafeBrandingColor(value)) {
+      throw new ValidationError('Cor inválida. Use uma cor hexadecimal, como #123456.');
+    }
     if (value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0)) {
       data[field] = value;
     }

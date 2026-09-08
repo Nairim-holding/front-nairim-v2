@@ -6,6 +6,8 @@ import type { DecodedSessionToken } from '@/core/cryptography/token-signer';
 import { UnauthorizedError, ForbiddenError } from '@/core/errors/domain-errors';
 import { prismaUserGroupPermissionsRepository } from '@/infra/repositories/prisma-user-group-permissions-repository';
 import type { PermissionAction } from '@/shared/utils/menu-resources';
+import { validateLiveSession } from './live-session';
+import { assertTenantReferences } from './tenant-references';
 
 /**
  * Sessão do usuário no servidor (SSR) — substitui os middlewares HTTP de
@@ -37,7 +39,7 @@ const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
  */
 export async function setSessionCookie(token: string, companySlug?: string): Promise<void> {
   const store = await cookies();
-  store.set(AUTH_COOKIE, token, { path: '/', sameSite: 'lax', httpOnly: false });
+  store.set(AUTH_COOKIE, token, { path: '/', sameSite: 'lax', httpOnly: false, secure: process.env.NODE_ENV === 'production' });
   if (companySlug) {
     store.set(SLUG_COOKIE, companySlug, { path: '/', sameSite: 'lax', httpOnly: false });
   }
@@ -63,7 +65,7 @@ export async function getServerSession(): Promise<DecodedSessionToken | null> {
   const token = await getSessionToken();
   if (!token) return null;
   try {
-    return jwtService.verify<DecodedSessionToken>(token);
+    return await validateLiveSession(jwtService.verify(token));
   } catch {
     return null;
   }
@@ -119,13 +121,13 @@ export async function withTenant<T>(
  *
  * Regra de autorização (idêntica ao backend — não são bypasses cosméticos):
  * 1. `role === 'SUPER_ADMIN'` → sempre libera.
- * 2. `resolveForUser` retorna `null` (usuário sem grupo, ou grupo excluído)
- *    → libera (comportamento anterior às diretivas, preservado de propósito).
+ * 2. Administrador sem grupo mantém acesso à própria empresa. Usuários comuns
+ *    sem grupo e grupos excluídos/inválidos não recebem permissões implícitas.
  * 3. Senão, exige `perms.get(resource)?.has(action)` → `ForbiddenError` (403)
  *    caso contrário.
  *
  * ⚠️ Papel ADMIN NÃO tem bypass por role — só SUPER_ADMIN. Um ADMIN sem grupo
- * é irrestrito pela regra 2, mas fica restrito assim que é atribuído a um
+ * é irrestrito na própria empresa pela regra 2, mas fica restrito assim que é atribuído a um
  * grupo com a matriz configurada. Não é um detalhe cosmético — é a regra de
  * segurança central dos módulos que usam este guard (ex.: user-groups).
  */
@@ -136,11 +138,14 @@ export async function withPermission<T>(
 ): Promise<T> {
   return withTenant(async (session) => {
     if (session.role === 'SUPER_ADMIN') return fn(session);
+    if (['users', 'user-groups'].includes(resource) && action !== 'view' && action !== 'export') {
+      assertAdmin(session);
+    }
 
     const perms = await prismaUserGroupPermissionsRepository.resolveForUser(session.id);
-    if (perms === null) return fn(session);
+    if (perms === null && ADMIN_ROLES.includes(session.role)) return fn(session);
 
-    if (!perms.get(resource)?.has(action)) {
+    if (!perms?.get(resource)?.has(action)) {
       throw new ForbiddenError('Acesso negado. Seu grupo de usuário não tem permissão para esta ação.');
     }
     return fn(session);
@@ -153,4 +158,17 @@ export async function getRequestIp(): Promise<string> {
   const forwarded = h.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
   return h.get('x-real-ip') ?? 'unknown';
+}
+
+/** Authorize first, then validate ownership of all supplied foreign keys. */
+export async function withPermissionInput<T>(
+  resource: string,
+  action: PermissionAction,
+  input: object,
+  fn: (session: DecodedSessionToken) => Promise<T>,
+): Promise<T> {
+  return withPermission(resource, action, async (session) => {
+    await assertTenantReferences(input as Record<string, unknown>);
+    return fn(session);
+  });
 }

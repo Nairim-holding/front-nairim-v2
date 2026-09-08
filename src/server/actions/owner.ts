@@ -3,7 +3,7 @@
 import { ownerUseCases } from '@/infra/factories/owner-factory';
 import { createOwnerSchema, updateOwnerSchema } from '@/shared/validators/owner';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { ContactSuggestion } from '@/core/entities/agency';
 import type { Owner, PaginatedOwners } from '@/core/entities/owner';
 import {
@@ -21,23 +21,23 @@ import {
 export async function createOwnerAction(input: Record<string, unknown>): Promise<ActionResult<Owner>> {
   return runAction(async () => {
     const data = createOwnerSchema.parse(input);
-    return withTenant(() => ownerUseCases.create.execute(data));
+    return withPermissionInput('owners', 'create', input, () => ownerUseCases.create.execute(data));
   });
 }
 
 export async function updateOwnerAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Owner>> {
   return runAction(async () => {
     const data = updateOwnerSchema.parse(input);
-    return withTenant(() => ownerUseCases.update.execute(id, data));
+    return withPermissionInput('owners', 'edit', input, () => ownerUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteOwnerAction(id: string): Promise<ActionResult<{ name: string }>> {
-  return runAction(() => withTenant(() => ownerUseCases.remove.execute(id)));
+  return runAction(() => withPermission('owners', 'delete', () => ownerUseCases.remove.execute(id)));
 }
 
 export async function restoreOwnerAction(id: string): Promise<ActionResult<Owner>> {
-  return runAction(() => withTenant(() => ownerUseCases.restore.execute(id)));
+  return runAction(() => withPermission('owners', 'edit', () => ownerUseCases.restore.execute(id)));
 }
 
 // ─── Leituras expostas como action (para Client Components) ─────────────────

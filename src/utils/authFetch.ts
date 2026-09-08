@@ -5,6 +5,8 @@
  * Token é obtido de cookies (conforme AuthContext.tsx)
  */
 
+import { isTrustedApiUrl } from './trusted-api-url';
+
 export async function authFetch(
   url: string,
   options?: RequestInit
@@ -14,7 +16,9 @@ export async function authFetch(
   // Obter token de cookies (onde AuthContext armazena)
   const token = getAuthToken();
 
-  if (token) {
+  const trusted = typeof window !== 'undefined' &&
+    isTrustedApiUrl(url, process.env.NEXT_PUBLIC_URL_API ?? '', window.location.href);
+  if (token && trusted) {
     headers.set('Authorization', `Bearer ${token}`);
     console.log('[authFetch] Authorization header adicionado');
   } else {
@@ -61,11 +65,9 @@ function getAuthToken(): string | null {
     if (authTokenCookie) {
       const token = authTokenCookie.split('=')[1];
       if (token) {
-        console.log('[authFetch] Token obtido do cookie:', token ? `${token.substring(0, 20)}...` : 'vazio');
         return token;
       }
     }
-    console.warn('[authFetch] Cookie authToken não encontrado. Cookies disponíveis:', document.cookie ? document.cookie.substring(0, 100) + '...' : 'nenhum');
   } catch (error) {
     console.error('[authFetch] Erro ao obter token:', error);
   }

@@ -18,18 +18,19 @@ export class JwtService implements TokenSigner {
   /** @inheritdoc */
   sign(payload: Record<string, unknown>, options?: { expiresIn?: string }): string {
     return jwt.sign(payload, env.JWT_SECRET, {
+      algorithm: 'HS256',
       expiresIn: (options?.expiresIn ?? env.JWT_EXPIRES_IN) as jwt.SignOptions['expiresIn'],
     });
   }
 
   /** @inheritdoc */
   verify<T = unknown>(token: string): T {
-    return jwt.verify(token, env.JWT_SECRET) as T;
+    return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as T;
   }
 
   /** @inheritdoc */
   verifyIgnoringExpiration<T = unknown>(token: string): T {
-    return jwt.verify(token, env.JWT_SECRET, { ignoreExpiration: true }) as T;
+    return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'], ignoreExpiration: true }) as T;
   }
 }
 

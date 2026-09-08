@@ -8,7 +8,7 @@ import {
   updateFinancialCardSchema,
 } from '@/shared/validators/financial-card';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { Card, CardUsageItem, PaginatedCards } from '@/core/entities/financial-card';
 import {
   getCardByIdData,
@@ -26,32 +26,32 @@ import {
 export async function createFinancialCardAction(input: Record<string, unknown>): Promise<ActionResult<Card>> {
   return runAction(async () => {
     const data = createFinancialCardSchema.parse(input);
-    return withTenant(() => financialCardUseCases.create.execute(data));
+    return withPermissionInput('financial-cards', 'create', input, () => financialCardUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialCardAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Card>> {
   return runAction(async () => {
     const data = updateFinancialCardSchema.parse(input);
-    return withTenant(() => financialCardUseCases.update.execute(id, data));
+    return withPermissionInput('financial-cards', 'edit', input, () => financialCardUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialCardAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialCardUseCases.remove.execute(id));
+    await withPermission('financial-cards', 'delete', () => financialCardUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialCardAction(id: string): Promise<ActionResult<Card>> {
-  return runAction(() => withTenant(() => financialCardUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-cards', 'edit', () => financialCardUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialCardAction(input: Record<string, unknown>): Promise<ActionResult<Card>> {
   return runAction(async () => {
     const data = quickCreateFinancialCardSchema.parse(input);
-    return withTenant(() => financialCardUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-cards', 'create', input, () => financialCardUseCases.quickCreate.execute(data));
   });
 }
 

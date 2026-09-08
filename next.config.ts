@@ -6,6 +6,11 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   sw: 'sw.js',
+  // Authenticated pages and Server Action responses must never enter a shared
+  // browser cache that survives logout or switching company.
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
+  runtimeCaching: [],
   // disable: process.env.NODE_ENV === "development", // desativa no dev
 });
 
@@ -27,7 +32,7 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: '50mb' },
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [

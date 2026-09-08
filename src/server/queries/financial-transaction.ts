@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialTransactionUseCases } from '@/infra/factories/financial-transaction-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialTransactionsQuerySchema } from '@/shared/validators/financial-transaction';
 import type {
   PaginatedTransactions,
@@ -52,19 +52,19 @@ export async function listFinancialTransactionsData(
 ): Promise<PaginatedTransactions> {
   const { limit, page, search, includeInactive } = listFinancialTransactionsQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-transactions', 'view', () =>
     financialTransactionUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getTransactionByIdData(id: string): Promise<Transaction> {
-  return withTenant(() => financialTransactionUseCases.getById.execute(id));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getById.execute(id));
 }
 
 export async function getTransactionFiltersData(raw: Record<string, unknown>): Promise<TransactionFiltersResult> {
-  return withTenant(() => financialTransactionUseCases.getFilters.execute(raw));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getFilters.execute(raw));
 }
 
 export async function getRelatedTransactionsData(id: string) {
-  return withTenant(() => financialTransactionUseCases.getRelated.execute(id));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getRelated.execute(id));
 }

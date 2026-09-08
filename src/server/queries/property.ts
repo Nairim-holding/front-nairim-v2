@@ -1,6 +1,6 @@
 import 'server-only';
 import { propertyUseCases } from '@/infra/factories/property-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listPropertiesQuerySchema } from '@/shared/validators/property';
 import type { PaginatedProperties, Property } from '@/core/entities/property';
 
@@ -43,14 +43,14 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listPropertiesData(raw: Record<string, unknown>): Promise<PaginatedProperties> {
   const { limit, page, search, includeInactive } = listPropertiesQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => propertyUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
+  return withPermission('properties', 'view', () => propertyUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
 }
 
 export async function getPropertyByIdData(id: string): Promise<Property> {
-  return withTenant(() => propertyUseCases.getById.execute(id));
+  return withPermission('properties', 'view', () => propertyUseCases.getById.execute(id));
 }
 
 export async function getPropertyFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => propertyUseCases.getFilters.execute(filters));
+  return withPermission('properties', 'view', () => propertyUseCases.getFilters.execute(filters));
 }

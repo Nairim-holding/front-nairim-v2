@@ -1,4 +1,5 @@
 import type { CompanyBranding } from '@/types/branding';
+import { isSafeBrandingColor } from '@/shared/validators/branding-color';
 
 interface ColorMapping {
   cssVar: string;
@@ -29,7 +30,7 @@ function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' |
   for (const { cssVar, lightField, darkField } of COLOR_MAPPINGS) {
     const lightValue = branding[lightField] as string | null;
     const value = mode === 'light' ? lightValue : ((branding[darkField] as string | null) ?? lightValue);
-    if (value) lines.push(`  ${cssVar}: ${value};`);
+    if (isSafeBrandingColor(value)) lines.push(`  ${cssVar}: ${value};`);
   }
 
   // Aliases legados (`--color-brand`, `--color-brand-hover`, `--color-brand-logo`)
@@ -41,11 +42,11 @@ function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' |
     ? (branding.secondary_color ?? branding.primary_color)
     : (branding.secondary_color_dark ?? branding.secondary_color ?? branding.primary_color_dark ?? branding.primary_color);
 
-  if (primary) {
+  if (isSafeBrandingColor(primary)) {
     lines.push(`  --color-brand: ${primary};`);
     lines.push(`  --color-brand-logo-raw: ${mode === 'dark' ? '#ffffff' : primary};`);
   }
-  if (secondary) lines.push(`  --color-brand-hover: ${secondary};`);
+  if (isSafeBrandingColor(secondary)) lines.push(`  --color-brand-hover: ${secondary};`);
 
   if (lines.length === 0) return '';
   return [`${selector} {`, ...lines, '}'].join('\n');

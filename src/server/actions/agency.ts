@@ -3,7 +3,7 @@
 import { agencyUseCases } from '@/infra/factories/agency-factory';
 import { createAgencySchema, updateAgencySchema } from '@/shared/validators/agency';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { Agency, ContactSuggestion, PaginatedAgencies } from '@/core/entities/agency';
 import {
   listAgenciesData,
@@ -24,7 +24,7 @@ import {
 export async function createAgencyAction(input: Record<string, unknown>): Promise<ActionResult<Agency>> {
   return runAction(async () => {
     const data = createAgencySchema.parse(input);
-    return withTenant(() => agencyUseCases.create.execute(data));
+    return withPermissionInput('agencies', 'create', input, () => agencyUseCases.create.execute(data));
   });
 }
 
@@ -32,18 +32,18 @@ export async function createAgencyAction(input: Record<string, unknown>): Promis
 export async function updateAgencyAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Agency>> {
   return runAction(async () => {
     const data = updateAgencySchema.parse(input);
-    return withTenant(() => agencyUseCases.update.execute(id, data));
+    return withPermissionInput('agencies', 'edit', input, () => agencyUseCases.update.execute(id, data));
   });
 }
 
 /** Soft-delete. Origem: DELETE /agencies/:id. */
 export async function deleteAgencyAction(id: string): Promise<ActionResult<{ legal_name: string }>> {
-  return runAction(() => withTenant(() => agencyUseCases.remove.execute(id)));
+  return runAction(() => withPermission('agencies', 'delete', () => agencyUseCases.remove.execute(id)));
 }
 
 /** Restaura. Origem: PATCH /agencies/:id/restore. */
 export async function restoreAgencyAction(id: string): Promise<ActionResult<{ legal_name: string }>> {
-  return runAction(() => withTenant(() => agencyUseCases.restore.execute(id)));
+  return runAction(() => withPermission('agencies', 'edit', () => agencyUseCases.restore.execute(id)));
 }
 
 // ─── Leituras expostas como action (para Client Components) ─────────────────

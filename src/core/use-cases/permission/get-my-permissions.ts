@@ -23,13 +23,13 @@ export class GetMyPermissionsUseCase {
     }
 
     const perms = await this.repo.resolveForUser(userId);
-    if (perms === null) {
+    if (perms === null && ['ADMIN', 'administrador'].includes(role)) {
       return { unrestricted: true, resources: {} };
     }
 
     const resources: Record<string, Record<string, boolean>> = {};
     for (const resource of MENU_RESOURCES) {
-      const granted = perms.get(resource.key);
+      const granted = perms?.get(resource.key);
       const row: Record<string, boolean> = {};
       for (const action of resource.actions) {
         row[action] = granted?.has(action) ?? false;

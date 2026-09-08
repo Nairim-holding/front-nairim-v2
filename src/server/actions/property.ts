@@ -3,7 +3,7 @@
 import { propertyUseCases } from '@/infra/factories/property-factory';
 import { createUnifiedPropertySchema, updateUnifiedPropertySchema } from '@/shared/validators/property';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import { readJsonField, readStringField, readPropertyUploadFiles } from '@/shared/http/form-data';
 import { ValidationError } from '@/core/errors/domain-errors';
 import type { CreateUnifiedPropertyData, PaginatedProperties, Property } from '@/core/entities/property';
@@ -41,12 +41,11 @@ export async function createUnifiedPropertyAction(formData: FormData): Promise<A
     const combined = parseUnifiedFormData(formData);
     const data = createUnifiedPropertySchema.parse(combined) as unknown as CreateUnifiedPropertyData;
 
-    const userId = readStringField(formData, 'userId');
     const featuredImageIdentifier = readStringField(formData, 'featuredImageIdentifier') || undefined;
     const files = await readPropertyUploadFiles(formData);
 
-    return withTenant(() =>
-      propertyUseCases.createUnified.execute({ data, files, userId, featuredImageIdentifier }),
+    return withPermissionInput('properties', 'create', data, (session) =>
+      propertyUseCases.createUnified.execute({ data, files, userId: session.id, featuredImageIdentifier }),
     );
   });
 }
@@ -60,25 +59,24 @@ export async function updateUnifiedPropertyAction(id: string, formData: FormData
     const combined = parseUnifiedFormData(formData);
     const data = updateUnifiedPropertySchema.parse(combined) as unknown as CreateUnifiedPropertyData;
 
-    const userId = readStringField(formData, 'userId');
     const featuredImageIdentifier = readStringField(formData, 'featuredImageIdentifier') || undefined;
     const removedDocuments = readJsonField<string[]>(formData, 'removedDocuments') ?? [];
     const files = await readPropertyUploadFiles(formData);
 
-    return withTenant(() =>
-      propertyUseCases.updateUnified.execute(id, { data, files, userId, removedDocuments, featuredImageIdentifier }),
+    return withPermissionInput('properties', 'edit', data, (session) =>
+      propertyUseCases.updateUnified.execute(id, { data, files, userId: session.id, removedDocuments, featuredImageIdentifier }),
     );
   });
 }
 
 /** Soft-delete. Origem: DELETE /properties/:id. */
 export async function deletePropertyAction(id: string): Promise<ActionResult<Property>> {
-  return runAction(() => withTenant(() => propertyUseCases.remove.execute(id)));
+  return runAction(() => withPermission('properties', 'delete', () => propertyUseCases.remove.execute(id)));
 }
 
 /** Restaura. Origem: PATCH /properties/:id/restore. */
 export async function restorePropertyAction(id: string): Promise<ActionResult<Property>> {
-  return runAction(() => withTenant(() => propertyUseCases.restore.execute(id)));
+  return runAction(() => withPermission('properties', 'edit', () => propertyUseCases.restore.execute(id)));
 }
 
 // ─── Leituras expostas como action (para Client Components) ─────────────────

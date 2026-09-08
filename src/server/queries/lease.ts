@@ -1,6 +1,6 @@
 import 'server-only';
 import { leaseUseCases } from '@/infra/factories/lease-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listLeasesQuerySchema } from '@/shared/validators/lease';
 import type { CancellationPreview, Lease, PaginatedLeases } from '@/core/entities/lease';
 
@@ -61,18 +61,18 @@ export function splitListParams(raw: Record<string, unknown>) {
 export async function listLeasesData(raw: Record<string, unknown>): Promise<PaginatedLeases> {
   const { limit, page, search } = listLeasesQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => leaseUseCases.list.execute({ limit, page, search, sortOptions, filters }));
+  return withPermission('leases', 'view', () => leaseUseCases.list.execute({ limit, page, search, sortOptions, filters }));
 }
 
 export async function getLeaseByIdData(id: string): Promise<Lease> {
-  return withTenant(() => leaseUseCases.getById.execute(id));
+  return withPermission('leases', 'view', () => leaseUseCases.getById.execute(id));
 }
 
 export async function getLeaseFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => leaseUseCases.getFilters.execute(filters));
+  return withPermission('leases', 'view', () => leaseUseCases.getFilters.execute(filters));
 }
 
 export async function getCancellationPreviewData(id: string, date: string): Promise<CancellationPreview> {
-  return withTenant(() => leaseUseCases.getCancellationPreview.execute(id, date));
+  return withPermission('leases', 'view', () => leaseUseCases.getCancellationPreview.execute(id, date));
 }

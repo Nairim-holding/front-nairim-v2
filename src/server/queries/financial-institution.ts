@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialInstitutionUseCases } from '@/infra/factories/financial-institution-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialInstitutionsQuerySchema } from '@/shared/validators/financial-institution';
 import type {
   BalanceSummaryItem,
@@ -49,17 +49,17 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialInstitutionsData(raw: Record<string, unknown>): Promise<PaginatedFinancialInstitutions> {
   const { limit, page, search, includeInactive } = listFinancialInstitutionsQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => financialInstitutionUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
+  return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
 }
 
 export async function getFinancialInstitutionByIdData(id: string): Promise<FinancialInstitution> {
-  return withTenant(() => financialInstitutionUseCases.getById.execute(id));
+  return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.getById.execute(id));
 }
 
 export async function getFinancialInstitutionFiltersData(): Promise<Record<string, unknown>> {
-  return withTenant(() => financialInstitutionUseCases.getFilters.execute());
+  return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.getFilters.execute());
 }
 
 export async function getFinancialInstitutionBalanceSummaryData(): Promise<BalanceSummaryItem[]> {
-  return withTenant(() => financialInstitutionUseCases.getBalanceSummary.execute());
+  return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.getBalanceSummary.execute());
 }

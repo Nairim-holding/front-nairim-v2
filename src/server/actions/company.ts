@@ -3,7 +3,7 @@
 import { companyUseCases } from '@/infra/factories/company-factory';
 import { pickBrandingFields, switchCompanySchema } from '@/shared/validators/company';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { requireSession, assertAdmin, assertSuperAdmin, withTenant, setSessionCookie } from '@/infra/auth/session';
+import { requireSession, assertSuperAdmin, withTenant, setSessionCookie } from '@/infra/auth/session';
 import { ValidationError } from '@/core/errors/domain-errors';
 import type { UploadInput } from '@/core/storage/storage';
 import type { BrandingAssetField, CompanyBranding, CompanyWithBranding } from '@/core/entities/company';
@@ -75,7 +75,7 @@ export async function uploadCompanyBrandingAssetAction(
 ): Promise<ActionResult<{ url: string }>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     const file = await extractFile(formData);
     return companyUseCases.uploadBrandingAsset.execute({ companyId, file, field, maxSizeMB: maxSizeFor(field) });
   });
@@ -114,7 +114,7 @@ export async function checkSlugAction(slug: string): Promise<ActionResult<{ avai
 export async function getCompanyByIdAction(id: string): Promise<ActionResult<CompanyWithBranding>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     return companyUseCases.getById.execute(id);
   });
 }
@@ -123,7 +123,7 @@ export async function getCompanyByIdAction(id: string): Promise<ActionResult<Com
 export async function createCompanyAction(input: Record<string, unknown>): Promise<ActionResult<CompanyWithBranding>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     return companyUseCases.create.execute({
       name: input.name as string | undefined,
       slug: input.slug as string | undefined,
@@ -137,7 +137,7 @@ export async function createCompanyAction(input: Record<string, unknown>): Promi
 export async function updateCompanyAction(id: string, input: Record<string, unknown>): Promise<ActionResult<CompanyWithBranding>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     return companyUseCases.update.execute(id, {
       name: input.name as string | undefined,
       slug: input.slug as string | undefined,
@@ -152,7 +152,7 @@ export async function updateCompanyAction(id: string, input: Record<string, unkn
 export async function deleteCompanyAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     await companyUseCases.remove.execute(id);
     return null;
   });
@@ -162,7 +162,7 @@ export async function deleteCompanyAction(id: string): Promise<ActionResult<null
 export async function restoreCompanyAction(id: string): Promise<ActionResult<CompanyWithBranding>> {
   return runAction(async () => {
     const session = await requireSession();
-    assertAdmin(session);
+    assertSuperAdmin(session);
     return companyUseCases.restore.execute(id);
   });
 }

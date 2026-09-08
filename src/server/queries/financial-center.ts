@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialCenterUseCases } from '@/infra/factories/financial-center-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listFinancialCentersQuerySchema } from '@/shared/validators/financial-center';
 import type { Center, PaginatedCenters } from '@/core/entities/financial-center';
 
@@ -40,16 +40,16 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listFinancialCentersData(raw: Record<string, unknown>): Promise<PaginatedCenters> {
   const { limit, page, search, includeInactive } = listFinancialCentersQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() =>
+  return withPermission('financial-centers', 'view', () =>
     financialCenterUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }),
   );
 }
 
 export async function getCenterByIdData(id: string): Promise<Center> {
-  return withTenant(() => financialCenterUseCases.getById.execute(id));
+  return withPermission('financial-centers', 'view', () => financialCenterUseCases.getById.execute(id));
 }
 
 export async function getCenterFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   void raw;
-  return withTenant(() => financialCenterUseCases.getFilters.execute());
+  return withPermission('financial-centers', 'view', () => financialCenterUseCases.getFilters.execute());
 }

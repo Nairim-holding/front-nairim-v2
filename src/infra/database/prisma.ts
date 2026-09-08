@@ -18,7 +18,7 @@ import { getCurrentCompanyId } from './tenant-context';
 // Address, Contact, junction tables, PropertyValue, PropertyIptu,
 // PlanningMonth, Company e CompanyBranding são excluídos intencionalmente.
 const TENANT_MODELS = new Set([
-  'Agency', 'Property', 'PropertyType', 'User', 'UserColumnPreference',
+  'Agency', 'Property', 'PropertyType', 'User', 'UserColumnPreference', 'UserDashboardLayout',
   'Document', 'Owner', 'Tenant', 'Lease', 'FinancialInstitution',
   'Category', 'Subcategory', 'Card', 'Center', 'Supplier',
   'Transaction', 'Invoice', 'RecurringConfig', 'Planning', 'Favorite',
@@ -39,40 +39,42 @@ const TENANT_MODELS = new Set([
 ]);
 
 /** Injeta company_id no `where` das queries de leitura. */
-function injectRead(model: string | undefined, args: any) {
+export function injectRead<T extends { where?: unknown }>(model: string | undefined, args: T): T {
   const companyId = getCurrentCompanyId();
   if (!companyId || !model || !TENANT_MODELS.has(model)) return args;
   return {
     ...args,
-    where: { company_id: companyId, ...(args?.where ?? {}) },
+    where: { ...((args?.where ?? {}) as object), company_id: companyId },
   };
 }
 
 /**
  * Injeta company_id no `data` dos creates.
  *
- * Corrige dois casos comuns de services que não recebem company_id:
- *  1. data sem company_id e sem company relation → injeta company_id como scalar
- *  2. data com company: { connect: { id: undefined } } → substitui pelo scalar
+ * Impõe a empresa do contexto tanto em inputs escalares como em inputs com
+ * relações, preservando a forma aceita pelo Prisma e impedindo sobrescritas.
  */
-function injectCreate(model: string | undefined, args: any) {
+export function injectCreate<T extends { data?: unknown }>(model: string | undefined, args: T): T {
   const companyId = getCurrentCompanyId();
   if (!companyId || !model || !TENANT_MODELS.has(model)) return args;
 
-  const data = args?.data ?? {};
+  const data = (args?.data ?? {}) as Record<string, unknown>;
 
-  // Caso 2: connect com id undefined — remove a relation quebrada e usa scalar.
-  if (data.company?.connect?.id === undefined && data.company !== undefined) {
+  if (data.company !== undefined) {
     const { company: _removed, ...rest } = data;
-    return { ...args, data: { ...rest, company_id: companyId } };
+    // Preserve Prisma's checked input shape for callers using other relations.
+    const { company_id: _companyId, ...fields } = rest;
+    return { ...args, data: { ...fields, company: { connect: { id: companyId } } } };
   }
+  return { ...args, data: { ...data, company_id: companyId } };
+}
 
-  // Caso 1: sem company_id nem relation → injeta scalar.
-  if (!data.company_id && !data.company) {
-    return { ...args, data: { ...data, company_id: companyId } };
-  }
-
-  return args;
+/** A mutation must neither select another tenant nor transfer ownership. */
+export function injectUpdate<T extends { where?: unknown; data?: unknown }>(model: string | undefined, args: T): T {
+  const scoped = injectRead(model, args);
+  if (scoped === args) return args;
+  const { company: _company, company_id: _companyId, ...data } = (args?.data ?? {}) as Record<string, unknown>;
+  return { ...scoped, data };
 }
 
 /** Constrói o PrismaClient com adapter PG e a extensão de tenant. */
@@ -83,34 +85,73 @@ function buildPrismaClient() {
     query: {
       $allModels: {
         // ─── Leitura ───────────────────────────────────────────────────────
-        async findMany({ model, args, query }: any) {
+        async findMany({ model, args, query }) {
           return query(injectRead(model, args));
         },
-        async findFirst({ model, args, query }: any) {
+        async findFirst({ model, args, query }) {
           return query(injectRead(model, args));
         },
-        async count({ model, args, query }: any) {
+        async findUnique({ model, args, query }) {
           return query(injectRead(model, args));
         },
-        async aggregate({ model, args, query }: any) {
+        async findUniqueOrThrow({ model, args, query }) {
           return query(injectRead(model, args));
         },
-        async groupBy({ model, args, query }: any) {
+        async findFirstOrThrow({ model, args, query }) {
+          return query(injectRead(model, args));
+        },
+        async count({ model, args, query }) {
+          return query(injectRead(model, args));
+        },
+        async aggregate({ model, args, query }) {
+          return query(injectRead(model, args));
+        },
+        async groupBy({ model, args, query }) {
           return query(injectRead(model, args));
         },
         // ─── Escrita ───────────────────────────────────────────────────────
-        async create({ model, args, query }: any) {
+        async create({ model, args, query }) {
           return query(injectCreate(model, args));
         },
-        async createMany({ model, args, query }: any) {
+        async update({ model, args, query }) {
+          return query(injectUpdate(model, args));
+        },
+        async updateMany({ model, args, query }) {
+          return query(injectUpdate(model, args));
+        },
+        async updateManyAndReturn({ model, args, query }) {
+          return query(injectUpdate(model, args));
+        },
+        async delete({ model, args, query }) {
+          return query(injectRead(model, args));
+        },
+        async deleteMany({ model, args, query }) {
+          return query(injectRead(model, args));
+        },
+        async upsert({ model, args, query }) {
+          return query({
+            ...injectRead(model, args),
+            create: injectCreate(model, { data: args.create }).data,
+            update: injectUpdate(model, { data: args.update }).data,
+          } as typeof args);
+        },
+        async createMany({ model, args, query }) {
           const companyId = getCurrentCompanyId();
-          if (companyId && model && TENANT_MODELS.has(model) && Array.isArray(args?.data)) {
+          if (companyId && model && TENANT_MODELS.has(model)) {
             args = {
               ...args,
-              data: args.data.map((item: any) =>
-                item.company_id ? item : { ...item, company_id: companyId },
+              data: (Array.isArray(args.data) ? args.data : [args.data]).map((item) =>
+                ({ ...item, company_id: companyId }),
               ),
             };
+          }
+          return query(args);
+        },
+        async createManyAndReturn({ model, args, query }) {
+          const companyId = getCurrentCompanyId();
+          if (companyId && model && TENANT_MODELS.has(model)) {
+            args = { ...args, data: (Array.isArray(args.data) ? args.data : [args.data])
+              .map((item) => ({ ...item, company_id: companyId })) } as typeof args;
           }
           return query(args);
         },

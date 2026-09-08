@@ -7,7 +7,7 @@ import {
   updateFinancialCenterSchema,
 } from '@/shared/validators/financial-center';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { Center, PaginatedCenters } from '@/core/entities/financial-center';
 import {
   getCenterByIdData,
@@ -24,32 +24,32 @@ import {
 export async function createFinancialCenterAction(input: Record<string, unknown>): Promise<ActionResult<Center>> {
   return runAction(async () => {
     const data = createFinancialCenterSchema.parse(input);
-    return withTenant(() => financialCenterUseCases.create.execute(data));
+    return withPermissionInput('financial-centers', 'create', input, () => financialCenterUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialCenterAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Center>> {
   return runAction(async () => {
     const data = updateFinancialCenterSchema.parse(input);
-    return withTenant(() => financialCenterUseCases.update.execute(id, data));
+    return withPermissionInput('financial-centers', 'edit', input, () => financialCenterUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialCenterAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialCenterUseCases.remove.execute(id));
+    await withPermission('financial-centers', 'delete', () => financialCenterUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialCenterAction(id: string): Promise<ActionResult<Center>> {
-  return runAction(() => withTenant(() => financialCenterUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-centers', 'edit', () => financialCenterUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialCenterAction(input: Record<string, unknown>): Promise<ActionResult<Center>> {
   return runAction(async () => {
     const data = quickCreateFinancialCenterSchema.parse(input);
-    return withTenant(() => financialCenterUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-centers', 'create', input, () => financialCenterUseCases.quickCreate.execute(data));
   });
 }
 

@@ -1,6 +1,6 @@
 import 'server-only';
 import { userUseCases } from '@/infra/factories/user-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listUsersQuerySchema } from '@/shared/validators/user';
 import type { PaginatedUsers, UserDetail } from '@/core/entities/user';
 
@@ -62,18 +62,18 @@ export async function listUsersData(raw: Record<string, unknown>): Promise<Pagin
   const { limit, page, search, includeInactive } = listUsersQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
 
-  return withTenant(() =>
+  return withPermission('users', 'view', () =>
     userUseCases.list.execute({ limit, page, search, sortOptions, includeInactive, filters }),
   );
 }
 
 /** Usuário por ID (detalhe completo). Origem: GET /users/:id. */
 export async function getUserByIdData(id: string): Promise<UserDetail> {
-  return withTenant(() => userUseCases.getById.execute(id));
+  return withPermission('users', 'view', () => userUseCases.getById.execute(id));
 }
 
 /** Filtros contextuais do DataTable. Origem: GET /users/filters. */
 export async function getUserFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => userUseCases.getFilters.execute(filters));
+  return withPermission('users', 'view', () => userUseCases.getFilters.execute(filters));
 }

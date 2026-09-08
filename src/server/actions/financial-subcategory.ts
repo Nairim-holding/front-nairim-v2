@@ -7,7 +7,7 @@ import {
   updateFinancialSubcategorySchema,
 } from '@/shared/validators/financial-subcategory';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type { PaginatedSubcategories, Subcategory } from '@/core/entities/subcategory';
 import {
   getSubcategoryByIdData,
@@ -24,32 +24,32 @@ import {
 export async function createFinancialSubcategoryAction(input: Record<string, unknown>): Promise<ActionResult<Subcategory>> {
   return runAction(async () => {
     const data = createFinancialSubcategorySchema.parse(input);
-    return withTenant(() => financialSubcategoryUseCases.create.execute(data));
+    return withPermissionInput('financial-categories', 'create', input, () => financialSubcategoryUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialSubcategoryAction(id: string, input: Record<string, unknown>): Promise<ActionResult<Subcategory>> {
   return runAction(async () => {
     const data = updateFinancialSubcategorySchema.parse(input);
-    return withTenant(() => financialSubcategoryUseCases.update.execute(id, data));
+    return withPermissionInput('financial-categories', 'edit', input, () => financialSubcategoryUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialSubcategoryAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialSubcategoryUseCases.remove.execute(id));
+    await withPermission('financial-categories', 'delete', () => financialSubcategoryUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialSubcategoryAction(id: string): Promise<ActionResult<Subcategory>> {
-  return runAction(() => withTenant(() => financialSubcategoryUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-categories', 'edit', () => financialSubcategoryUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialSubcategoryAction(input: Record<string, unknown>): Promise<ActionResult<Subcategory>> {
   return runAction(async () => {
     const data = quickCreateFinancialSubcategorySchema.parse(input);
-    return withTenant(() => financialSubcategoryUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-categories', 'create', input, () => financialSubcategoryUseCases.quickCreate.execute(data));
   });
 }
 

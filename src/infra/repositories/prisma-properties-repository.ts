@@ -539,7 +539,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
           for (const iptu of data.iptus) {
             const iptuData = buildIptuData(iptu);
             if (iptu.id) {
-              await tx.propertyIptu.update({ where: { id: iptu.id }, data: iptuData });
+              await tx.propertyIptu.update({ where: { id: iptu.id, property_id: property.id }, data: iptuData });
             } else {
               await tx.propertyIptu.create({ data: { property_id: property.id, year: Number(iptu.year), ...iptuData } });
             }

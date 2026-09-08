@@ -2,7 +2,7 @@
 
 import { iptuPropertyUseCases } from '@/infra/factories/planning-factory';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import type { IptuPropertyFiltersResult } from '@/core/entities/iptu-property';
 
 /**
@@ -13,5 +13,5 @@ import type { IptuPropertyFiltersResult } from '@/core/entities/iptu-property';
 export async function getIptuPropertyFiltersAction(
   raw?: Record<string, unknown>,
 ): Promise<ActionResult<IptuPropertyFiltersResult>> {
-  return runAction(() => withTenant(() => iptuPropertyUseCases.getFilters.execute(raw)));
+  return runAction(() => withPermission('properties', 'view', () => iptuPropertyUseCases.getFilters.execute(raw)));
 }

@@ -8,7 +8,8 @@ import type { AutoBackupInfo, BackupPayload, RestoreOutcome } from '@/core/entit
 
 /**
  * Server Actions do módulo Backup (Configurações → Backup).
- * Guarda: `withTenant` com papel ADMIN (equivale a `requireAdmin` do backend).
+ * Guarda: SUPER_ADMIN. Backups completos contêm hashes de senha e papéis;
+ * permitir exportação/restauração a administradores de tenant escalava privilégios.
  * Camada: server. Origem: BackupController.
  */
 
@@ -22,7 +23,7 @@ export async function exportBackupAction(): Promise<ActionResult<ExportBackupRes
       const stamp = new Date().toISOString().slice(0, 10);
       const filename = `backup-nairim-${slug}-${stamp}.json`;
       return { payload, filename };
-    }, { role: 'admin' }),
+    }, { role: 'superAdmin' }),
   );
 }
 
@@ -39,7 +40,7 @@ export async function restoreBackupAction(input: {
         throw new ValidationError('Arquivo de backup não é um JSON válido');
       }
       return backupUseCases.restore.execute(session.company_id, backupData, input.confirmationName);
-    }, { role: 'admin' }),
+    }, { role: 'superAdmin' }),
   );
 }
 
@@ -49,7 +50,7 @@ export async function listAutoBackupsAction(): Promise<ActionResult<AutoBackupIn
       const company = await backupUseCases.companyById(session.company_id);
       if (!company) throw new NotFoundError('Empresa não encontrada');
       return backupUseCases.listAuto.execute(company.slug);
-    }, { role: 'admin' }),
+    }, { role: 'superAdmin' }),
   );
 }
 
@@ -63,6 +64,6 @@ export async function downloadAutoBackupAction(
       const file = backupUseCases.downloadAuto.execute(company.slug, filename);
       if (!file) throw new NotFoundError('Backup automático não encontrado');
       return file;
-    }, { role: 'admin' }),
+    }, { role: 'superAdmin' }),
   );
 }

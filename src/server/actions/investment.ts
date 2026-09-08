@@ -13,7 +13,7 @@ import {
   updateInvestmentSchema,
 } from '@/shared/validators/investment';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type {
   Investment,
   InvestmentDashboardResponse,
@@ -37,7 +37,7 @@ export async function createInvestmentAction(
 ): Promise<ActionResult<Investment>> {
   return runAction(async () => {
     const data = createInvestmentSchema.parse(input);
-    return withTenant(() =>
+    return withPermissionInput('investments', 'create', input, () =>
       investmentUseCases.create.execute({
         financial_institution_id: data.financial_institution_id,
         partition: data.partition ?? undefined,
@@ -65,7 +65,7 @@ export async function updateInvestmentAction(
     // chaves não enviadas, então o spread preserva essa distinção — normalizar
     // tudo para `null` aqui apagaria vencimento/observações a cada edição.
     // `partition` é a exceção: não é anulável, então só vai quando tem valor.
-    return withTenant(() =>
+    return withPermissionInput('investments', 'edit', input, () =>
       investmentUseCases.update.execute(id, {
         ...rest,
         ...(partition != null ? { partition } : {}),
@@ -76,7 +76,7 @@ export async function updateInvestmentAction(
 
 export async function deleteInvestmentAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => investmentUseCases.remove.execute(id));
+    await withPermission('investments', 'delete', () => investmentUseCases.remove.execute(id));
     return null;
   });
 }
@@ -86,7 +86,7 @@ export async function reorderInvestmentsAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const { ordered_ids } = investmentReorderSchema.parse(input);
-    await withTenant(() => investmentUseCases.reorder.execute(ordered_ids));
+    await withPermission('investments', 'edit', () => investmentUseCases.reorder.execute(ordered_ids));
     return null;
   });
 }
@@ -96,7 +96,7 @@ export async function updateInvestmentNotesAction(
 ): Promise<ActionResult<Investment>> {
   return runAction(async () => {
     const { id, notes } = investmentNotesSchema.parse(input);
-    return withTenant(() => investmentUseCases.updateNotes.execute(id, notes ?? null));
+    return withPermissionInput('investments', 'edit', input, () => investmentUseCases.updateNotes.execute(id, notes ?? null));
   });
 }
 
@@ -107,7 +107,7 @@ export async function listInvestmentTransactionsAction(
 ): Promise<ActionResult<InvestmentTransactionEntry[]>> {
   return runAction(async () => {
     const { investment_id, year, month } = investmentTransactionListSchema.parse(input);
-    return withTenant(() => investmentUseCases.listTransactions.execute(investment_id, year, month));
+    return withPermission('investments', 'view', () => investmentUseCases.listTransactions.execute(investment_id, year, month));
   });
 }
 
@@ -116,7 +116,7 @@ export async function createInvestmentTransactionAction(
 ): Promise<ActionResult<InvestmentTransactionEntry>> {
   return runAction(async () => {
     const data = investmentTransactionSchema.parse(input);
-    return withTenant(() => investmentUseCases.createTransaction.execute(data));
+    return withPermissionInput('investments', 'create', input, () => investmentUseCases.createTransaction.execute(data));
   });
 }
 
@@ -126,13 +126,13 @@ export async function updateInvestmentTransactionAction(
 ): Promise<ActionResult<InvestmentTransactionEntry>> {
   return runAction(async () => {
     const data = investmentTransactionUpdateSchema.parse(input);
-    return withTenant(() => investmentUseCases.updateTransaction.execute(id, data));
+    return withPermissionInput('investments', 'edit', input, () => investmentUseCases.updateTransaction.execute(id, data));
   });
 }
 
 export async function deleteInvestmentTransactionAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => investmentUseCases.deleteTransaction.execute(id));
+    await withPermission('investments', 'delete', () => investmentUseCases.deleteTransaction.execute(id));
     return null;
   });
 }
@@ -144,7 +144,7 @@ export async function setInvestmentMonthBalanceAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const { investment_id, year, month, balance } = investmentMonthBalanceSchema.parse(input);
-    await withTenant(() => investmentUseCases.setMonthBalance.execute(investment_id, year, month, balance));
+    await withPermission('investments', 'edit', () => investmentUseCases.setMonthBalance.execute(investment_id, year, month, balance));
     return null;
   });
 }
@@ -156,7 +156,7 @@ export async function saveInvestmentSettingsAction(
 ): Promise<ActionResult<InvestmentSettings>> {
   return runAction(async () => {
     const data = investmentSettingsSchema.parse(input);
-    return withTenant(() => investmentUseCases.saveSettings.execute(data));
+    return withPermissionInput('investments', 'edit', input, () => investmentUseCases.saveSettings.execute(data));
   });
 }
 

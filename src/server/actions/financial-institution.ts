@@ -3,7 +3,7 @@
 import { financialInstitutionUseCases } from '@/infra/factories/financial-institution-factory';
 import { createFinancialInstitutionSchema, quickCreateFinancialInstitutionSchema, updateFinancialInstitutionSchema } from '@/shared/validators/financial-institution';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import type {
   BalanceSummaryItem,
   FinancialInstitution,
@@ -25,32 +25,32 @@ import {
 export async function createFinancialInstitutionAction(input: Record<string, unknown>): Promise<ActionResult<FinancialInstitution>> {
   return runAction(async () => {
     const data = createFinancialInstitutionSchema.parse(input);
-    return withTenant(() => financialInstitutionUseCases.create.execute(data));
+    return withPermissionInput('financial-institutions', 'create', input, () => financialInstitutionUseCases.create.execute(data));
   });
 }
 
 export async function updateFinancialInstitutionAction(id: string, input: Record<string, unknown>): Promise<ActionResult<FinancialInstitution>> {
   return runAction(async () => {
     const data = updateFinancialInstitutionSchema.parse(input);
-    return withTenant(() => financialInstitutionUseCases.update.execute(id, data));
+    return withPermissionInput('financial-institutions', 'edit', input, () => financialInstitutionUseCases.update.execute(id, data));
   });
 }
 
 export async function deleteFinancialInstitutionAction(id: string): Promise<ActionResult<null>> {
   return runAction(async () => {
-    await withTenant(() => financialInstitutionUseCases.remove.execute(id));
+    await withPermission('financial-institutions', 'delete', () => financialInstitutionUseCases.remove.execute(id));
     return null;
   });
 }
 
 export async function restoreFinancialInstitutionAction(id: string): Promise<ActionResult<FinancialInstitution>> {
-  return runAction(() => withTenant(() => financialInstitutionUseCases.restore.execute(id)));
+  return runAction(() => withPermission('financial-institutions', 'edit', () => financialInstitutionUseCases.restore.execute(id)));
 }
 
 export async function quickCreateFinancialInstitutionAction(input: Record<string, unknown>): Promise<ActionResult<FinancialInstitution>> {
   return runAction(async () => {
     const data = quickCreateFinancialInstitutionSchema.parse(input);
-    return withTenant(() => financialInstitutionUseCases.quickCreate.execute(data));
+    return withPermissionInput('financial-institutions', 'create', input, () => financialInstitutionUseCases.quickCreate.execute(data));
   });
 }
 

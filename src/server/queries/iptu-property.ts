@@ -1,6 +1,6 @@
 import 'server-only';
 import { iptuPropertyUseCases } from '@/infra/factories/planning-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import type { IptuPropertyFiltersResult } from '@/core/entities/iptu-property';
 
 /**
@@ -10,5 +10,5 @@ import type { IptuPropertyFiltersResult } from '@/core/entities/iptu-property';
 export async function getIptuPropertyFiltersData(
   raw?: Record<string, unknown>,
 ): Promise<IptuPropertyFiltersResult> {
-  return withTenant(() => iptuPropertyUseCases.getFilters.execute(raw));
+  return withPermission('properties', 'view', () => iptuPropertyUseCases.getFilters.execute(raw));
 }

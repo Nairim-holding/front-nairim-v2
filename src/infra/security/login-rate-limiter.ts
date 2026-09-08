@@ -1,5 +1,6 @@
 /**
- * Rate limiter de login por (email:ip) — porte de
+ * Rate limiter de login por conta (independente de IP informado pelo cliente).
+ * Baseado no porte de
  * api-nairim-v2/src/middlewares/authRateLimit.ts.
  *
  * ⚠️ LIMITAÇÃO CONHECIDA (mesma do backend): o estado vive em memória do
@@ -34,8 +35,9 @@ export interface LoginAttemptStatus {
 class LoginRateLimiter {
   private readonly attempts = new Map<string, FailedAttempt>();
 
-  private key(email: string, ip: string): string {
-    return `${email.toLowerCase().trim()}:${ip}`;
+  private key(email: string): string {
+    // Client-controlled proxy headers must not reset the account's failure count.
+    return email.toLowerCase().trim();
   }
 
   /** Remove entradas expiradas (limpeza oportunista, sem timers). */
@@ -53,10 +55,10 @@ class LoginRateLimiter {
    * Verifica se o par está bloqueado no momento.
    * @returns mensagem de bloqueio se bloqueado, senão `null`.
    */
-  checkBlocked(email: string, ip: string): string | null {
+  checkBlocked(email: string, _ip: string): string | null {
     const now = Date.now();
     this.sweep(now);
-    const a = this.attempts.get(this.key(email, ip));
+    const a = this.attempts.get(this.key(email));
     if (a?.blockedUntil && a.blockedUntil > now) {
       const remaining = Math.ceil((a.blockedUntil - now) / 1000);
       const minutes = Math.floor(remaining / 60);
@@ -67,9 +69,9 @@ class LoginRateLimiter {
   }
 
   /** Registra uma tentativa falha; bloqueia ao atingir o máximo. */
-  registerFailure(email: string, ip: string): void {
+  registerFailure(email: string, _ip: string): void {
     const now = Date.now();
-    const k = this.key(email, ip);
+    const k = this.key(email);
     const current = this.attempts.get(k) ?? { count: 0, firstAttempt: now, lastAttempt: now };
 
     current.count++;
@@ -81,14 +83,14 @@ class LoginRateLimiter {
   }
 
   /** Zera o contador após login bem-sucedido. */
-  reset(email: string, ip: string): void {
-    this.attempts.delete(this.key(email, ip));
+  reset(email: string, _ip: string): void {
+    this.attempts.delete(this.key(email));
   }
 
   /** Status atual para compor a resposta de erro (formato do backend). */
-  getStatus(email: string, ip: string): LoginAttemptStatus {
+  getStatus(email: string, _ip: string): LoginAttemptStatus {
     const now = Date.now();
-    const a = this.attempts.get(this.key(email, ip));
+    const a = this.attempts.get(this.key(email));
 
     if (!a) {
       return {

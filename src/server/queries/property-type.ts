@@ -1,6 +1,6 @@
 import 'server-only';
 import { propertyTypeUseCases } from '@/infra/factories/property-type-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listPropertyTypesQuerySchema } from '@/shared/validators/property-type';
 import type { PaginatedPropertyTypes, PropertyType } from '@/core/entities/property-type';
 
@@ -44,14 +44,14 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listPropertyTypesData(raw: Record<string, unknown>): Promise<PaginatedPropertyTypes> {
   const { limit, page, search, includeInactive } = listPropertyTypesQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => propertyTypeUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
+  return withPermission('property-types', 'view', () => propertyTypeUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
 }
 
 export async function getPropertyTypeByIdData(id: string): Promise<PropertyType> {
-  return withTenant(() => propertyTypeUseCases.getById.execute(id));
+  return withPermission('property-types', 'view', () => propertyTypeUseCases.getById.execute(id));
 }
 
 export async function getPropertyTypeFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => propertyTypeUseCases.getFilters.execute(filters));
+  return withPermission('property-types', 'view', () => propertyTypeUseCases.getFilters.execute(filters));
 }

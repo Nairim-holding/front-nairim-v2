@@ -1,6 +1,6 @@
 import 'server-only';
 import { ownerUseCases } from '@/infra/factories/owner-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import { listOwnersQuerySchema } from '@/shared/validators/owner';
 import type { ContactSuggestion } from '@/core/entities/agency';
 import type { Owner, PaginatedOwners } from '@/core/entities/owner';
@@ -41,18 +41,18 @@ function splitListParams(raw: Record<string, unknown>) {
 export async function listOwnersData(raw: Record<string, unknown>): Promise<PaginatedOwners> {
   const { limit, page, search, includeInactive } = listOwnersQuerySchema.parse(raw);
   const { sortOptions, filters } = splitListParams(raw);
-  return withTenant(() => ownerUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
+  return withPermission('owners', 'view', () => ownerUseCases.list.execute({ limit, page, search, sortOptions, filters, includeInactive }));
 }
 
 export async function getOwnerByIdData(id: string): Promise<Owner> {
-  return withTenant(() => ownerUseCases.getById.execute(id));
+  return withPermission('owners', 'view', () => ownerUseCases.getById.execute(id));
 }
 
 export async function getOwnerFiltersData(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { filters } = splitListParams(raw);
-  return withTenant(() => ownerUseCases.getFilters.execute(filters));
+  return withPermission('owners', 'view', () => ownerUseCases.getFilters.execute(filters));
 }
 
 export async function getOwnerContactSuggestionsData(search: string): Promise<ContactSuggestion[]> {
-  return withTenant(() => ownerUseCases.getContactSuggestions.execute(search));
+  return withPermission('owners', 'view', () => ownerUseCases.getContactSuggestions.execute(search));
 }

@@ -1,6 +1,6 @@
 import 'server-only';
 import { financialTransactionUseCases } from '@/infra/factories/financial-transaction-factory';
-import { withTenant } from '@/infra/auth/session';
+import { withPermission } from '@/infra/auth/session';
 import {
   expenseByCategoryQuerySchema,
   monthlySummaryMultiQuerySchema,
@@ -27,7 +27,7 @@ export async function getMonthlySummaryData(
   raw: Record<string, unknown>,
 ): Promise<MonthlySummary> {
   const { year } = monthlySummaryQuerySchema.parse(raw);
-  return withTenant(() => financialTransactionUseCases.getMonthlySummary.execute(year, raw));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getMonthlySummary.execute(year, raw));
 }
 
 export async function getMonthlySummaryMultiData(
@@ -35,18 +35,18 @@ export async function getMonthlySummaryMultiData(
 ): Promise<MonthlySummaryMultiResult> {
   monthlySummaryMultiQuerySchema.parse(raw);
   const years = parseMultiYears(raw);
-  return withTenant(() => financialTransactionUseCases.getMonthlySummaryMulti.execute(years, raw));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getMonthlySummaryMulti.execute(years, raw));
 }
 
 export async function getAvailableYearsData(): Promise<AvailableYearsResult> {
-  return withTenant(() => financialTransactionUseCases.getAvailableYears.execute());
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getAvailableYears.execute());
 }
 
 export async function getExpenseByCategoryData(
   raw: Record<string, unknown>,
 ): Promise<ExpenseByCategoryResult> {
   const { startDate, endDate } = expenseByCategoryQuerySchema.parse(raw);
-  return withTenant(() =>
+  return withPermission('financial-transactions', 'view', () =>
     financialTransactionUseCases.getExpenseByCategory.execute(new Date(startDate), new Date(endDate), raw),
   );
 }
@@ -55,11 +55,11 @@ export async function getSubcategoryBreakdownData(
   raw: Record<string, unknown>,
 ): Promise<SubcategoryBreakdownResult> {
   const { categoryId, startDate, endDate } = subcategoryBreakdownQuerySchema.parse(raw);
-  return withTenant(() =>
+  return withPermission('financial-transactions', 'view', () =>
     financialTransactionUseCases.getSubcategoryBreakdown.execute(categoryId, new Date(startDate), new Date(endDate), raw),
   );
 }
 
 export async function getTransactionDocumentsData(transactionId: string): Promise<TransactionDocument[]> {
-  return withTenant(() => financialTransactionUseCases.listDocuments.execute(transactionId));
+  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.listDocuments.execute(transactionId));
 }

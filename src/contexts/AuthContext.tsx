@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = (token: string, user: User) => {
     // Cookie de SESSÃO (sem max-age): apagado ao fechar o navegador → reabrir exige login.
-    document.cookie = `authToken=${token}; path=/; SameSite=Lax`;
+    // The login/switch Server Action already set the credential cookie.
 
     sessionStorage.setItem('userData', JSON.stringify(user));
     markActivity();
@@ -245,7 +245,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const newToken = result.token;
         // Mantém cookie de SESSÃO (sem max-age) também na renovação.
-        document.cookie = `authToken=${newToken}; path=/; SameSite=Lax`;
+        // The refresh Server Action owns cookie flags, including Secure.
         setAuthState(prev => ({ ...prev, token: newToken }));
         console.log('[AuthContext] Token renovado em background.');
       } catch (error) {
