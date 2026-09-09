@@ -201,17 +201,17 @@ export class PrismaFinancialInvoicesRepository implements InvoicesRepository {
     if (effective_date) transactionData.effective_date = parseLocalDate(effective_date);
     if (institution_id) transactionData.financial_institution_id = institution_id;
 
-    const [updatedTransactions, updatedInvoice] = await prisma.$transaction([
-      prisma.transaction.updateMany({
+    const [updatedTransactions, updatedInvoice] = await prisma.$transaction(async tx => Promise.all([
+      tx.transaction.updateMany({
         where: { invoice_id: id, deleted_at: null },
         data: transactionData,
       }),
-      prisma.invoice.update({
+      tx.invoice.update({
         where: { id },
         data: updateData,
         include: { card: CARD_SELECT as never },
       }),
-    ]);
+    ]));
 
     return {
       ...updatedInvoice,

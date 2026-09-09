@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies, headers } from 'next/headers';
 import { jwtService } from './jwt-service';
 import { runWithTenant } from '@/infra/database/tenant-context';
+import { runWithAuditActor } from '@/infra/database/audit-context';
 import type { DecodedSessionToken } from '@/core/cryptography/token-signer';
 import { UnauthorizedError, ForbiddenError } from '@/core/errors/domain-errors';
 import { prismaUserGroupPermissionsRepository } from '@/infra/repositories/prisma-user-group-permissions-repository';
@@ -110,7 +111,7 @@ export async function withTenant<T>(
   if (!session.company_id) {
     throw new ForbiddenError('Contexto de empresa não identificado. Faça login novamente.');
   }
-  return runWithTenant(session.company_id, () => fn(session));
+  return runWithTenant(session.company_id, () => runWithAuditActor(session, () => fn(session)));
 }
 
 /**

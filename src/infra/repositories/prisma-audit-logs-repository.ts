@@ -739,7 +739,7 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
       null;
 
     // Busca o registro atual no banco para carregar todos os dados da tabela e relacionamentos
-    if (log.record_id) {
+    if (log.record_id && !('id' in oldValues) && !('id' in newValues)) {
       const delegate =
         modelInfo?.delegate ??
         (prisma as any)[log.table_name.charAt(0).toLowerCase() + log.table_name.slice(1)];
@@ -882,6 +882,7 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     const logs = await prisma.auditLog.findMany({
       where,
       select: { user_name: true, user_email: true, table_name: true },
+      distinct: ['user_name', 'user_email', 'table_name'],
     });
 
     const uniqueUsers = Array.from(
@@ -893,12 +894,6 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     ).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 
     const uniqueTables = Array.from(new Set(logs.map((l) => l.table_name))).sort();
-
-    const dateRange = await prisma.auditLog.aggregate({
-      where,
-      _min: { created_at: true },
-      _max: { created_at: true },
-    });
 
     return {
       filters: [
@@ -935,8 +930,6 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
           type: 'date',
           label: 'Período',
           description: 'Data/hora da ação',
-          min: dateRange._min.created_at?.toISOString().split('T')[0],
-          max: dateRange._max.created_at?.toISOString().split('T')[0],
           dateRange: true,
         },
       ],
@@ -984,6 +977,7 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     });
 
     if (orderBy.length === 0) orderBy.push({ created_at: 'desc' });
+    orderBy.push({ id: 'desc' });
 
     return orderBy;
   }

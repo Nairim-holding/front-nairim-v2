@@ -29,7 +29,9 @@ function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' |
 
   for (const { cssVar, lightField, darkField } of COLOR_MAPPINGS) {
     const lightValue = branding[lightField] as string | null;
-    const value = mode === 'light' ? lightValue : ((branding[darkField] as string | null) ?? lightValue);
+    // Fundos e textos claros não são fallback legível para o tema escuro.
+    const canInheritLight = !['bg_color', 'card_color', 'border_color', 'text_color'].includes(lightField);
+    const value = mode === 'light' ? lightValue : ((branding[darkField] as string | null) ?? (canInheritLight ? lightValue : null));
     if (isSafeBrandingColor(value)) lines.push(`  ${cssVar}: ${value};`);
   }
 

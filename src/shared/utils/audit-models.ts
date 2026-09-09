@@ -12,6 +12,12 @@
 export const MODEL_LABELS: Record<string, string> = {
   Agency: 'Imobiliária',
   Property: 'Imóvel',
+  PropertyValue: 'Valores e condições do imóvel',
+  PropertyIptu: 'IPTU do imóvel',
+  Company: 'Empresa',
+  CompanyBranding: 'Identidade visual da empresa',
+  Contact: 'Contato',
+  ContactChannel: 'Telefone ou e-mail do contato',
   PropertyType: 'Tipo de Imóvel',
   User: 'Usuário',
   Document: 'Documento',

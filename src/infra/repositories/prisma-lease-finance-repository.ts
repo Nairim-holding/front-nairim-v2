@@ -52,28 +52,32 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
 
   /** Resolve (find-or-create) o fornecedor-espelho da imobiliária. */
   private async resolveAgencySupplier(agencyId: string, companyId: string): Promise<string | null> {
-    const existing = await prisma.supplier.findFirst({ where: { agency_id: agencyId, company_id: companyId, deleted_at: null } });
-    if (existing) return existing.id;
+    return prisma.$transaction(async tx => {
+      // Serializa a resolução por imobiliária para duas gerações não criarem espelhos.
+      await tx.$queryRaw`SELECT id FROM "Agency" WHERE id = ${agencyId} AND company_id = ${companyId} FOR UPDATE`;
+      const agency = await tx.agency.findFirst({ where: { id: agencyId, company_id: companyId, deleted_at: null } });
+      if (!agency) return null;
+      const linked = await tx.supplier.findMany({ where: { agency_id: agencyId, company_id: companyId, deleted_at: null } });
+      if (linked.length === 1) return linked[0].id;
+      if (linked.length > 1) throw new Error('Há contatos duplicados vinculados à imobiliária. Consolide os cadastros antes de gerar lançamentos.');
 
-    const agency = await prisma.agency.findUnique({ where: { id: agencyId } });
-    if (!agency) return null;
-
-    // internal_code determinístico e único por imobiliária (a constraint
-    // @@unique([company_id, internal_code]) trata NULLs como iguais nesta base,
-    // então não dá para usar NULL). Identificação real do mirror é por agency_id.
-    const supplier = await prisma.supplier.create({
-      data: {
-        legal_name: agency.legal_name,
-        trade_name: agency.trade_name,
-        cnpj: agency.cnpj,
-        internal_code: `AG-${agencyId.slice(0, 8)}`,
-        created_via: 'agency_mirror',
-        is_active: true,
-        agency: { connect: { id: agencyId } },
-        company: { connect: { id: companyId } },
-      },
+      const cnpj = agency.cnpj.replace(/\D/g, '');
+      const candidates = cnpj.length === 14
+        ? (await tx.supplier.findMany({ where: { company_id: companyId, deleted_at: null, is_active: true, OR: [{ agency_id: null }, { agency_id: agencyId }] } }))
+          .filter(supplier => supplier.cnpj?.replace(/\D/g, '') === cnpj)
+        : [];
+      if (candidates.length > 1) throw new Error('Há mais de um contato com o CNPJ da imobiliária. Consolide os cadastros antes de gerar lançamentos.');
+      if (candidates.length === 1) {
+        await tx.supplier.update({ where: { id: candidates[0].id }, data: { agency_id: agencyId } });
+        return candidates[0].id;
+      }
+      const supplier = await tx.supplier.create({ data: {
+        legal_name: agency.legal_name, trade_name: agency.trade_name, cnpj: agency.cnpj,
+        internal_code: `AG-${agencyId}`, created_via: 'agency_mirror', is_active: true,
+        agency: { connect: { id: agencyId } }, company: { connect: { id: companyId } },
+      } });
+      return supplier.id;
     });
-    return supplier.id;
   }
 
   /** Monta as parcelas de IPTU conforme a condição de pagamento da locação. */

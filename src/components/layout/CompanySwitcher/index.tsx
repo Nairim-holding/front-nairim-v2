@@ -51,7 +51,7 @@ function CompanyAvatar({
         alt={label}
         width={size === 'sm' ? 20 : 28}
         height={size === 'sm' ? 20 : 28}
-        className={`${px} rounded-md object-contain shrink-0`}
+        className={`${px} rounded-md object-contain shrink-0${isDark && !company?.branding?.logo_dark_url ? ' invert' : ''}`}
         unoptimized
       />
     );

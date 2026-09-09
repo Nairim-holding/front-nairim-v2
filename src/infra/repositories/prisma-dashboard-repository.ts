@@ -1,3 +1,4 @@
+import { releaseExpiredProperties } from './property-occupancy';
 import { isLocationConfirmed, coordinate } from '@/shared/utils/property-location';
 import prisma from '@/infra/database/prisma';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
@@ -42,6 +43,7 @@ export { calcVariation, calculateVacancyMonths, decimalToNumber, getPeriodDatesI
 
 export class PrismaDashboardRepository implements DashboardRepository {
   async getFinancial(startDate: Date, endDate: Date): Promise<FinancialMetrics> {
+    await releaseExpiredProperties(prisma);
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
@@ -219,6 +221,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getPortfolio(startDate: Date, endDate: Date): Promise<PortfolioMetrics> {
+    await releaseExpiredProperties(prisma);
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
@@ -540,6 +543,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getGeolocation(startDate: Date, endDate: Date): Promise<GeolocationResponse> {
+    await releaseExpiredProperties(prisma);
     const properties = await prisma.property.findMany({
       where: { deleted_at: null },
       include: {

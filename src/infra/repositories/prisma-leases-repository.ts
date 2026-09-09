@@ -1,3 +1,4 @@
+import { occupancyDate, syncPropertyOccupancy } from './property-occupancy';
 import prisma from '@/infra/database/prisma';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
 import type { LeasesRepository } from '@/core/repositories/leases-repository';
@@ -65,12 +66,10 @@ function normalizeText(text: string): string {
 
 /** Status calculado por data (idêntico a `LeaseService.determineStatus`). */
 function determineStatus(endDate: Date): 'EXPIRED' | 'EXPIRING' | 'ACTIVE' {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setHours(0, 0, 0, 0);
+  const now = occupancyDate();
+  const end = new Date(endDate.toISOString().slice(0, 10) + 'T00:00:00.000Z');
   const oneMonthFromNow = new Date(now);
-  oneMonthFromNow.setMonth(now.getMonth() + 1);
+  oneMonthFromNow.setUTCMonth(now.getUTCMonth() + 1);
   if (end < now) return 'EXPIRED';
   if (end <= oneMonthFromNow) return 'EXPIRING';
   return 'ACTIVE';
@@ -411,11 +410,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
         },
       });
 
-      // Se criou e está ativa/expirando, garante que o imóvel fique OCUPADO.
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: data.property_id, deleted_at: null }, orderBy: { created_at: 'desc' } });
-      if (propertyValue && propertyValue.status !== 'OCCUPIED' && calculatedStatus !== 'CANCELED') {
-        await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'OCCUPIED' } });
-      }
+      await syncPropertyOccupancy(tx, data.property_id);
 
       return newLease;
     });
@@ -443,18 +438,9 @@ export class PrismaLeasesRepository implements LeasesRepository {
         },
       });
 
-      const targetPropertyId = data.property_id ?? existing.property_id;
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: targetPropertyId, deleted_at: null }, orderBy: { created_at: 'desc' } });
-
-      if (propertyValue) {
-        if (calculatedStatus !== 'CANCELED' && propertyValue.status !== 'OCCUPIED') {
-          await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'OCCUPIED' } });
-        } else if (calculatedStatus === 'CANCELED' && propertyValue.status === 'OCCUPIED') {
-          const activeLeases = await tx.lease.count({ where: { property_id: targetPropertyId, NOT: { id: updatedLease.id }, deleted_at: null, status: { not: 'CANCELED' } } });
-          if (activeLeases === 0) {
-            await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'AVAILABLE' } });
-          }
-        }
+      await syncPropertyOccupancy(tx, existing.property_id);
+      if (data.property_id && data.property_id !== existing.property_id) {
+        await syncPropertyOccupancy(tx, data.property_id);
       }
 
       return updatedLease;
@@ -473,13 +459,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
         data: { deleted_at: new Date(), status: 'CANCELED', canceled_at: existing.canceled_at || new Date() },
       });
 
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: existing.property_id, deleted_at: null }, orderBy: { created_at: 'desc' } });
-      if (propertyValue && propertyValue.status === 'OCCUPIED') {
-        const activeLeases = await tx.lease.count({ where: { property_id: existing.property_id, NOT: { id }, deleted_at: null, status: { not: 'CANCELED' } } });
-        if (activeLeases === 0) {
-          await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'AVAILABLE' } });
-        }
-      }
+      await syncPropertyOccupancy(tx, existing.property_id);
       return deletedLease;
     });
 
@@ -495,13 +475,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
       await tx.transaction.deleteMany({ where: { lease_id: id } });
       await tx.lease.delete({ where: { id } });
 
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: existing.property_id, deleted_at: null }, orderBy: { created_at: 'desc' } });
-      if (propertyValue && propertyValue.status === 'OCCUPIED') {
-        const activeLeases = await tx.lease.count({ where: { property_id: existing.property_id, NOT: { id }, deleted_at: null, status: { not: 'CANCELED' } } });
-        if (activeLeases === 0) {
-          await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'AVAILABLE' } });
-        }
-      }
+      await syncPropertyOccupancy(tx, existing.property_id);
       return existing;
     });
 
@@ -515,14 +489,11 @@ export class PrismaLeasesRepository implements LeasesRepository {
     const result = await prisma.$transaction(async (tx: any) => {
       const updatedLease = await tx.lease.update({
         where: { id },
-        data: { status: determineStatus(existing.end_date), canceled_at: null, cancellation_penalty: null, other_cancellation_amounts: null, cancellation_justification: null },
+        data: { deleted_at: null, status: determineStatus(existing.end_date), canceled_at: null, cancellation_penalty: null, other_cancellation_amounts: null, cancellation_justification: null },
       });
 
-      // Como restaurou a locação, garante que o imóvel fique OCUPADO.
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: existing.property_id, deleted_at: null }, orderBy: { created_at: 'desc' } });
-      if (propertyValue && propertyValue.status !== 'OCCUPIED') {
-        await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'OCCUPIED' } });
-      }
+      await syncPropertyOccupancy(tx, existing.property_id);
+
       return updatedLease;
     });
 
@@ -610,13 +581,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
       });
 
       // 4. Libera o imóvel se não houver outra locação ativa.
-      const propertyValue = await tx.propertyValue.findFirst({ where: { property_id: existing.property_id, deleted_at: null }, orderBy: { created_at: 'desc' } });
-      if (propertyValue && propertyValue.status === 'OCCUPIED') {
-        const activeLeases = await tx.lease.count({ where: { property_id: existing.property_id, NOT: { id }, deleted_at: null, status: { not: 'CANCELED' } } });
-        if (activeLeases === 0) {
-          await tx.propertyValue.update({ where: { id: propertyValue.id }, data: { status: 'AVAILABLE' } });
-        }
-      }
+      await syncPropertyOccupancy(tx, existing.property_id);
 
       // `Transaction.amount` também é `@db.Decimal` — mesma serialização necessária.
       const serializedCharge = charge ? { ...charge, amount: Number(charge.amount) } : charge;

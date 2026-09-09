@@ -1,3 +1,4 @@
+import { releaseExpiredProperties } from './property-occupancy';
 import prisma from '@/infra/database/prisma';
 import { resolveLocation, type LocationAddress } from '@/shared/utils/property-location';
 import { buildDateTimeCondition } from '@/shared/utils/date-utils';
@@ -291,6 +292,7 @@ function buildIptuData(iptu: NonNullable<CreateUnifiedPropertyData['iptus']>[num
 
 export class PrismaPropertiesRepository implements PropertiesRepository {
   async list(params: ListPropertiesParams): Promise<PaginatedProperties> {
+    await releaseExpiredProperties(prisma);
     const take = Math.max(1, Math.min(params.limit, 100));
     const skip = (Math.max(1, params.page) - 1) * take;
 
@@ -398,6 +400,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
   }
 
   async findById(id: string): Promise<Property | null> {
+    await releaseExpiredProperties(prisma);
     const property = await prisma.property.findFirst({ where: { id, deleted_at: null }, include: DETAIL_INCLUDE });
     if (!property) return null;
     if ((property as any).documents) (property as any).documents = sortPropertyDocuments((property as any).documents);

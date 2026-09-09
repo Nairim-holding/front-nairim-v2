@@ -1,6 +1,7 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
+import prisma from '@/infra/database/prisma';
 import { authUseCases } from '@/infra/factories/auth-factory';
 import {
   loginSchema,
@@ -55,12 +56,26 @@ export async function loginAction(input: { email: string; password: string }): P
 
     const result = await authUseCases.login.execute(parsed.data);
     await validateLiveSession(jwtService.verify(result.token));
+    await prisma.auditLog.create({ data: {
+      company_id: result.user.company_id, user_id: result.user.id,
+      user_name: result.user.name, user_email: result.user.email,
+      action: 'LOGIN', table_name: 'Auth', record_id: result.user.id, ip: ip.slice(0, 45),
+    } });
     loginRateLimiter.reset(emailKey, ip);
     await setSessionCookie(result.token, result.user.company_slug || undefined);
     return { ok: true, token: result.token, user: result.user, slug: result.user.company_slug };
   } catch (err) {
     if (err instanceof InvalidCredentialsError) {
       loginRateLimiter.registerFailure(emailKey, ip);
+      try {
+        const user = await prisma.user.findFirst({ where: { email: { equals: emailKey, mode: 'insensitive' } }, select: { id: true, company_id: true, name: true } });
+        await prisma.auditLog.create({ data: {
+          company_id: user?.company_id, user_id: user?.id, user_name: user?.name,
+          user_email: emailKey, action: 'LOGIN_FAILED', table_name: 'Auth', ip: ip.slice(0, 45),
+        } });
+      } catch (auditError) {
+        console.error('[audit] Falha ao registrar tentativa de login', auditError);
+      }
       return { ok: false, message: 'Email ou senha incorretos', rateLimit: loginRateLimiter.getStatus(emailKey, ip) };
     }
 

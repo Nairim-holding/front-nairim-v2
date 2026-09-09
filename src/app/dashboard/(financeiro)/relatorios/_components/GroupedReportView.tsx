@@ -133,9 +133,8 @@ const GroupedReportView = forwardRef<ReportViewHandle, GroupedReportViewProps>(f
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {
     const tooltipConfig = getCustomEchartsTooltipConfig((params: any) => {
       const item = Array.isArray(params) ? params[0] : params;
-      const g = chartData[item.dataIndex];
-      return buildCustomTooltipHTML(g?.label ?? item.name ?? '', [
-        { label: groupColumnLabel, value: formatCurrency(g?.total ?? item.value ?? 0), color: item.color },
+      return buildCustomTooltipHTML(item.name ?? '', [
+        { label: groupColumnLabel, value: formatCurrency(Number(item.value ?? 0)), color: item.color },
       ]);
     });
 

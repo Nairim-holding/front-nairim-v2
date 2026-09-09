@@ -408,6 +408,7 @@ model AuditLog {
   @@index([action])
   @@index([table_name])
   @@index([created_at])
+  @@index([company_id, created_at(sort: Desc), id(sort: Desc)])
 }
 
 model UserColumnPreference {

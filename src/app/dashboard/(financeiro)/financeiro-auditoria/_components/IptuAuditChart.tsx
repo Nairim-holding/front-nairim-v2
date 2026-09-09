@@ -61,6 +61,7 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
     () =>
       sortedRows.map((r) => ({
         property: r.propertyTitle,
+        propertyType: r.propertyType ?? 'Não informado',
         income: r.income,
         expense: r.expense,
         balance: r.balance,
@@ -71,6 +72,7 @@ export default function IptuAuditChart({ rows, isLoading }: IptuAuditChartProps)
   const detailColumns = useMemo(
     () => [
       { key: 'property', label: 'Imóvel' },
+      { key: 'propertyType', label: 'Tipo do imóvel' },
       { key: 'income', label: 'Restituição (CR)', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'expense', label: 'IPTU Pago (DB)', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'balance', label: 'Saldo', format: (v: number) => formatCurrency(v), summable: true },

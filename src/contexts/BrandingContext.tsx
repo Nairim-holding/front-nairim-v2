@@ -139,8 +139,11 @@ export function BrandingProvider({
     const name = b?.company_name ?? DEFAULT_NAME;
 
     const light = resolveColorSet(b, LIGHT_FIELD_BY_KEY, DEFAULT_LIGHT_COLORS, DEFAULT_LIGHT_COLORS);
-    // Tema escuro herda do claro quando a empresa não definiu uma cor `_dark` específica
-    const dark = resolveColorSet(b, DARK_FIELD_BY_KEY, light, DEFAULT_DARK_COLORS);
+    // Mantém as cores da marca, usando fundos/textos próprios do tema escuro.
+    const dark = resolveColorSet(b, DARK_FIELD_BY_KEY, {
+      ...light, bg: DEFAULT_DARK_COLORS.bg, card: DEFAULT_DARK_COLORS.card,
+      border: DEFAULT_DARK_COLORS.border, text: DEFAULT_DARK_COLORS.text,
+    }, DEFAULT_DARK_COLORS);
 
     return {
       branding: b,
@@ -150,7 +153,7 @@ export function BrandingProvider({
       appDescription: b?.app_description ?? `Plataforma de gestão imobiliária — ${name}`,
       logoUrl: b?.logo_url ?? null,
       logoSidebarUrl: b?.logo_sidebar_url ?? b?.logo_url ?? null,
-      logoDarkUrl: b?.logo_dark_url ?? b?.logo_url ?? null,
+      logoDarkUrl: b?.logo_dark_url ?? null,
       faviconUrl: b?.favicon_url ?? null,
       ogImageUrl: b?.og_image_url ?? null,
       primaryColor: light.primary,

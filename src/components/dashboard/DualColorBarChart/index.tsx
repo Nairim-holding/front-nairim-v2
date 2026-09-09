@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import type { EChartsOption } from 'echarts';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getThemeTokens } from '@/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 export interface DualColorBarItem {
@@ -69,6 +70,7 @@ export default function DualColorBarChart({
   isLoading,
   valueFormatter,
 }: DualColorBarChartProps) {
+  useTheme();
   const tokens = getThemeTokens();
   const baseColor = color ?? tokens.chartSeries[0];
   const lightColor = hexToRgba(baseColor, 0.3);

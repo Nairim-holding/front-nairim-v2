@@ -73,6 +73,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       select: {
         id: true,
         title: true,
+        type: { select: { description: true } },
         center_id: true,
         debit_center_id: true,
         addresses: {
@@ -103,6 +104,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       rowsByProperty.set(p.id, {
         propertyId: p.id,
         propertyTitle: p.title,
+        propertyType: p.type?.description ?? null,
         address: addressStr,
         income: 0,
         expense: 0,
@@ -135,7 +137,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       event_date: true,
       effective_date: true,
       center_id: true,
-      lease: { select: { property: { select: { id: true, title: true } } } },
+      lease: { select: { contract_number: true, tenant: { select: { name: true } }, property: { select: { id: true, title: true } } } },
     } as const;
 
     const [incomeTxns, expenseTxns] = await Promise.all([
@@ -151,7 +153,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       const amount = Number(t.amount);
       row.income += amount;
       const txDate = (t.effective_date ?? t.event_date).toISOString().slice(0, 10);
-      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'INCOME' });
+      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'INCOME', tenantName: t.lease?.tenant?.name ?? null, contractNumber: t.lease?.contract_number ?? null });
     }
 
     for (const t of expenseTxns) {
@@ -162,7 +164,7 @@ export class PrismaIptuAuditRepository implements IptuAuditRepository {
       const amount = Number(t.amount);
       row.expense += amount;
       const txDate = (t.effective_date ?? t.event_date).toISOString().slice(0, 10);
-      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'EXPENSE' });
+      row.transactions.push({ id: t.id, description: t.description, amount, date: txDate, type: 'EXPENSE', tenantName: t.lease?.tenant?.name ?? null, contractNumber: t.lease?.contract_number ?? null });
     }
 
     const rows = Array.from(rowsByProperty.values())

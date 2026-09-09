@@ -897,8 +897,8 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       ? `${baseDescription} – Origem conta ${originInst.name}`
       : `Transferência – Origem conta ${originInst.name}`;
 
-    const [origin, mirror] = await prisma.$transaction([
-      prisma.transaction.create({
+    const [origin, mirror] = await prisma.$transaction(async tx => Promise.all([
+      tx.transaction.create({
         data: {
           event_date: eventDate,
           effective_date: effectiveDate,
@@ -914,7 +914,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         } as never,
         include: { category: true, financial_institution: true, supplier: true } as never,
       }),
-      prisma.transaction.create({
+      tx.transaction.create({
         data: {
           event_date: eventDate,
           effective_date: effectiveDate,
@@ -930,7 +930,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         } as never,
         include: { category: true, financial_institution: true, supplier: true } as never,
       }),
-    ]);
+    ]));
 
     return {
       transfer_group_id: transferGroupId,

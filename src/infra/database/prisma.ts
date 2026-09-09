@@ -2,6 +2,7 @@ import { env } from '@/infra/config/env';
 import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getCurrentCompanyId } from './tenant-context';
+import { withAuditContext } from './audit-context';
 
 /**
  * Client Prisma com extensão MULTI-TENANT.
@@ -169,4 +170,4 @@ const prisma: ExtendedPrisma = globalForPrisma.prisma ?? buildPrismaClient();
 
 if (env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-export default prisma;
+export default withAuditContext(prisma);

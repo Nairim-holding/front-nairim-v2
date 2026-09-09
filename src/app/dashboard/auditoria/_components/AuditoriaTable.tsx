@@ -28,7 +28,7 @@ export default function AuditoriaTable({ columns }: AuditoriaTableProps) {
         autoFocusSearch
         defaultLimit={150}
         enableExcelExport
-        excludeFilterFields={['created_at']}
+        enableRefresh
         enableCreate={false}
         enableView={false}
         enableEdit={false}

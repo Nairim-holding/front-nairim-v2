@@ -194,7 +194,7 @@ export default function AuditoriaIptuContent() {
         ) : (
           <>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <IptuAuditComparativeChart monthly={monthly} yearly={yearly} isLoading={isLoading} />
+              <IptuAuditComparativeChart rows={rows} monthly={monthly} yearly={yearly} isLoading={isLoading} />
               <IptuAuditChart rows={rows} isLoading={isLoading} />
             </div>
             <IptuAuditTable rows={rows} totals={totals} isLoading={isLoading} />

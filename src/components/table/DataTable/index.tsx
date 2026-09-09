@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
-import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip, FileSpreadsheet } from "lucide-react";
+import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip, FileSpreadsheet, RefreshCw } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
@@ -59,6 +59,7 @@ interface DynamicTableManagerProps {
   filtersFetcher?: (appliedFilters?: Record<string, any>) => Promise<any>;
   /** Botão de exportar para Excel na toolbar (Tarefa 5.1 do guia de correções) — desligado por padrão para não alterar telas existentes. */
   enableExcelExport?: boolean;
+  enableRefresh?: boolean;
   /**
    * Campos do backend a esconder do modal de Filtro (Tarefa 5.4 do guia de
    * correções) — ex.: remover "Período" de Logs de Auditoria, que passou a
@@ -98,6 +99,7 @@ export default function DynamicTableManager({
   rowActions,
   filtersFetcher,
   enableExcelExport = false,
+  enableRefresh = false,
   excludeFilterFields,
 }: DynamicTableManagerProps) {
   const { can } = usePermissions();
@@ -1110,6 +1112,13 @@ export default function DynamicTableManager({
                     </span>
                   )}
                 </div>
+                {enableRefresh && !useLocalMode && (
+                  <button type="button" onClick={refreshData} disabled={isLoadingData}
+                    className="p-2 hover:bg-surface-subtle rounded transition-colors disabled:opacity-50"
+                    title="Atualizar registros" aria-label="Atualizar registros">
+                    <RefreshCw size={20} className={isLoadingData ? 'animate-spin' : ''} />
+                  </button>
+                )}
                 {canDeletePerm && (
                   <button
                     type="button"

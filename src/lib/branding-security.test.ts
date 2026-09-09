@@ -18,4 +18,15 @@ describe('branding injection protection', () => {
     expect(css).toContain('body.dark');
     expect(css).toContain('--color-brand: #123456;');
   });
+  it('does not paint dark-mode cards white when only light branding is configured', () => {
+    const css = buildBrandingCss({ primary_color: '#123456', card_color: '#ffffff', text_color: '#111111' } as CompanyBranding);
+    const dark = css.split('body.dark')[1];
+    expect(dark).not.toContain('--color-bg-surface: #ffffff');
+    expect(dark).not.toContain('--color-text-primary: #111111');
+    expect(dark).toContain('--color-brand-primary: #123456');
+  });
+  it('honors an explicit dark card color', () => {
+    const css = buildBrandingCss({ card_color: '#ffffff', card_color_dark: '#202020' } as CompanyBranding);
+    expect(css.split('body.dark')[1]).toContain('--color-bg-surface: #202020');
+  });
 });

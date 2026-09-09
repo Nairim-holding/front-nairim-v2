@@ -41,11 +41,14 @@ export interface IptuAuditTransactionDetail {
   amount: number;
   date: string;
   type: 'INCOME' | 'EXPENSE';
+  tenantName: string | null;
+  contractNumber: string | null;
 }
 
 export interface IptuAuditRow {
   propertyId: string;
   propertyTitle: string;
+  propertyType: string | null;
   address: string | null;
   income: number;
   expense: number;

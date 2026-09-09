@@ -14,25 +14,25 @@ interface LogoProps {
 export default function Logo({ className = '', variant = 'default' }: LogoProps) {
   const { logoUrl, logoSidebarUrl, logoDarkUrl, companyName } = useBranding();
   const { isDark } = useTheme();
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   // Cascata de fallback: variante específica → dark (se tema escuro ativo) → logo padrão
-  const resolvedUrl =
-    variant === 'sidebar' ? (logoSidebarUrl ?? logoUrl) :
-    variant === 'dark' ? (logoDarkUrl ?? logoUrl) :
-    isDark ? (logoDarkUrl ?? logoUrl) : logoUrl;
+  const wantsDark = isDark || variant === 'dark';
+  const resolvedUrl = wantsDark && logoDarkUrl ? logoDarkUrl :
+    variant === 'sidebar' ? (logoSidebarUrl ?? logoUrl) : logoUrl;
+  const imageClassName = `${className}${wantsDark && !logoDarkUrl ? ' invert' : ''}`;
 
   // Se houver URL customizada, válida e a imagem não falhou, renderiza a imagem
-  if (resolvedUrl && !imageFailed) {
+  if (resolvedUrl && failedUrl !== resolvedUrl) {
     return (
       <Image
         src={resolvedUrl}
         alt={companyName}
         width={131}
         height={46}
-        className={className}
+        className={imageClassName}
         unoptimized
-        onError={() => setImageFailed(true)}
+        onError={() => setFailedUrl(resolvedUrl)}
       />
     );
   }

@@ -133,6 +133,33 @@ export const createUnifiedPropertySchema = z.object({
 /** Update: mesma forma do create (o front sempre envia o objeto completo no fluxo unificado). */
 export const updateUnifiedPropertySchema = createUnifiedPropertySchema;
 
+/** Um IPTU legado inalterado não impede editar as outras abas do imóvel. */
+export function parseUnifiedPropertyUpdate(input: Record<string, unknown>, existingIptus: unknown[]) {
+  const baseIptuSchema = iptuSchema.innerType();
+  const fields = Object.keys(baseIptuSchema.shape);
+  const normalize = (field: string, value: unknown): string => {
+    if (value === null || value === undefined || value === '') return '';
+    if (field.endsWith('_date')) return (value instanceof Date ? value.toISOString() : String(value)).slice(0, 10);
+    if (field === 'iptu_installments') return JSON.stringify(value);
+    if (field !== 'id' && field !== 'payment_condition') return String(Number(value));
+    return String(value);
+  };
+  const existing = existingIptus as Record<string, unknown>[];
+  const iptus = z.array(baseIptuSchema).parse(input.iptus ?? []);
+  const changed = iptus.filter(iptu => {
+    const saved = iptu.id ? existing.find(item => item.id === iptu.id) : undefined;
+    return !saved || fields.some(field => normalize(field, iptu[field as keyof typeof iptu]) !== normalize(field, saved[field]));
+  });
+  // Validação completa continua obrigatória para qualquer IPTU novo ou alterado.
+  const checked = createUnifiedPropertySchema.safeParse({ ...input, iptus: changed });
+  if (!checked.success) {
+    throw new z.ZodError(checked.error.issues.map(issue => issue.path[0] === 'iptus' && typeof issue.path[1] === 'number'
+      ? { ...issue, path: ['iptus', iptus.indexOf(changed[issue.path[1]]), ...issue.path.slice(2)] }
+      : issue));
+  }
+  return { ...checked.data, iptus };
+}
+
 export const listPropertiesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(150).default(150),
   page: z.coerce.number().int().min(1).default(1),

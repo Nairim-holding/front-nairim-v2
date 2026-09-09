@@ -3,23 +3,8 @@
 import { Fragment, useState } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 
-export interface IptuAuditTransaction {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  type: 'INCOME' | 'EXPENSE';
-}
-
-export interface IptuAuditRow {
-  propertyId: string;
-  propertyTitle: string;
-  address: string | null;
-  income: number;
-  expense: number;
-  balance: number;
-  transactions: IptuAuditTransaction[];
-}
+import type { IptuAuditRow } from '@/core/entities/iptu-audit';
+export type { IptuAuditRow } from '@/core/entities/iptu-audit';
 
 interface IptuAuditTableProps {
   rows: IptuAuditRow[];

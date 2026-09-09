@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import type { IptuAuditRow } from '@/core/entities/iptu-audit';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
@@ -17,6 +18,7 @@ export interface IptuAuditPeriodPoint {
 }
 
 interface IptuAuditComparativeChartProps {
+  rows: IptuAuditRow[];
   monthly: IptuAuditPeriodPoint[];
   yearly: IptuAuditPeriodPoint[];
   isLoading: boolean;
@@ -31,7 +33,7 @@ function formatCurrency(value: number): string {
  * restituição recebida dos inquilinos (receita), com a linha de saldo — é o que
  * mostra se os repasses estão corretos ou se há prejuízo (Tarefa 4.1).
  */
-export default function IptuAuditComparativeChart({ monthly, yearly, isLoading }: IptuAuditComparativeChartProps) {
+export default function IptuAuditComparativeChart({ rows, monthly, yearly, isLoading }: IptuAuditComparativeChartProps) {
   useTheme();
   const tokens = getThemeTokens();
   const [mode, setMode] = useState<'month' | 'year'>('month');
@@ -111,24 +113,38 @@ export default function IptuAuditComparativeChart({ monthly, yearly, isLoading }
   );
 
   const detailData = useMemo(
-    () =>
-      points.map((p) => ({
-        periodo: p.label,
-        income: p.income,
-        expense: p.expense,
-        balance: p.balance,
-      })),
-    [points],
+    () => rows.flatMap(row => row.transactions.map(transaction => {
+      const key = transaction.date.slice(0, mode === 'month' ? 7 : 4);
+      return {
+        id: transaction.id,
+        periodo: points.find(point => point.key === key)?.label ?? key,
+        date: transaction.date,
+        property: row.propertyTitle,
+        propertyType: row.propertyType ?? 'Não informado',
+        tenant: transaction.tenantName ?? 'Sem inquilino vinculado',
+        contract: transaction.contractNumber ?? '—',
+        description: transaction.description,
+        income: transaction.type === 'INCOME' ? transaction.amount : 0,
+        expense: transaction.type === 'EXPENSE' ? transaction.amount : 0,
+        balance: transaction.type === 'INCOME' ? transaction.amount : -transaction.amount,
+      };
+    })).sort((a, b) => a.date.localeCompare(b.date) || a.property.localeCompare(b.property, 'pt-BR')),
+    [rows, points, mode],
   );
 
   const detailColumns = useMemo(
     () => [
-      { key: 'periodo', label: mode === 'month' ? 'Mês' : 'Ano' },
+      { key: 'date', label: 'Data', format: (v: string) => v.split('-').reverse().join('/') },
+      { key: 'property', label: 'Imóvel' },
+      { key: 'propertyType', label: 'Tipo do imóvel' },
+      { key: 'tenant', label: 'Inquilino' },
+      { key: 'contract', label: 'Contrato' },
+      { key: 'description', label: 'Lançamento' },
       { key: 'income', label: 'Restituição recebida', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'expense', label: 'IPTU pago', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'balance', label: 'Saldo', format: (v: number) => formatCurrency(v), summable: true },
     ],
-    [mode],
+    [],
   );
 
   return (
@@ -138,6 +154,8 @@ export default function IptuAuditComparativeChart({ monthly, yearly, isLoading }
         isDraggable={false}
         detailData={detailData}
         detailColumns={detailColumns}
+        detailGroupBy={{ key: 'periodo', order: points.map(point => point.label) }}
+        detailTotalLabel="lançamentos"
       >
         {({ isFullscreen }) =>
           !isLoading && points.length === 0 ? (

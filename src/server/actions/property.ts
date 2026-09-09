@@ -1,11 +1,11 @@
 'use server';
 
 import { propertyUseCases } from '@/infra/factories/property-factory';
-import { createUnifiedPropertySchema, updateUnifiedPropertySchema } from '@/shared/validators/property';
+import { createUnifiedPropertySchema, parseUnifiedPropertyUpdate } from '@/shared/validators/property';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { withPermission, withPermissionInput } from '@/infra/auth/session';
 import { readJsonField, readStringField, readPropertyUploadFiles } from '@/shared/http/form-data';
-import { ValidationError } from '@/core/errors/domain-errors';
+import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
 import type { CreateUnifiedPropertyData, PaginatedProperties, Property } from '@/core/entities/property';
 import { listPropertiesData, getPropertyByIdData, getPropertyFiltersData } from '@/server/queries/property';
 
@@ -57,15 +57,17 @@ export async function createUnifiedPropertyAction(formData: FormData): Promise<A
 export async function updateUnifiedPropertyAction(id: string, formData: FormData): Promise<ActionResult<Property>> {
   return runAction(async () => {
     const combined = parseUnifiedFormData(formData);
-    const data = updateUnifiedPropertySchema.parse(combined) as unknown as CreateUnifiedPropertyData;
 
     const featuredImageIdentifier = readStringField(formData, 'featuredImageIdentifier') || undefined;
     const removedDocuments = readJsonField<string[]>(formData, 'removedDocuments') ?? [];
     const files = await readPropertyUploadFiles(formData);
 
-    return withPermissionInput('properties', 'edit', data, (session) =>
-      propertyUseCases.updateUnified.execute(id, { data, files, userId: session.id, removedDocuments, featuredImageIdentifier }),
-    );
+    return withPermissionInput('properties', 'edit', combined, async (session) => {
+      const existing = await propertyUseCases.getById.execute(id);
+      if (!existing) throw new NotFoundError('Propriedade não encontrada');
+      const data = parseUnifiedPropertyUpdate(combined, existing.iptus ?? []) as unknown as CreateUnifiedPropertyData;
+      return propertyUseCases.updateUnified.execute(id, { data, files, userId: session.id, removedDocuments, featuredImageIdentifier });
+    });
   });
 }
 
