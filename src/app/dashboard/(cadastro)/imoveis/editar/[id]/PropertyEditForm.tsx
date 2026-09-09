@@ -9,6 +9,7 @@ import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../../_lib/propertySteps';
 import { buildPropertyFormData, transformPropertyData } from '../../_lib/propertyTransform';
 import { updateUnifiedPropertyAction, getPropertyByIdAction } from '@/server/actions/property';
+import { findOccupyingLease } from '@/shared/utils/property-occupancy';
 
 
 interface Props {
@@ -34,7 +35,7 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
   const { handleFieldChange } = usePropertyAddressLookup(showMessage);
   const [completedSteps] = useState<number[]>([0, 1, 2, 3, 4]);
 
-  const activeLease = propertyData?.leases?.find((l: any) => l.status !== 'CANCELED'); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const activeLease = findOccupyingLease(propertyData?.leases);
 
   const steps = useMemo(
     () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, activeLease }),

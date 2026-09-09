@@ -166,7 +166,7 @@ export function buildPropertySteps({
           icon: <Key size={20} />,
           renderBottom: hasActiveLease
             ? () => (
-                <div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 shadow-lg">
+                <div className="absolute z-10 bottom-full mb-2 hidden group-hover:block bg-surface-subtle text-content border border-ui-border text-xs rounded p-2 shadow-lg">
                   Inquilino atual: {tenantName}
                 </div>
               )

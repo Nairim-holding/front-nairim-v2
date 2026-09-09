@@ -1,14 +1,7 @@
 import type { Prisma } from '@/generated/prisma/client';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
-
-/** Contratos DATE-only continuam válidos durante todo o último dia em São Paulo. */
-export function occupancyDate(now = new Date()): Date {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(now);
-  const part = (type: string) => parts.find(p => p.type === type)!.value;
-  return new Date(`${part('year')}-${part('month')}-${part('day')}T00:00:00.000Z`);
-}
+import { occupancyDate } from '@/shared/utils/property-occupancy';
+export { occupancyDate } from '@/shared/utils/property-occupancy';
 
 type Client = Pick<typeof import('@/infra/database/prisma').default, 'property' | 'propertyValue' | 'lease'>;
 

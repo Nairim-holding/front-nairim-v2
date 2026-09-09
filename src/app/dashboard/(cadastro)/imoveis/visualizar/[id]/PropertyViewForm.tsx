@@ -5,6 +5,7 @@ import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, type SelectOption } from '../../_lib/propertySteps';
 import { transformPropertyData } from '../../_lib/propertyTransform';
 import { getPropertyByIdAction } from '@/server/actions/property';
+import { findOccupyingLease } from '@/shared/utils/property-occupancy';
 
 interface Props {
   id: string;
@@ -25,7 +26,7 @@ const COMPLETED_STEPS = [0, 1, 2, 3, 4];
 const noop = async () => null;
 
 export default function PropertyViewForm({ id, propertyData, ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw }: Props) {
-  const activeLease = propertyData?.leases?.[0];
+  const activeLease = findOccupyingLease(propertyData?.leases);
 
   const steps = useMemo(
     () => buildPropertySteps({ ownerOptions, typeOptions, agencyOptions, centerOptions, creditCenterOptions, debitCenterOptions, categoryOptions, subcategoryOptions, subcategoriesRaw, readOnly: true, activeLease }),
