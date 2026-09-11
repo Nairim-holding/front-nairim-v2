@@ -23,7 +23,7 @@ services:
       - EVOLUTION_API_URL=http://evolution-api:8080
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
       - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
-      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
+      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs-prod:27017/?authSource=admin
     env_file:
       - .env
     volumes:
@@ -32,7 +32,7 @@ services:
       - postgres
       - minio
       - evolution-api
-      - mongodb-logs
+      - mongodb-logs-prod
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -120,7 +120,7 @@ services:
       - PORT=3000
       # Vence o .env.test montado em /app/.env: dentro do compose o Mongo é
       # alcançado pelo DNS interno, nunca por 127.0.0.1.
-      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
+      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_STAGING_USER:-nairim_logs}:${MONGODB_LOGS_STAGING_PASSWORD}@mongodb-logs-staging:27017/?authSource=admin
       - MONGODB_LOGS_DATABASE=${MONGODB_LOGS_TEST_DATABASE:-nairim_logs_test}
     env_file:
       - path: .env.test
@@ -128,7 +128,7 @@ services:
     depends_on:
       - postgres-test-2
       - minio
-      - mongodb-logs
+      - mongodb-logs-staging
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -179,7 +179,7 @@ services:
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000
-      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
+      - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_STAGING_USER:-nairim_logs}:${MONGODB_LOGS_STAGING_PASSWORD}@mongodb-logs-staging:27017/?authSource=admin
       - MONGODB_LOGS_DATABASE=${MONGODB_LOGS_HOMOLOG_DATABASE:-nairim_logs_homolog}
     env_file:
       - path: .env.homolog
@@ -187,7 +187,7 @@ services:
     depends_on:
       - postgres-homolog
       - minio
-      - mongodb-logs
+      - mongodb-logs-staging
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"

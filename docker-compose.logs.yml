@@ -1,7 +1,9 @@
 services:
-  mongodb-logs:
+  # Produção tem instância, volume e credencial exclusivos: backup, restore,
+  # queda ou reset de teste/homologação nunca alcançam o histórico real.
+  mongodb-logs-prod:
     image: mongo:8.0
-    container_name: nairim-mongodb-logs
+    container_name: nairim-mongodb-logs-prod
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_LOGS_USER:?Configure MONGODB_LOGS_USER}
@@ -9,12 +11,33 @@ services:
     ports:
       - "127.0.0.1:${MONGODB_LOGS_PORT:-27018}:27017"
     volumes:
-      - mongodb_logs_data:/data/db
+      - mongodb_logs_prod_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
       interval: 10s
       timeout: 5s
       retries: 12
+
+  # Instância compartilhada por teste e homologação, separados por database.
+  # Só sobe com --profile test ou --profile homolog.
+  mongodb-logs-staging:
+    profiles: ["test", "homolog"]
+    image: mongo:8.0
+    container_name: nairim-mongodb-logs-staging
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_LOGS_STAGING_USER:-nairim_logs}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_LOGS_STAGING_PASSWORD:?Configure MONGODB_LOGS_STAGING_PASSWORD}
+    ports:
+      - "127.0.0.1:${MONGODB_LOGS_STAGING_PORT:-27019}:27017"
+    volumes:
+      - mongodb_logs_staging_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   # Um serviço de transferência por PostgreSQL: cada ambiente tem a sua própria
   # fila AuditLogOutbox e o worker só lê o banco apontado em DATABASE_URL.
   logs-worker:
@@ -28,9 +51,9 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: ${LOGS_WORKER_DATABASE_URL:?Configure LOGS_WORKER_DATABASE_URL}
-      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
+      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs-prod:27017/?authSource=admin
     depends_on:
-      mongodb-logs:
+      mongodb-logs-prod:
         condition: service_healthy
 
   logs-worker-test:
@@ -47,11 +70,10 @@ services:
         required: false
     environment:
       DATABASE_URL: ${LOGS_WORKER_TEST_DATABASE_URL:-}
-      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
-      # Banco separado: teste nunca escreve na coleção de produção.
+      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_STAGING_USER:-nairim_logs}:${MONGODB_LOGS_STAGING_PASSWORD}@mongodb-logs-staging:27017/?authSource=admin
       MONGODB_LOGS_DATABASE: ${MONGODB_LOGS_TEST_DATABASE:-nairim_logs_test}
     depends_on:
-      mongodb-logs:
+      mongodb-logs-staging:
         condition: service_healthy
 
   logs-worker-homolog:
@@ -66,11 +88,15 @@ services:
         required: false
     environment:
       DATABASE_URL: ${LOGS_WORKER_HOMOLOG_DATABASE_URL:-}
-      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs:27017/?authSource=admin
+      MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_STAGING_USER:-nairim_logs}:${MONGODB_LOGS_STAGING_PASSWORD}@mongodb-logs-staging:27017/?authSource=admin
       MONGODB_LOGS_DATABASE: ${MONGODB_LOGS_HOMOLOG_DATABASE:-nairim_logs_homolog}
     depends_on:
-      mongodb-logs:
+      mongodb-logs-staging:
         condition: service_healthy
 volumes:
-  mongodb_logs_data:
+  # Mantém o nome do volume já existente na VPS: renomear o serviço não move
+  # dados, e o histórico de produção já migrado continua onde está.
+  mongodb_logs_prod_data:
     name: nairim_mongodb_logs_data
+  mongodb_logs_staging_data:
+    name: nairim_mongodb_logs_staging_data
