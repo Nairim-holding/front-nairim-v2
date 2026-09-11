@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle, History } from 'lucide-react';
+import LogsSettings from './LogsSettings';
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -160,9 +161,12 @@ export default function ConfiguracoesPage() {
 
   return (
     <Section title="Configurações">
-      <div className="max-w-2xl space-y-6">
+      <div className="w-full min-w-0 space-y-6">
+        <div className="mb-2"><p className="text-sm text-content-secondary">Gerencie os dados da empresa, as cópias de segurança e o histórico de atividades.</p></div>
+        {isAdmin && <LogsSettings />}
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         {/* Backup */}
-        <div className="bg-surface border border-ui-border rounded-xl p-6">
+        <div className="bg-surface border border-ui-border rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2 rounded-lg bg-brand/10 text-brand">
               <DatabaseBackup size={22} />
@@ -171,7 +175,7 @@ export default function ConfiguracoesPage() {
           </div>
           <p className="text-[13px] text-content-secondary mb-4">
             Gere uma cópia dos dados da sua empresa. O arquivo inclui imóveis, locações,
-            financeiro, cadastros; arquivos de mídia são referenciados por link.
+            financeiro, cadastros; arquivos de mídia são referenciados por link. Logs são exportados separadamente.
           </p>
 
           {isAdmin ? (
@@ -312,6 +316,7 @@ export default function ConfiguracoesPage() {
           </div>
         )}
 
+        </div>
         {/* Modal de confirmação */}
         {showRestoreConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>

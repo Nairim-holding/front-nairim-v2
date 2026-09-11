@@ -89,6 +89,7 @@ export class GetPlanningDashboardUseCase {
     startDate: string,
     endDate: string,
     filters?: PlanningDashboardFilters,
+    sumPlannedOverPeriod?: boolean,
   ): Promise<PlanningDashboardResponse> {
     if (!DATE_RE.test(startDate)) {
       throw new ValidationError('startDate deve estar no formato YYYY-MM-DD');
@@ -102,7 +103,7 @@ export class GetPlanningDashboardUseCase {
     if (isNaN(end.getTime())) throw new ValidationError('endDate é uma data inválida');
     if (start > end) throw new ValidationError('startDate não pode ser maior que endDate');
 
-    return this.repository.getDashboard(startDate, endDate, filters);
+    return this.repository.getDashboard(startDate, endDate, filters, sumPlannedOverPeriod);
   }
 }
 

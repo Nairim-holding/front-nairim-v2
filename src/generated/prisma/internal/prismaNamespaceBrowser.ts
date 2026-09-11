@@ -60,7 +60,7 @@ export const ModelName = {
   UserAccessSchedule: 'UserAccessSchedule',
   UserGroup: 'UserGroup',
   UserGroupPermission: 'UserGroupPermission',
-  AuditLog: 'AuditLog',
+  AuditLogOutbox: 'AuditLogOutbox',
   UserColumnPreference: 'UserColumnPreference',
   UserDashboardLayout: 'UserDashboardLayout',
   Document: 'Document',
@@ -332,7 +332,7 @@ export const UserGroupPermissionScalarFieldEnum = {
 export type UserGroupPermissionScalarFieldEnum = (typeof UserGroupPermissionScalarFieldEnum)[keyof typeof UserGroupPermissionScalarFieldEnum]
 
 
-export const AuditLogScalarFieldEnum = {
+export const AuditLogOutboxScalarFieldEnum = {
   id: 'id',
   company_id: 'company_id',
   user_id: 'user_id',
@@ -347,7 +347,7 @@ export const AuditLogScalarFieldEnum = {
   created_at: 'created_at'
 } as const
 
-export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+export type AuditLogOutboxScalarFieldEnum = (typeof AuditLogOutboxScalarFieldEnum)[keyof typeof AuditLogOutboxScalarFieldEnum]
 
 
 export const UserColumnPreferenceScalarFieldEnum = {

@@ -29,7 +29,9 @@ import { NotFoundError } from '@/core/errors/domain-errors';
  *    fora ("realizado" e COMPLETED por definicao).
  *  - Saldo anterior (antes de startDate) acumulado nas linhas dos meses.
  *  - FIXED: planejado = default_amount (NAO multiplica por meses). VARIABLE:
- *    planejado = valor do mes corrente.
+ *    planejado = valor do mes corrente. Com `sumPlannedOverPeriod` (so os
+ *    graficos do dashboard passam), o planejado soma um valor por mes do
+ *    periodo — ver sumPlannedOverMonths.
  *  - monthly_values no item: sempre 12 meses (VARIABLE usa os gravados, FIXED
  *    usa default_amount em todos).
  *
@@ -52,6 +54,52 @@ function round2(value: number): number {
 
 function monthKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Planejado de um planejamento.
+ *
+ * `overPeriod = true` (gráficos do dashboard): soma um valor por mês do
+ * recorte — espelha o realizado, que soma os lançamentos de todos os meses.
+ *  - FIXED: `default_amount` em cada mês (12 meses => 12x o valor mensal).
+ *  - VARIABLE: o valor gravado de cada mês-calendário; mês sem registro = 0.
+ *    `monthly_values` não tem ano, então Jan/25 e Jan/26 usam ambos Janeiro.
+ *
+ * `overPeriod = false` (padrão, tela de Planejamento): valor de um único mês,
+ * comportamento original — FIXED usa `default_amount` e VARIABLE o mês
+ * corrente do relógio.
+ */
+function sumPlannedOverMonths(
+  planning: { type: string; default_amount: unknown; monthly_values: Array<{ month: number; amount: unknown }> } | undefined,
+  months: Array<{ month: number; year: number }>,
+  overPeriod: boolean,
+): number {
+  if (!planning) return 0;
+
+  if (!overPeriod) {
+    if (planning.type === 'FIXED') return Number(planning.default_amount ?? 0);
+    if (planning.type === 'VARIABLE') {
+      const currentMonth = new Date().getMonth() + 1;
+      const mv = planning.monthly_values.find((m) => m.month === currentMonth);
+      return Number(mv?.amount ?? 0);
+    }
+    return 0;
+  }
+
+  if (planning.type === 'FIXED') {
+    return Number(planning.default_amount ?? 0) * months.length;
+  }
+
+  if (planning.type === 'VARIABLE') {
+    let total = 0;
+    for (const { month } of months) {
+      const mv = planning.monthly_values.find((m) => m.month === month);
+      total += Number(mv?.amount ?? 0);
+    }
+    return total;
+  }
+
+  return 0;
 }
 
 export class PrismaPlanningsRepository implements PlanningsRepository {
@@ -129,6 +177,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
     startDate: string,
     endDate: string,
     filters?: PlanningDashboardFilters,
+    sumPlannedOverPeriod = false,
   ): Promise<PlanningDashboardResponse> {
     const start = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
@@ -254,16 +303,11 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
 
       const realizedTotal = monthlyRealized.reduce((s, m) => s + m.realized_amount, 0);
 
-      let plannedTotal = 0;
-      const currentMonth = new Date().getMonth() + 1;
-      if (planningData) {
-        if (planningData.type === 'FIXED') {
-          plannedTotal = Number(planningData.default_amount ?? 0);
-        } else if (planningData.type === 'VARIABLE') {
-          const mv = planningData.monthly_values.find((m) => m.month === currentMonth);
-          plannedTotal = Number(mv?.amount ?? 0);
-        }
-      }
+      // Com a flag (gráficos do dashboard), o planejado acompanha o MESMO
+      // recorte do realizado: soma um valor por mês do período — senão um
+      // filtro de 12 meses compara 12 meses de realizado contra 1 de planejado.
+      // Sem a flag, mantém o valor de um único mês (tela de Planejamento).
+      const plannedTotal = sumPlannedOverMonths(planningData, months, sumPlannedOverPeriod);
 
       const percentage =
         plannedTotal > 0 ? Math.round((realizedTotal / plannedTotal) * 10000) / 100 : 0;
@@ -330,15 +374,8 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
         return { month, year, realized_amount: round2(catTxMap?.get(mk) ?? 0) };
       });
 
-      const currentMonth = new Date().getMonth() + 1;
-      if (catPlanning) {
-        if (catPlanning.type === 'FIXED') {
-          catPlannedTotal += Number(catPlanning.default_amount ?? 0);
-        } else if (catPlanning.type === 'VARIABLE') {
-          const mv = catPlanning.monthly_values.find((m) => m.month === currentMonth);
-          catPlannedTotal += Number(mv?.amount ?? 0);
-        }
-      }
+      // Mesma regra do item (ver buildItem).
+      catPlannedTotal += sumPlannedOverMonths(catPlanning, months, sumPlannedOverPeriod);
 
       const catRealizedTotal = catMonthlyData.reduce((s, m) => s + m.realized_amount, 0);
       const catPercentage =

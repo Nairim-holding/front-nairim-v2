@@ -111,7 +111,7 @@ interface DateRangeFilterProps {
   onClear: () => void;
 }
 
-function DateRangeFilter({ filterValue, onChange, onClear }: DateRangeFilterProps) {
+export function DateRangeFilter({ filterValue, onChange, onClear }: DateRangeFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });

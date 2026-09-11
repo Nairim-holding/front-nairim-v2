@@ -289,13 +289,17 @@ export default function Aside({
         </div>
 
         {isSuperAdmin && (
-          <div className="px-3 pt-3">
+          // `relative z-20`: o dropdown do switcher é absolute e precisa ficar
+          // ACIMA dos irmãos seguintes (sino de locações e a nav). Sem um
+          // stacking context próprio aqui, esses blocos — que vêm depois no
+          // DOM — eram pintados por cima da lista de empresas.
+          <div className="relative z-20 px-3 pt-3">
             <CompanySwitcher isOpen={isOpen} onNavigate={() => { if (!isPinned) handleToggle(); }} />
           </div>
         )}
 
         {/* Atalho sempre visível, separado do logo para não ser comprimido. */}
-        <div className="px-3 pt-3">
+        <div className="relative z-10 px-3 pt-3">
           <LeaseOverdueBell placement="sidebar" />
         </div>
 

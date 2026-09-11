@@ -324,7 +324,6 @@ export type UserWhereInput = {
   updated_users?: Prisma.UserListRelationFilter
   created_user_groups?: Prisma.UserGroupListRelationFilter
   updated_user_groups?: Prisma.UserGroupListRelationFilter
-  audit_logs?: Prisma.AuditLogListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -363,7 +362,6 @@ export type UserOrderByWithRelationInput = {
   updated_users?: Prisma.UserOrderByRelationAggregateInput
   created_user_groups?: Prisma.UserGroupOrderByRelationAggregateInput
   updated_user_groups?: Prisma.UserGroupOrderByRelationAggregateInput
-  audit_logs?: Prisma.AuditLogOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -406,7 +404,6 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updated_users?: Prisma.UserListRelationFilter
   created_user_groups?: Prisma.UserGroupListRelationFilter
   updated_user_groups?: Prisma.UserGroupListRelationFilter
-  audit_logs?: Prisma.AuditLogListRelationFilter
 }, "id" | "company_id_email">
 
 export type UserOrderByWithAggregationInput = {
@@ -495,7 +492,6 @@ export type UserCreateInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -530,7 +526,6 @@ export type UserUncheckedCreateInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -565,7 +560,6 @@ export type UserUpdateInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -600,7 +594,6 @@ export type UserUncheckedUpdateInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1022,22 +1015,6 @@ export type UserUncheckedUpdateManyWithoutGroupNestedInput = {
   deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
-export type UserCreateNestedOneWithoutAudit_logsInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutAudit_logsInput, Prisma.UserUncheckedCreateWithoutAudit_logsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAudit_logsInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneWithoutAudit_logsNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutAudit_logsInput, Prisma.UserUncheckedCreateWithoutAudit_logsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAudit_logsInput
-  upsert?: Prisma.UserUpsertWithoutAudit_logsInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAudit_logsInput, Prisma.UserUpdateWithoutAudit_logsInput>, Prisma.UserUncheckedUpdateWithoutAudit_logsInput>
-}
-
 export type UserCreateNestedOneWithoutColumnPreferencesInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutColumnPreferencesInput, Prisma.UserUncheckedCreateWithoutColumnPreferencesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutColumnPreferencesInput
@@ -1143,7 +1120,6 @@ export type UserCreateWithoutCompanyInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCompanyInput = {
@@ -1177,7 +1153,6 @@ export type UserUncheckedCreateWithoutCompanyInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCompanyInput = {
@@ -1264,7 +1239,6 @@ export type UserCreateWithoutCreated_usersInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreated_usersInput = {
@@ -1298,7 +1272,6 @@ export type UserUncheckedCreateWithoutCreated_usersInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreated_usersInput = {
@@ -1337,7 +1310,6 @@ export type UserCreateWithoutUpdated_usersInput = {
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUpdated_usersInput = {
@@ -1371,7 +1343,6 @@ export type UserUncheckedCreateWithoutUpdated_usersInput = {
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUpdated_usersInput = {
@@ -1410,7 +1381,6 @@ export type UserCreateWithoutCreatorInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatorInput = {
@@ -1444,7 +1414,6 @@ export type UserUncheckedCreateWithoutCreatorInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatorInput = {
@@ -1488,7 +1457,6 @@ export type UserCreateWithoutUpdaterInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUpdaterInput = {
@@ -1522,7 +1490,6 @@ export type UserUncheckedCreateWithoutUpdaterInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUpdaterInput = {
@@ -1577,7 +1544,6 @@ export type UserUpdateWithoutCreated_usersInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreated_usersInput = {
@@ -1611,7 +1577,6 @@ export type UserUncheckedUpdateWithoutCreated_usersInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutUpdated_usersInput = {
@@ -1656,7 +1621,6 @@ export type UserUpdateWithoutUpdated_usersInput = {
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdated_usersInput = {
@@ -1690,7 +1654,6 @@ export type UserUncheckedUpdateWithoutUpdated_usersInput = {
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutCreatorInput = {
@@ -1756,7 +1719,6 @@ export type UserCreateWithoutAccess_schedulesInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccess_schedulesInput = {
@@ -1790,7 +1752,6 @@ export type UserUncheckedCreateWithoutAccess_schedulesInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccess_schedulesInput = {
@@ -1840,7 +1801,6 @@ export type UserUpdateWithoutAccess_schedulesInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccess_schedulesInput = {
@@ -1874,7 +1834,6 @@ export type UserUncheckedUpdateWithoutAccess_schedulesInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreated_user_groupsInput = {
@@ -1908,7 +1867,6 @@ export type UserCreateWithoutCreated_user_groupsInput = {
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreated_user_groupsInput = {
@@ -1942,7 +1900,6 @@ export type UserUncheckedCreateWithoutCreated_user_groupsInput = {
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreated_user_groupsInput = {
@@ -1981,7 +1938,6 @@ export type UserCreateWithoutUpdated_user_groupsInput = {
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUpdated_user_groupsInput = {
@@ -2015,7 +1971,6 @@ export type UserUncheckedCreateWithoutUpdated_user_groupsInput = {
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUpdated_user_groupsInput = {
@@ -2054,7 +2009,6 @@ export type UserCreateWithoutGroupInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGroupInput = {
@@ -2088,7 +2042,6 @@ export type UserUncheckedCreateWithoutGroupInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGroupInput = {
@@ -2143,7 +2096,6 @@ export type UserUpdateWithoutCreated_user_groupsInput = {
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreated_user_groupsInput = {
@@ -2177,7 +2129,6 @@ export type UserUncheckedUpdateWithoutCreated_user_groupsInput = {
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutUpdated_user_groupsInput = {
@@ -2222,7 +2173,6 @@ export type UserUpdateWithoutUpdated_user_groupsInput = {
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdated_user_groupsInput = {
@@ -2256,7 +2206,6 @@ export type UserUncheckedUpdateWithoutUpdated_user_groupsInput = {
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutGroupInput = {
@@ -2273,158 +2222,6 @@ export type UserUpdateWithWhereUniqueWithoutGroupInput = {
 export type UserUpdateManyWithWhereWithoutGroupInput = {
   where: Prisma.UserScalarWhereInput
   data: Prisma.XOR<Prisma.UserUpdateManyMutationInput, Prisma.UserUncheckedUpdateManyWithoutGroupInput>
-}
-
-export type UserCreateWithoutAudit_logsInput = {
-  id?: string
-  name: string
-  email: string
-  password: string
-  birth_date: Date | string
-  gender: $Enums.Gender
-  role?: $Enums.Role
-  created_at?: Date | string
-  updated_at?: Date | string
-  deleted_at?: Date | string | null
-  is_active?: boolean
-  photo_url?: string | null
-  phone_country_code?: string | null
-  phone_area_code?: string | null
-  phone?: string | null
-  phone_extension?: string | null
-  has_time_restriction?: boolean
-  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
-  favorites?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  columnPreferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutUserInput
-  dashboardLayouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutUserInput
-  company: Prisma.CompanyCreateNestedOneWithoutUsersInput
-  group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
-  access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
-  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
-  creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
-  updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
-  created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
-  updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
-  created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
-  updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-}
-
-export type UserUncheckedCreateWithoutAudit_logsInput = {
-  id?: string
-  company_id: string
-  name: string
-  email: string
-  password: string
-  birth_date: Date | string
-  gender: $Enums.Gender
-  role?: $Enums.Role
-  created_at?: Date | string
-  updated_at?: Date | string
-  deleted_at?: Date | string | null
-  user_group_id?: string | null
-  is_active?: boolean
-  photo_url?: string | null
-  phone_country_code?: string | null
-  phone_area_code?: string | null
-  phone?: string | null
-  phone_extension?: string | null
-  has_time_restriction?: boolean
-  created_by?: string | null
-  updated_by?: string | null
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
-  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
-  dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
-  access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
-  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
-  created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
-  updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
-  created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
-  updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-}
-
-export type UserCreateOrConnectWithoutAudit_logsInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutAudit_logsInput, Prisma.UserUncheckedCreateWithoutAudit_logsInput>
-}
-
-export type UserUpsertWithoutAudit_logsInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutAudit_logsInput, Prisma.UserUncheckedUpdateWithoutAudit_logsInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutAudit_logsInput, Prisma.UserUncheckedCreateWithoutAudit_logsInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutAudit_logsInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutAudit_logsInput, Prisma.UserUncheckedUpdateWithoutAudit_logsInput>
-}
-
-export type UserUpdateWithoutAudit_logsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
-  birth_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_area_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_extension?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  has_time_restriction?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
-  favorites?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  columnPreferences?: Prisma.UserColumnPreferenceUpdateManyWithoutUserNestedInput
-  dashboardLayouts?: Prisma.UserDashboardLayoutUpdateManyWithoutUserNestedInput
-  company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
-  group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
-  access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
-  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
-  creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
-  updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
-  created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
-  updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
-  created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
-  updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-}
-
-export type UserUncheckedUpdateWithoutAudit_logsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  company_id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
-  birth_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_area_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone_extension?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  has_time_restriction?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  created_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  updated_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
-  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
-  dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
-  access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
-  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
-  created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
-  updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
-  created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
-  updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
 }
 
 export type UserCreateWithoutColumnPreferencesInput = {
@@ -2458,7 +2255,6 @@ export type UserCreateWithoutColumnPreferencesInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutColumnPreferencesInput = {
@@ -2492,7 +2288,6 @@ export type UserUncheckedCreateWithoutColumnPreferencesInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutColumnPreferencesInput = {
@@ -2542,7 +2337,6 @@ export type UserUpdateWithoutColumnPreferencesInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutColumnPreferencesInput = {
@@ -2576,7 +2370,6 @@ export type UserUncheckedUpdateWithoutColumnPreferencesInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDashboardLayoutsInput = {
@@ -2610,7 +2403,6 @@ export type UserCreateWithoutDashboardLayoutsInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDashboardLayoutsInput = {
@@ -2644,7 +2436,6 @@ export type UserUncheckedCreateWithoutDashboardLayoutsInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDashboardLayoutsInput = {
@@ -2694,7 +2485,6 @@ export type UserUpdateWithoutDashboardLayoutsInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDashboardLayoutsInput = {
@@ -2728,7 +2518,6 @@ export type UserUncheckedUpdateWithoutDashboardLayoutsInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDocumentsInput = {
@@ -2762,7 +2551,6 @@ export type UserCreateWithoutDocumentsInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDocumentsInput = {
@@ -2796,7 +2584,6 @@ export type UserUncheckedCreateWithoutDocumentsInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDocumentsInput = {
@@ -2846,7 +2633,6 @@ export type UserUpdateWithoutDocumentsInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDocumentsInput = {
@@ -2880,7 +2666,6 @@ export type UserUncheckedUpdateWithoutDocumentsInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFavoritesInput = {
@@ -2914,7 +2699,6 @@ export type UserCreateWithoutFavoritesInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFavoritesInput = {
@@ -2948,7 +2732,6 @@ export type UserUncheckedCreateWithoutFavoritesInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFavoritesInput = {
@@ -2998,7 +2781,6 @@ export type UserUpdateWithoutFavoritesInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFavoritesInput = {
@@ -3032,7 +2814,6 @@ export type UserUncheckedUpdateWithoutFavoritesInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLease_notificationsInput = {
@@ -3066,7 +2847,6 @@ export type UserCreateWithoutLease_notificationsInput = {
   updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLease_notificationsInput = {
@@ -3100,7 +2880,6 @@ export type UserUncheckedCreateWithoutLease_notificationsInput = {
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
   updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
-  audit_logs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLease_notificationsInput = {
@@ -3150,7 +2929,6 @@ export type UserUpdateWithoutLease_notificationsInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLease_notificationsInput = {
@@ -3184,7 +2962,6 @@ export type UserUncheckedUpdateWithoutLease_notificationsInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyCompanyInput = {
@@ -3241,7 +3018,6 @@ export type UserUpdateWithoutCompanyInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCompanyInput = {
@@ -3275,7 +3051,6 @@ export type UserUncheckedUpdateWithoutCompanyInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutCompanyInput = {
@@ -3378,7 +3153,6 @@ export type UserUpdateWithoutCreatorInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatorInput = {
@@ -3412,7 +3186,6 @@ export type UserUncheckedUpdateWithoutCreatorInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutCreatorInput = {
@@ -3469,7 +3242,6 @@ export type UserUpdateWithoutUpdaterInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdaterInput = {
@@ -3503,7 +3275,6 @@ export type UserUncheckedUpdateWithoutUpdaterInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutUpdaterInput = {
@@ -3583,7 +3354,6 @@ export type UserUpdateWithoutGroupInput = {
   updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGroupInput = {
@@ -3617,7 +3387,6 @@ export type UserUncheckedUpdateWithoutGroupInput = {
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
   updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
-  audit_logs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutGroupInput = {
@@ -3659,7 +3428,6 @@ export type UserCountOutputType = {
   updated_users: number
   created_user_groups: number
   updated_user_groups: number
-  audit_logs: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3673,7 +3441,6 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   updated_users?: boolean | UserCountOutputTypeCountUpdated_usersArgs
   created_user_groups?: boolean | UserCountOutputTypeCountCreated_user_groupsArgs
   updated_user_groups?: boolean | UserCountOutputTypeCountUpdated_user_groupsArgs
-  audit_logs?: boolean | UserCountOutputTypeCountAudit_logsArgs
 }
 
 /**
@@ -3756,13 +3523,6 @@ export type UserCountOutputTypeCountUpdated_user_groupsArgs<ExtArgs extends runt
   where?: Prisma.UserGroupWhereInput
 }
 
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountAudit_logsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.AuditLogWhereInput
-}
-
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -3800,7 +3560,6 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updated_users?: boolean | Prisma.User$updated_usersArgs<ExtArgs>
   created_user_groups?: boolean | Prisma.User$created_user_groupsArgs<ExtArgs>
   updated_user_groups?: boolean | Prisma.User$updated_user_groupsArgs<ExtArgs>
-  audit_logs?: boolean | Prisma.User$audit_logsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -3900,7 +3659,6 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   updated_users?: boolean | Prisma.User$updated_usersArgs<ExtArgs>
   created_user_groups?: boolean | Prisma.User$created_user_groupsArgs<ExtArgs>
   updated_user_groups?: boolean | Prisma.User$updated_user_groupsArgs<ExtArgs>
-  audit_logs?: boolean | Prisma.User$audit_logsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3933,7 +3691,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     updated_users: Prisma.$UserPayload<ExtArgs>[]
     created_user_groups: Prisma.$UserGroupPayload<ExtArgs>[]
     updated_user_groups: Prisma.$UserGroupPayload<ExtArgs>[]
-    audit_logs: Prisma.$AuditLogPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3950,7 +3707,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     user_group_id: string | null
     /**
      * Situação do usuário. Distinto de `deleted_at`: inativo continua existindo,
-     * excluído sai da listagem. Não bloqueia login (campo cadastral).
+     * excluído sai da listagem. Contas inativas são recusadas na validação de sessão.
      */
     is_active: boolean
     /**
@@ -4376,7 +4133,6 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   updated_users<T extends Prisma.User$updated_usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updated_usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   created_user_groups<T extends Prisma.User$created_user_groupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$created_user_groupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   updated_user_groups<T extends Prisma.User$updated_user_groupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updated_user_groupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  audit_logs<T extends Prisma.User$audit_logsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$audit_logsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5122,30 +4878,6 @@ export type User$updated_user_groupsArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.UserGroupScalarFieldEnum | Prisma.UserGroupScalarFieldEnum[]
-}
-
-/**
- * User.audit_logs
- */
-export type User$audit_logsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the AuditLog
-   */
-  select?: Prisma.AuditLogSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the AuditLog
-   */
-  omit?: Prisma.AuditLogOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.AuditLogInclude<ExtArgs> | null
-  where?: Prisma.AuditLogWhereInput
-  orderBy?: Prisma.AuditLogOrderByWithRelationInput | Prisma.AuditLogOrderByWithRelationInput[]
-  cursor?: Prisma.AuditLogWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.AuditLogScalarFieldEnum | Prisma.AuditLogScalarFieldEnum[]
 }
 
 /**

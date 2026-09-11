@@ -92,12 +92,11 @@ export type UserGroup = Prisma.UserGroupModel
  */
 export type UserGroupPermission = Prisma.UserGroupPermissionModel
 /**
- * Model AuditLog
- * Trilha de auditoria: login, inclusão, alteração e exclusão em recursos de
- * negócio. Gerada automaticamente (extensão do Prisma) para CRUD, e
- * manualmente para login/login falho (AuthService).
+ * Model AuditLogOutbox
+ * Fila temporária de entrega ao MongoDB. Os gatilhos preservam a atomicidade
+ * com as alterações de negócio; o worker remove cada entrada após confirmação.
  */
-export type AuditLog = Prisma.AuditLogModel
+export type AuditLogOutbox = Prisma.AuditLogOutboxModel
 /**
  * Model UserColumnPreference
  * 

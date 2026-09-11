@@ -44,7 +44,9 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
 
     (async () => {
       try {
-        const params: Record<string, unknown> = { startDate, endDate, ...(filters ?? {}) };
+        // Planejado somado no mesmo recorte do realizado (senão o ano inteiro
+        // compara 12 meses de realizado contra 1 mês de planejado).
+        const params: Record<string, unknown> = { startDate, endDate, sumPlannedOverPeriod: true, ...(filters ?? {}) };
         const result = await getPlanningDashboardAction(params);
         if (!cancelled && result.ok && Array.isArray(result.data?.expenses)) {
           setCategories(result.data.expenses);

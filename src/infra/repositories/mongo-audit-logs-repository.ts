@@ -1,3 +1,6 @@
+import { logsCollection, type StoredAuditLog } from '@/infra/database/mongodb';
+import { getCurrentCompanyId } from '@/infra/database/tenant-context';
+import type { Filter } from 'mongodb';
 import prisma from '@/infra/database/prisma';
 import type { AuditLogsRepository } from '@/core/repositories/audit-logs-repository';
 import type {
@@ -8,7 +11,6 @@ import type {
   PaginatedAuditLogs,
 } from '@/core/entities/audit-log';
 import {
-  AUDIT_CONTROL_FIELDS,
   AUDIT_HIDDEN_FIELDS,
   AUDIT_MONEY_FIELDS,
   AUDIT_PERCENT_FIELDS,
@@ -21,9 +23,9 @@ import {
 import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 /**
- * Implementação Prisma de {@link AuditLogsRepository}.
+ * Implementação MongoDB de {@link AuditLogsRepository}.
  * Porte de api-nairim-v2/src/services/AuditLogService.ts.
- * Tenant-scoped: `AuditLog` está em TENANT_MODELS.
+ * Todas as consultas exigem contexto de empresa.
  *
  * Camada: infra.
  */
@@ -36,21 +38,6 @@ const ACTION_LABELS: Record<string, string> = {
   DELETE: 'Exclusão',
 };
 
-const SELECT = {
-  id: true,
-  company: { select: { id: true, name: true } },
-  user_name: true,
-  user_email: true,
-  action: true,
-  table_name: true,
-  record_id: true,
-  ip: true,
-  created_at: true,
-  // Só para derivar a descrição legível do registro na coluna "Registro"
-  // (Tarefa 8.2) — o uuid cru não dizia nada ao usuário.
-  old_values: true,
-  new_values: true,
-} as const;
 
 type RawRow = {
   id: string;
@@ -617,84 +604,68 @@ const MODEL_FIELDS: Record<string, string[]> = {
   ],
 };
 
-/** Relações a serem incluídas ao buscar o registro completo para extrair contatos, endereços e grupos */
-const INCLUDE_RELATIONS: Record<string, any> = {
-  agency: { addresses: { include: { address: true } }, contacts: true },
-  agencies: { addresses: { include: { address: true } }, contacts: true },
-  owner: { addresses: { include: { address: true } }, contacts: true },
-  owners: { addresses: { include: { address: true } }, contacts: true },
-  tenant: { addresses: { include: { address: true } }, contacts: true },
-  tenants: { addresses: { include: { address: true } }, contacts: true },
-  supplier: { addresses: { include: { address: true } }, contacts: true },
-  suppliers: { addresses: { include: { address: true } }, contacts: true },
-  property: { addresses: { include: { address: true } } },
-  properties: { addresses: { include: { address: true } } },
-};
-
 /** Mapeamento robusto de nome de tabela/model (singular, plural, snake_case) para o delegate do Prisma e campos de negócio */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const MODEL_MAPPING: Record<string, { delegate?: any; fields?: string[] }> = {
-  agency: { delegate: prisma.agency, fields: MODEL_FIELDS.Agency },
-  agencies: { delegate: prisma.agency, fields: MODEL_FIELDS.Agency },
-  property: { delegate: prisma.property, fields: MODEL_FIELDS.Property },
-  properties: { delegate: prisma.property, fields: MODEL_FIELDS.Property },
-  propertytype: { delegate: prisma.propertyType, fields: MODEL_FIELDS.PropertyType },
-  property_type: { delegate: prisma.propertyType, fields: MODEL_FIELDS.PropertyType },
-  property_types: { delegate: prisma.propertyType, fields: MODEL_FIELDS.PropertyType },
-  propertytypes: { delegate: prisma.propertyType, fields: MODEL_FIELDS.PropertyType },
-  propertyvalue: { delegate: prisma.propertyValue, fields: MODEL_FIELDS.PropertyValue },
-  property_value: { delegate: prisma.propertyValue, fields: MODEL_FIELDS.PropertyValue },
-  property_values: { delegate: prisma.propertyValue, fields: MODEL_FIELDS.PropertyValue },
-  propertyvalues: { delegate: prisma.propertyValue, fields: MODEL_FIELDS.PropertyValue },
-  propertyiptu: { delegate: prisma.propertyIptu, fields: MODEL_FIELDS.PropertyIptu },
-  property_iptu: { delegate: prisma.propertyIptu, fields: MODEL_FIELDS.PropertyIptu },
-  property_iptus: { delegate: prisma.propertyIptu, fields: MODEL_FIELDS.PropertyIptu },
-  user: { delegate: prisma.user, fields: MODEL_FIELDS.User },
-  users: { delegate: prisma.user, fields: MODEL_FIELDS.User },
-  owner: { delegate: prisma.owner, fields: MODEL_FIELDS.Owner },
-  owners: { delegate: prisma.owner, fields: MODEL_FIELDS.Owner },
-  tenant: { delegate: prisma.tenant, fields: MODEL_FIELDS.Tenant },
-  tenants: { delegate: prisma.tenant, fields: MODEL_FIELDS.Tenant },
-  lease: { delegate: prisma.lease, fields: MODEL_FIELDS.Lease },
-  leases: { delegate: prisma.lease, fields: MODEL_FIELDS.Lease },
-  financialinstitution: { delegate: prisma.financialInstitution, fields: MODEL_FIELDS.FinancialInstitution },
-  financial_institution: { delegate: prisma.financialInstitution, fields: MODEL_FIELDS.FinancialInstitution },
-  financial_institutions: { delegate: prisma.financialInstitution, fields: MODEL_FIELDS.FinancialInstitution },
-  financialinstitutions: { delegate: prisma.financialInstitution, fields: MODEL_FIELDS.FinancialInstitution },
-  category: { delegate: prisma.category, fields: MODEL_FIELDS.Category },
-  categories: { delegate: prisma.category, fields: MODEL_FIELDS.Category },
-  subcategory: { delegate: prisma.subcategory, fields: MODEL_FIELDS.Subcategory },
-  subcategories: { delegate: prisma.subcategory, fields: MODEL_FIELDS.Subcategory },
-  card: { delegate: prisma.card, fields: MODEL_FIELDS.Card },
-  cards: { delegate: prisma.card, fields: MODEL_FIELDS.Card },
-  center: { delegate: prisma.center, fields: MODEL_FIELDS.Center },
-  centers: { delegate: prisma.center, fields: MODEL_FIELDS.Center },
-  supplier: { delegate: prisma.supplier, fields: MODEL_FIELDS.Supplier },
-  suppliers: { delegate: prisma.supplier, fields: MODEL_FIELDS.Supplier },
-  transaction: { delegate: prisma.transaction, fields: MODEL_FIELDS.Transaction },
-  transactions: { delegate: prisma.transaction, fields: MODEL_FIELDS.Transaction },
-  invoice: { delegate: prisma.invoice, fields: MODEL_FIELDS.Invoice },
-  invoices: { delegate: prisma.invoice, fields: MODEL_FIELDS.Invoice },
-  recurringconfig: { delegate: prisma.recurringConfig, fields: MODEL_FIELDS.RecurringConfig },
-  recurring_config: { delegate: prisma.recurringConfig, fields: MODEL_FIELDS.RecurringConfig },
-  recurring_configs: { delegate: prisma.recurringConfig, fields: MODEL_FIELDS.RecurringConfig },
-  recurringconfigs: { delegate: prisma.recurringConfig, fields: MODEL_FIELDS.RecurringConfig },
-  planning: { delegate: prisma.planning, fields: MODEL_FIELDS.Planning },
-  plannings: { delegate: prisma.planning, fields: MODEL_FIELDS.Planning },
-  usergroup: { delegate: prisma.userGroup, fields: MODEL_FIELDS.UserGroup },
-  user_group: { delegate: prisma.userGroup, fields: MODEL_FIELDS.UserGroup },
-  user_groups: { delegate: prisma.userGroup, fields: MODEL_FIELDS.UserGroup },
-  usergroups: { delegate: prisma.userGroup, fields: MODEL_FIELDS.UserGroup },
-  document: { delegate: prisma.document, fields: MODEL_FIELDS.Document },
-  documents: { delegate: prisma.document, fields: MODEL_FIELDS.Document },
-  company: { delegate: prisma.company, fields: [] },
-  companies: { delegate: prisma.company, fields: [] },
-  companybranding: { delegate: prisma.companyBranding, fields: [] },
-  company_branding: { delegate: prisma.companyBranding, fields: [] },
+const MODEL_MAPPING: Record<string, { fields?: string[] }> = {
+  agency: { fields: MODEL_FIELDS.Agency },
+  agencies: { fields: MODEL_FIELDS.Agency },
+  property: { fields: MODEL_FIELDS.Property },
+  properties: { fields: MODEL_FIELDS.Property },
+  propertytype: { fields: MODEL_FIELDS.PropertyType },
+  property_type: { fields: MODEL_FIELDS.PropertyType },
+  property_types: { fields: MODEL_FIELDS.PropertyType },
+  propertytypes: { fields: MODEL_FIELDS.PropertyType },
+  propertyvalue: { fields: MODEL_FIELDS.PropertyValue },
+  property_value: { fields: MODEL_FIELDS.PropertyValue },
+  property_values: { fields: MODEL_FIELDS.PropertyValue },
+  propertyvalues: { fields: MODEL_FIELDS.PropertyValue },
+  propertyiptu: { fields: MODEL_FIELDS.PropertyIptu },
+  property_iptu: { fields: MODEL_FIELDS.PropertyIptu },
+  property_iptus: { fields: MODEL_FIELDS.PropertyIptu },
+  user: { fields: MODEL_FIELDS.User },
+  users: { fields: MODEL_FIELDS.User },
+  owner: { fields: MODEL_FIELDS.Owner },
+  owners: { fields: MODEL_FIELDS.Owner },
+  tenant: { fields: MODEL_FIELDS.Tenant },
+  tenants: { fields: MODEL_FIELDS.Tenant },
+  lease: { fields: MODEL_FIELDS.Lease },
+  leases: { fields: MODEL_FIELDS.Lease },
+  financialinstitution: { fields: MODEL_FIELDS.FinancialInstitution },
+  financial_institution: { fields: MODEL_FIELDS.FinancialInstitution },
+  financial_institutions: { fields: MODEL_FIELDS.FinancialInstitution },
+  financialinstitutions: { fields: MODEL_FIELDS.FinancialInstitution },
+  category: { fields: MODEL_FIELDS.Category },
+  categories: { fields: MODEL_FIELDS.Category },
+  subcategory: { fields: MODEL_FIELDS.Subcategory },
+  subcategories: { fields: MODEL_FIELDS.Subcategory },
+  card: { fields: MODEL_FIELDS.Card },
+  cards: { fields: MODEL_FIELDS.Card },
+  center: { fields: MODEL_FIELDS.Center },
+  centers: { fields: MODEL_FIELDS.Center },
+  supplier: { fields: MODEL_FIELDS.Supplier },
+  suppliers: { fields: MODEL_FIELDS.Supplier },
+  transaction: { fields: MODEL_FIELDS.Transaction },
+  transactions: { fields: MODEL_FIELDS.Transaction },
+  invoice: { fields: MODEL_FIELDS.Invoice },
+  invoices: { fields: MODEL_FIELDS.Invoice },
+  recurringconfig: { fields: MODEL_FIELDS.RecurringConfig },
+  recurring_config: { fields: MODEL_FIELDS.RecurringConfig },
+  recurring_configs: { fields: MODEL_FIELDS.RecurringConfig },
+  recurringconfigs: { fields: MODEL_FIELDS.RecurringConfig },
+  planning: { fields: MODEL_FIELDS.Planning },
+  plannings: { fields: MODEL_FIELDS.Planning },
+  usergroup: { fields: MODEL_FIELDS.UserGroup },
+  user_group: { fields: MODEL_FIELDS.UserGroup },
+  user_groups: { fields: MODEL_FIELDS.UserGroup },
+  usergroups: { fields: MODEL_FIELDS.UserGroup },
+  document: { fields: MODEL_FIELDS.Document },
+  documents: { fields: MODEL_FIELDS.Document },
+  company: { fields: [] },
+  companies: { fields: [] },
+  companybranding: { fields: [] },
+  company_branding: { fields: [] },
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
-export class PrismaAuditLogsRepository implements AuditLogsRepository {
+export class MongoAuditLogsRepository implements AuditLogsRepository {
   async list(params: GetAuditLogsParams): Promise<PaginatedAuditLogs> {
     const { limit = 150, page = 1, search = '', filters = {}, sortOptions = {} } = params;
 
@@ -705,8 +676,8 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     const orderBy = this.buildOrderBy(sortOptions);
 
     const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({ where, skip, take, orderBy, select: SELECT }),
-      prisma.auditLog.count({ where }),
+      (await logsCollection()).find(where).sort(orderBy).skip(skip).limit(take).toArray(),
+      (await logsCollection()).countDocuments(where),
     ]);
 
     return {
@@ -718,12 +689,7 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
   }
 
   async findById(id: string): Promise<AuditLogDetail | null> {
-    // findFirst é escopado por empresa pela extensão do Prisma (AuditLog está
-    // em TENANT_MODELS): uma empresa não alcança log de outra pelo uuid.
-    const log = await prisma.auditLog.findFirst({
-      where: { id },
-      select: SELECT,
-    });
+    const log = await (await logsCollection()).findOne({ ...this.buildWhereClause({}, ""), id });
     if (!log) return null;
 
     const oldValues = (log.old_values as Record<string, unknown> | null) ?? {};
@@ -738,79 +704,7 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
       MODEL_MAPPING[cleanTable.replace(/[^a-z0-9]/g, '')] ??
       null;
 
-    // Busca o registro atual no banco para carregar todos os dados da tabela e relacionamentos
-    if (log.record_id && !('id' in oldValues) && !('id' in newValues)) {
-      const delegate =
-        modelInfo?.delegate ??
-        (prisma as any)[log.table_name.charAt(0).toLowerCase() + log.table_name.slice(1)];
-
-      if (delegate) {
-        try {
-          const include = INCLUDE_RELATIONS[cleanTable];
-          let currentRecord: Record<string, unknown> | null = null;
-
-          if (typeof delegate.findUnique === 'function') {
-            currentRecord = (await delegate.findUnique({
-              where: { id: log.record_id },
-              ...(include ? { include } : {}),
-            })) as Record<string, unknown> | null;
-          }
-
-          if (!currentRecord && typeof delegate.findFirst === 'function') {
-            currentRecord = (await delegate.findFirst({
-              where: { id: log.record_id },
-              ...(include ? { include } : {}),
-            })) as Record<string, unknown> | null;
-          }
-
-          if (currentRecord) {
-            // Se o registro tiver endereços relacionados (Address), achata para os campos de endereço
-            if (Array.isArray((currentRecord as any).addresses) && (currentRecord as any).addresses.length > 0) {
-              const primaryAddr = (currentRecord as any).addresses[0]?.address ?? (currentRecord as any).addresses[0];
-              if (primaryAddr && typeof primaryAddr === 'object') {
-                for (const [k, v] of Object.entries(primaryAddr)) {
-                  if (v !== null && typeof v === 'object' && !(v instanceof Date)) continue;
-                  if (k !== 'id' && !(k in currentRecord)) {
-                    (currentRecord as any)[k] = v;
-                  }
-                }
-              }
-            }
-
-            // Se o registro tiver contatos relacionados (Contact), achata para os campos de contato
-            if (Array.isArray((currentRecord as any).contacts) && (currentRecord as any).contacts.length > 0) {
-              const primaryContact = (currentRecord as any).contacts[0];
-              if (primaryContact && typeof primaryContact === 'object') {
-                for (const [k, v] of Object.entries(primaryContact)) {
-                  if (v !== null && typeof v === 'object' && !(v instanceof Date)) continue;
-                  if (k !== 'id' && !(k in currentRecord)) {
-                    (currentRecord as any)[k] = v;
-                  }
-                }
-              }
-            }
-
-            for (const [k, v] of Object.entries(currentRecord)) {
-              if (v !== null && typeof v === 'object' && !(v instanceof Date)) continue;
-              if (log.action === 'UPDATE') {
-                if (!(k in fullOldValues)) {
-                  fullOldValues[k] = v;
-                }
-                if (!(k in fullNewValues)) {
-                  fullNewValues[k] = null;
-                }
-              } else if (log.action === 'CREATE') {
-                if (!(k in fullNewValues)) {
-                  fullNewValues[k] = v;
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn(`[auditLogs] Falha ao carregar registro completo de ${log.table_name}:`, (err as Error).message);
-        }
-      }
-    }
+    // Snapshots são históricos; não completar com valores atuais do cadastro.
 
     // Garante que TODOS os campos da tabela existam na lista para exibição completa
     const catalogFields =
@@ -879,11 +773,11 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
   async getFilters(filters: Record<string, unknown>): Promise<AuditFiltersResponse> {
     const where = this.buildWhereClause(filters, '');
 
-    const logs = await prisma.auditLog.findMany({
-      where,
-      select: { user_name: true, user_email: true, table_name: true },
-      distinct: ['user_name', 'user_email', 'table_name'],
-    });
+    const logs = await (await logsCollection()).aggregate<{user_name: string | null; user_email: string | null; table_name: string}>([
+      { $match: where },
+      { $group: { _id: { user_name: '$user_name', user_email: '$user_email', table_name: '$table_name' } } },
+      { $replaceRoot: { newRoot: '$_id' } },
+    ]).toArray();
 
     const uniqueUsers = Array.from(
       new Map(
@@ -936,51 +830,37 @@ export class PrismaAuditLogsRepository implements AuditLogsRepository {
     };
   }
 
-  private buildWhereClause(filters: Record<string, unknown>, search: string) {
-    const where: Record<string, unknown> = {};
-
+  private buildWhereClause(filters: Record<string, unknown>, search: string): Filter<StoredAuditLog> {
+    const companyId = getCurrentCompanyId();
+    if (!companyId) throw new Error('Contexto de empresa obrigatório para logs.');
+    const where: Filter<StoredAuditLog> = { company_id: companyId };
     if (search.trim()) {
-      const term = search.trim();
-      where.OR = [
-        { user_name: { contains: term, mode: 'insensitive' } },
-        { user_email: { contains: term, mode: 'insensitive' } },
+      const term = search.trim().replace(/[.*+?^${}()|[\]\\]/g, match => '\\' + match);
+      where.$or = [
+        { user_name: { $regex: term, $options: 'i' } },
+        { user_email: { $regex: term, $options: 'i' } },
       ];
     }
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') return;
-
-      if (key === 'user_email') {
-        where.user_email = String(value);
-      } else if (key === 'action') {
-        where.action = String(value).toUpperCase();
-      } else if (key === 'table_name') {
-        where.table_name = String(value);
-      } else if (key === 'created_at') {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value === undefined || value === null || value === '') continue;
+      if (key === 'user_email') where.user_email = String(value);
+      else if (key === 'action') where.action = String(value).toUpperCase();
+      else if (key === 'table_name') where.table_name = String(value);
+      else if (key === 'created_at') {
         const condition = buildDateTimeCondition(value);
-        if (Object.keys(condition).length > 0) where.created_at = condition;
+        if (Object.keys(condition).length) where.created_at = Object.fromEntries(Object.entries(condition).map(([key, date]) => ['$' + key, date]));
       }
-    });
-
+    }
     return where;
   }
-
   private buildOrderBy(sortOptions: Record<string, string>) {
-    const orderBy: Record<string, 'asc' | 'desc'>[] = [];
-
-    Object.entries(sortOptions).forEach(([field, value]) => {
-      if (!value) return;
-      const direction = String(value).toLowerCase() === 'desc' ? 'desc' : 'asc';
-      if (['created_at', 'action', 'table_name', 'user_name'].includes(field)) {
-        orderBy.push({ [field]: direction });
-      }
-    });
-
-    if (orderBy.length === 0) orderBy.push({ created_at: 'desc' });
-    orderBy.push({ id: 'desc' });
-
+    const orderBy: Record<string, 1 | -1> = {};
+    for (const [field, value] of Object.entries(sortOptions)) {
+      if (value && ['created_at', 'action', 'table_name', 'user_name'].includes(field)) orderBy[field] = value.toLowerCase() === 'desc' ? -1 : 1;
+    }
+    if (!Object.keys(orderBy).length) orderBy.created_at = -1;
+    orderBy.id = -1;
     return orderBy;
   }
 }
-
-export const prismaAuditLogsRepository = new PrismaAuditLogsRepository();
+export const mongoAuditLogsRepository = new MongoAuditLogsRepository();

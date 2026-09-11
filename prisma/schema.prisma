@@ -51,7 +51,6 @@ model Company {
   user_groups             UserGroup[]
   user_group_permissions  UserGroupPermission[]
   user_access_schedules   UserAccessSchedule[]
-  audit_logs              AuditLog[]
   iptu_audit_settings     IptuAuditSettings?
 }
 
@@ -291,7 +290,6 @@ model User {
   created_user_groups UserGroup[] @relation("UserGroupCreatedBy")
   updated_user_groups UserGroup[] @relation("UserGroupUpdatedBy")
 
-  audit_logs AuditLog[]
 
   @@unique([company_id, email])
   @@index([company_id])
@@ -372,14 +370,13 @@ model UserGroupPermission {
   @@index([user_group_id])
 }
 
-/// Trilha de auditoria: login, inclusão, alteração e exclusão em recursos de
-/// negócio. Gerada automaticamente (extensão do Prisma) para CRUD, e
-/// manualmente para login/login falho (AuthService).
-model AuditLog {
+/// Fila temporária de entrega ao MongoDB. Os gatilhos preservam a atomicidade
+/// com as alterações de negócio; o worker remove cada entrada após confirmação.
+model AuditLogOutbox {
   id         String      @id @default(uuid())
   /// Nulo só quando o login falho nem resolve um usuário (e-mail inexistente).
   company_id String?
-  /// Nulo + SetNull: a linha sobrevive à remoção do usuário que a gerou.
+  /// Snapshot sem FK: remover um usuário não altera uma entrega pendente.
   user_id    String?
   /// Snapshot do nome/e-mail no momento da ação — não depende do usuário
   /// ainda existir, nem reflete um rename posterior.
@@ -400,8 +397,6 @@ model AuditLog {
   ip         String?     @db.VarChar(45)
   created_at DateTime    @default(now())
 
-  company Company? @relation(fields: [company_id], references: [id])
-  user    User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@index([company_id])
   @@index([user_id])

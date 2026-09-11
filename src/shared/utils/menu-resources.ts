@@ -233,8 +233,8 @@ export const MENU_RESOURCES: MenuResource[] = [
     key: 'audit-logs',
     label: 'Auditoria',
     group: 'Configurações',
-    // Log é gerado pelo sistema, não cadastrado — só visualização faz sentido.
-    actions: ['view'],
+      // Exportação e expurgo exigem também papel de administrador no servidor.
+      actions: ['view', 'export', 'delete'],
     routes: ['/audit-logs'],
   },
 ];

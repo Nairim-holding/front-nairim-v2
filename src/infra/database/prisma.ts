@@ -26,7 +26,7 @@ const TENANT_MODELS = new Set([
   // Grupos de rota portados posteriormente ao mapeamento original (ver
   // MIGRATION_STATUS.md — Módulo 13): também têm company_id e precisam do
   // mesmo isolamento automático dos demais.
-  'UserGroup', 'UserGroupPermission', 'UserAccessSchedule', 'AuditLog',
+  'UserGroup', 'UserGroupPermission', 'UserAccessSchedule', 'AuditLogOutbox',
   'IptuAuditSettings',
   // Investimentos: só a raiz tem company_id. InvestmentTransaction e
   // InvestmentMonthBalance são escopados pelo investimento pai, que é

@@ -7,7 +7,11 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "docker:up": "powershell -ExecutionPolicy Bypass -File ./docker-up-sequential.ps1"
+    "docker:up": "powershell -ExecutionPolicy Bypass -File ./docker-up-sequential.ps1",
+    "logs:up": "docker compose -f docker-compose.logs.yml up -d --build",
+    "logs:worker": "node --env-file=.env worker/logs/run.mjs",
+    "logs:migrate": "node --env-file=.env worker/logs/run.mjs --once",
+    "logs:export-and-drop": "node --env-file=.env scripts/export-and-drop-legacy-logs.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1089.0",
@@ -24,8 +28,10 @@
     "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.562.0",
+    "mongodb": "^6.21.0",
     "next": "16.1.3",
     "next-pwa": "^5.6.0",
+    "pg": "^8.23.0",
     "react": "19.2.3",
     "react-countup": "^6.5.3",
     "react-dom": "19.2.3",

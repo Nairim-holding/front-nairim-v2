@@ -26,10 +26,17 @@ export interface PlanningsRepository {
   /** Soft-delete de um planejamento. Lança erro se não existir ativo. */
   remove(id: string): Promise<Planning>;
   /** Agregado do GET /planning/dashboard (saldos + categorias + subcategorias
-   *  + planejado/realizado). */
+   *  + planejado/realizado).
+   *
+   *  `sumPlannedOverPeriod` controla o `planned_amount`:
+   *   - `false` (padrão, usado pela tela de Planejamento): valor de UM mês
+   *     (FIXED = default_amount; VARIABLE = mês corrente).
+   *   - `true` (gráficos do dashboard): soma um valor por mês do período, para
+   *     o planejado acompanhar o mesmo recorte do realizado. */
   getDashboard(
     startDate: string,
     endDate: string,
     filters?: PlanningDashboardFilters,
+    sumPlannedOverPeriod?: boolean,
   ): Promise<PlanningDashboardResponse>;
 }

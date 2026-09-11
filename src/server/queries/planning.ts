@@ -37,5 +37,11 @@ export async function getPlanningDashboardData(
     if (values.length > 0) filters[field] = values;
   }
 
-  return withPermission('planning', 'view', () => planningUseCases.getDashboard.execute(startDate, endDate, filters));
+  // Flag só dos gráficos do dashboard (ver PlanningsRepository.getDashboard).
+  // Ausente = comportamento original, preservado para a tela de Planejamento.
+  const sumPlannedOverPeriod = raw.sumPlannedOverPeriod === true || raw.sumPlannedOverPeriod === 'true';
+
+  return withPermission('planning', 'view', () =>
+    planningUseCases.getDashboard.execute(startDate, endDate, filters, sumPlannedOverPeriod),
+  );
 }
