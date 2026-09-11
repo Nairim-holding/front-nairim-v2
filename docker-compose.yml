@@ -106,6 +106,9 @@ services:
   # FRONTEND - TESTE
   # ==========================================
   front-nairim-test:
+    # Mesmo perfil do mongodb-logs-staging de que depende: sem --profile test
+    # nenhum dos dois entra no projeto e a subida de produção não quebra.
+    profiles: ["test"]
     container_name: front-nairim-app-test
     build:
       context: .
@@ -167,6 +170,7 @@ services:
   # FRONTEND - HOMOLOGAÇÃO (TERCEIRO AMBIENTE)
   # ==========================================
   front-nairim-homolog:
+    profiles: ["homolog"]
     container_name: front-nairim-app-homolog
     build:
       context: .
