@@ -57,9 +57,11 @@ function contactDetails(contacts: Array<{
 }
 
 /**
- * Consulta interna já escopada por empresa. Cada lançamento mensal vencido
- * vira um alerta próprio; com isso duas competências atrasadas da mesma
- * locação não se escondem uma atrás da outra.
+ * Consulta interna já escopada por empresa. Cada lançamento mensal vencido de
+ * uma locação vigente vira um alerta próprio; com isso duas competências
+ * atrasadas da mesma locação não se escondem uma atrás da outra. Contratos já
+ * encerrados ficam fora para não atribuir uma pendência histórica ao contrato
+ * atual do mesmo imóvel.
  */
 export async function findOverdueLeasesForCompany(companyId: string): Promise<OverdueLease[]> {
   const today = todayInSaoPaulo();
@@ -76,6 +78,8 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
           company_id: companyId,
           deleted_at: null,
           status: { not: 'CANCELED' },
+          start_date: { lte: today },
+          end_date: { gte: today },
         },
       },
     },
