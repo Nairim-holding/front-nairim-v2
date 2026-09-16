@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { Plus, Trash2, Search, User, Phone, Mail, Smartphone, X, Edit2, Loader2, Check } from 'lucide-react';
+import { Plus, Trash2, Search, User, Phone, Mail, Smartphone, X, Edit2, Loader2, Check, MessageCircle } from 'lucide-react';
 import { maskPhone } from '@/utils/masks';
 import ContactChannelFields from '../ContactChannelFields';
 import {
@@ -22,6 +22,7 @@ interface Contact {
   phone?: string;
   cellphone?: string;
   email?: string;
+  whatsapp_notification_phone?: string | null;
   /** Telefones/e-mails adicionais (Etapa 3). O principal segue nos campos acima. */
   channels?: ContactChannelEntry[];
 }
@@ -49,7 +50,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
 
   // O formulário edita LISTAS; a conversão para principal + canais acontece
   // só no salvar, em `toPersistedValue`.
-  const emptyForm: ContactFormValue = { contact: '', cellphones: [''], phones: [''], emails: [''] };
+  const emptyForm: ContactFormValue = { contact: '', cellphones: [''], phones: [''], emails: [''], whatsapp_notification_phone: null };
   const [tempContact, setTempContact] = useState<ContactFormValue>(emptyForm);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,9 +58,7 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   const [isLoadingList, setIsLoadingList] = useState(false);
 
   useEffect(() => {
-    if (JSON.stringify(value) !== JSON.stringify(contacts)) {
-      setContacts(value || []);
-    }
+    setContacts((current) => JSON.stringify(value) === JSON.stringify(current) ? current : (value || []));
   }, [value]);
 
   const fetchContacts = useCallback(async (search: string = '') => {
@@ -120,8 +119,10 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   const handleSaveContact = () => {
     if (!hasAnyValue(tempContact)) return;
 
-    const newContacts = [...contacts];
     const persisted = toPersistedValue(tempContact) as Contact;
+    const newContacts = persisted.whatsapp_notification_phone
+      ? contacts.map((contact) => ({ ...contact, whatsapp_notification_phone: null }))
+      : [...contacts];
 
     if (editingIndex !== null) {
       newContacts[editingIndex] = persisted;
@@ -135,15 +136,22 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
   };
 
   const handleSelectExisting = (contact: Contact) => {
+    const selectedPhone = resourceType === 'agencies'
+      ? contact.whatsapp_notification_phone ?? null
+      : null;
     const newContactToAdd = {
       contact: contact.contact,
       phone: contact.phone,
       cellphone: contact.cellphone,
       email: contact.email,
       channels: contact.channels ?? [],
+      whatsapp_notification_phone: selectedPhone,
     };
-    
-    const newContacts = [...contacts, newContactToAdd];
+
+    const currentContacts = selectedPhone
+      ? contacts.map((current) => ({ ...current, whatsapp_notification_phone: null }))
+      : contacts;
+    const newContacts = [...currentContacts, newContactToAdd];
     setContacts(newContacts);
     if (onChange) onChange(newContacts);
     closeModal();
@@ -212,16 +220,19 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
             <div className="space-y-2 mt-auto">
               {(() => {
                 const view = toFormValue(c);
-                const lines: Array<{ key: string; icon: ReactNode; text: string; title?: string }> = [
+                const selectedPhone = String(c.whatsapp_notification_phone ?? '').replace(/\D/g, '');
+                const lines: Array<{ key: string; icon: ReactNode; text: string; title?: string; receivesWhatsApp?: boolean }> = [
                   ...view.cellphones.map((value, i) => ({
                     key: `cel-${i}`,
                     icon: <Smartphone size={13} className="text-content-placeholder" />,
                     text: maskPhone(value),
+                    receivesWhatsApp: value.replace(/\D/g, '') === selectedPhone,
                   })),
                   ...view.phones.map((value, i) => ({
                     key: `tel-${i}`,
                     icon: <Phone size={13} className="text-content-placeholder" />,
                     text: maskPhone(value),
+                    receivesWhatsApp: value.replace(/\D/g, '') === selectedPhone,
                   })),
                   ...view.emails.map((value, i) => ({
                     key: `mail-${i}`,
@@ -240,6 +251,11 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                     <span className="break-all whitespace-normal leading-tight" title={line.title}>
                       {line.text}
                     </span>
+                    {line.receivesWhatsApp && (
+                      <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-950/40 dark:text-green-300">
+                        <MessageCircle size={11} /> Alertas
+                      </span>
+                    )}
                   </div>
                 ));
               })()}
@@ -337,7 +353,13 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                         label="Celular"
                         icon={<Smartphone size={13} className="text-content-placeholder" />}
                         values={tempContact.cellphones}
-                        onChange={(cellphones) => setTempContact({ ...tempContact, cellphones })}
+                        onChange={(cellphones) => setTempContact({
+                          ...tempContact,
+                          cellphones,
+                          whatsapp_notification_phone: [...cellphones, ...tempContact.phones]
+                            .some((phone) => phone.replace(/\D/g, '') === String(tempContact.whatsapp_notification_phone ?? '').replace(/\D/g, ''))
+                            ? tempContact.whatsapp_notification_phone : null,
+                        })}
                         mask={maskPhoneInput}
                         type="tel"
                         maxLength={15}
@@ -350,7 +372,13 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                         label="Telefone Fixo"
                         icon={<Phone size={13} className="text-content-placeholder" />}
                         values={tempContact.phones}
-                        onChange={(phones) => setTempContact({ ...tempContact, phones })}
+                        onChange={(phones) => setTempContact({
+                          ...tempContact,
+                          phones,
+                          whatsapp_notification_phone: [...tempContact.cellphones, ...phones]
+                            .some((phone) => phone.replace(/\D/g, '') === String(tempContact.whatsapp_notification_phone ?? '').replace(/\D/g, ''))
+                            ? tempContact.whatsapp_notification_phone : null,
+                        })}
                         mask={maskPhoneInput}
                         type="tel"
                         maxLength={14}
@@ -358,6 +386,34 @@ export default function ContactManager({ value = [], onChange, resourceType, rea
                         addLabel="Adicionar telefone"
                       />
                     </div>
+                    {resourceType === 'agencies' && (
+                      <div className="md:col-span-2 rounded-lg border border-green-200 bg-green-50/70 p-3 dark:border-green-900 dark:bg-green-950/20">
+                        <p className="mb-2 text-sm font-medium text-green-800 dark:text-green-200">Número para alertas pelo WhatsApp</p>
+                        <p className="mb-3 text-xs text-green-700/80 dark:text-green-300/80">Marque o número que será usado na Central de Alertas. Apenas um número da imobiliária pode ficar selecionado.</p>
+                        <div className="space-y-2">
+                          {[...tempContact.cellphones, ...tempContact.phones]
+                            .filter((phone) => phone.replace(/\D/g, '').length >= 10)
+                            .map((phone, index) => {
+                              const digits = phone.replace(/\D/g, '');
+                              const checked = digits === String(tempContact.whatsapp_notification_phone ?? '').replace(/\D/g, '');
+                              return (
+                                <label key={`${digits}-${index}`} className="flex cursor-pointer items-center gap-2 text-sm text-content-secondary">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(event) => setTempContact({ ...tempContact, whatsapp_notification_phone: event.target.checked ? digits : null })}
+                                    className="h-4 w-4 rounded border-ui-border accent-green-600"
+                                  />
+                                  <span>{maskPhone(phone)}</span>
+                                </label>
+                              );
+                            })}
+                          {[...tempContact.cellphones, ...tempContact.phones].every((phone) => phone.replace(/\D/g, '').length < 10) && (
+                            <p className="text-xs text-content-muted">Digite um celular ou telefone válido para habilitar a seleção.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     <div className="md:col-span-2">
                       <ContactChannelFields
                         label="E-mail"

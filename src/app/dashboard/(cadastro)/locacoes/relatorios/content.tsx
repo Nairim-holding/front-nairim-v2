@@ -16,9 +16,7 @@ import { currentReferenceMonth, describeSelectedMonths, exportFilename, selectio
 /**
  * Tela do Relatório de Locações (menu Locações > Relatórios).
  *
- * O usuário escolhe um ou mais MESES DE REFERÊNCIA — não um intervalo de
- * datas. O aluguel de dezembro entra na conta em janeiro, e é o relatório que
- * faz essa conversão; a tela fala a língua do usuário ("dezembro de 2025").
+ * O usuário escolhe os meses de apuração dos recebimentos pela data efetiva.
  *
  * Exportação/impressão reaproveitam `@/lib/reports/exportHelpers`, os mesmos
  * dos Relatórios Financeiros — daí o cabeçalho padrão (logo, CNPJ, endereço,
@@ -45,10 +43,10 @@ export default function LeaseReportsPageContent() {
       dateRange: selectionDateRange(months),
       periodLabel,
       summaryTitle: 'Apuração de Impostos',
-      filterLabels: [],
+      filterLabels: data?.warnings?.length || data?.unmatched?.length ? ['Há valores que precisam de conferência na tela'] : [],
       userName: user?.name ?? '—',
     }),
-    [months, periodLabel, user],
+    [months, periodLabel, user, data],
   );
 
   const generate = useCallback(async () => {
@@ -96,15 +94,18 @@ export default function LeaseReportsPageContent() {
 
   return (
     <Section title="Relatório de Locações">
-      <div className="flex flex-col lg:flex-row gap-4 mt-2">
+      <div className="flex min-w-0 flex-col gap-4 mt-2">
         {/* ── Seleção do período ─────────────────────────────────────────── */}
-        <aside className="w-full lg:w-[260px] shrink-0 space-y-3">
+        <aside className="grid w-full min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
+          <fieldset disabled={isLoading} className="min-w-0 space-y-2 disabled:opacity-60">
           <div>
             <h2 className="text-sm font-semibold text-content mb-1">Mês de referência</h2>
           </div>
 
-          <MonthSelector selected={months} onChange={setMonths} />
+          <MonthSelector selected={months} onChange={(selected) => { setMonths(selected); setData(null); }} />
+          </fieldset>
 
+          <div className="space-y-3">
           <button
             type="button"
             onClick={generate}
@@ -144,10 +145,20 @@ export default function LeaseReportsPageContent() {
               <FileText size={16} />
             </button>
           </div>
+          </div>
         </aside>
 
         {/* ── Relatório ──────────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0 space-y-4">
+          <p className="text-xs text-content-muted">Valores recebidos no mês selecionado, conforme a data efetiva dos lançamentos concluídos. Multas compõem o faturamento e são somadas uma única vez ao líquido.</p>
+          {!!dataWithRedemptions?.unmatched?.length && (
+            <details className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              <summary className="cursor-pointer font-medium">{dataWithRedemptions.unmatched.length} lançamento(s) precisam de vínculo com a locação para entrar nos totais</summary>
+              <ul className="mt-2 space-y-1">
+                {dataWithRedemptions.unmatched.map((item) => <li key={item.id}>{item.description} · {item.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</li>)}
+              </ul>
+            </details>
+          )}
           <div className="rounded-xl border border-ui-border-soft bg-surface">
             <div className="px-3 py-2 border-b border-ui-border-soft">
               <h2 className="text-sm font-semibold text-content">Locações</h2>

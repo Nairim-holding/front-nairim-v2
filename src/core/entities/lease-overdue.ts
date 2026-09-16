@@ -26,7 +26,7 @@ export interface OverdueLease {
   rent_due_day: number;
   /** Data do vencimento em atraso. */
   due_date: Date;
-  /** Primeiro dia em que a cobrança pode ser disparada automaticamente. */
+  /** Primeiro dia em que o alerta passa a ser exibido para ação manual. */
   automatic_notification_date: Date;
   /** Dias corridos entre o vencimento e hoje. */
   days_overdue: number;

@@ -221,11 +221,12 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
       detailColumns={detailColumns}
     >
       {({ isFullscreen }) => (
-        <div className="w-full h-full flex flex-col p-3 gap-2">
-          <div className="flex items-center justify-between gap-2 shrink-0 relative z-20">
+        <div className="w-full min-w-0 h-full flex flex-col p-3 gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-20">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Categoria</span>
-            <div className="w-52 sm:w-64">
+            <div className="w-52 sm:w-64 min-w-0 max-w-full">
               <Select
+                full
                 options={categories}
                 value={selectedCategoryId}
                 onChange={(v) => setSelectedCategoryId(String(v))}

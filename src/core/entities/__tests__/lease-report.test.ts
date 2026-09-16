@@ -3,7 +3,6 @@ import {
   buildRedemptionRows,
   computeNetAmount,
   computeRedemptionPayable,
-  creditMonthOf,
   monthsOfQuarter,
   quartersOf,
   round2,
@@ -28,11 +27,6 @@ const MONTHLY_REVENUE = 34184.88;
 const QUARTERLY_REVENUE = 102477.09;
 
 describe('mês de referência', () => {
-  it('credita o aluguel no mês seguinte ao de referência', () => {
-    expect(creditMonthOf({ year: 2025, month: 12 })).toEqual({ year: 2026, month: 1 });
-    expect(creditMonthOf({ year: 2026, month: 1 })).toEqual({ year: 2026, month: 2 });
-  });
-
   it('agrupa os meses selecionados em trimestres-calendário distintos', () => {
     const quarters = quartersOf([
       { year: 2025, month: 7 },
@@ -104,14 +98,14 @@ describe('valor líquido', () => {
   it('soma créditos e subtrai débitos na fórmula do cliente', () => {
     const net = computeNetAmount({
       gross_revenue: 1000,
-      received_amount: 1000,
+      received_amount: 1050,
       penalty: 50,
       property_tax_refund: 30,
       discount_expense: 20,
       withholding: 94.5,
       agency_share: 100,
     });
-    // 1000 + 50 + 30 − 20 − 94,50 − 100
+    // 1050 (aluguel + multa) + 30 − 20 − 94,50 − 100; multa não se repete.
     expect(net).toBe(865.5);
   });
 

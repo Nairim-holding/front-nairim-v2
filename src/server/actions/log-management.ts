@@ -22,12 +22,12 @@ interface PurgePreview {
 export async function logStorageStatusAction() {
   return runAction(() => withPermission('audit-logs', 'view', async session => {
     assertAdmin(session);
-    const logs = await logsCollection();
-    const [stored, pending] = await Promise.all([
-      logs.countDocuments({ company_id: session.company_id }),
-      prisma.auditLogOutbox.count({ where: { company_id: session.company_id } }),
-    ]);
-    return { stored, pending };
+    const stats = await (await logsDatabase()).command({ dbStats: 1, scale: 1 });
+    const databaseSizeBytes = Number(
+      stats.totalSize
+      ?? (Number(stats.storageSize ?? 0) + Number(stats.indexSize ?? 0)),
+    );
+    return { databaseSizeBytes };
   }));
 }
 

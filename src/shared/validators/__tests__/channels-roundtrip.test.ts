@@ -45,4 +45,36 @@ describe('canais extras sobrevivem à validação', () => {
     expect(channels?.[0].value).toBe('14222222222');
     expect(channels?.[0].kind).toBe('CELLPHONE');
   });
+
+  it('imobiliária preserva um único número selecionado para alertas', () => {
+    const selected = toPersistedValue({
+      contact: 'Célia Cristina Bianchi',
+      cellphones: ['14996715918'],
+      phones: [],
+      emails: [],
+      whatsapp_notification_phone: '14996715918',
+    });
+
+    const parsed = updateAgencySchema.parse({ contacts: [selected] });
+    expect(parsed.contacts?.[0].whatsapp_notification_phone).toBe('14996715918');
+  });
+
+  it('imobiliária rejeita número que não pertence ao contato', () => {
+    expect(() => updateAgencySchema.parse({
+      contacts: [{
+        contact: 'Célia Cristina Bianchi',
+        cellphone: '14996715918',
+        whatsapp_notification_phone: '14999999999',
+      }],
+    })).toThrow('Selecione um telefone válido deste contato');
+  });
+
+  it('imobiliária aceita somente um número selecionado entre todos os contatos', () => {
+    expect(() => updateAgencySchema.parse({
+      contacts: [
+        { cellphone: '14996715918', whatsapp_notification_phone: '14996715918' },
+        { cellphone: '14999999999', whatsapp_notification_phone: '14999999999' },
+      ],
+    })).toThrow('Selecione somente um número por imobiliária');
+  });
 });

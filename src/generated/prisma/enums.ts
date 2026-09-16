@@ -177,6 +177,7 @@ export type ContactChannelKind = (typeof ContactChannelKind)[keyof typeof Contac
 
 export const HolidayScope = {
   NATIONAL: 'NATIONAL',
+  STATE: 'STATE',
   MUNICIPAL: 'MUNICIPAL'
 } as const
 

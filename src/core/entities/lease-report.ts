@@ -2,11 +2,9 @@
  * Entidades e regras fiscais do Relatório de Locações
  * (menu Locações > Relatórios).
  *
- * O relatório é sempre pedido por MÊS DE REFERÊNCIA, não por data de
- * lançamento: o aluguel de Dezembro/2025 é creditado em Janeiro/2026. Isso
- * casa com a geração automática dos lançamentos da locação
- * (PrismaLeaseFinanceRepository), que emite a primeira parcela um mês DEPOIS
- * do início do contrato — ver `monthsBetween(...).slice(1)` lá.
+ * O mês de apuração corresponde à data efetiva dos lançamentos recebidos.
+ * A geração das parcelas já determina seu vencimento; o relatório não
+ * desloca novamente as datas para o mês seguinte.
  *
  * ⚠️ Nome de arquivo SINGULAR em todas as camadas (`lease-report.ts`), pelo
  * mesmo motivo documentado em `financial-report.ts`.
@@ -14,7 +12,7 @@
  * Camada: core (regra pura, sem I/O).
  */
 
-/** Mês de referência escolhido pelo usuário (o crédito cai no mês seguinte). */
+/** Mês de apuração escolhido pelo usuário. */
 export interface ReferenceMonth {
   year: number;
   /** 1–12. */
@@ -35,7 +33,7 @@ export interface LeaseReportRow {
   property_title: string;
   /** Valor bruto da locação no período (CR). */
   gross_revenue: number;
-  /** Valor recebido informado pelo lançamento de aluguel da locação (CR). */
+  /** Aluguel recebido mais multas recebidas (CR), antes das deduções. */
   received_amount: number;
   /** Desconto ou despesa informada na locação (DB). */
   discount_expense: number;
@@ -43,15 +41,15 @@ export interface LeaseReportRow {
   penalty: number;
   /** Restituição de IPTU (CR). */
   property_tax_refund: number;
-  /** IRRF retido sobre o aluguel (DB) — só para imóveis marcados com IRRF. */
+  /** Retenção sobre o aluguel (DB), registrada no financeiro ou indicada no imóvel. */
   withholding: number;
   /** Parte que fica com a imobiliária, i.e. a comissão (DB). */
   agency_share: number;
-  /** Recebido + Multa + IPTU − Desconto − Retenções − Parte da Imobiliária. */
+  /** Recebido + IPTU − Desconto − Retenções − Parte da Imobiliária (multa já incluída no recebido). */
   net_amount: number;
   tenant_name: string;
   tenant_document: string | null;
-  /** Imóvel marcado como sujeito a IRRF no cadastro. */
+  /** Retenção registrada no período ou indicada no cadastro do imóvel. */
   has_withholding: boolean;
 }
 
@@ -177,6 +175,9 @@ export interface LeaseReportResult {
   quarterlyDarf: QuarterlyDarfRow[];
   /** Trimestres cobertos pela seleção — o quadro de Resgate é preenchido na tela. */
   quarters: Quarter[];
+  /** Valores reconhecidos como locação, mas sem contrato identificado com segurança. */
+  unmatched?: Array<{ id: string; description: string; amount: number; date: Date }>;
+  warnings?: string[];
 }
 
 /**
@@ -203,11 +204,6 @@ export function buildRedemptionRows(quarters: Quarter[], inputs: InvestmentRedem
 
 export const round2 = (v: number): number => Math.round((v + Number.EPSILON) * 100) / 100;
 
-/** Mês em que o aluguel do mês de referência é creditado (referência + 1). */
-export function creditMonthOf({ year, month }: ReferenceMonth): ReferenceMonth {
-  return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
-}
-
 /** Trimestres-calendário distintos cobertos pelos meses de referência. */
 export function quartersOf(months: ReferenceMonth[]): Quarter[] {
   const seen = new Map<string, Quarter>();
@@ -227,7 +223,7 @@ export function monthsOfQuarter({ year, quarter }: Quarter): ReferenceMonth[] {
 /** Valor líquido da linha, na fórmula definida pelo cliente. */
 export function computeNetAmount(row: Omit<LeaseReportRow, 'net_amount' | 'lease_id' | 'agency_name' | 'property_title' | 'tenant_name' | 'tenant_document' | 'has_withholding'>): number {
   return round2(
-    row.received_amount + row.penalty + row.property_tax_refund
+    row.received_amount + row.property_tax_refund
       - row.discount_expense - row.withholding - row.agency_share,
   );
 }

@@ -23,8 +23,6 @@ import {
 import { describeActionError } from '@/shared/actions/action-result';
 import { formatCurrency, formatDate } from '@/utils';
 import { useMessageContext } from '@/contexts';
-import { useAuth } from '@/contexts/AuthContext';
-import WhatsAppConnectionPanel from '@/components/domain/whatsapp/WhatsAppConnectionPanel';
 import LeaseNotificationActions from './LeaseNotificationActions';
 
 type Filter = 'ALL' | 'UNNOTIFIED' | 'NEGOTIATING' | 'CRITICAL';
@@ -53,7 +51,6 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { showMessage } = useMessageContext();
-  const { user } = useAuth();
 
   const refresh = async () => {
     setIsRefreshing(true);
@@ -92,7 +89,7 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
         item.contract_number,
       ].some((value) => value.toLocaleLowerCase('pt-BR').includes(needle));
       const matchesFilter = filter === 'ALL'
-        || (filter === 'UNNOTIFIED' && item.notification_count === 0)
+        || (filter === 'UNNOTIFIED' && item.overdue_status !== 'NOTIFIED')
         || (filter === 'NEGOTIATING' && item.overdue_status === 'NEGOTIATING')
         || (filter === 'CRITICAL' && item.days_overdue > 30);
       return matchesQuery && matchesFilter;
@@ -101,8 +98,6 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
 
   return (
     <div className="space-y-4">
-      {user?.role === 'SUPER_ADMIN' && <WhatsAppConnectionPanel />}
-
       {summary.total === 0 ? (
         <div className="rounded-2xl border border-green-200 bg-green-50 p-6 dark:bg-green-950/20 dark:border-green-900">
           <div className="flex items-center gap-3 text-green-700 dark:text-green-300">
@@ -138,7 +133,7 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
 
       <div className="rounded-2xl border border-ui-border-soft bg-surface shadow-sm overflow-hidden">
         <div className="border-b border-green-100 bg-green-50 px-4 py-2.5 text-xs text-green-700 dark:border-green-900 dark:bg-green-950/25 dark:text-green-300">
-          A primeira cobrança por WhatsApp é enviada automaticamente após um dia útil, respeitando fins de semana e feriados. Use o botão para reenviar quando necessário.
+          Os alertas são enviados manualmente. O botão abre o WhatsApp no número selecionado da imobiliária, com a mensagem de cobrança preenchida para conferência.
         </div>
         <div className="p-3 sm:p-4 border-b border-ui-border-soft flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
           <div className="relative flex-1 max-w-xl">
@@ -222,7 +217,7 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
                     >
                       {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
-                    <LeaseNotificationActions item={item} onUpdated={refresh} />
+                    <LeaseNotificationActions item={item} />
                   </div>
                 </div>
               </article>

@@ -16,12 +16,44 @@ import { contactChannelSchema } from './br-documents';
 /** CNPJ: exatamente 14 dígitos após remover não-dígitos. */
 const cnpjSchema = z.string().refine((v) => v.replace(/[^\d]/g, '').length === 14, 'CNPJ inválido');
 
+const onlyDigits = (value: string | null | undefined) => String(value ?? '').replace(/\D/g, '');
+
 const contactSchema = z.object({
   contact: z.string().nullish(),
   phone: z.string().nullish(),
   cellphone: z.string().nullish(),
   email: z.string().email('Email inválido').nullish().or(z.literal('')),
+  whatsapp_notification_phone: z.string().nullish(),
   channels: z.array(contactChannelSchema).optional(),
+}).superRefine((contact, ctx) => {
+  const selected = onlyDigits(contact.whatsapp_notification_phone);
+  if (!selected) return;
+
+  const availablePhones = [
+    contact.cellphone,
+    contact.phone,
+    ...(contact.channels ?? [])
+      .filter((channel) => channel.kind === 'CELLPHONE' || channel.kind === 'PHONE')
+      .map((channel) => channel.value),
+  ].map(onlyDigits);
+
+  if (selected.length < 10 || !availablePhones.includes(selected)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['whatsapp_notification_phone'],
+      message: 'Selecione um telefone válido deste contato para os alertas do WhatsApp',
+    });
+  }
+});
+
+const contactsSchema = z.array(contactSchema).superRefine((contacts, ctx) => {
+  const selectedCount = contacts.filter((contact) => onlyDigits(contact.whatsapp_notification_phone)).length;
+  if (selectedCount > 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Selecione somente um número por imobiliária para os alertas do WhatsApp',
+    });
+  }
 });
 
 const addressSchema = z.object({
@@ -43,7 +75,7 @@ export const createAgencySchema = z.object({
   license_number: z.string().nullish(),
   commission_category_id: z.string().nullish(),
   commission_subcategory_id: z.string().nullish(),
-  contacts: z.array(contactSchema).optional(),
+  contacts: contactsSchema.optional(),
   addresses: z.array(addressSchema).optional(),
 }).passthrough();
 
@@ -56,7 +88,7 @@ export const updateAgencySchema = z.object({
   license_number: z.string().nullish(),
   commission_category_id: z.string().nullish(),
   commission_subcategory_id: z.string().nullish(),
-  contacts: z.array(contactSchema).optional(),
+  contacts: contactsSchema.optional(),
   addresses: z.array(addressSchema).optional(),
 }).passthrough();
 

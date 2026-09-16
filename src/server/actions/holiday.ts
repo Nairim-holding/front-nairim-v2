@@ -6,13 +6,16 @@ import { NotFoundError } from '@/core/errors/domain-errors';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { createHolidaySchema, listHolidaysSchema } from '@/shared/validators/holiday';
 import { createDateLocal } from '@/shared/utils/date-utils';
+import { automaticHolidays, type HolidayScope } from '@/core/entities/holidays';
 
 export interface HolidayItem {
   id: string;
   date: string;
   description: string;
-  scope: 'NATIONAL' | 'MUNICIPAL';
+  scope: HolidayScope;
   city: string | null;
+  state: string | null;
+  automatic?: boolean;
 }
 
 export async function listHolidaysAction(raw: Record<string, unknown>): Promise<ActionResult<HolidayItem[]>> {
@@ -27,13 +30,28 @@ export async function listHolidaysAction(raw: Record<string, unknown>): Promise<
         },
         orderBy: { date: 'asc' },
       });
-      return rows.map((row) => ({
+      const properties = await prisma.property.findMany({
+        where: { company_id: session.company_id, deleted_at: null },
+        select: { addresses: { where: { deleted_at: null }, select: { address: { select: { city: true, state: true } } } } },
+      });
+      const automatic = new Map<string, HolidayItem>();
+      const localities = [{ city: null, state: null }, ...properties.flatMap((property) => property.addresses.map((entry) => entry.address))];
+      for (const locality of localities) {
+        for (const holiday of automaticHolidays(year, locality.state, locality.city)) {
+          const id = `automatic:${holiday.date}:${holiday.scope}:${holiday.state ?? ''}:${holiday.city ?? ''}`;
+          automatic.set(id, { ...holiday, id, automatic: true });
+        }
+      }
+      const saved = rows.map((row) => ({
         id: row.id,
         date: row.date.toISOString().slice(0, 10),
         description: row.description,
         scope: row.scope,
         city: row.city,
+        state: row.state,
       }));
+      const automaticRows = [...automatic.values()].filter((holiday) => !saved.some((row) => row.date === holiday.date && row.scope === holiday.scope && row.city === holiday.city && row.state === holiday.state));
+      return [...saved, ...automaticRows].sort((a, b) => a.date.localeCompare(b.date));
     });
   });
 }
@@ -50,6 +68,7 @@ export async function createHolidayAction(raw: Record<string, unknown>): Promise
           description: input.description,
           scope: input.scope,
           city: input.scope === 'MUNICIPAL' ? input.city : null,
+          state: input.scope !== 'NATIONAL' ? input.state : null,
         },
       });
       return {
@@ -58,6 +77,7 @@ export async function createHolidayAction(raw: Record<string, unknown>): Promise
         description: row.description,
         scope: row.scope,
         city: row.city,
+        state: row.state,
       };
     });
   });

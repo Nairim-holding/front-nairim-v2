@@ -2,7 +2,6 @@ import prisma from '@/infra/database/prisma';
 import type { LeaseReportsRepository } from '@/core/repositories/lease-reports-repository';
 import {
   computeNetAmount,
-  creditMonthOf,
   monthsOfQuarter,
   quartersOf,
   round2,
@@ -20,36 +19,33 @@ import {
   type WithholdingTax,
 } from '@/core/entities/lease-report';
 import { createDateLocal } from '@/shared/utils/date-utils';
+import { matchReportLease, normalizeReportText } from '@/core/entities/lease-report-matching';
 
 /**
  * Implementação Prisma de {@link LeaseReportsRepository}.
  * Tenant-scoped: `Transaction` e `Lease` estão em TENANT_MODELS.
  *
  * ── De onde vem cada coluna ─────────────────────────────────────────────────
- * Os lançamentos da locação são gerados por `PrismaLeaseFinanceRepository`,
- * que grava `lease_id` e uma descrição com prefixo fixo. A classificação aqui
- * usa a MESMA chave que a sincronização usa para idempotência (primeira
- * palavra da descrição: "Aluguel" / "Comissão" / "Restituição") — de
- * propósito: se um dia o prefixo mudar lá, a idempotência do sync quebra
- * junto, então não há como as duas leituras divergirem em silêncio.
- * Multas são os lançamentos com `is_cancellation_charge = true`, marcados no
- * cancelamento da locação.
+ * Classifica os lançamentos gerados pela locação e os avulsos importados
+ * pelas descrições, categorias e marca de multa. Receitas e despesas são
+ * distinguidas para que pagamento de IPTU não vire restituição.
  *
  * ── Mês de referência ───────────────────────────────────────────────────────
- * O aluguel de Dez/2025 é creditado em Jan/2026, e é assim que os lançamentos
- * são emitidos (primeira parcela um mês após o início do contrato). Então
- * para cada mês de referência a janela consultada é o mês SEGUINTE.
+ * Usa o mês da data efetiva dos lançamentos concluídos. Lançamentos antigos
+ * sem vínculo são associados por contrato exato ou endereço inequívoco.
  *
  * Camada: infra.
  */
 
-type TransactionKind = 'rent' | 'commission' | 'iptu' | 'penalty' | 'other';
+type TransactionKind = 'rent' | 'commission' | 'iptu' | 'penalty' | 'withholding' | 'other';
 
 interface RawLeaseTransaction {
   amount: unknown;
   description: string;
   is_cancellation_charge: boolean;
   lease_id: string | null;
+  category?: { type: string } | null;
+  subcategory?: { name: string } | null;
 }
 
 /** Primeiro e último dia (UTC) do mês informado. */
@@ -62,12 +58,21 @@ function monthWindow({ year, month }: ReferenceMonth): { gte: Date; lte: Date } 
 const COMBINING_MARKS = /[̀-ͯ]/g;
 
 /**
- * Classifica o lançamento pelo prefixo da descrição gerada pelo sync.
- * Acentuação normalizada porque "Comissão" pode chegar sem acento de bases
- * antigas importadas do backend anterior.
+ * Reconhece os prefixos gerados pelo sistema e as categorias da base antiga.
  */
 function classify(tx: RawLeaseTransaction): TransactionKind {
-  if (tx.is_cancellation_charge) return 'penalty';
+  const description = normalizeReportText(tx.description ?? '');
+  const subcategory = normalizeReportText(tx.subcategory?.name ?? '');
+  if (tx.is_cancellation_charge && tx.category?.type !== 'EXPENSE') return 'penalty';
+  if (tx.category?.type === 'EXPENSE' && description.startsWith('irrf') && description.includes('aluguel')) return 'withholding';
+  if (tx.category?.type === 'INCOME') {
+    if (subcategory === 'restituicao iptu' || description.startsWith('restituicao iptu')) return 'iptu';
+    if (description.startsWith('multa') || subcategory.includes('multa')) return 'penalty';
+    if (description.includes('aluguel') || subcategory === 'alugueis') return 'rent';
+    return 'other';
+  }
+  if (tx.category?.type === 'EXPENSE' && description.includes('comissao')) return 'commission';
+  if (tx.category?.type) return 'other';
   const first = String(tx.description ?? '')
     .trim()
     .split(/\s+/)[0]
@@ -94,6 +99,7 @@ interface RowAccumulator {
   penalty: number;
   property_tax_refund: number;
   agency_share: number;
+  withholding: number;
 }
 
 export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
@@ -108,38 +114,49 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
     revenueByMonth: Map<string, number>;
     /** Receita bruta dos imóveis COM IRRF, por mês de referência. */
     withholdingBaseByMonth: Map<string, number>;
+    unmatched: Array<{ id: string; description: string; amount: number; date: Date }>;
+    warnings: string[];
   }> {
     const rows = new Map<string, RowAccumulator>();
     const revenueByMonth = new Map<string, number>();
     const withholdingBaseByMonth = new Map<string, number>();
-    if (months.length === 0) return { rows, revenueByMonth, withholdingBaseByMonth };
+    const unmatched: Array<{ id: string; description: string; amount: number; date: Date }> = [];
+    const warnings: string[] = [];
+    if (months.length === 0) return { rows, revenueByMonth, withholdingBaseByMonth, unmatched, warnings };
+    const leases = await prisma.lease.findMany({
+      where: { deleted_at: null },
+      select: {
+        id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+        discount_amount: true,
+        agency: { select: { trade_name: true } },
+        property: { select: { title: true, income_tax_withholding: true, agency: { select: { trade_name: true } } } },
+        tenant: { select: { name: true, cpf: true, cnpj: true } },
+      },
+    });
+    const leasesById = new Map(leases.map((lease) => [lease.id, lease]));
 
     // Uma query por mês de referência: os totais mensais dos DARF precisam da
     // separação por mês, e um OR de janelas voltaria tudo achatado.
     for (const reference of months) {
       const key = `${reference.year}-${String(reference.month).padStart(2, '0')}`;
-      const window = monthWindow(creditMonthOf(reference));
+      const window = monthWindow(reference);
 
       const transactions = await prisma.transaction.findMany({
         where: {
           deleted_at: null,
-          lease_id: { not: null },
+          status: 'COMPLETED',
+          is_transfer: false,
           effective_date: window,
         },
         select: {
+          id: true,
+          effective_date: true,
+          category: { select: { type: true } },
+          subcategory: { select: { name: true } },
           amount: true,
           description: true,
           is_cancellation_charge: true,
           lease_id: true,
-          lease: {
-            select: {
-              id: true,
-              discount_amount: true,
-              agency: { select: { trade_name: true } },
-              property: { select: { title: true, income_tax_withholding: true, agency: { select: { trade_name: true } } } },
-              tenant: { select: { name: true, cpf: true, cnpj: true } },
-            },
-          },
         },
       });
 
@@ -147,10 +164,18 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       // por locação POR MÊS de referência em que ela teve movimento — senão o
       // desconto de um contrato apareceria multiplicado pelo nº de parcelas.
       const discountCharged = new Set<string>();
+      const rentByLease = new Map<string, number>();
+      const recordedWithholding = new Map<string, number>();
 
       for (const tx of transactions) {
-        const lease = tx.lease;
-        if (!lease) continue;
+        const kind = classify(tx);
+        if (kind === 'other') continue;
+        const lease = tx.lease_id ? leasesById.get(tx.lease_id)
+          : matchReportLease(tx.description, tx.effective_date, leases);
+        if (!lease) {
+          unmatched.push({ id: tx.id, description: tx.description, amount: Number(tx.amount), date: tx.effective_date });
+          continue;
+        }
 
         const leaseId = lease.id;
         let row = rows.get(leaseId);
@@ -168,26 +193,23 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
             penalty: 0,
             property_tax_refund: 0,
             agency_share: 0,
+            withholding: 0,
           };
           rows.set(leaseId, row);
         }
 
         const amount = Number(tx.amount ?? 0);
 
-        switch (classify(tx as RawLeaseTransaction)) {
+        switch (kind) {
           case 'rent': {
+            if (/^saldo (locacao|aluguel)\b/.test(normalizeReportText(tx.description))) {
+              warnings.push(`${key}: "${tx.description}" foi incluído pelo valor registrado. Confira se o saldo já está líquido de comissão antes de usar o faturamento na apuração.`);
+            }
             row.gross_revenue = round2(row.gross_revenue + amount);
-            // O lançamento gerado pela locação nasce como PENDING e permanece
-            // assim até uma baixa manual no Financeiro. O relatório de Locações,
-            // porém, usa esse lançamento como a fonte do "Valor Recebido"; filtrar
-            // pelo status fazia a coluna inteira ficar zerada nas bases em que as
-            // baixas ainda não foram registradas. A situação do lançamento continua
-            // disponível no Financeiro, mas não elimina o valor deste relatório.
+            // A consulta inclui somente lançamentos efetivamente concluídos.
             row.received_amount = round2(row.received_amount + amount);
             revenueByMonth.set(key, round2((revenueByMonth.get(key) ?? 0) + amount));
-            if (row.has_withholding) {
-              withholdingBaseByMonth.set(key, round2((withholdingBaseByMonth.get(key) ?? 0) + amount));
-            }
+            rentByLease.set(leaseId, round2((rentByLease.get(leaseId) ?? 0) + amount));
             const discountKey = `${key}::${leaseId}`;
             if (!discountCharged.has(discountKey)) {
               discountCharged.add(discountKey);
@@ -203,29 +225,44 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
             break;
           case 'penalty':
             row.penalty = round2(row.penalty + amount);
+            row.received_amount = round2(row.received_amount + amount);
+            revenueByMonth.set(key, round2((revenueByMonth.get(key) ?? 0) + amount));
             break;
-          default:
-            // Lançamento avulso vinculado à locação — não entra em nenhuma
-            // coluna do relatório, que só reporta o schedule + a multa.
+          case 'withholding':
+            row.has_withholding = true;
+            recordedWithholding.set(leaseId, round2((recordedWithholding.get(leaseId) ?? 0) + amount));
             break;
+        }
+      }
+      for (const leaseId of new Set([...rentByLease.keys(), ...recordedWithholding.keys()])) {
+        const row = rows.get(leaseId)!;
+        const rent = rentByLease.get(leaseId) ?? 0;
+        const recorded = recordedWithholding.get(leaseId);
+        const expected = round2(rent * WITHHOLDING_TOTAL_RATE);
+        const hasWithholdingThisMonth = recorded !== undefined || leasesById.get(leaseId)?.property.income_tax_withholding === true;
+        row.withholding = round2(row.withholding + (recorded ?? (hasWithholdingThisMonth ? expected : 0)));
+        if (hasWithholdingThisMonth) {
+          withholdingBaseByMonth.set(key, round2((withholdingBaseByMonth.get(key) ?? 0) + rent));
+        }
+        if (recorded !== undefined && Math.abs(recorded - expected) > 0.01) {
+          warnings.push(`${key}: retenção registrada de ${row.property_title} (${recorded.toFixed(2)}) difere da calculada sobre o aluguel (${expected.toFixed(2)}). O líquido usa a retenção registrada; confira a distribuição por imposto nos quadros fiscais.`);
         }
       }
     }
 
-    return { rows, revenueByMonth, withholdingBaseByMonth };
+    return { rows, revenueByMonth, withholdingBaseByMonth, unmatched, warnings };
   }
 
   /** @inheritdoc */
   async getLeaseReport(params: LeaseReportParams): Promise<LeaseReportResult> {
-    const months = [...params.months].sort((a, b) => a.year - b.year || a.month - b.month);
-    const { rows: accumulators, revenueByMonth, withholdingBaseByMonth } = await this.aggregate(months);
+    const months = [...new Map(params.months.map((month) => [`${month.year}-${month.month}`, month])).values()]
+      .sort((a, b) => a.year - b.year || a.month - b.month);
+    const { rows: accumulators, revenueByMonth, withholdingBaseByMonth, unmatched, warnings } = await this.aggregate(months);
 
     // ── Linhas ───────────────────────────────────────────────────────────────
     const rows: LeaseReportRow[] = [...accumulators.values()]
       .map((acc) => {
-        const withholding = acc.has_withholding
-          ? round2(acc.gross_revenue * WITHHOLDING_TOTAL_RATE)
-          : 0;
+        const withholding = acc.withholding;
         const base = {
           gross_revenue: acc.gross_revenue,
           received_amount: acc.received_amount,
@@ -261,14 +298,14 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
     };
 
     // ── Quadro Retenções dos Aluguéis ────────────────────────────────────────
-    const withholdingBase = round2(rows.filter((r) => r.has_withholding).reduce((acc, r) => acc + r.gross_revenue, 0));
+    const withholdingBase = round2([...withholdingBaseByMonth.values()].reduce((acc, value) => acc + value, 0));
     const withholdingAmounts = Object.fromEntries(
       (Object.keys(WITHHOLDING_RATES) as WithholdingTax[]).map((tax) => [tax, round2(withholdingBase * WITHHOLDING_RATES[tax])]),
     ) as Record<WithholdingTax, number>;
     const withholding: WithholdingSummary = {
       base: withholdingBase,
       amounts: withholdingAmounts,
-      total: round2(Object.values(withholdingAmounts).reduce((acc, v) => acc + v, 0)),
+      total: totals.withholding,
     };
 
     // ── Quadro DARF mensal (PIS/COFINS) ──────────────────────────────────────
@@ -295,6 +332,12 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         (m) => !months.some((sel) => sel.year === m.year && sel.month === m.month),
       );
       const extra = missing.length > 0 ? await this.aggregate(missing) : null;
+      if (extra) {
+        warnings.push(...extra.warnings);
+        for (const item of extra.unmatched) {
+          warnings.push(`Apuração trimestral: lançamento sem locação identificada: ${item.description} (${item.amount.toFixed(2)}).`);
+        }
+      }
 
       const revenue = round2(
         quarterMonths.reduce((acc, m) => {
@@ -321,7 +364,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
     // na tela (não há origem confiável no financeiro para um resgate), e as
     // linhas são montadas lá por `buildRedemptionRows`.
 
-    return { months, rows, totals, withholding, monthlyDarf, quarterlyDarf, quarters };
+    return { months, rows, totals, withholding, monthlyDarf, quarterlyDarf, quarters, unmatched, warnings };
   }
 }
 

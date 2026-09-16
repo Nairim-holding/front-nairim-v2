@@ -58,8 +58,8 @@ function Panel({ title, children, note }: { title: string; children: React.React
   );
 }
 
-const TH = 'px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-content-muted whitespace-nowrap';
-const TD = 'px-3 py-1.5 text-sm text-content-secondary whitespace-nowrap';
+const TH = 'px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-content-muted whitespace-normal';
+const TD = 'px-2 py-1.5 text-xs text-content-secondary whitespace-nowrap';
 
 interface TaxPanelsProps {
   data: LeaseReportResult;
@@ -76,11 +76,20 @@ const TaxPanels = forwardRef<HTMLDivElement, TaxPanelsProps>(function TaxPanels(
   const taxes = Object.keys(WITHHOLDING_RATES) as WithholdingTax[];
 
   return (
-    <div ref={ref} className="report-panels grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div ref={ref} className="report-panels grid grid-cols-1 min-[1800px]:grid-cols-2 gap-4">
+      {!!data.warnings?.length && (
+        <div role="status" className="col-span-full">
+          <Panel title="Conferência da apuração">
+            <ul className="space-y-1 p-3 text-xs text-content-secondary">
+              {data.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+            </ul>
+          </Panel>
+        </div>
+      )}
       {/* ── 1. Retenções dos Aluguéis ─────────────────────────────────────── */}
       <Panel
         title="Retenções dos Aluguéis"
-        note={`Base: ${formatCurrency(data.withholding.base)} — receita bruta dos imóveis marcados com IRRF no cadastro.`}
+        note={`Base: ${formatCurrency(data.withholding.base)} — aluguéis com IRRF registrado ou retenção indicada no cadastro. O líquido prioriza a retenção efetivamente lançada; o detalhamento por imposto é calculado pelas alíquotas exibidas.`}
       >
         <table className="w-full border-collapse">
           <thead>

@@ -30,6 +30,7 @@ export interface ContactWithChannels {
   cellphone?: string | null;
   phone?: string | null;
   email?: string | null;
+  whatsapp_notification_phone?: string | null;
   channels?: ContactChannel[];
 }
 
@@ -40,6 +41,7 @@ export interface ContactFormValue {
   cellphones: string[];
   phones: string[];
   emails: string[];
+  whatsapp_notification_phone?: string | null;
 }
 
 const clean = (value: string | null | undefined): string => String(value ?? '').trim();
@@ -61,7 +63,7 @@ export function normalizeValues(values: Array<string | null | undefined>): strin
   return result;
 }
 
-const KIND_OF: Record<keyof Omit<ContactFormValue, 'id' | 'contact'>, ContactChannelKind> = {
+const KIND_OF: Record<'cellphones' | 'phones' | 'emails', ContactChannelKind> = {
   cellphones: 'CELLPHONE',
   phones: 'PHONE',
   emails: 'EMAIL',
@@ -81,6 +83,7 @@ export function toFormValue(contact: ContactWithChannels): ContactFormValue {
     cellphones: normalizeValues([contact.cellphone, ...byKind('CELLPHONE')]),
     phones: normalizeValues([contact.phone, ...byKind('PHONE')]),
     emails: normalizeValues([contact.email, ...byKind('EMAIL')]),
+    whatsapp_notification_phone: contact.whatsapp_notification_phone ?? null,
   };
 }
 
@@ -93,6 +96,8 @@ export function toPersistedValue(form: ContactFormValue): ContactWithChannels {
   const cellphones = normalizeValues(form.cellphones);
   const phones = normalizeValues(form.phones);
   const emails = normalizeValues(form.emails);
+  const notificationDigits = clean(form.whatsapp_notification_phone).replace(/\D/g, '');
+  const availablePhones = [...cellphones, ...phones].map((value) => value.replace(/\D/g, ''));
 
   const channels: ContactChannel[] = [];
   const pushExtras = (values: string[], key: keyof typeof KIND_OF) => {
@@ -110,6 +115,9 @@ export function toPersistedValue(form: ContactFormValue): ContactWithChannels {
     cellphone: cellphones[0] ?? null,
     phone: phones[0] ?? null,
     email: emails[0] ?? null,
+    whatsapp_notification_phone: notificationDigits && availablePhones.includes(notificationDigits)
+      ? notificationDigits
+      : null,
     channels,
   };
 }

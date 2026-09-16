@@ -1,11 +1,17 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
+import { BRAZIL_STATES } from '@/core/entities/holidays';
 
 export const createHolidaySchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe uma data válida.'),
+  date: z.string().refine(isValidIsoDateString, 'Informe uma data válida.').refine((date) => Number(date.slice(0, 4)) >= 2000 && Number(date.slice(0, 4)) <= 2200, 'Informe um ano entre 2000 e 2200.'),
   description: z.string().trim().min(1, 'Informe a descrição do feriado.'),
-  scope: z.enum(['NATIONAL', 'MUNICIPAL']),
+  scope: z.enum(['NATIONAL', 'STATE', 'MUNICIPAL']),
+  state: z.union([z.enum(BRAZIL_STATES), z.literal('')]).nullish(),
   city: z.string().trim().nullish(),
 }).superRefine((value, context) => {
+  if (value.scope !== 'NATIONAL' && !value.state) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['state'], message: 'Informe o estado do feriado.' });
+  }
   if (value.scope === 'MUNICIPAL' && !value.city) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'Informe a cidade do feriado municipal.' });
   }

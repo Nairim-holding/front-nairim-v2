@@ -31,6 +31,14 @@ const CREDIT = 'text-emerald-600 dark:text-emerald-400';
 const DEBIT = 'text-orange-600 dark:text-orange-400';
 const NET = 'text-content font-semibold';
 
+/** Permite quebrar antes do valor, mas mantém todos os dígitos juntos. */
+function money(value: number) {
+  const formatted = formatCurrency(value);
+  const separator = formatted.search(/\s/);
+  if (separator < 0) return <span className="whitespace-nowrap">{formatted}</span>;
+  return <>{formatted.slice(0, separator)} <span className="inline-block whitespace-nowrap">{formatted.slice(separator + 1)}</span></>;
+}
+
 interface LeaseReportTableProps {
   data: LeaseReportResult;
 }
@@ -40,9 +48,16 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
 
   return (
     <div className="overflow-x-auto">
-      <table ref={ref} className="w-full min-w-[1200px] border-collapse">
+      <table ref={ref} className="w-full min-w-[1000px] table-fixed border-collapse [&_th]:whitespace-normal [&_th]:break-normal [&_th]:px-1.5 [&_td]:whitespace-normal [&_td]:break-words [&_td]:px-1.5 [&_tbody_tr]:text-xs [&_tfoot_tr]:text-xs">
+        <colgroup>
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '12%' }} />
+          {CURRENCY_LABELS.map((label) => <col key={label} style={{ width: '7.5%' }} />)}
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '8%' }} />
+        </colgroup>
         <thead>
-          <tr className="text-left text-[11px] font-semibold text-content-muted uppercase tracking-wide border-b border-ui-border-soft">
+          <tr className="text-left text-[10px] font-semibold text-content-muted uppercase border-b border-ui-border-soft">
             <th className="px-3 py-2 whitespace-nowrap">Imobiliária</th>
             <th className="px-3 py-2 whitespace-nowrap">Imóvel</th>
             {CURRENCY_LABELS.map((label) => (
@@ -75,14 +90,14 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
                   </span>
                 )}
               </td>
-              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{formatCurrency(row.gross_revenue)}</td>
-              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{formatCurrency(row.received_amount)}</td>
-              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{formatCurrency(row.discount_expense)}</td>
-              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{formatCurrency(row.penalty)}</td>
-              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{formatCurrency(row.property_tax_refund)}</td>
-              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{formatCurrency(row.withholding)}</td>
-              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{formatCurrency(row.agency_share)}</td>
-              <td className={`px-3 py-1.5 text-right ${NET}`}>{formatCurrency(row.net_amount)}</td>
+              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.gross_revenue)}</td>
+              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.received_amount)}</td>
+              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.discount_expense)}</td>
+              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.penalty)}</td>
+              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.property_tax_refund)}</td>
+              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.withholding)}</td>
+              <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.agency_share)}</td>
+              <td className={`px-3 py-1.5 text-right ${NET}`}>{money(row.net_amount)}</td>
               <td className="px-3 py-1.5 whitespace-nowrap">{row.tenant_name}</td>
               <td className="px-3 py-1.5 whitespace-nowrap">{row.tenant_document ? formatCPFCNPJ(row.tenant_document) : '-'}</td>
             </tr>
@@ -93,14 +108,14 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
           <tfoot>
             <tr className="text-sm font-bold text-content border-t-2 border-ui-border">
               <td className="px-3 py-2" colSpan={2}>Total</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.gross_revenue)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.received_amount)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.discount_expense)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.penalty)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.property_tax_refund)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.withholding)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.agency_share)}</td>
-              <td className="px-3 py-2 text-right">{formatCurrency(totals.net_amount)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.gross_revenue)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.received_amount)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.discount_expense)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.penalty)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.property_tax_refund)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.withholding)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.agency_share)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.net_amount)}</td>
               <td className="px-3 py-2" colSpan={2} />
             </tr>
           </tfoot>

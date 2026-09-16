@@ -667,6 +667,9 @@ model Contact {
   updated_at  DateTime  @updatedAt
   deleted_at  DateTime?
   cellphone   String?
+  /// Número deste contato escolhido para abrir cobranças manuais no WhatsApp.
+  /// Nulo quando nenhum telefone deste contato foi selecionado.
+  whatsapp_notification_phone String?
   agency_id   String?
   owner_id    String?
   tenant_id   String?
@@ -1397,6 +1400,7 @@ model Holiday {
   date       DateTime    @db.Date
   description String
   scope      HolidayScope @default(NATIONAL)
+  state      String?     @db.VarChar(2)
   /// Município do feriado, quando `scope` é MUNICIPAL.
   city       String?
   created_at DateTime    @default(now())
@@ -1411,6 +1415,7 @@ model Holiday {
 
 enum HolidayScope {
   NATIONAL
+  STATE
   MUNICIPAL
 }
 

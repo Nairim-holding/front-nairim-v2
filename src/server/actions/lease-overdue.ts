@@ -10,7 +10,6 @@ import {
   listOverdueLeasesData,
   type LeaseOverdueSummary,
 } from '@/server/queries/lease-overdue';
-import { deliverOverdueWhatsApp } from '@/server/services/lease-overdue-whatsapp';
 
 export async function getOverdueLeaseAlertsAction(): Promise<ActionResult<LeaseOverdueSummary>> {
   return runAction(() => listOverdueLeasesData());
@@ -34,16 +33,5 @@ export async function updateLeaseOverdueStatusAction(
     });
     if (updated.count === 0) throw new NotFoundError('Locação não encontrada.');
     return null;
-  }));
-}
-
-export async function sendLeaseOverdueWhatsAppAction(
-  transactionId: string,
-): Promise<ActionResult<{ recorded_at: Date; provider_message_id: string | null }>> {
-  return runAction(() => withPermission('leases', 'edit', async (session) => {
-    const overdue = (await findOverdueLeasesForCompany(session.company_id))
-      .find((item) => item.transaction_id === transactionId);
-    if (!overdue) throw new NotFoundError('A locação não está mais em atraso.');
-    return deliverOverdueWhatsApp(session.company_id, overdue, session.id);
   }));
 }

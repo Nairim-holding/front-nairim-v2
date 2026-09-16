@@ -243,7 +243,7 @@ function buildLeaseData(data: CreateLeaseData | UpdateLeaseData, existing?: any)
     property_tax_second_installment: data.property_tax_second_installment !== undefined ? num(data.property_tax_second_installment) : (existing?.property_tax_second_installment ?? null),
     property_tax_second_installment_due_date: data.property_tax_second_installment_due_date !== undefined ? (data.property_tax_second_installment_due_date ? new Date(data.property_tax_second_installment_due_date) : null) : (existing?.property_tax_second_installment_due_date ?? null),
     iptu_year: data.iptu_year !== undefined ? (data.iptu_year ? Number(data.iptu_year) : null) : (existing?.iptu_year ?? null),
-    iptu_installments_count: data.iptu_installments_count !== undefined ? (data.iptu_installments_count ? Number(data.iptu_installments_count) : null) : (existing?.iptu_installments_count ?? null),
+    iptu_installments_count: data.iptu_installments_count !== undefined ? (data.iptu_installments_count != null ? Number(data.iptu_installments_count) : null) : (existing?.iptu_installments_count ?? null),
     iptu_installments: data.iptu_installments !== undefined ? (Array.isArray(data.iptu_installments) ? data.iptu_installments : null) : (existing?.iptu_installments ?? null),
     iptu_installments_due_dates: data.iptu_installments_due_dates !== undefined ? (Array.isArray(data.iptu_installments_due_dates) ? data.iptu_installments_due_dates : null) : (existing?.iptu_installments_due_dates ?? null),
     extra_charges: data.extra_charges !== undefined ? num(data.extra_charges) : (existing?.extra_charges ?? null),

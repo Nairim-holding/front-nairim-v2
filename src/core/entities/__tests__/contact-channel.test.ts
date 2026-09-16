@@ -53,6 +53,7 @@ describe('banco → formulário', () => {
       cellphones: [],
       phones: [],
       emails: [],
+      whatsapp_notification_phone: null,
     });
   });
 });
@@ -92,8 +93,21 @@ describe('formulário → banco', () => {
       cellphones: ['(11) 90000-0001', '(11) 90000-0002'],
       phones: ['(11) 3000-0001'],
       emails: ['maria@x.com', 'maria.alt@x.com'],
+      whatsapp_notification_phone: '11900000002',
     };
     expect(toFormValue(toPersistedValue(original))).toEqual(original);
+  });
+
+  it('descarta a seleção se o número não pertence ao contato', () => {
+    const persisted = toPersistedValue({
+      contact: 'Maria',
+      cellphones: ['(11) 90000-0001'],
+      phones: [],
+      emails: [],
+      whatsapp_notification_phone: '11999999999',
+    });
+
+    expect(persisted.whatsapp_notification_phone).toBeNull();
   });
 });
 

@@ -122,6 +122,7 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
             phone: c.phone?.replace(/\D/g, '') || null,
             email: c.email || null,
             cellphone: c.cellphone?.replace(/\D/g, '') || null,
+            whatsapp_notification_phone: c.whatsapp_notification_phone?.replace(/\D/g, '') || null,
             // Sem isso os telefones/e-mails extras (Etapa 3) somem ao salvar.
             channels: (c.channels || []).map((ch: any) => ({
               ...ch,
@@ -179,6 +180,7 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
         contact: c.contact?.contact || c.contact || '',
         phone: c.contact?.phone || c.phone || '',
         cellphone: c.contact?.cellphone || c.cellphone || '',
+        whatsapp_notification_phone: c.contact?.whatsapp_notification_phone || c.whatsapp_notification_phone || null,
         email: c.contact?.email || c.email || '',
         channels: c.contact?.channels || c.channels || [],
       })) || []

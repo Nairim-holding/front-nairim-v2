@@ -40,18 +40,6 @@ function dateKey(value: Date): string {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 }
 
-function safeDueDate(year: number, monthIndex: number, dueDay: number): Date {
-  const lastDay = new Date(year, monthIndex + 1, 0, 12).getDate();
-  return new Date(year, monthIndex, Math.min(Math.max(dueDay, 1), lastDay), 12);
-}
-
-function isWithinLease(date: Date, start: Date, end: Date): boolean {
-  const key = dateKey(date);
-  const startKey = dateKey(fromDatabaseDate(start));
-  const endKey = dateKey(fromDatabaseDate(end));
-  return key >= startKey && key <= endKey;
-}
-
 export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditReconciliationRepository {
   async search(companyId: string, input: CreditReconciliationSearchInput): Promise<CreditCandidate[]> {
     const creditDate = parseCalendarDate(input.credit_date);
@@ -64,8 +52,10 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
           company_id: companyId,
           deleted_at: null,
           status: { not: 'CANCELED' },
-          agency_id: { in: input.agency_ids },
-          financial_institution_id: input.financial_institution_id,
+          OR: [
+            { agency_id: { in: input.agency_ids } },
+            { agency_id: null, property: { agency_id: { in: input.agency_ids } } },
+          ],
           start_date: { lte: createDateLocal(creditDate.getFullYear(), creditDate.getMonth() + 1, creditDate.getDate()) },
         },
         select: {
@@ -83,11 +73,12 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
           property: {
             select: {
               title: true,
+              agency: { select: { trade_name: true } },
               income_tax_withholding: true,
               addresses: {
                 where: { deleted_at: null },
                 take: 1,
-                select: { address: { select: { city: true } } },
+                select: { address: { select: { city: true, state: true } } },
               },
             },
           },
@@ -102,23 +93,15 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
             lte: createDateLocal(creditDate.getFullYear(), creditDate.getMonth() + 1, creditDate.getDate()),
           },
         },
-        select: { date: true, scope: true, city: true },
+        select: { date: true, scope: true, city: true, state: true },
       }),
     ]);
 
-    const matchedLeases = leases.flatMap((lease) => {
+    const matchedLeases = leases.map((lease) => {
       const city = lease.property.addresses[0]?.address.city ?? null;
       const years = [...new Set([creditDate.getFullYear(), rangeStart.getFullYear()])];
-      const holidays = holidaysForCity(registeredHolidays, city, years);
-      const possibleDueDates = [
-        safeDueDate(creditDate.getFullYear(), creditDate.getMonth(), lease.rent_due_day),
-        safeDueDate(new Date(creditDate.getFullYear(), creditDate.getMonth() - 1, 1).getFullYear(), new Date(creditDate.getFullYear(), creditDate.getMonth() - 1, 1).getMonth(), lease.rent_due_day),
-      ];
-      const dueDate = possibleDueDates.find(
-        (date) => isWithinLease(date, lease.start_date, lease.end_date)
-          && dateKey(nextBusinessDay(date, holidays)) === dateKey(creditDate),
-      );
-      return dueDate ? [{ lease, dueDate, holidays }] : [];
+      const holidays = holidaysForCity(registeredHolidays, city, years, lease.property.addresses[0]?.address.state);
+      return { lease, holidays };
     });
 
     if (matchedLeases.length === 0) return [];
@@ -139,7 +122,7 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
       select: { id: true, lease_id: true, amount: true, description: true, effective_date: true },
     });
 
-    const candidates: CreditCandidate[] = matchedLeases.flatMap(({ lease, dueDate, holidays }) => {
+    const candidates: CreditCandidate[] = matchedLeases.flatMap(({ lease, holidays }) => {
       const transactions = pending.filter((transaction) => {
         if (transaction.lease_id !== lease.id) return false;
         const scheduledDate = fromDatabaseDate(transaction.effective_date);
@@ -148,6 +131,9 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
       });
       const rentTransactions = transactions.filter((transaction) => kindOf(transaction.description) === 'rent');
       if (rentTransactions.length === 0) return [];
+      // The pending installment is authoritative: its due date and bank may
+      // have been edited independently of the contract's current defaults.
+      const dueDate = fromDatabaseDate(rentTransactions[0].effective_date);
 
       const sum = (kind: Kind) => round2(transactions
         .filter((transaction) => kindOf(transaction.description) === kind)
@@ -170,7 +156,7 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
         lease_id: lease.id,
         property_title: lease.property.title,
         tenant_name: lease.tenant.name,
-        agency_name: lease.agency?.trade_name ?? '—',
+        agency_name: lease.agency?.trade_name ?? lease.property.agency?.trade_name ?? '—',
         rent_due_day: lease.rent_due_day,
         tax_due_day: lease.tax_due_day,
         condo_due_day: lease.condo_due_day,

@@ -41,6 +41,7 @@ export default function VisualizarImobiliariaPage() {
         contact: c.contact?.contact || c.contact || '',
         phone: c.contact?.phone || c.phone || '',
         cellphone: c.contact?.cellphone || c.cellphone || '',
+        whatsapp_notification_phone: c.contact?.whatsapp_notification_phone || c.whatsapp_notification_phone || null,
         email: c.contact?.email || c.email || '',
         channels: c.contact?.channels || c.channels || [],
       })) || []

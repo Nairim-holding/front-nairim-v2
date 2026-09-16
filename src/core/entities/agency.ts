@@ -14,6 +14,7 @@ export interface AgencyContactInput {
   phone?: string | null;
   cellphone?: string | null;
   email?: string | null;
+  whatsapp_notification_phone?: string | null;
   /** Telefones/e-mails adicionais (Etapa 3). O principal fica nos campos acima. */
   channels?: ContactChannel[];
 }

@@ -19,6 +19,8 @@
  */
 
 /** Um feriado já reduzido ao que importa aqui: a data. */
+import { automaticHolidays, normalizeLocality } from './holidays';
+
 export interface HolidayDate {
   /** Data local do feriado (hora ignorada). */
   date: Date;
@@ -108,16 +110,19 @@ const normalizeCity = (value: string | null | undefined) =>
  * a fonte comum da conciliação e das cobranças automáticas.
  */
 export function holidaysForCity(
-  registered: Array<{ date: Date; scope: string; city: string | null }>,
+  registered: Array<{ date: Date; scope: string; city: string | null; state?: string | null }>,
   city: string | null,
   years: number[],
+  state?: string | null,
 ): HolidayDate[] {
   const normalizedCity = normalizeCity(city);
   const saved = registered
     .filter((holiday) => holiday.scope === 'NATIONAL'
-      || (holiday.scope === 'MUNICIPAL' && normalizeCity(holiday.city) === normalizedCity))
+      || (holiday.scope === 'STATE' && !!state && normalizeLocality(holiday.state) === normalizeLocality(state))
+      || (holiday.scope === 'MUNICIPAL' && !!normalizedCity && normalizeCity(holiday.city) === normalizedCity
+        && (!holiday.state || normalizeLocality(holiday.state) === normalizeLocality(state))))
     .map((holiday) => ({ date: fromDatabaseDate(holiday.date) }));
-  return [...saved, ...years.flatMap(fixedNationalHolidays)];
+  return [...saved, ...years.flatMap((year) => automaticHolidays(year, state, city).map((holiday) => ({ date: fromDatabaseDate(new Date(`${holiday.date}T00:00:00Z`)) })))];
 }
 
 /**

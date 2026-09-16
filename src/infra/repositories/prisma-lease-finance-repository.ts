@@ -117,6 +117,9 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
         break;
       }
       case 'INSTALLMENTS': {
+        // Zero parcelas é uma escolha explícita; valores antigos no
+        // detalhamento não podem recriar IPTU já quitado na renovação.
+        if (lease.iptu_installments_count != null && Number(lease.iptu_installments_count) === 0) break;
         const amounts: any[] = Array.isArray(lease.iptu_installments) ? lease.iptu_installments : [];
         const dueDates: any[] = Array.isArray(lease.iptu_installments_due_dates) ? lease.iptu_installments_due_dates : [];
         amounts.forEach((a, idx) => {

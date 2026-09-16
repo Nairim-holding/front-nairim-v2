@@ -243,6 +243,22 @@ describe('Lease use-cases', () => {
 });
 
 describe('validateLeaseBusinessRules (warnings/erros do LeaseValidator)', () => {
+  it.each([0, '0', '0,00', 'R$ 0,00'])('aceita IPTU base %s e zero parcelas em nova locação ou renovação, sem avisos', (base) => {
+    const data = { ...baseData, property_tax: base, payment_condition: 'INSTALLMENTS', iptu_installments_count: 0, iptu_installments: [] };
+    expect(validateLeaseBusinessRules(data, false)).toEqual([]);
+    expect(validateLeaseBusinessRules(data, true)).toEqual([]);
+  });
+
+  it('aceita cadastro antigo sem IPTU com quantidade nula e detalhamento vazio', () => {
+    expect(validateLeaseBusinessRules({ ...baseData, property_tax: 0, payment_condition: 'INSTALLMENTS', iptu_installments_count: null, iptu_installments: [] }, true)).toEqual([]);
+  });
+
+  it('mantém o aviso se tentar configurar cobranças com base zerada', () => {
+    const data = { ...baseData, property_tax: 0, payment_condition: 'INSTALLMENTS', iptu_installments_count: 2, iptu_installments: [100, 100] };
+    expect(validateLeaseBusinessRules(data, false).some((warning) => warning.includes('Base'))).toBe(true);
+    expect(validateLeaseBusinessRules({ ...data, iptu_installments_count: 0 }, true).some((warning) => warning.includes('Base'))).toBe(true);
+  });
+
   it('bloqueia start_date >= end_date', () => {
     expect(() => validateLeaseBusinessRules(
       { rent_due_day: 5, start_date: '2026-12-31', end_date: '2026-01-01' }, false,

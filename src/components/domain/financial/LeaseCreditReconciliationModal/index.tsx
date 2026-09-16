@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Building2, CalendarDays, CheckCircle2, Landmark, Search, WalletCards, X } from 'lucide-react';
 import { listAgenciesAction } from '@/server/actions/agency';
 import {
@@ -14,6 +14,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Checkbox from '@/components/ui/Checkbox';
 import HolidayManager from './HolidayManager';
+import { creditDateError } from '@/components/ui/Input/date-edit';
 
 interface Option {
   label: string;
@@ -44,6 +45,9 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
   const [isSearching, setIsSearching] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState('');
+  const [dateError, setDateError] = useState('');
+  const [creditYear, setCreditYear] = useState(() => new Date().getFullYear());
+  const searchRevision = useRef(0);
 
   useEffect(() => {
     listAgenciesAction({ limit: 150, page: 1 })
@@ -63,7 +67,18 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
   const allSelected = agencies.length > 0 && agencyIds.length === agencies.length;
   const creditedAmount = useMemo(() => parseCurrencyFromPTBR(amount), [amount]);
   const exactMatches = candidates?.filter((candidate) => candidate.amount_matches).length ?? 0;
-  const creditYear = Number(creditDate.slice(0, 4)) || new Date().getFullYear();
+  const validateCreditDate = () => {
+    const message = creditDateError(creditDate);
+    setDateError(message);
+    if (!message) setCreditYear(Number(creditDate.slice(0, 4)));
+    return !message;
+  };
+
+  const invalidateSearch = () => {
+    setCandidates(null);
+    setSelectedLeaseId('');
+    searchRevision.current += 1;
+  };
 
   const payload = () => ({
     credit_date: creditDate,
@@ -75,13 +90,16 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
   const search = async () => {
     setError('');
     setSelectedLeaseId('');
+    if (!validateCreditDate()) return;
     if (!creditDate || !institutionId || creditedAmount <= 0 || agencyIds.length === 0) {
       setError('Preencha a data, o valor, a instituição e ao menos uma imobiliária.');
       return;
     }
     setIsSearching(true);
+    const revision = searchRevision.current;
     const result = await searchLeaseCreditCandidatesAction(payload());
     setIsSearching(false);
+    if (revision !== searchRevision.current) return;
     if (!result.ok) {
       setCandidates(null);
       setError(describeActionError(result, 'Não foi possível pesquisar as locações.'));
@@ -106,6 +124,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
   };
 
   const toggleAgency = (id: string) => {
+    invalidateSearch();
     setAgencyIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]);
   };
 
@@ -143,7 +162,8 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                 required
                 type="date"
                 value={creditDate}
-                onChange={(event) => setCreditDate(event.target.value)}
+                onChange={(event) => { setCreditDate(event.target.value); setDateError(''); invalidateSearch(); }}
+                onBlur={validateCreditDate}
                 svg={<CalendarDays size={15} />}
                 full
               />
@@ -152,7 +172,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                 label="Valor líquido do crédito"
                 required
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) => { setAmount(event.target.value); invalidateSearch(); }}
                 placeholder="R$ 0,00"
                 mask="money"
                 svg={<WalletCards size={15} />}
@@ -163,7 +183,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                 label="Instituição financeira"
                 required
                 value={institutionId}
-                onChange={(value) => setInstitutionId(String(value))}
+                onChange={(value) => { setInstitutionId(String(value)); invalidateSearch(); }}
                 options={institutions}
                 placeholder="Selecione a instituição"
                 searchable
@@ -171,6 +191,8 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                 full
               />
             </div>
+
+            {dateError && <p role="alert" className="text-sm text-red-700">{dateError}</p>}
 
             <fieldset className="rounded-lg border border-ui-border-soft bg-surface p-3">
               <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-content"><Building2 size={14} /> Imobiliárias</legend>
@@ -182,7 +204,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                   <Checkbox
                     checked={allSelected}
                     indeterminate={agencyIds.length > 0 && !allSelected}
-                    onChange={() => setAgencyIds(allSelected ? [] : agencies.map((item) => item.value))}
+                    onChange={() => { setAgencyIds(allSelected ? [] : agencies.map((item) => item.value)); invalidateSearch(); }}
                     label={`Todas (${agencies.length})`}
                   />
                 </div>
@@ -247,7 +269,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
             </section>
           )}
 
-          <HolidayManager key={creditYear} year={creditYear} onError={setError} />
+          <HolidayManager key={creditYear} year={creditYear} onError={setError} onChanged={invalidateSearch} />
         </div>
 
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-ui-border-soft">

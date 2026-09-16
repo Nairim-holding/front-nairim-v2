@@ -31,6 +31,7 @@ export type HolidayMinAggregateOutputType = {
   date: Date | null
   description: string | null
   scope: $Enums.HolidayScope | null
+  state: string | null
   city: string | null
   created_at: Date | null
   updated_at: Date | null
@@ -43,6 +44,7 @@ export type HolidayMaxAggregateOutputType = {
   date: Date | null
   description: string | null
   scope: $Enums.HolidayScope | null
+  state: string | null
   city: string | null
   created_at: Date | null
   updated_at: Date | null
@@ -55,6 +57,7 @@ export type HolidayCountAggregateOutputType = {
   date: number
   description: number
   scope: number
+  state: number
   city: number
   created_at: number
   updated_at: number
@@ -69,6 +72,7 @@ export type HolidayMinAggregateInputType = {
   date?: true
   description?: true
   scope?: true
+  state?: true
   city?: true
   created_at?: true
   updated_at?: true
@@ -81,6 +85,7 @@ export type HolidayMaxAggregateInputType = {
   date?: true
   description?: true
   scope?: true
+  state?: true
   city?: true
   created_at?: true
   updated_at?: true
@@ -93,6 +98,7 @@ export type HolidayCountAggregateInputType = {
   date?: true
   description?: true
   scope?: true
+  state?: true
   city?: true
   created_at?: true
   updated_at?: true
@@ -178,6 +184,7 @@ export type HolidayGroupByOutputType = {
   date: Date
   description: string
   scope: $Enums.HolidayScope
+  state: string | null
   city: string | null
   created_at: Date
   updated_at: Date
@@ -211,6 +218,7 @@ export type HolidayWhereInput = {
   date?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   description?: Prisma.StringFilter<"Holiday"> | string
   scope?: Prisma.EnumHolidayScopeFilter<"Holiday"> | $Enums.HolidayScope
+  state?: Prisma.StringNullableFilter<"Holiday"> | string | null
   city?: Prisma.StringNullableFilter<"Holiday"> | string | null
   created_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
@@ -224,6 +232,7 @@ export type HolidayOrderByWithRelationInput = {
   date?: Prisma.SortOrder
   description?: Prisma.SortOrder
   scope?: Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -241,6 +250,7 @@ export type HolidayWhereUniqueInput = Prisma.AtLeast<{
   date?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   description?: Prisma.StringFilter<"Holiday"> | string
   scope?: Prisma.EnumHolidayScopeFilter<"Holiday"> | $Enums.HolidayScope
+  state?: Prisma.StringNullableFilter<"Holiday"> | string | null
   city?: Prisma.StringNullableFilter<"Holiday"> | string | null
   created_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
@@ -254,6 +264,7 @@ export type HolidayOrderByWithAggregationInput = {
   date?: Prisma.SortOrder
   description?: Prisma.SortOrder
   scope?: Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -272,6 +283,7 @@ export type HolidayScalarWhereWithAggregatesInput = {
   date?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
   description?: Prisma.StringWithAggregatesFilter<"Holiday"> | string
   scope?: Prisma.EnumHolidayScopeWithAggregatesFilter<"Holiday"> | $Enums.HolidayScope
+  state?: Prisma.StringNullableWithAggregatesFilter<"Holiday"> | string | null
   city?: Prisma.StringNullableWithAggregatesFilter<"Holiday"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
@@ -283,6 +295,7 @@ export type HolidayCreateInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -296,6 +309,7 @@ export type HolidayUncheckedCreateInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -307,6 +321,7 @@ export type HolidayUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -320,6 +335,7 @@ export type HolidayUncheckedUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -332,6 +348,7 @@ export type HolidayCreateManyInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -343,6 +360,7 @@ export type HolidayUpdateManyMutationInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -355,6 +373,7 @@ export type HolidayUncheckedUpdateManyInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -383,6 +402,7 @@ export type HolidayCountOrderByAggregateInput = {
   date?: Prisma.SortOrder
   description?: Prisma.SortOrder
   scope?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   city?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -395,6 +415,7 @@ export type HolidayMaxOrderByAggregateInput = {
   date?: Prisma.SortOrder
   description?: Prisma.SortOrder
   scope?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   city?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -407,6 +428,7 @@ export type HolidayMinOrderByAggregateInput = {
   date?: Prisma.SortOrder
   description?: Prisma.SortOrder
   scope?: Prisma.SortOrder
+  state?: Prisma.SortOrder
   city?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -464,6 +486,7 @@ export type HolidayCreateWithoutCompanyInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -475,6 +498,7 @@ export type HolidayUncheckedCreateWithoutCompanyInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -516,6 +540,7 @@ export type HolidayScalarWhereInput = {
   date?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   description?: Prisma.StringFilter<"Holiday"> | string
   scope?: Prisma.EnumHolidayScopeFilter<"Holiday"> | $Enums.HolidayScope
+  state?: Prisma.StringNullableFilter<"Holiday"> | string | null
   city?: Prisma.StringNullableFilter<"Holiday"> | string | null
   created_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Holiday"> | Date | string
@@ -527,6 +552,7 @@ export type HolidayCreateManyCompanyInput = {
   date: Date | string
   description: string
   scope?: $Enums.HolidayScope
+  state?: string | null
   city?: string | null
   created_at?: Date | string
   updated_at?: Date | string
@@ -538,6 +564,7 @@ export type HolidayUpdateWithoutCompanyInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -549,6 +576,7 @@ export type HolidayUncheckedUpdateWithoutCompanyInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -560,6 +588,7 @@ export type HolidayUncheckedUpdateManyWithoutCompanyInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   scope?: Prisma.EnumHolidayScopeFieldUpdateOperationsInput | $Enums.HolidayScope
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -574,6 +603,7 @@ export type HolidaySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   date?: boolean
   description?: boolean
   scope?: boolean
+  state?: boolean
   city?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -587,6 +617,7 @@ export type HolidaySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   date?: boolean
   description?: boolean
   scope?: boolean
+  state?: boolean
   city?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -600,6 +631,7 @@ export type HolidaySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   date?: boolean
   description?: boolean
   scope?: boolean
+  state?: boolean
   city?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -613,13 +645,14 @@ export type HolidaySelectScalar = {
   date?: boolean
   description?: boolean
   scope?: boolean
+  state?: boolean
   city?: boolean
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
 }
 
-export type HolidayOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "date" | "description" | "scope" | "city" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["holiday"]>
+export type HolidayOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "date" | "description" | "scope" | "state" | "city" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["holiday"]>
 export type HolidayInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
 }
@@ -641,6 +674,7 @@ export type $HolidayPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     date: Date
     description: string
     scope: $Enums.HolidayScope
+    state: string | null
     /**
      * Município do feriado, quando `scope` é MUNICIPAL.
      */
@@ -1077,6 +1111,7 @@ export interface HolidayFieldRefs {
   readonly date: Prisma.FieldRef<"Holiday", 'DateTime'>
   readonly description: Prisma.FieldRef<"Holiday", 'String'>
   readonly scope: Prisma.FieldRef<"Holiday", 'HolidayScope'>
+  readonly state: Prisma.FieldRef<"Holiday", 'String'>
   readonly city: Prisma.FieldRef<"Holiday", 'String'>
   readonly created_at: Prisma.FieldRef<"Holiday", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"Holiday", 'DateTime'>

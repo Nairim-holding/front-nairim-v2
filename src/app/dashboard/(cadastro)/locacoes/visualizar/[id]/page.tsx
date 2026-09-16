@@ -131,7 +131,7 @@ export default function VisualizarLocacaoPage() {
       notes: apiData.notes || '',
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
-      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
+      property_tax: apiData.property_tax != null ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
       discount_amount: apiData.discount_amount ? formatMoney(apiData.discount_amount) : '',
       agency_commission: apiData.agency_commission ? String(apiData.agency_commission) : '5',
@@ -146,7 +146,7 @@ export default function VisualizarLocacaoPage() {
       property_tax_cash: apiData.property_tax_cash ? formatMoney(apiData.property_tax_cash) : '',
       property_tax_first_installment: apiData.property_tax_first_installment ? formatMoney(apiData.property_tax_first_installment) : '',
       property_tax_second_installment: apiData.property_tax_second_installment ? formatMoney(apiData.property_tax_second_installment) : '',
-      iptu_installments_count: apiData.iptu_installments_count ? String(apiData.iptu_installments_count) : '',
+      iptu_installments_count: apiData.iptu_installments_count != null ? String(apiData.iptu_installments_count) : '',
       iptu_installments: Array.isArray(apiData.iptu_installments)
         ? apiData.iptu_installments.map((val: number, idx: number) => ({
             value: formatMoney(val),

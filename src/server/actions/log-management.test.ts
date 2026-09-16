@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   session: { id: 'user-a', company_id: 'company-a', role: 'ADMIN' },
   permission: true,
   count: vi.fn(), pending: vi.fn(), deleteLogs: vi.fn(), findPreview: vi.fn(), deletePreview: vi.fn(),
-  insertPreview: vi.fn(), lock: vi.fn(),
+  insertPreview: vi.fn(), lock: vi.fn(), databaseStats: vi.fn(),
 }));
 vi.mock('@/infra/auth/session', () => ({
   assertAdmin: (session: { role: string }) => { if (session.role !== 'ADMIN') throw new Error('Forbidden'); },
@@ -18,18 +18,27 @@ vi.mock('@/infra/database/prisma', () => ({ default: {
 } }));
 vi.mock('@/infra/database/mongodb', () => ({
   logsCollection: async () => ({ countDocuments: mocks.count, deleteMany: mocks.deleteLogs }),
-  logsDatabase: async () => ({ collection: () => ({ createIndex: vi.fn(), insertOne: mocks.insertPreview, findOne: mocks.findPreview, deleteOne: mocks.deletePreview }) }),
+  logsDatabase: async () => ({
+    command: mocks.databaseStats,
+    collection: () => ({ createIndex: vi.fn(), insertOne: mocks.insertPreview, findOne: mocks.findPreview, deleteOne: mocks.deletePreview }),
+  }),
 }));
-import { previewLogPurgeAction, purgeLogsAction } from './log-management';
+import { logStorageStatusAction, previewLogPurgeAction, purgeLogsAction } from './log-management';
 
 const token = 'ba8a73cf-bb68-4d34-9956-60ecbca55ace';
 beforeEach(() => {
   vi.clearAllMocks(); mocks.session.role = 'ADMIN'; mocks.permission = true;
   mocks.pending.mockResolvedValue(0); mocks.count.mockResolvedValue(2);
+  mocks.databaseStats.mockResolvedValue({ storageSize: 1048576, indexSize: 262144, totalSize: 1310720 });
   mocks.findPreview.mockResolvedValue({ _id: token, company_id: 'company-a', user_id: 'user-a', count: 2, selection: { mode: 'all' }, cutoff: new Date('2026-09-11T12:00:00Z') });
   mocks.deleteLogs.mockResolvedValue({ deletedCount: 2 });
 });
 describe('purge authorization and confirmation', () => {
+  it('informa o tamanho total do banco de logs em bytes', async () => {
+    expect(await logStorageStatusAction()).toEqual({ ok: true, data: { databaseSizeBytes: 1310720 } });
+    expect(mocks.databaseStats).toHaveBeenCalledWith({ dbStats: 1, scale: 1 });
+  });
+
   it('requires both administrator and resource permission', async () => {
     mocks.session.role = 'DEFAULT';
     expect((await previewLogPurgeAction({ mode: 'all' })).ok).toBe(false);

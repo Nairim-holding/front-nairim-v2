@@ -92,6 +92,14 @@ function validateIptuConditions(data: Record<string, unknown>): string[] {
   const warnings: string[] = [];
   const baseIptu = parseDecimal(data.property_tax);
 
+  // IPTU já quitado, inclusive em renovações: manter Parcelado (Livre)
+  // com base e quantidade zeradas não exige configurar uma cobrança.
+  if (baseIptu === 0 && data.payment_condition === 'INSTALLMENTS'
+    && parseDecimal(data.iptu_installments_count) === 0
+    && (!Array.isArray(data.iptu_installments) || data.iptu_installments.every((value) => parseDecimal(value) === 0))) {
+    return warnings;
+  }
+
   if (!baseIptu || baseIptu <= 0) {
     if (data.payment_condition) {
       warnings.push('Para configurar as opções de pagamento, preencha o "Valor do IPTU (Base)" primeiro.');

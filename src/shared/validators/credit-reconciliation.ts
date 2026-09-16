@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
 const money = z.preprocess((value) => {
   if (typeof value === 'number') return value;
@@ -11,7 +12,7 @@ const money = z.preprocess((value) => {
 }, z.number().positive('Informe um valor de crédito maior que zero.'));
 
 export const creditReconciliationSearchSchema = z.object({
-  credit_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe uma data de crédito válida.'),
+  credit_date: z.string().refine(isValidIsoDateString, 'Informe uma data de crédito válida.').refine((date) => Number(date.slice(0, 4)) >= 2000 && Number(date.slice(0, 4)) <= 2200, 'Informe um ano entre 2000 e 2200.'),
   credited_amount: money,
   financial_institution_id: z.string().trim().min(1, 'Selecione a instituição financeira.'),
   agency_ids: z.array(z.string().trim().min(1)).min(1, 'Selecione ao menos uma imobiliária.'),

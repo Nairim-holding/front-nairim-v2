@@ -353,7 +353,7 @@ export default function EditarLocacaoPage() {
       rent_amount: apiData.rent_amount ? formatMoney(apiData.rent_amount) : 'R$ 0,00',
       adjustment_index_id: apiData.adjustment_index_id || '',
       condo_fee: apiData.condo_fee ? formatMoney(apiData.condo_fee) : '',
-      property_tax: apiData.property_tax ? formatMoney(apiData.property_tax) : '',
+      property_tax: apiData.property_tax != null ? formatMoney(apiData.property_tax) : '',
       extra_charges: apiData.extra_charges ? formatMoney(apiData.extra_charges) : '',
       discount_amount: apiData.discount_amount ? formatMoney(apiData.discount_amount) : '',
       agency_commission: apiData.agency_commission !== null && apiData.agency_commission !== undefined
@@ -464,6 +464,7 @@ export default function EditarLocacaoPage() {
                 <div>
                   <p className="text-xs text-content-muted uppercase tracking-wider font-semibold">Valor Base do IPTU (Anual)</p>
                   <p className="text-xl font-bold text-content">{fv?.property_tax || 'R$ 0,00'}</p>
+                  <p className="mt-1 text-sm text-content-muted">IPTU já quitado ou sem cobrança nesta locação? Informe o valor base 0,00, selecione Parcelado (Livre) e use 0 parcelas.</p>
                 </div>
               </div>
             )
@@ -546,8 +547,9 @@ export default function EditarLocacaoPage() {
           },
           {
             field: 'iptu_installments_count',
-            label: 'Número de Parcelas (Ex: 10, 12, 14)',
+            label: 'Número de Parcelas (0 = sem IPTU)',
             type: 'number',
+            min: 0,
             icon: <Hash size={20} />,
             required: true,
             hidden: (fv) => fv?.payment_condition !== 'INSTALLMENTS',

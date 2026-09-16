@@ -16,6 +16,9 @@ import {
 const isAdminRole = (role?: string) =>
   !!role && role.toLowerCase().includes('admin');
 
+const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 interface AutoBackup {
   name: string;
   size: number;
@@ -77,8 +80,8 @@ export default function ConfiguracoesPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e: any) {
-      showMessage(e?.message ?? 'Erro ao baixar o backup automático.', 'error');
+    } catch (error: unknown) {
+      showMessage(errorMessage(error, 'Erro ao baixar o backup automático.'), 'error');
     }
   };
 
@@ -100,8 +103,8 @@ export default function ConfiguracoesPage() {
       URL.revokeObjectURL(url);
 
       showMessage('Backup gerado. O download foi iniciado.', 'success');
-    } catch (e: any) {
-      showMessage(e?.message ?? 'Erro ao gerar o backup.', 'error');
+    } catch (error: unknown) {
+      showMessage(errorMessage(error, 'Erro ao gerar o backup.'), 'error');
     } finally {
       setGenerating(false);
     }
@@ -151,8 +154,8 @@ export default function ConfiguracoesPage() {
 
       showMessage('✅ Restauração concluída com sucesso! Recarregando...', 'success');
       setTimeout(() => window.location.reload(), 1500);
-    } catch (e: any) {
-      showMessage(e?.message ?? 'Erro ao restaurar backup.', 'error');
+    } catch (error: unknown) {
+      showMessage(errorMessage(error, 'Erro ao restaurar backup.'), 'error');
     } finally {
       setRestoring(false);
       setShowRestoreConfirm(false);
@@ -163,7 +166,6 @@ export default function ConfiguracoesPage() {
     <Section title="Configurações">
       <div className="w-full min-w-0 space-y-6">
         <div className="mb-2"><p className="text-sm text-content-secondary">Gerencie os dados da empresa, as cópias de segurança e o histórico de atividades.</p></div>
-        {isAdmin && <LogsSettings />}
         <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         {/* Backup */}
         <div className="bg-surface border border-ui-border rounded-2xl p-6 shadow-sm">
@@ -202,7 +204,7 @@ export default function ConfiguracoesPage() {
               <div className="p-2 rounded-lg bg-orange-100/50">
                 <Upload size={22} className="text-orange-600" />
               </div>
-              <h2 className="text-lg font-semibold text-content">Restaurar de Backup</h2>
+              <h2 className="text-lg font-semibold text-content">Restaurar Backup</h2>
             </div>
             <p className="text-[13px] text-content-secondary mb-4">
               ⚠️ Restaurar um backup substituirá TODOS os dados atuais. Um backup automático
@@ -282,7 +284,7 @@ export default function ConfiguracoesPage() {
 
         {/* Backups automáticos (gerados antes de cada restore) */}
         {isAdmin && autoBackups.length > 0 && (
-          <div className="bg-surface border border-ui-border rounded-xl p-6">
+          <div className="bg-surface border border-ui-border rounded-xl p-6 lg:col-span-2">
             <div className="flex items-center gap-3 mb-1">
               <div className="p-2 rounded-lg bg-brand/10 text-brand">
                 <History size={22} />
@@ -317,6 +319,7 @@ export default function ConfiguracoesPage() {
         )}
 
         </div>
+        {isAdmin && <LogsSettings />}
         {/* Modal de confirmação */}
         {showRestoreConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>

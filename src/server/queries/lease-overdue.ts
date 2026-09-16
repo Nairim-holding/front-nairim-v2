@@ -36,24 +36,23 @@ function todayInSaoPaulo(): Date {
   return createDateLocal(Number(value.year), Number(value.month), Number(value.day));
 }
 
-function contactDetails(contacts: Array<{
+export function resolveAgencyAlertContact(contacts: Array<{
   email: string | null;
   cellphone: string | null;
   phone: string | null;
+  whatsapp_notification_phone: string | null;
   channels: Array<{ kind: 'EMAIL' | 'CELLPHONE' | 'PHONE'; value: string }>;
 }>): { email: string | null; phone: string | null } {
+  let email: string | null = null;
+  let phone: string | null = null;
   for (const contact of contacts) {
-    const email = contact.email?.trim()
+    email ||= contact.email?.trim()
       || contact.channels.find((channel) => channel.kind === 'EMAIL')?.value?.trim()
       || null;
-    const phone = contact.cellphone?.trim()
-      || contact.channels.find((channel) => channel.kind === 'CELLPHONE')?.value?.trim()
-      || contact.phone?.trim()
-      || contact.channels.find((channel) => channel.kind === 'PHONE')?.value?.trim()
-      || null;
-    if (email || phone) return { email, phone };
+    phone ||= contact.whatsapp_notification_phone?.trim() || null;
+    if (email && phone) break;
   }
-  return { email: null, phone: null };
+  return { email, phone };
 }
 
 /**
@@ -99,7 +98,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
               addresses: {
                 where: { deleted_at: null },
                 take: 1,
-                select: { address: { select: { city: true } } },
+                select: { address: { select: { city: true, state: true } } },
               },
             },
           },
@@ -115,6 +114,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
                   email: true,
                   cellphone: true,
                   phone: true,
+                  whatsapp_notification_phone: true,
                   channels: {
                     where: { deleted_at: null },
                     orderBy: { display_order: 'asc' },
@@ -160,7 +160,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
         lte: createDateLocal(Math.max(...relevantYears), 12, 31),
       },
     },
-    select: { date: true, scope: true, city: true },
+    select: { date: true, scope: true, city: true, state: true },
   });
 
   const noticesByCompetence = new Map<string, {
@@ -188,9 +188,9 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
   for (const row of rows) {
     const lease = row.lease;
     if (!lease) continue;
-    const agencyContact = contactDetails(lease.agency?.contacts ?? []);
+    const agencyContact = resolveAgencyAlertContact(lease.agency?.contacts ?? []);
     const city = lease.property.addresses[0]?.address.city ?? null;
-    const holidays = holidaysForCity(registeredHolidays, city, relevantYears);
+    const holidays = holidaysForCity(registeredHolidays, city, relevantYears, lease.property.addresses[0]?.address.state);
     const dueDate = fromDatabaseDate(row.effective_date);
     const expectedCreditDate = nextBusinessDay(dueDate, holidays);
     const automaticNotificationDate = addBusinessDays(expectedCreditDate, 1, holidays);

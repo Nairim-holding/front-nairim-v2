@@ -122,7 +122,7 @@ export default function LeaseOverdueBell({ placement = 'floating' }: { placement
                       <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-content-secondary"><Building2 size={13} />{item.agency_name}</p>
                       <p className="mt-1 text-xs text-content-muted">Venceu em {formatDate(item.due_date)} · <span className="font-semibold text-red-600 dark:text-red-300">{item.days_overdue} dias</span></p>
                     </div>
-                    <LeaseNotificationActions item={item} compact onUpdated={refresh} />
+                    <LeaseNotificationActions item={item} compact />
                   </div>
                 </div>
               ))}

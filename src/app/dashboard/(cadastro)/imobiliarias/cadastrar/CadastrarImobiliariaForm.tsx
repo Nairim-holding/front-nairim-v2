@@ -110,6 +110,7 @@ export default function CadastrarImobiliariaForm({ categoryOptions, subcategorie
             phone: c.phone?.replace(/\D/g, '') || null,
             email: c.email || null,
             cellphone: c.cellphone?.replace(/\D/g, '') || null,
+            whatsapp_notification_phone: c.whatsapp_notification_phone?.replace(/\D/g, '') || null,
             // Sem isso os telefones/e-mails extras (Etapa 3) somem ao salvar.
             channels: (c.channels || []).map((ch: any) => ({
               ...ch,

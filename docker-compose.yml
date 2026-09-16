@@ -1,5 +1,4 @@
 include:
-  - path: docker-compose.evolution.yml
   - path: docker-compose.logs.yml
 
 services:
@@ -19,10 +18,6 @@ services:
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=3000
-      # Dentro do compose, usa o DNS interno do serviço em vez da porta do host.
-      - EVOLUTION_API_URL=http://evolution-api:8080
-      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
-      - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
       - MONGODB_LOGS_URI=mongodb://${MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD}@mongodb-logs-prod:27017/?authSource=admin
     env_file:
       - .env
@@ -31,7 +26,6 @@ services:
     depends_on:
       - postgres
       - minio
-      - evolution-api
       - mongodb-logs-prod
     labels:
       - "traefik.enable=true"

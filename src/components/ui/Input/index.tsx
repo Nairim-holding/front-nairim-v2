@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import Label from "../Label";
+import DateInput from './DateInput';
 
 export interface InputProps {
   id?: string;
@@ -162,7 +163,12 @@ const removeMask = (maskType: InputProps['mask'], value: string): string => {
   }
 };
 
-export default function Input({
+export default function Input(props: InputProps) {
+  if (props.type === 'date' || props.mask === 'date') return <DateInput {...props} />;
+  return <StandardInput {...props} />;
+}
+
+function StandardInput({
   id,
   label,
   required,

@@ -15,10 +15,7 @@ interface MonthSelectorProps {
 /**
  * Grade de 12 meses com navegação por ano e seleção múltipla.
  *
- * É seleção de MÊS DE REFERÊNCIA, não de intervalo de datas: o usuário pensa
- * em "o aluguel de dezembro", e o relatório é quem sabe que esse dinheiro
- * entrou em janeiro. Por isso não reaproveita o `CalendarPicker` dos
- * Relatórios Financeiros, que trabalha com from/to em dias.
+ * Seleciona meses completos de recebimento, inclusive meses não consecutivos.
  */
 export default function MonthSelector({ selected, onChange, max = 36 }: MonthSelectorProps) {
   const [year, setYear] = useState(() => (selected[0]?.year ?? new Date().getFullYear()));
@@ -60,7 +57,7 @@ export default function MonthSelector({ selected, onChange, max = 36 }: MonthSel
 
   return (
     <div className="rounded-xl border border-ui-border-soft bg-surface p-3">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex max-w-xs items-center justify-between mb-3">
         <button
           type="button"
           onClick={() => setYear((y) => y - 1)}
@@ -80,7 +77,7 @@ export default function MonthSelector({ selected, onChange, max = 36 }: MonthSel
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-12 gap-1.5">
         {MONTH_ABBR.map((label, index) => {
           const month = index + 1;
           const isSelected = selectedKeys.has(monthKey({ year, month }));
@@ -90,6 +87,7 @@ export default function MonthSelector({ selected, onChange, max = 36 }: MonthSel
               key={label}
               type="button"
               disabled={isBlocked}
+              aria-pressed={isSelected}
               onClick={() => toggle(month)}
               title={isBlocked ? `Máximo de ${max} meses` : undefined}
               className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${

@@ -33,6 +33,7 @@ export type ContactMinAggregateOutputType = {
   updated_at: Date | null
   deleted_at: Date | null
   cellphone: string | null
+  whatsapp_notification_phone: string | null
   agency_id: string | null
   owner_id: string | null
   tenant_id: string | null
@@ -48,6 +49,7 @@ export type ContactMaxAggregateOutputType = {
   updated_at: Date | null
   deleted_at: Date | null
   cellphone: string | null
+  whatsapp_notification_phone: string | null
   agency_id: string | null
   owner_id: string | null
   tenant_id: string | null
@@ -63,6 +65,7 @@ export type ContactCountAggregateOutputType = {
   updated_at: number
   deleted_at: number
   cellphone: number
+  whatsapp_notification_phone: number
   agency_id: number
   owner_id: number
   tenant_id: number
@@ -80,6 +83,7 @@ export type ContactMinAggregateInputType = {
   updated_at?: true
   deleted_at?: true
   cellphone?: true
+  whatsapp_notification_phone?: true
   agency_id?: true
   owner_id?: true
   tenant_id?: true
@@ -95,6 +99,7 @@ export type ContactMaxAggregateInputType = {
   updated_at?: true
   deleted_at?: true
   cellphone?: true
+  whatsapp_notification_phone?: true
   agency_id?: true
   owner_id?: true
   tenant_id?: true
@@ -110,6 +115,7 @@ export type ContactCountAggregateInputType = {
   updated_at?: true
   deleted_at?: true
   cellphone?: true
+  whatsapp_notification_phone?: true
   agency_id?: true
   owner_id?: true
   tenant_id?: true
@@ -198,6 +204,7 @@ export type ContactGroupByOutputType = {
   updated_at: Date
   deleted_at: Date | null
   cellphone: string | null
+  whatsapp_notification_phone: string | null
   agency_id: string | null
   owner_id: string | null
   tenant_id: string | null
@@ -234,6 +241,7 @@ export type ContactWhereInput = {
   updated_at?: Prisma.DateTimeFilter<"Contact"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"Contact"> | Date | string | null
   cellphone?: Prisma.StringNullableFilter<"Contact"> | string | null
+  whatsapp_notification_phone?: Prisma.StringNullableFilter<"Contact"> | string | null
   agency_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   owner_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   tenant_id?: Prisma.StringNullableFilter<"Contact"> | string | null
@@ -254,6 +262,7 @@ export type ContactOrderByWithRelationInput = {
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrderInput | Prisma.SortOrder
   cellphone?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp_notification_phone?: Prisma.SortOrderInput | Prisma.SortOrder
   agency_id?: Prisma.SortOrderInput | Prisma.SortOrder
   owner_id?: Prisma.SortOrderInput | Prisma.SortOrder
   tenant_id?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -277,6 +286,7 @@ export type ContactWhereUniqueInput = Prisma.AtLeast<{
   updated_at?: Prisma.DateTimeFilter<"Contact"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"Contact"> | Date | string | null
   cellphone?: Prisma.StringNullableFilter<"Contact"> | string | null
+  whatsapp_notification_phone?: Prisma.StringNullableFilter<"Contact"> | string | null
   agency_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   owner_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   tenant_id?: Prisma.StringNullableFilter<"Contact"> | string | null
@@ -297,6 +307,7 @@ export type ContactOrderByWithAggregationInput = {
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrderInput | Prisma.SortOrder
   cellphone?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp_notification_phone?: Prisma.SortOrderInput | Prisma.SortOrder
   agency_id?: Prisma.SortOrderInput | Prisma.SortOrder
   owner_id?: Prisma.SortOrderInput | Prisma.SortOrder
   tenant_id?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -318,6 +329,7 @@ export type ContactScalarWhereWithAggregatesInput = {
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"Contact"> | Date | string
   deleted_at?: Prisma.DateTimeNullableWithAggregatesFilter<"Contact"> | Date | string | null
   cellphone?: Prisma.StringNullableWithAggregatesFilter<"Contact"> | string | null
+  whatsapp_notification_phone?: Prisma.StringNullableWithAggregatesFilter<"Contact"> | string | null
   agency_id?: Prisma.StringNullableWithAggregatesFilter<"Contact"> | string | null
   owner_id?: Prisma.StringNullableWithAggregatesFilter<"Contact"> | string | null
   tenant_id?: Prisma.StringNullableWithAggregatesFilter<"Contact"> | string | null
@@ -333,6 +345,7 @@ export type ContactCreateInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
@@ -349,6 +362,7 @@ export type ContactUncheckedCreateInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
@@ -365,6 +379,7 @@ export type ContactUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
@@ -381,6 +396,7 @@ export type ContactUncheckedUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -397,6 +413,7 @@ export type ContactCreateManyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
@@ -412,6 +429,7 @@ export type ContactUpdateManyMutationInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ContactUncheckedUpdateManyInput = {
@@ -423,6 +441,7 @@ export type ContactUncheckedUpdateManyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -448,6 +467,7 @@ export type ContactCountOrderByAggregateInput = {
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
   cellphone?: Prisma.SortOrder
+  whatsapp_notification_phone?: Prisma.SortOrder
   agency_id?: Prisma.SortOrder
   owner_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
@@ -463,6 +483,7 @@ export type ContactMaxOrderByAggregateInput = {
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
   cellphone?: Prisma.SortOrder
+  whatsapp_notification_phone?: Prisma.SortOrder
   agency_id?: Prisma.SortOrder
   owner_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
@@ -478,6 +499,7 @@ export type ContactMinOrderByAggregateInput = {
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
   cellphone?: Prisma.SortOrder
+  whatsapp_notification_phone?: Prisma.SortOrder
   agency_id?: Prisma.SortOrder
   owner_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
@@ -680,6 +702,7 @@ export type ContactCreateWithoutAgencyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
@@ -695,6 +718,7 @@ export type ContactUncheckedCreateWithoutAgencyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   owner_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
@@ -739,6 +763,7 @@ export type ContactScalarWhereInput = {
   updated_at?: Prisma.DateTimeFilter<"Contact"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"Contact"> | Date | string | null
   cellphone?: Prisma.StringNullableFilter<"Contact"> | string | null
+  whatsapp_notification_phone?: Prisma.StringNullableFilter<"Contact"> | string | null
   agency_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   owner_id?: Prisma.StringNullableFilter<"Contact"> | string | null
   tenant_id?: Prisma.StringNullableFilter<"Contact"> | string | null
@@ -754,6 +779,7 @@ export type ContactCreateWithoutOwnerInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
@@ -769,6 +795,7 @@ export type ContactUncheckedCreateWithoutOwnerInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
@@ -810,6 +837,7 @@ export type ContactCreateWithoutTenantInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
@@ -825,6 +853,7 @@ export type ContactUncheckedCreateWithoutTenantInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   supplier_id?: string | null
@@ -866,6 +895,7 @@ export type ContactCreateWithoutSupplierInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   tenant?: Prisma.TenantCreateNestedOneWithoutContactsInput
@@ -881,6 +911,7 @@ export type ContactUncheckedCreateWithoutSupplierInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
@@ -922,6 +953,7 @@ export type ContactCreateWithoutChannelsInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency?: Prisma.AgencyCreateNestedOneWithoutContactsInput
   owner?: Prisma.OwnerCreateNestedOneWithoutContactsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutContactsInput
@@ -937,6 +969,7 @@ export type ContactUncheckedCreateWithoutChannelsInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
@@ -968,6 +1001,7 @@ export type ContactUpdateWithoutChannelsInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
@@ -983,6 +1017,7 @@ export type ContactUncheckedUpdateWithoutChannelsInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -998,6 +1033,7 @@ export type ContactCreateManyAgencyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   owner_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
@@ -1012,6 +1048,7 @@ export type ContactUpdateWithoutAgencyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
@@ -1027,6 +1064,7 @@ export type ContactUncheckedUpdateWithoutAgencyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1042,6 +1080,7 @@ export type ContactUncheckedUpdateManyWithoutAgencyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1056,6 +1095,7 @@ export type ContactCreateManyOwnerInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   tenant_id?: string | null
   supplier_id?: string | null
@@ -1070,6 +1110,7 @@ export type ContactUpdateWithoutOwnerInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
@@ -1085,6 +1126,7 @@ export type ContactUncheckedUpdateWithoutOwnerInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1100,6 +1142,7 @@ export type ContactUncheckedUpdateManyWithoutOwnerInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1114,6 +1157,7 @@ export type ContactCreateManyTenantInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   supplier_id?: string | null
@@ -1128,6 +1172,7 @@ export type ContactUpdateWithoutTenantInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutContactsNestedInput
@@ -1143,6 +1188,7 @@ export type ContactUncheckedUpdateWithoutTenantInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1158,6 +1204,7 @@ export type ContactUncheckedUpdateManyWithoutTenantInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1172,6 +1219,7 @@ export type ContactCreateManySupplierInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   cellphone?: string | null
+  whatsapp_notification_phone?: string | null
   agency_id?: string | null
   owner_id?: string | null
   tenant_id?: string | null
@@ -1186,6 +1234,7 @@ export type ContactUpdateWithoutSupplierInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency?: Prisma.AgencyUpdateOneWithoutContactsNestedInput
   owner?: Prisma.OwnerUpdateOneWithoutContactsNestedInput
   tenant?: Prisma.TenantUpdateOneWithoutContactsNestedInput
@@ -1201,6 +1250,7 @@ export type ContactUncheckedUpdateWithoutSupplierInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1216,6 +1266,7 @@ export type ContactUncheckedUpdateManyWithoutSupplierInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cellphone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_notification_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   owner_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tenant_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1261,6 +1312,7 @@ export type ContactSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   updated_at?: boolean
   deleted_at?: boolean
   cellphone?: boolean
+  whatsapp_notification_phone?: boolean
   agency_id?: boolean
   owner_id?: boolean
   tenant_id?: boolean
@@ -1282,6 +1334,7 @@ export type ContactSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   updated_at?: boolean
   deleted_at?: boolean
   cellphone?: boolean
+  whatsapp_notification_phone?: boolean
   agency_id?: boolean
   owner_id?: boolean
   tenant_id?: boolean
@@ -1301,6 +1354,7 @@ export type ContactSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   updated_at?: boolean
   deleted_at?: boolean
   cellphone?: boolean
+  whatsapp_notification_phone?: boolean
   agency_id?: boolean
   owner_id?: boolean
   tenant_id?: boolean
@@ -1320,13 +1374,14 @@ export type ContactSelectScalar = {
   updated_at?: boolean
   deleted_at?: boolean
   cellphone?: boolean
+  whatsapp_notification_phone?: boolean
   agency_id?: boolean
   owner_id?: boolean
   tenant_id?: boolean
   supplier_id?: boolean
 }
 
-export type ContactOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "contact" | "phone" | "email" | "created_at" | "updated_at" | "deleted_at" | "cellphone" | "agency_id" | "owner_id" | "tenant_id" | "supplier_id", ExtArgs["result"]["contact"]>
+export type ContactOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "contact" | "phone" | "email" | "created_at" | "updated_at" | "deleted_at" | "cellphone" | "whatsapp_notification_phone" | "agency_id" | "owner_id" | "tenant_id" | "supplier_id", ExtArgs["result"]["contact"]>
 export type ContactInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   agency?: boolean | Prisma.Contact$agencyArgs<ExtArgs>
   owner?: boolean | Prisma.Contact$ownerArgs<ExtArgs>
@@ -1370,6 +1425,11 @@ export type $ContactPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     updated_at: Date
     deleted_at: Date | null
     cellphone: string | null
+    /**
+     * Número deste contato escolhido para abrir cobranças manuais no WhatsApp.
+     * Nulo quando nenhum telefone deste contato foi selecionado.
+     */
+    whatsapp_notification_phone: string | null
     agency_id: string | null
     owner_id: string | null
     tenant_id: string | null
@@ -1810,6 +1870,7 @@ export interface ContactFieldRefs {
   readonly updated_at: Prisma.FieldRef<"Contact", 'DateTime'>
   readonly deleted_at: Prisma.FieldRef<"Contact", 'DateTime'>
   readonly cellphone: Prisma.FieldRef<"Contact", 'String'>
+  readonly whatsapp_notification_phone: Prisma.FieldRef<"Contact", 'String'>
   readonly agency_id: Prisma.FieldRef<"Contact", 'String'>
   readonly owner_id: Prisma.FieldRef<"Contact", 'String'>
   readonly tenant_id: Prisma.FieldRef<"Contact", 'String'>

@@ -17,6 +17,7 @@ export interface ContactInput {
   phone?: string | null;
   cellphone?: string | null;
   email?: string | null;
+  whatsapp_notification_phone?: string | null;
   channels?: ContactChannel[];
 }
 
@@ -26,12 +27,14 @@ export function contactScalars(contact: ContactInput): {
   phone: string | null;
   cellphone: string | null;
   email: string | null;
+  whatsapp_notification_phone: string | null;
 } {
   return {
     contact: contact.contact || null,
     phone: contact.phone || null,
     cellphone: contact.cellphone || null,
     email: contact.email || null,
+    whatsapp_notification_phone: contact.whatsapp_notification_phone?.replace(/\D/g, '') || null,
   };
 }
 

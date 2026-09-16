@@ -224,7 +224,7 @@ export default function CadastrarLocacaoPage() {
         property_tax_second_installment: data.property_tax_second_installment ? parseMoney(data.property_tax_second_installment) : null,
         property_tax_second_installment_due_date: data.property_tax_second_installment_due_date || null,
 
-        iptu_installments_count: data.iptu_installments_count ? parseInt(data.iptu_installments_count) : null,
+        iptu_installments_count: data.iptu_installments_count != null && data.iptu_installments_count !== '' ? parseInt(data.iptu_installments_count) : null,
         iptu_installments: data.iptu_installments 
           ? data.iptu_installments
               .map((inst: any) => typeof inst === 'string' ? parseMoney(inst) : parseMoney(inst?.value || 0))
@@ -344,6 +344,7 @@ export default function CadastrarLocacaoPage() {
                 <div>
                   <p className="text-xs text-content-muted uppercase tracking-wider font-semibold">Valor Base do IPTU (Anual)</p>
                   <p className="text-xl font-bold text-content">{fv?.property_tax || 'R$ 0,00'}</p>
+                  <p className="mt-1 text-sm text-content-muted">IPTU já quitado ou sem cobrança nesta locação? Informe o valor base 0,00, selecione Parcelado (Livre) e use 0 parcelas.</p>
                 </div>
               </div>
             )
@@ -426,8 +427,9 @@ export default function CadastrarLocacaoPage() {
           },
           {
             field: 'iptu_installments_count',
-            label: 'Número de Parcelas (Ex: 10, 12, 14)',
+            label: 'Número de Parcelas (0 = sem IPTU)',
             type: 'number',
+            min: 0,
             icon: <Hash size={20} />,
             required: true,
             hidden: (fv) => fv?.payment_condition !== 'INSTALLMENTS',
