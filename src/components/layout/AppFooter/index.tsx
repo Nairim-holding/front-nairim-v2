@@ -140,15 +140,6 @@ export default function Footer() {
             </p>
           </div>
         </div>
-
-        {/* Selo de qualidade */}
-        <div className="mt-10 pt-6 border-t border-ui-border-soft flex justify-center">
-          <div className="flex items-center gap-3 text-[10px] md:text-[11px] tracking-[0.1em] text-content-muted">
-            <div className="w-2 h-2 rounded-full bg-state-success/60 animate-pulse" />
-            <span>EMPRESA FAMILIAR COM TRADIÇÃO E INOVAÇÃO</span>
-            <div className="w-2 h-2 rounded-full bg-state-success/60 animate-pulse" />
-          </div>
-        </div>
       </div>
     </footer>
   );
