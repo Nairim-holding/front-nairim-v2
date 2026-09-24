@@ -1,15 +1,21 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Poppins } from 'next/font/google';
+import localFont from 'next/font/local';
 import { AppProviders } from './providers';
 import GlobalNotifications from '@/components/feedback/Notifications';
 import { cookies } from 'next/headers';
 import { fetchBranding } from '@/lib/fetchBranding';
 import { buildBrandingCss } from '@/lib/brandingCss';
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
+const poppins = localFont({
+  src: [
+    { path: './fonts/poppins-400.woff2', weight: '400' },
+    { path: './fonts/poppins-500.woff2', weight: '500' },
+    { path: './fonts/poppins-600.woff2', weight: '600' },
+    { path: './fonts/poppins-700.woff2', weight: '700' },
+    { path: './fonts/poppins-800.woff2', weight: '800' },
+    { path: './fonts/poppins-900.woff2', weight: '900' },
+  ],
   variable: '--font-poppins',
   display: 'swap',
 });

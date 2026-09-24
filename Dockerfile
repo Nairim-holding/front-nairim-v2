@@ -19,17 +19,27 @@ ARG NEXT_PUBLIC_COMPANY_SLUG
 ARG NEXT_PUBLIC_COMPANY_NAME
 ARG NEXT_PUBLIC_CARTO_API_KEY
 
+# O Next coleta rotas no build e importa o Prisma. Estes valores são placeholders
+# usados apenas no estágio builder; os segredos reais entram em runtime pelo .env.
+ARG DATABASE_URL
+ARG JWT_SECRET
+
 # Expõe como variáveis de ambiente para o Next.js no momento do build
 ENV NEXT_PUBLIC_URL_API=${NEXT_PUBLIC_URL_API}
 ENV NEXT_PUBLIC_COMPANY_SLUG=${NEXT_PUBLIC_COMPANY_SLUG}
 ENV NEXT_PUBLIC_COMPANY_NAME=${NEXT_PUBLIC_COMPANY_NAME}
 ENV NEXT_PUBLIC_CARTO_API_KEY=${NEXT_PUBLIC_CARTO_API_KEY}
 
-# Permite usar um arquivo .env específico para o build (ex: .env.test)
+# Permite usar um arquivo .env específico para o build (ex: .env.test).
+# Os valores não informados ao Dockerfile são carregados do arquivo escolhido.
 ARG ENV_FILE
 RUN if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ] && [ "$ENV_FILE" != ".env" ] && [ "$ENV_FILE" != "./.env" ]; then cp "$ENV_FILE" .env; fi
 
-RUN npm run build
+# O runner do Actions passa placeholders para compilar sem acesso ao banco.
+# Em builds locais, deixa o Next.js carregar os valores do .env.
+RUN if [ -z "${DATABASE_URL:-}" ]; then unset DATABASE_URL; fi && \
+    if [ -z "${JWT_SECRET:-}" ]; then unset JWT_SECRET; fi && \
+    npm run build
 
 # 3. Imagem de Produção (Roda o app)
 FROM base AS runner
