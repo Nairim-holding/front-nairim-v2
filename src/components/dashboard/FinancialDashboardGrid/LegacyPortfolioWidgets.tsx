@@ -53,7 +53,7 @@ export function AvgRentalWidget({ metrics }: LegacyWidgetProps) {
     <LegacyWidgetWrapper>
       <NumericCard
         value={value}
-        label="Ticket Médio do Aluguel"
+        label="Ticket Médio da Locação"
         variation={String(get('averageRentalTicket').variation)}
         positive={get('averageRentalTicket').isPositive}
         detailData={get('averageRentalTicket').data}

@@ -24,7 +24,7 @@ import { FinancialWidgetProps } from './types';
 
 // Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
 export const WIDGET_LABELS: Record<string, string> = {
-  'widget-11': 'Ticket Médio do Aluguel',
+  'widget-11': 'Ticket Médio da Locação',
   'widget-12': 'Valor Total de Aluguel do Portfólio',
   'widget-13': 'Total de Impostos e Taxas',
   'widget-14': 'Valor Total de Aquisição do Portfólio',
