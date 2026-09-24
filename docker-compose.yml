@@ -7,6 +7,7 @@ services:
   # ==========================================
   front-nairim:
     container_name: front-nairim-app
+    image: ${FRONT_NAIRIM_IMAGE:-front-nairim-app:prod}
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,6 +15,7 @@ services:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend
         - NEXT_PUBLIC_COMPANY_SLUG=nairim
         - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
+        - NEXT_PUBLIC_CARTO_API_KEY
         - ENV_FILE=.env
     environment:
       - HOSTNAME=0.0.0.0
@@ -104,6 +106,7 @@ services:
     # nenhum dos dois entra no projeto e a subida de produção não quebra.
     profiles: ["test"]
     container_name: front-nairim-app-test
+    image: ${FRONT_NAIRIM_TEST_IMAGE:-front-nairim-app:test}
     build:
       context: .
       dockerfile: Dockerfile
@@ -111,6 +114,7 @@ services:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-test-2
         - NEXT_PUBLIC_COMPANY_SLUG=nairim
         - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
+        - NEXT_PUBLIC_CARTO_API_KEY
         - ENV_FILE=.env.test
     environment:
       - HOSTNAME=0.0.0.0
@@ -166,6 +170,7 @@ services:
   front-nairim-homolog:
     profiles: ["homolog"]
     container_name: front-nairim-app-homolog
+    image: ${FRONT_NAIRIM_HOMOLOG_IMAGE:-front-nairim-app:homolog}
     build:
       context: .
       dockerfile: Dockerfile
@@ -173,6 +178,7 @@ services:
         - NEXT_PUBLIC_URL_API=https://nairim.com.br/backend-homolog
         - NEXT_PUBLIC_COMPANY_SLUG=nairim
         - NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
+        - NEXT_PUBLIC_CARTO_API_KEY
         - ENV_FILE=.env.homolog
     environment:
       - HOSTNAME=0.0.0.0

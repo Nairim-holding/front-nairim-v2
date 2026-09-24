@@ -3,30 +3,104 @@ name: Deploy Automatico Hostinger
 on:
   push:
     branches:
-      - main 
+      - main
+
+concurrency:
+  group: front-nairim-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  imagem:
+    name: Imagem ${{ matrix.ambiente }}
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - ambiente: producao
+            tag: prod
+            api_url: https://nairim.com.br/backend
+          - ambiente: teste
+            tag: test
+            api_url: https://nairim.com.br/backend-test-2
+          - ambiente: homologacao
+            tag: homolog
+            api_url: https://nairim.com.br/backend-homolog
     steps:
-      - name: Executando deploy via SSH
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Cada ambiente recebe sua própria imagem porque NEXT_PUBLIC_* é
+      # incorporada ao bundle durante o build do Next.js.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/nairim-holding/front-nairim-v2:${{ matrix.tag }}-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=front-nairim-v2
+            org.opencontainers.image.description=${{ matrix.ambiente }}
+          build-args: |
+            NEXT_PUBLIC_URL_API=${{ matrix.api_url }}
+            NEXT_PUBLIC_COMPANY_SLUG=nairim
+            NEXT_PUBLIC_COMPANY_NAME=Nairim Holding
+            NEXT_PUBLIC_CARTO_API_KEY=${{ vars.NEXT_PUBLIC_CARTO_API_KEY }}
+          cache-from: type=gha,scope=front-nairim-${{ matrix.tag }}
+          cache-to: type=gha,mode=max,scope=front-nairim-${{ matrix.tag }}
+
+  deploy:
+    name: Atualizar VPS
+    needs: imagem
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Buscar imagens e reiniciar os ambientes
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          PROD_IMAGE: ghcr.io/nairim-holding/front-nairim-v2:prod-${{ github.sha }}
+          TEST_IMAGE: ghcr.io/nairim-holding/front-nairim-v2:test-${{ github.sha }}
+          HOMOLOG_IMAGE: ghcr.io/nairim-holding/front-nairim-v2:homolog-${{ github.sha }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
           key: ${{ secrets.HOST_SSH_KEY_2 }}
           port: 22
+          command_timeout: 15m
+          envs: PROD_IMAGE,TEST_IMAGE,HOMOLOG_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -e
             cd /var/www/front-nairim-v2
-
             git fetch origin main
             git reset --hard origin/main
 
-            # Compila e inicia um por vez sequencialmente (evita travamento do servidor)
-            # Removemos o "docker compose down" geral para que o site não fique fora do ar 
-            # durante todo o tempo de build. Cada container só será recriado no momento final.
-            docker compose up -d --build front-nairim
-            docker compose up -d --build front-nairim-test
-            docker compose up -d --build front-nairim-homolog
+            # O token do GitHub só autentica o pull da imagem neste deploy.
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            export FRONT_NAIRIM_IMAGE="$PROD_IMAGE"
+            docker compose pull front-nairim
+            docker compose up -d --no-build --force-recreate front-nairim
+
+            export FRONT_NAIRIM_TEST_IMAGE="$TEST_IMAGE"
+            docker compose --profile test pull front-nairim-test
+            docker compose --profile test up -d --no-build --force-recreate front-nairim-test
+
+            export FRONT_NAIRIM_HOMOLOG_IMAGE="$HOMOLOG_IMAGE"
+            docker compose --profile homolog pull front-nairim-homolog
+            docker compose --profile homolog up -d --no-build --force-recreate front-nairim-homolog
