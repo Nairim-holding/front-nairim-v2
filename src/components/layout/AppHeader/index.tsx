@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Header() {
-  const { companyName, logoUrl } = useBranding();
+  const { companyName } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -73,11 +73,11 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="z-50">
               <Image
-                src={logoUrl ?? "/logo.svg"}
+                src="/logo.svg"
                 alt={`logo ${companyName}`}
-                width={91}
-                height={45}
-                className="h-10 w-auto md:h-13"
+                width={1166}
+                height={421}
+                className="object-contain h-10 w-auto md:h-13"
                 priority
               />
             </Link>

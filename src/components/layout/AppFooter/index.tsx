@@ -8,7 +8,7 @@ import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
-  const { companyName, logoUrl } = useBranding();
+  const { companyName } = useBranding();
   const currentYear = new Date().getFullYear();
 
   // Garante que o componente só renderize as classes dinâmicas após a hidratação
@@ -52,11 +52,11 @@ export default function Footer() {
               <div className="relative">
                 <div className="text-3xl md:text-4xl font-bold tracking-tight">
                   <Image
-                    src={logoUrl ?? "/logo.svg"}
+                    src="/logo.svg"
                     alt={`Logo ${companyName}`}
-                    width={150}
-                    height={50}
-                    className="object-contain md:w-auto md:h-20"
+                    width={1166}
+                    height={421}
+                    className="object-contain h-14 w-auto md:h-20"
                   />
                 </div>
               </div>
@@ -75,7 +75,7 @@ export default function Footer() {
             <h4 className="text-[12px] md:text-[15px] text-brand-accent tracking-[0.3em] opacity-80 text-center">
               NAVEGAÇÃO
             </h4>
-            <nav className="flex flex-col items-center gap-4 md:gap-6">
+            <nav className="flex flex-row flex-wrap items-center justify-center gap-8 md:gap-12">
               {[
                 { name: 'Ínicio', href: '/' },
                 { name: 'Imóveis', href: '#imoveis' },
@@ -84,7 +84,7 @@ export default function Footer() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="group flex items-center gap-4 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium justify-center text-content-muted hover:text-content"
+                  className="group flex items-center gap-3 text-[13px] md:text-[14px] tracking-[0.1em] transition-all duration-500 font-medium text-content-muted hover:text-content"
                 >
                   <span className="w-0 group-hover:w-6 md:group-hover:w-8 h-[1px] bg-brand transition-all duration-500" />
                   {item.name}
