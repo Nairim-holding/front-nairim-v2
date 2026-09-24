@@ -9,8 +9,8 @@ import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
  */
 
 /**
- * Prévia dos lançamentos a excluir no cancelamento (da data informada até o
- * término do contrato). Não exclui nada — só lista para confirmação do usuário.
+ * Prévia dos lançamentos a excluir no cancelamento (a partir da data
+ * informada, inclusive vencimentos após o término). Não exclui nada.
  * Origem: getCancellationPreview.
  */
 export class GetCancellationPreviewUseCase {

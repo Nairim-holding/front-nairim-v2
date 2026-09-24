@@ -154,9 +154,11 @@ export interface CancelLeaseInput {
   transactionIds?: string[];
   charge?: CancellationChargeInput | null;
   reason?: string | null;
+  cancellation_penalty?: number | null;
+  other_cancellation_amounts?: number | null;
 }
 
-/** Prévia de cancelamento: lançamentos que seriam excluídos. */
+/** Prévia de cancelamento: lançamentos disponíveis para exclusão. */
 export interface CancellationPreview {
   lease: { id: string; contract_number: string; start_date: Date; end_date: Date };
   from: Date;

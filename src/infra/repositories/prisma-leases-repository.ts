@@ -507,10 +507,10 @@ export class PrismaLeasesRepository implements LeasesRepository {
     const from = parseLocalDate(date);
     const to = lease.end_date;
 
-    // Lançamentos da locação com efetivação entre a data do cancelamento e o
-    // término. Encargos de cancelamento e já excluídos não entram.
+    // Alguns lançamentos gerados têm vencimento após o fim do contrato.
+    // Eles também precisam aparecer na prévia do cancelamento.
     const transactions = await prisma.transaction.findMany({
-      where: { lease_id: id, deleted_at: null, is_cancellation_charge: false, effective_date: { gte: from, lte: to } },
+      where: { lease_id: id, deleted_at: null, is_cancellation_charge: false, effective_date: { gte: from } },
       orderBy: { effective_date: 'asc' },
       include: { category: true, center: true },
     });
@@ -528,18 +528,24 @@ export class PrismaLeasesRepository implements LeasesRepository {
       const existing = await tx.lease.findFirst({ where: { id, company_id: companyId, deleted_at: null } });
       if (!existing) return null;
 
-      const canceledAt = input.date ? new Date(input.date) : new Date();
+      const canceledAt = parseLocalDate(input.date);
 
-      // 1. Soft-delete dos lançamentos confirmados (restritos a esta locação/empresa).
-      const ids = Array.isArray(input.transactionIds) ? input.transactionIds.map(String) : [];
-      let deletedCount = 0;
-      if (ids.length > 0) {
-        const result = await tx.transaction.updateMany({
-          where: { id: { in: ids }, lease_id: id, company_id: companyId, deleted_at: null },
-          data: { deleted_at: new Date() },
-        });
-        deletedCount = result.count;
-      }
+      // A tabela não envia IDs: exclui automaticamente os pendentes a partir
+      // da data. O modal detalhado envia a seleção explícita do usuário.
+      const transactionFilter = input.transactionIds === undefined
+        ? { status: { not: 'COMPLETED' }, effective_date: { gte: canceledAt } }
+        : { id: { in: input.transactionIds.map(String) } };
+      const deleted = await tx.transaction.updateMany({
+        where: {
+          ...transactionFilter,
+          lease_id: id,
+          company_id: companyId,
+          deleted_at: null,
+          is_cancellation_charge: false,
+        },
+        data: { deleted_at: new Date() },
+      });
+      const deletedCount = deleted.count;
 
       // 2. Encargo opcional (custas/juros/multas) → 1 lançamento de receita.
       let charge = null;
@@ -576,7 +582,8 @@ export class PrismaLeasesRepository implements LeasesRepository {
           status: 'CANCELED',
           canceled_at: canceledAt,
           cancellation_justification: input.reason ?? existing.cancellation_justification,
-          cancellation_penalty: charge ? Number(charge.amount) : existing.cancellation_penalty,
+          cancellation_penalty: charge ? Number(charge.amount) : (input.cancellation_penalty ?? existing.cancellation_penalty),
+          other_cancellation_amounts: input.other_cancellation_amounts ?? existing.other_cancellation_amounts,
         },
       });
 

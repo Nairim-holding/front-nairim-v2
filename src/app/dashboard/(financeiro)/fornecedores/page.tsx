@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Section from "@/components/layout/PageSection";
 import { Plus, Trash2, Edit2, X, Search } from "lucide-react";
 import { useMessageContext } from "@/contexts/MessageContext";
@@ -22,6 +22,7 @@ import {
   updateFinancialSupplierAction,
   getSupplierByIdAction,
 } from '@/server/actions/financial-supplier';
+import { matchesSupplierSearch } from '@/core/entities/financial-supplier-search';
 
 type FormMode = 'IDLE' | 'CREATE' | 'EDIT';
 
@@ -33,6 +34,7 @@ export default function FornecedoresPage() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   
   const [search, setSearch] = useState('');
+  const searchRequest = useRef(0);
   const [formMode, setFormMode] = useState<FormMode>('IDLE');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
@@ -44,22 +46,24 @@ export default function FornecedoresPage() {
   // Estado para armazenar o código interno gerado automaticamente
   const [generatedInternalCode, setGeneratedInternalCode] = useState<string>('');
 
-  const fetchData = async () => {
+  const fetchData = async (term = search) => {
+    const request = ++searchRequest.current;
     try {
-      const result = await listSuppliersAction({ limit: 100 });
+      const result = await listSuppliersAction({ limit: 100, search: term });
       if (!result.ok) throw new Error(result.error);
-      setSuppliers(result.data?.data || result.data || []);
+      if (request === searchRequest.current) setSuppliers(result.data?.data || result.data || []);
     } catch {
-      showMessage("Erro ao carregar os contatos.", "error");
+      if (request === searchRequest.current) showMessage("Erro ao carregar os contatos.", "error");
     } finally {
-      setIsLoading(false);
+      if (request === searchRequest.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    const timer = setTimeout(() => { void fetchData(search); }, search ? 250 : 0);
+    return () => { clearTimeout(timer); searchRequest.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [search]);
 
   // Buscar último fornecedor para gerar código interno automaticamente (último código global + 1)
   useEffect(() => {
@@ -97,18 +101,9 @@ export default function FornecedoresPage() {
     }
   }, [formMode]);
 
-  const normalizeText = (text: string) => 
-    text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
-
   const displayedSuppliers = suppliers
     .filter(s => !s.deleted_at)
-    .filter(s => {
-      const term = normalizeText(search);
-      return normalizeText(s.legal_name).includes(term) || 
-             normalizeText(s.trade_name || '').includes(term) || 
-             normalizeText(s.cnpj || '').includes(term) ||
-             normalizeText(s.cpf || '').includes(term);
-    })
+    .filter(s => matchesSupplierSearch(s, search))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const getPersonType = (supplier: any): OwnerType => {
@@ -383,7 +378,7 @@ export default function FornecedoresPage() {
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" />
                   <input 
                     type="text" 
-                    placeholder="Buscar por nome, CPF ou CNPJ..." 
+                    placeholder="Buscar por nome, CPF, CNPJ, telefone ou e-mail..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 text-[13px] bg-surface-subtle border border-ui-border rounded-lg outline-none focus:border-brand transition-colors"

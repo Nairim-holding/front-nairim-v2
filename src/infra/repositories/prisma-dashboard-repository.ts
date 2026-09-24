@@ -1,5 +1,7 @@
 import { releaseExpiredProperties } from './property-occupancy';
+import { classifyLeaseReportTransaction } from './prisma-lease-reports-repository';
 import { isLocationConfirmed, coordinate } from '@/shared/utils/property-location';
+import { matchReportLease } from '@/core/entities/lease-report-matching';
 import prisma from '@/infra/database/prisma';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
 import type { ChartData, ClientsMetrics, FinancialMetrics, GeolocationResponse, PortfolioMetrics } from '@/core/entities/dashboard';
@@ -47,7 +49,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
-    const [properties, prevProperties] = await Promise.all([
+    const [properties, prevProperties, leases, currentRentTransactions, previousRentTransactions] = await Promise.all([
       prisma.property.findMany({
         where: {
           created_at: { gte: period.current.start, lte: period.current.end },
@@ -80,27 +82,81 @@ export class PrismaDashboardRepository implements DashboardRepository {
           },
         },
       }),
+      prisma.lease.findMany({
+        where: { deleted_at: null },
+        select: {
+          id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+          property_id: true,
+          property: {
+            select: {
+              title: true, area_total: true,
+              type: { select: { description: true } },
+              owner: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      prisma.transaction.findMany({
+        where: {
+          deleted_at: null, status: 'COMPLETED', is_transfer: false,
+          effective_date: { gte: period.current.start, lte: period.current.end },
+        },
+        select: {
+          amount: true, description: true, effective_date: true, lease_id: true,
+          is_cancellation_charge: true,
+          category: { select: { type: true } },
+          subcategory: { select: { name: true } },
+        },
+      }),
+      prisma.transaction.findMany({
+        where: {
+          deleted_at: null, status: 'COMPLETED', is_transfer: false,
+          effective_date: { gte: period.previous.start, lte: period.previous.end },
+        },
+        select: {
+          amount: true, description: true, effective_date: true, lease_id: true,
+          is_cancellation_charge: true,
+          category: { select: { type: true } },
+          subcategory: { select: { name: true } },
+        },
+      }),
     ]);
 
-    const avgRentalData = properties
-      .filter((p) => toNum(p.values[0]?.rental_value) > 0)
-      .map((p) => ({
-        id: p.id,
-        title: p.title,
-        rentalValue: toNum(p.values[0]?.rental_value),
-        type: p.type?.description,
-        areaTotal: p.area_total,
-        valuePerSqm:
-          p.area_total > 0 && p.values[0]?.rental_value != null
-            ? Number((toNum(p.values[0]?.rental_value) / p.area_total).toFixed(2))
-            : 0,
-        owner: p.owner?.name,
-      }));
-    const prevAvgValue =
-      prevProperties.length > 0
-        ? prevProperties.reduce((acc, p) => acc + toNum(p.values[0]?.rental_value), 0) /
-          prevProperties.length
-        : 0;
+    // Mesmo conceito de receita bruta do Relatório de Locações: somente
+    // lançamentos de aluguel concluídos, sem comissão, IPTU ou multa.
+    // Cada imóvel entra uma vez no divisor, ainda que tenha mais de um contrato.
+    const leasesById = new Map(leases.map((lease) => [lease.id, lease]));
+    const grossByProperty = (transactions: typeof currentRentTransactions) => {
+      const totals = new Map<string, number>();
+      for (const transaction of transactions) {
+        if (classifyLeaseReportTransaction(transaction) !== 'rent') continue;
+        const lease = transaction.lease_id
+          ? leasesById.get(transaction.lease_id)
+          : matchReportLease(transaction.description, transaction.effective_date, leases);
+        if (!lease) continue;
+        totals.set(lease.property_id, (totals.get(lease.property_id) ?? 0) + toNum(transaction.amount));
+      }
+      return totals;
+    };
+    const currentGrossByProperty = grossByProperty(currentRentTransactions);
+    const previousGrossByProperty = grossByProperty(previousRentTransactions);
+    const propertyDetails = new Map(leases.map((lease) => [lease.property_id, lease.property]));
+    const avgRentalData = [...currentGrossByProperty].map(([id, rentalValue]) => {
+      const property = propertyDetails.get(id);
+      const areaTotal = property?.area_total ?? 0;
+      return {
+        id,
+        title: property?.title ?? '—',
+        rentalValue,
+        type: property?.type?.description,
+        areaTotal,
+        valuePerSqm: areaTotal > 0 ? Number((rentalValue / areaTotal).toFixed(2)) : 0,
+        owner: property?.owner?.name,
+      };
+    });
+    const prevAvgValue = previousGrossByProperty.size > 0
+      ? [...previousGrossByProperty.values()].reduce((sum, value) => sum + value, 0) / previousGrossByProperty.size
+      : 0;
 
     const activeRentalData = properties
       .filter((p) => toNum(p.values[0]?.rental_value) > 0 && p.values[0]?.status === 'AVAILABLE')

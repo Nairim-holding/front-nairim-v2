@@ -60,7 +60,7 @@ const COMBINING_MARKS = /[̀-ͯ]/g;
 /**
  * Reconhece os prefixos gerados pelo sistema e as categorias da base antiga.
  */
-function classify(tx: RawLeaseTransaction): TransactionKind {
+export function classifyLeaseReportTransaction(tx: RawLeaseTransaction): TransactionKind {
   const description = normalizeReportText(tx.description ?? '');
   const subcategory = normalizeReportText(tx.subcategory?.name ?? '');
   if (tx.is_cancellation_charge && tx.category?.type !== 'EXPENSE') return 'penalty';
@@ -168,7 +168,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       const recordedWithholding = new Map<string, number>();
 
       for (const tx of transactions) {
-        const kind = classify(tx);
+        const kind = classifyLeaseReportTransaction(tx);
         if (kind === 'other') continue;
         const lease = tx.lease_id ? leasesById.get(tx.lease_id)
           : matchReportLease(tx.description, tx.effective_date, leases);

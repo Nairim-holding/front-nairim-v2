@@ -24,7 +24,7 @@ const col = (key: string, label: string, extra?: Partial<{ width: string; format
 export const COLS_AVG_RENTAL = [
   col("title",       "Imóvel",          { width: "250px" }),
   col("type",        "Tipo",            { width: "120px" }),
-  col("rentalValue", "Valor do Aluguel",{ width: "150px", format: formatCurrency, summable: true }),
+  col("rentalValue", "Valor Bruto da Locação",{ width: "170px", format: formatCurrency, summable: true }),
   col("valuePerSqm", "Valor/m²",        { width: "100px", format: (v: any) => `R$ ${v?.toFixed(2)}` }),
   col("areaTotal",   "Área Total",      { width: "100px", format: formatSqm, summable: true }),
   col("owner",       "Proprietário",    { width: "150px" }),

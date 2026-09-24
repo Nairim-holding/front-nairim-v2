@@ -14,6 +14,7 @@ import {
 } from '@/core/entities/credit-reconciliation';
 import { WITHHOLDING_TOTAL_RATE } from '@/core/entities/lease-report';
 import { createDateLocal } from '@/shared/utils/date-utils';
+import { matchReportLease } from '@/core/entities/lease-report-matching';
 
 type Kind = 'rent' | 'commission' | 'iptu' | 'other';
 
@@ -60,8 +61,11 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
         },
         select: {
           id: true,
+          property_id: true,
+          contract_number: true,
           start_date: true,
           end_date: true,
+          canceled_at: true,
           rent_amount: true,
           commission_amount: true,
           agency_commission: true,
@@ -113,7 +117,10 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
         status: 'PENDING',
         is_cancellation_charge: false,
         financial_institution_id: input.financial_institution_id,
-        lease_id: { in: matchedLeases.map(({ lease }) => lease.id) },
+        OR: [
+          { lease_id: { in: matchedLeases.map(({ lease }) => lease.id) } },
+          { lease_id: null },
+        ],
         effective_date: {
           gte: createDateLocal(rangeStart.getFullYear(), rangeStart.getMonth() + 1, rangeStart.getDate()),
           lte: createDateLocal(creditDate.getFullYear(), creditDate.getMonth() + 1, creditDate.getDate()),
@@ -122,12 +129,36 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
       select: { id: true, lease_id: true, amount: true, description: true, effective_date: true },
     });
 
+    const leasesById = new Map(matchedLeases.map(({ lease }) => [lease.id, lease]));
+    const holidaysByLeaseId = new Map(matchedLeases.map(({ lease, holidays }) => [lease.id, holidays]));
+    const rentLeaseIdsByProperty = new Map<string, Set<string>>();
+    for (const transaction of pending) {
+      if (kindOf(transaction.description) !== 'rent') continue;
+      const matched = transaction.lease_id
+        ? leasesById.get(transaction.lease_id)
+        : matchReportLease(transaction.description, transaction.effective_date, leases);
+      if (!matched) continue;
+      const holidays = holidaysByLeaseId.get(matched.id);
+      if (!holidays || dateKey(nextBusinessDay(fromDatabaseDate(transaction.effective_date), holidays)) !== dateKey(creditDate)) continue;
+      const ids = rentLeaseIdsByProperty.get(matched.property_id) ?? new Set<string>();
+      ids.add(matched.id);
+      rentLeaseIdsByProperty.set(matched.property_id, ids);
+    }
+
     const candidates: CreditCandidate[] = matchedLeases.flatMap(({ lease, holidays }) => {
       const transactions = pending.filter((transaction) => {
-        if (transaction.lease_id !== lease.id) return false;
+        if (kindOf(transaction.description) === 'other') return false;
         const scheduledDate = fromDatabaseDate(transaction.effective_date);
-        return dateKey(nextBusinessDay(scheduledDate, holidays)) === dateKey(creditDate)
-          && kindOf(transaction.description) !== 'other';
+        if (dateKey(nextBusinessDay(scheduledDate, holidays)) !== dateKey(creditDate)) return false;
+        if (transaction.lease_id) return transaction.lease_id === lease.id;
+
+        // Lançamentos digitados diretamente na conta podem não ter lease_id.
+        // O contrato na descrição identifica o imóvel; se só uma locação dele
+        // tem aluguel nesta data, somamos o lançamento a essa locação.
+        const linkedByDescription = matchReportLease(transaction.description, transaction.effective_date, leases);
+        if (!linkedByDescription || linkedByDescription.property_id !== lease.property_id) return false;
+        const rentLeaseIds = rentLeaseIdsByProperty.get(lease.property_id);
+        return rentLeaseIds?.size === 1 && rentLeaseIds.has(lease.id);
       });
       const rentTransactions = transactions.filter((transaction) => kindOf(transaction.description) === 'rent');
       if (rentTransactions.length === 0) return [];
@@ -186,7 +217,6 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
       where: {
         company_id: companyId,
         id: { in: candidate.pending_transaction_ids },
-        lease_id: input.lease_id,
         financial_institution_id: input.financial_institution_id,
         status: 'PENDING',
         deleted_at: null,

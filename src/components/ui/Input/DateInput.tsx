@@ -68,7 +68,7 @@ export default function DateInput({ id, label, required, value, onChange, onBlur
         />
         <span className="absolute right-3 flex h-6 w-6 items-center justify-center text-content-muted">
           <CalendarDays size={19} aria-hidden="true" />
-          <input type="date" aria-label={`Selecionar ${label || 'data'} no calendário`} disabled={disabled}
+          <input type="date" aria-label={`Selecionar ${label || 'data'} no calendário`} disabled={disabled} tabIndex={-1}
             value={isValidIsoDateString(iso) ? iso : ''}
             onClick={(event) => { try { event.currentTarget.showPicker?.(); } catch { /* Native control remains usable. */ } }}
             onChange={(event) => { emit(dateDisplay(event.target.value)); input.current?.setCustomValidity(''); input.current?.focus(); }}

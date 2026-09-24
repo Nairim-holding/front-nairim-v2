@@ -14,6 +14,7 @@ import { NotFoundError } from '@/core/errors/domain-errors';
 import { throwDuplicatedDocument } from '@/core/use-cases/financial-supplier/crud';
 import { buildContactCreateData } from './shared/contact-channels';
 import { buildDateTimeCondition } from '@/shared/utils/date-utils';
+import { matchesSupplierSearch } from '@/core/entities/financial-supplier-search';
 
 /**
  * Implementação Prisma de {@link SuppliersRepository}.
@@ -30,7 +31,7 @@ import { buildDateTimeCondition } from '@/shared/utils/date-utils';
 
 type SupplierRow = Supplier & {
   addresses?: Array<{ id: string; address_id: string; address?: Record<string, unknown> | null }>;
-  contacts?: Array<{ id: string; contact?: string | null; phone?: string | null; cellphone?: string | null; email?: string | null }>;
+  contacts?: Array<{ id: string; contact?: string | null; phone?: string | null; cellphone?: string | null; email?: string | null; channels?: Array<{ value: string; deleted_at?: Date | null }> }>;
   deleted_at: Date | null;
 };
 
@@ -104,41 +105,7 @@ function buildFilterConditions(filters: Record<string, unknown>): Record<string,
 }
 
 function filterSuppliersBySearch(suppliers: SupplierRow[], searchTerm: string): SupplierRow[] {
-  if (!searchTerm.trim()) return suppliers;
-  const normalizedSearch = normalizeText(searchTerm);
-
-  return suppliers.filter((supplier) => {
-    const directFields = [
-      supplier.legal_name,
-      supplier.trade_name,
-      supplier.cnpj,
-      supplier.cpf,
-      supplier.state_registration,
-      supplier.municipal_registration,
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    const addressFields =
-      supplier.addresses
-        ?.map((sa) => sa.address)
-        .filter(Boolean)
-        .map(
-          (addr) =>
-            [addr?.street, addr?.district, addr?.city, addr?.state, addr?.zip_code, addr?.complement]
-              .filter(Boolean)
-              .join(' '),
-        )
-        .join(' ') || '';
-
-    const contactFields =
-      supplier.contacts
-        ?.map((c) => [c.contact, c.phone, c.cellphone, c.email].filter(Boolean).join(' '))
-        .join(' ') || '';
-
-    const allFields = [directFields, addressFields, contactFields].join(' ');
-    return normalizeText(allFields).includes(normalizedSearch);
-  });
+  return suppliers.filter((supplier) => matchesSupplierSearch(supplier, searchTerm));
 }
 
 function sortSuppliers(suppliers: SupplierRow[], sortOptions: Record<string, string>): SupplierRow[] {
