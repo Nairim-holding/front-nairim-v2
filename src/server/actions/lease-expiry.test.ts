@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const db = vi.hoisted(() => ({ lease: { findMany: vi.fn() }, leaseExpiryReminder: {
   upsert: vi.fn(), updateMany: vi.fn(), findFirstOrThrow: vi.fn(), update: vi.fn(),
 } }));
@@ -10,6 +10,7 @@ const lease = { id: 'lease', end_date: new Date('2026-10-26T00:00:00Z'), propert
 const reminder = { id: 'reminder', end_date: lease.end_date, shown_days: ['2026-09-24', '2026-09-25', '2026-09-26'], acknowledged_on: null, dismissed: false };
 
 describe('expiry notification actions', () => {
+  afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     vi.resetAllMocks();
     vi.useFakeTimers();
@@ -47,5 +48,20 @@ describe('expiry notification actions', () => {
     expect(db.leaseExpiryReminder.update).toHaveBeenCalledWith({ where: { id: 'reminder', user_id: 'user', company_id: 'company' }, data: { acknowledged_on: '2026-09-26' } });
     db.lease.findMany.mockResolvedValue([{ ...lease, expiry_reminders: [reminder] }]);
     expect(await acknowledgeLeaseExpiryAction('lease', '2026-10-26', true)).toMatchObject({ ok: true });
+  });
+  it('keeps dismissal available after a missed day and resets eligibility for a new end date', async () => {
+    vi.setSystemTime(new Date('2026-09-30T12:00:00Z'));
+    const eligibleReminder = { ...reminder, shown_days: ['2026-09-26', '2026-09-27', '2026-09-28'] };
+    db.lease.findMany.mockResolvedValue([{ ...lease, expiry_reminders: [eligibleReminder] }]);
+    expect(await getLeaseExpiryAlertsAction()).toMatchObject({ ok: true, data: [{ canDismiss: true }] });
+
+    db.leaseExpiryReminder.findFirstOrThrow.mockResolvedValue({ ...eligibleReminder, shown_days: [...eligibleReminder.shown_days, '2026-09-30'] });
+    expect(await getLeaseExpiryAlertsAction(['lease'])).toMatchObject({ ok: true, data: [{ canDismiss: true }] });
+    db.lease.findMany.mockResolvedValue([{ ...lease, expiry_reminders: [{ ...eligibleReminder, shown_days: [...eligibleReminder.shown_days, '2026-09-30'] }] }]);
+    expect(await acknowledgeLeaseExpiryAction('lease', '2026-10-26', true)).toMatchObject({ ok: true });
+    expect(db.leaseExpiryReminder.update).toHaveBeenCalledWith({ where: { id: 'reminder', user_id: 'user', company_id: 'company' }, data: { dismissed: true } });
+
+    db.lease.findMany.mockResolvedValue([{ ...lease, end_date: new Date('2026-10-27'), expiry_reminders: [eligibleReminder] }]);
+    expect(await getLeaseExpiryAlertsAction()).toMatchObject({ ok: true, data: [{ canDismiss: false }] });
   });
 });

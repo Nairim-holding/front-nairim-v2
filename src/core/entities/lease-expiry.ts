@@ -13,13 +13,16 @@ export function expiryDays(endDate: Date | string, now = new Date()): number {
   return Math.round((new Date(endDate).getTime() - occupancyDate(now).getTime()) / 86_400_000);
 }
 
-/** Eligibility depends on actual daily displays, not elapsed time or polling. */
+/** Three consecutive display days permanently unlock dismissal for this expiry. */
 export function canDismissExpiry(shownDays: readonly string[], today: string): boolean {
-  const days = new Set(shownDays);
-  const date = new Date(`${today}T00:00:00Z`);
-  for (let offset = 0; offset < 3; offset++) {
-    if (!days.has(date.toISOString().slice(0, 10))) return false;
-    date.setUTCDate(date.getUTCDate() - 1);
+  const days = [...new Set(shownDays)].filter(day => day <= today).sort();
+  let previousDay = Number.NaN;
+  let streak = 0;
+  for (const day of days) {
+    const timestamp = new Date(`${day}T00:00:00Z`).getTime();
+    streak = timestamp - previousDay === 86_400_000 ? streak + 1 : 1;
+    if (streak >= 3) return true;
+    previousDay = timestamp;
   }
-  return true;
+  return false;
 }
