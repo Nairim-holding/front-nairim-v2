@@ -97,7 +97,8 @@ export const ModelName = {
   AdjustmentIndex: 'AdjustmentIndex',
   AdjustmentIndexValue: 'AdjustmentIndexValue',
   Holiday: 'Holiday',
-  LeaseNotification: 'LeaseNotification'
+  LeaseNotification: 'LeaseNotification',
+  LeaseExpiryReminder: 'LeaseExpiryReminder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -271,6 +272,8 @@ export const UserScalarFieldEnum = {
   created_at: 'created_at',
   updated_at: 'updated_at',
   deleted_at: 'deleted_at',
+  all_companies_access: 'all_companies_access',
+  allowed_company_ids: 'allowed_company_ids',
   user_group_id: 'user_group_id',
   is_active: 'is_active',
   photo_url: 'photo_url',
@@ -507,6 +510,7 @@ export const PropertyValueScalarFieldEnum = {
   deleted_at: 'deleted_at',
   extra_charges: 'extra_charges',
   sale_value: 'sale_value',
+  sale_buyer: 'sale_buyer',
   sale_date: 'sale_date',
   purchase_date: 'purchase_date'
 } as const
@@ -1011,6 +1015,20 @@ export const LeaseNotificationScalarFieldEnum = {
 } as const
 
 export type LeaseNotificationScalarFieldEnum = (typeof LeaseNotificationScalarFieldEnum)[keyof typeof LeaseNotificationScalarFieldEnum]
+
+
+export const LeaseExpiryReminderScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  user_id: 'user_id',
+  lease_id: 'lease_id',
+  end_date: 'end_date',
+  shown_days: 'shown_days',
+  acknowledged_on: 'acknowledged_on',
+  dismissed: 'dismissed'
+} as const
+
+export type LeaseExpiryReminderScalarFieldEnum = (typeof LeaseExpiryReminderScalarFieldEnum)[keyof typeof LeaseExpiryReminderScalarFieldEnum]
 
 
 export const SortOrder = {

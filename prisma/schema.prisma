@@ -43,6 +43,7 @@ model Company {
   investment_settings     InvestmentSettings?
   adjustment_indexes      AdjustmentIndex[]
   holidays                Holiday[]
+  lease_expiry_reminders  LeaseExpiryReminder[]
   lease_notifications     LeaseNotification[]
   documents               Document[]
   favorites               Favorite[]
@@ -252,6 +253,9 @@ model User {
   dashboardLayouts  UserDashboardLayout[]
   company           Company               @relation(fields: [company_id], references: [id])
 
+  all_companies_access Boolean @default(false)
+  allowed_company_ids String[] @default([])
+
   // Grupo ao qual o usuário pertence. Usuários DEFAULT sem grupo não têm
   // permissões; administradores sem grupo mantêm acesso à própria empresa.
   user_group_id String?
@@ -275,6 +279,7 @@ model User {
   /// intervalos em `access_schedules`, no fuso America/Sao_Paulo.
   has_time_restriction Boolean              @default(false)
   access_schedules     UserAccessSchedule[]
+  lease_expiry_reminders LeaseExpiryReminder[]
   lease_notifications  LeaseNotification[]
 
   // Auditoria do próprio usuário (auto-relação)
@@ -419,7 +424,7 @@ model UserColumnPreference {
   user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   company          Company @relation(fields: [company_id], references: [id])
 
-  @@unique([user_id, resource])
+  @@unique([company_id, user_id, resource])
   @@index([user_id])
   @@index([resource])
   @@index([company_id])
@@ -436,7 +441,7 @@ model UserDashboardLayout {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   company    Company  @relation(fields: [company_id], references: [id])
 
-  @@unique([user_id, resource])
+  @@unique([company_id, user_id, resource])
   @@index([user_id])
   @@index([resource])
   @@index([company_id])
@@ -584,6 +589,7 @@ model Lease {
   adjustment_index                AdjustmentIndex?  @relation(fields: [adjustment_index_id], references: [id])
   /// Marcação manual do acompanhamento do atraso (Etapa 8).
   overdue_status                  LeaseOverdueStatus?
+  expiry_reminders                LeaseExpiryReminder[]
   notifications                   LeaseNotification[]
   transactions                    Transaction[]
   documents                       Document[]
@@ -612,6 +618,7 @@ model PropertyValue {
   deleted_at     DateTime?
   extra_charges  Decimal?       @db.Decimal(20, 2)
   sale_value     Decimal?       @db.Decimal(20, 2)
+  sale_buyer     String?
   sale_date      DateTime?      @db.Date
   purchase_date  DateTime?      @db.Date
   property       Property       @relation(fields: [property_id], references: [id])
@@ -1207,6 +1214,7 @@ enum AuditAction {
 
 enum Role {
   DEFAULT
+  MANAGER
   ADMIN
   SUPER_ADMIN
 }
@@ -1214,6 +1222,7 @@ enum Role {
 enum PropertyStatus {
   OCCUPIED
   AVAILABLE
+  SOLD
 }
 
 enum DocumentType {
@@ -1223,6 +1232,7 @@ enum DocumentType {
   PROPERTY_RECORD
   IMAGE
   LEASE_CONTRACT
+  PROPERTY_SALE
 }
 
 enum LeaseStatus {
@@ -1458,4 +1468,21 @@ enum LeaseNotificationChannel {
 enum LeaseOverdueStatus {
   NOTIFIED
   NEGOTIATING
+}
+
+model LeaseExpiryReminder {
+  id              String   @id @default(uuid())
+  company_id      String
+  user_id         String
+  lease_id        String
+  end_date        DateTime @db.Date
+  shown_days      String[] @default([])
+  acknowledged_on String?
+  dismissed       Boolean  @default(false)
+  company         Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  lease           Lease    @relation(fields: [lease_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, lease_id, end_date])
+  @@index([company_id, user_id])
 }

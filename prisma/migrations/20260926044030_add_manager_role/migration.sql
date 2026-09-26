@@ -1,0 +1,15 @@
+-- Adiciona o papel MANAGER ("Gestor") ao enum Role. Aditivo, sem impacto em
+-- dados existentes. Confirmado via `prisma migrate diff --from-config-datasource
+-- --to-schema prisma/schema.prisma --script` (só esta linha no diff).
+--
+-- NÃO aplicado automaticamente. Aplicar manualmente seguindo o runbook do
+-- projeto (prisma migrate dev é inutilizável aqui — histórico de migrations
+-- incompleto força reset destrutivo):
+--
+--   npx prisma db execute --file prisma/migrations/20260926044030_add_manager_role/migration.sql
+--   npx prisma migrate resolve --applied 20260926044030_add_manager_role
+--   npx prisma generate
+--
+-- ALTER TYPE ... ADD VALUE não pode rodar na mesma transação que usa o novo
+-- valor — esta migration contém apenas esta instrução.
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'MANAGER';

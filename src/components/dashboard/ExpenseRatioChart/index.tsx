@@ -105,6 +105,7 @@ export default function ExpenseRatioChart({ year: yearProp, endDate, filters }: 
       title="% DESPESAS EM RELAÇÃO ÀS RECEITAS"
       subtitle={`Mês atual: ${MONTH_LABELS_FULL[currentMonthIndex]} de ${year}`}
       detailData={detailData}
+      detailForPoint={() => detailData[currentMonthIndex] ? [detailData[currentMonthIndex]] : []}
       detailColumns={detailColumns}
     >
       {({ isFullscreen }) => (

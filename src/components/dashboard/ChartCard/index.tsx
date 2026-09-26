@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { createContext, useCallback, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Maximize2, FileText, X } from 'lucide-react';
 import DataModal from '@/components/charts/DataModal';
@@ -22,8 +22,12 @@ export interface ChartCardGroupBy {
   unitLabel?: (count: number) => string;
 }
 
+export interface ChartPoint { dataIndex: number; name?: string; seriesName?: string; seriesType?: string }
+export const ChartDrilldownContext = createContext<((point: ChartPoint) => void) | undefined>(undefined);
+
 export interface ChartCardRenderOpts {
   isFullscreen: boolean;
+  openDetails: (point: ChartPoint) => void;
 }
 
 interface ChartCardProps {
@@ -32,6 +36,7 @@ interface ChartCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   detailData?: any[];
   detailColumns?: ChartCardColumn[];
+  detailForPoint?: (point: ChartPoint) => unknown[];
   /** Agrupa o "Ver Dados Detalhados" por um campo dos dados, com subtotal por grupo. */
   detailGroupBy?: ChartCardGroupBy;
   /** Unidade mostrada no rodapé do modal de detalhes ("Total: N <detailTotalLabel>"). */
@@ -56,6 +61,7 @@ export default function ChartCard({
   subtitle,
   detailData = [],
   detailColumns,
+  detailForPoint,
   detailGroupBy,
   detailTotalLabel,
   dragHandleClassName = 'widget-drag-handle',
@@ -65,14 +71,23 @@ export default function ChartCard({
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const hasDetailData = detailData.length > 0;
+  const [selection, setSelection] = useState<{ title: string; data: unknown[] } | null>(null);
+  const openDetails = useCallback((point: ChartPoint) => {
+    const data = detailForPoint ? detailForPoint(point) : point.seriesType === 'gauge'
+      ? detailData : detailData[point.dataIndex] ? [detailData[point.dataIndex]] : [];
+    setSelection({ title: point.name ? `${title} — ${point.name}` : title, data });
+    setIsFullscreenOpen(false);
+    setIsDataModalOpen(true);
+  }, [detailForPoint, detailData, title]);
 
   const openDataModal = () => {
+    setSelection(null);
     setIsFullscreenOpen(false);
     setTimeout(() => setIsDataModalOpen(true), isFullscreenOpen ? 300 : 0);
   };
 
   return (
-    <>
+    <ChartDrilldownContext.Provider value={openDetails}>
       <div
         className={`${isDraggable ? `${dragHandleClassName} cursor-move` : ''} px-4 py-3 border-b border-ui-border-soft shrink-0 flex items-center justify-between gap-2`}
       >
@@ -99,13 +114,13 @@ export default function ChartCard({
         </div>
       </div>
 
-      <div className="flex-1 relative min-h-0">{children({ isFullscreen: false })}</div>
+      <div className="flex-1 relative min-h-0">{children({ isFullscreen: false, openDetails })}</div>
 
       <DataModal
         isOpen={isDataModalOpen}
         onClose={() => setIsDataModalOpen(false)}
-        title={title}
-        data={detailData}
+        title={selection?.title ?? title}
+        data={selection?.data ?? detailData}
         columns={detailColumns}
         groupBy={detailGroupBy}
         totalLabel={detailTotalLabel}
@@ -145,12 +160,12 @@ export default function ChartCard({
               </div>
             </div>
             <div className="flex-1 p-3 sm:p-4 md:p-5 relative bg-surface overflow-y-auto custom-scrollbar flex flex-col min-h-0">
-              {children({ isFullscreen: true })}
+              {children({ isFullscreen: true, openDetails })}
             </div>
           </div>
         </div>,
         document.body
       )}
-    </>
+    </ChartDrilldownContext.Provider>
   );
 }

@@ -36,6 +36,7 @@ export type UserMinAggregateOutputType = {
   created_at: Date | null
   updated_at: Date | null
   deleted_at: Date | null
+  all_companies_access: boolean | null
   user_group_id: string | null
   is_active: boolean | null
   photo_url: string | null
@@ -60,6 +61,7 @@ export type UserMaxAggregateOutputType = {
   created_at: Date | null
   updated_at: Date | null
   deleted_at: Date | null
+  all_companies_access: boolean | null
   user_group_id: string | null
   is_active: boolean | null
   photo_url: string | null
@@ -84,6 +86,8 @@ export type UserCountAggregateOutputType = {
   created_at: number
   updated_at: number
   deleted_at: number
+  all_companies_access: number
+  allowed_company_ids: number
   user_group_id: number
   is_active: number
   photo_url: number
@@ -110,6 +114,7 @@ export type UserMinAggregateInputType = {
   created_at?: true
   updated_at?: true
   deleted_at?: true
+  all_companies_access?: true
   user_group_id?: true
   is_active?: true
   photo_url?: true
@@ -134,6 +139,7 @@ export type UserMaxAggregateInputType = {
   created_at?: true
   updated_at?: true
   deleted_at?: true
+  all_companies_access?: true
   user_group_id?: true
   is_active?: true
   photo_url?: true
@@ -158,6 +164,8 @@ export type UserCountAggregateInputType = {
   created_at?: true
   updated_at?: true
   deleted_at?: true
+  all_companies_access?: true
+  allowed_company_ids?: true
   user_group_id?: true
   is_active?: true
   photo_url?: true
@@ -255,6 +263,8 @@ export type UserGroupByOutputType = {
   created_at: Date
   updated_at: Date
   deleted_at: Date | null
+  all_companies_access: boolean
+  allowed_company_ids: string[]
   user_group_id: string | null
   is_active: boolean
   photo_url: string | null
@@ -300,6 +310,8 @@ export type UserWhereInput = {
   created_at?: Prisma.DateTimeFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"User"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  all_companies_access?: Prisma.BoolFilter<"User"> | boolean
+  allowed_company_ids?: Prisma.StringNullableListFilter<"User">
   user_group_id?: Prisma.StringNullableFilter<"User"> | string | null
   is_active?: Prisma.BoolFilter<"User"> | boolean
   photo_url?: Prisma.StringNullableFilter<"User"> | string | null
@@ -317,6 +329,7 @@ export type UserWhereInput = {
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
   group?: Prisma.XOR<Prisma.UserGroupNullableScalarRelationFilter, Prisma.UserGroupWhereInput> | null
   access_schedules?: Prisma.UserAccessScheduleListRelationFilter
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderListRelationFilter
   lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   updater?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -338,6 +351,8 @@ export type UserOrderByWithRelationInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  all_companies_access?: Prisma.SortOrder
+  allowed_company_ids?: Prisma.SortOrder
   user_group_id?: Prisma.SortOrderInput | Prisma.SortOrder
   is_active?: Prisma.SortOrder
   photo_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -355,6 +370,7 @@ export type UserOrderByWithRelationInput = {
   company?: Prisma.CompanyOrderByWithRelationInput
   group?: Prisma.UserGroupOrderByWithRelationInput
   access_schedules?: Prisma.UserAccessScheduleOrderByRelationAggregateInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderOrderByRelationAggregateInput
   lease_notifications?: Prisma.LeaseNotificationOrderByRelationAggregateInput
   creator?: Prisma.UserOrderByWithRelationInput
   updater?: Prisma.UserOrderByWithRelationInput
@@ -380,6 +396,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   created_at?: Prisma.DateTimeFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"User"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  all_companies_access?: Prisma.BoolFilter<"User"> | boolean
+  allowed_company_ids?: Prisma.StringNullableListFilter<"User">
   user_group_id?: Prisma.StringNullableFilter<"User"> | string | null
   is_active?: Prisma.BoolFilter<"User"> | boolean
   photo_url?: Prisma.StringNullableFilter<"User"> | string | null
@@ -397,6 +415,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
   group?: Prisma.XOR<Prisma.UserGroupNullableScalarRelationFilter, Prisma.UserGroupWhereInput> | null
   access_schedules?: Prisma.UserAccessScheduleListRelationFilter
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderListRelationFilter
   lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   updater?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -418,6 +437,8 @@ export type UserOrderByWithAggregationInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  all_companies_access?: Prisma.SortOrder
+  allowed_company_ids?: Prisma.SortOrder
   user_group_id?: Prisma.SortOrderInput | Prisma.SortOrder
   is_active?: Prisma.SortOrder
   photo_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -448,6 +469,8 @@ export type UserScalarWhereWithAggregatesInput = {
   created_at?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   deleted_at?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  all_companies_access?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  allowed_company_ids?: Prisma.StringNullableListFilter<"User">
   user_group_id?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   is_active?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   photo_url?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -471,6 +494,8 @@ export type UserCreateInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -485,6 +510,7 @@ export type UserCreateInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -506,6 +532,8 @@ export type UserUncheckedCreateInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -521,6 +549,7 @@ export type UserUncheckedCreateInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -539,6 +568,8 @@ export type UserUpdateInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -553,6 +584,7 @@ export type UserUpdateInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -574,6 +606,8 @@ export type UserUncheckedUpdateInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -589,6 +623,7 @@ export type UserUncheckedUpdateInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -608,6 +643,8 @@ export type UserCreateManyInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -631,6 +668,8 @@ export type UserUpdateManyMutationInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -652,6 +691,8 @@ export type UserUncheckedUpdateManyInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -672,6 +713,14 @@ export type UserListRelationFilter = {
 
 export type UserOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type UserNullableScalarRelationFilter = {
@@ -696,6 +745,8 @@ export type UserCountOrderByAggregateInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
+  all_companies_access?: Prisma.SortOrder
+  allowed_company_ids?: Prisma.SortOrder
   user_group_id?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   photo_url?: Prisma.SortOrder
@@ -720,6 +771,7 @@ export type UserMaxOrderByAggregateInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
+  all_companies_access?: Prisma.SortOrder
   user_group_id?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   photo_url?: Prisma.SortOrder
@@ -744,6 +796,7 @@ export type UserMinOrderByAggregateInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   deleted_at?: Prisma.SortOrder
+  all_companies_access?: Prisma.SortOrder
   user_group_id?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   photo_url?: Prisma.SortOrder
@@ -803,6 +856,10 @@ export type UserUncheckedUpdateManyWithoutCompanyNestedInput = {
   deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
+export type UserCreateallowed_company_idsInput = {
+  set: string[]
+}
+
 export type UserCreateNestedOneWithoutCreated_usersInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreated_usersInput, Prisma.UserUncheckedCreateWithoutCreated_usersInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreated_usersInput
@@ -849,6 +906,11 @@ export type EnumGenderFieldUpdateOperationsInput = {
 
 export type EnumRoleFieldUpdateOperationsInput = {
   set?: $Enums.Role
+}
+
+export type UserUpdateallowed_company_idsInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type UserUpdateOneWithoutCreated_usersNestedInput = {
@@ -1089,6 +1151,20 @@ export type UserUpdateOneWithoutLease_notificationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLease_notificationsInput, Prisma.UserUpdateWithoutLease_notificationsInput>, Prisma.UserUncheckedUpdateWithoutLease_notificationsInput>
 }
 
+export type UserCreateNestedOneWithoutLease_expiry_remindersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedCreateWithoutLease_expiry_remindersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLease_expiry_remindersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutLease_expiry_remindersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedCreateWithoutLease_expiry_remindersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLease_expiry_remindersInput
+  upsert?: Prisma.UserUpsertWithoutLease_expiry_remindersInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLease_expiry_remindersInput, Prisma.UserUpdateWithoutLease_expiry_remindersInput>, Prisma.UserUncheckedUpdateWithoutLease_expiry_remindersInput>
+}
+
 export type UserCreateWithoutCompanyInput = {
   id?: string
   name: string
@@ -1100,6 +1176,8 @@ export type UserCreateWithoutCompanyInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1113,6 +1191,7 @@ export type UserCreateWithoutCompanyInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutUserInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1133,6 +1212,8 @@ export type UserUncheckedCreateWithoutCompanyInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1148,6 +1229,7 @@ export type UserUncheckedCreateWithoutCompanyInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1196,6 +1278,8 @@ export type UserScalarWhereInput = {
   created_at?: Prisma.DateTimeFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"User"> | Date | string
   deleted_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  all_companies_access?: Prisma.BoolFilter<"User"> | boolean
+  allowed_company_ids?: Prisma.StringNullableListFilter<"User">
   user_group_id?: Prisma.StringNullableFilter<"User"> | string | null
   is_active?: Prisma.BoolFilter<"User"> | boolean
   photo_url?: Prisma.StringNullableFilter<"User"> | string | null
@@ -1219,6 +1303,8 @@ export type UserCreateWithoutCreated_usersInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1233,6 +1319,7 @@ export type UserCreateWithoutCreated_usersInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1253,6 +1340,8 @@ export type UserUncheckedCreateWithoutCreated_usersInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1268,6 +1357,7 @@ export type UserUncheckedCreateWithoutCreated_usersInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
@@ -1290,6 +1380,8 @@ export type UserCreateWithoutUpdated_usersInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1304,6 +1396,7 @@ export type UserCreateWithoutUpdated_usersInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1324,6 +1417,8 @@ export type UserUncheckedCreateWithoutUpdated_usersInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1339,6 +1434,7 @@ export type UserUncheckedCreateWithoutUpdated_usersInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
@@ -1361,6 +1457,8 @@ export type UserCreateWithoutCreatorInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1375,6 +1473,7 @@ export type UserCreateWithoutCreatorInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
@@ -1395,6 +1494,8 @@ export type UserUncheckedCreateWithoutCreatorInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1409,6 +1510,7 @@ export type UserUncheckedCreateWithoutCreatorInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1437,6 +1539,8 @@ export type UserCreateWithoutUpdaterInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1451,6 +1555,7 @@ export type UserCreateWithoutUpdaterInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
@@ -1471,6 +1576,8 @@ export type UserUncheckedCreateWithoutUpdaterInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1485,6 +1592,7 @@ export type UserUncheckedCreateWithoutUpdaterInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1524,6 +1632,8 @@ export type UserUpdateWithoutCreated_usersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1538,6 +1648,7 @@ export type UserUpdateWithoutCreated_usersInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -1558,6 +1669,8 @@ export type UserUncheckedUpdateWithoutCreated_usersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1573,6 +1686,7 @@ export type UserUncheckedUpdateWithoutCreated_usersInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
@@ -1601,6 +1715,8 @@ export type UserUpdateWithoutUpdated_usersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1615,6 +1731,7 @@ export type UserUpdateWithoutUpdated_usersInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -1635,6 +1752,8 @@ export type UserUncheckedUpdateWithoutUpdated_usersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1650,6 +1769,7 @@ export type UserUncheckedUpdateWithoutUpdated_usersInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
@@ -1699,6 +1819,8 @@ export type UserCreateWithoutAccess_schedulesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1712,6 +1834,7 @@ export type UserCreateWithoutAccess_schedulesInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutUserInput
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1733,6 +1856,8 @@ export type UserUncheckedCreateWithoutAccess_schedulesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1747,6 +1872,7 @@ export type UserUncheckedCreateWithoutAccess_schedulesInput = {
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1781,6 +1907,8 @@ export type UserUpdateWithoutAccess_schedulesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1794,6 +1922,7 @@ export type UserUpdateWithoutAccess_schedulesInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutUpdateManyWithoutUserNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -1815,6 +1944,8 @@ export type UserUncheckedUpdateWithoutAccess_schedulesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1829,6 +1960,7 @@ export type UserUncheckedUpdateWithoutAccess_schedulesInput = {
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1847,6 +1979,8 @@ export type UserCreateWithoutCreated_user_groupsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1861,6 +1995,7 @@ export type UserCreateWithoutCreated_user_groupsInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1881,6 +2016,8 @@ export type UserUncheckedCreateWithoutCreated_user_groupsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1896,6 +2033,7 @@ export type UserUncheckedCreateWithoutCreated_user_groupsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1918,6 +2056,8 @@ export type UserCreateWithoutUpdated_user_groupsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -1932,6 +2072,7 @@ export type UserCreateWithoutUpdated_user_groupsInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -1952,6 +2093,8 @@ export type UserUncheckedCreateWithoutUpdated_user_groupsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -1967,6 +2110,7 @@ export type UserUncheckedCreateWithoutUpdated_user_groupsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1989,6 +2133,8 @@ export type UserCreateWithoutGroupInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2002,6 +2148,7 @@ export type UserCreateWithoutGroupInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutUserInput
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -2023,6 +2170,8 @@ export type UserUncheckedCreateWithoutGroupInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2037,6 +2186,7 @@ export type UserUncheckedCreateWithoutGroupInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2076,6 +2226,8 @@ export type UserUpdateWithoutCreated_user_groupsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2090,6 +2242,7 @@ export type UserUpdateWithoutCreated_user_groupsInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2110,6 +2263,8 @@ export type UserUncheckedUpdateWithoutCreated_user_groupsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2125,6 +2280,7 @@ export type UserUncheckedUpdateWithoutCreated_user_groupsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2153,6 +2309,8 @@ export type UserUpdateWithoutUpdated_user_groupsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2167,6 +2325,7 @@ export type UserUpdateWithoutUpdated_user_groupsInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2187,6 +2346,8 @@ export type UserUncheckedUpdateWithoutUpdated_user_groupsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2202,6 +2363,7 @@ export type UserUncheckedUpdateWithoutUpdated_user_groupsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2235,6 +2397,8 @@ export type UserCreateWithoutColumnPreferencesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2248,6 +2412,7 @@ export type UserCreateWithoutColumnPreferencesInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -2269,6 +2434,8 @@ export type UserUncheckedCreateWithoutColumnPreferencesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2283,6 +2450,7 @@ export type UserUncheckedCreateWithoutColumnPreferencesInput = {
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2317,6 +2485,8 @@ export type UserUpdateWithoutColumnPreferencesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2330,6 +2500,7 @@ export type UserUpdateWithoutColumnPreferencesInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2351,6 +2522,8 @@ export type UserUncheckedUpdateWithoutColumnPreferencesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2365,6 +2538,7 @@ export type UserUncheckedUpdateWithoutColumnPreferencesInput = {
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2383,6 +2557,8 @@ export type UserCreateWithoutDashboardLayoutsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2396,6 +2572,7 @@ export type UserCreateWithoutDashboardLayoutsInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -2417,6 +2594,8 @@ export type UserUncheckedCreateWithoutDashboardLayoutsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2431,6 +2610,7 @@ export type UserUncheckedCreateWithoutDashboardLayoutsInput = {
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2465,6 +2645,8 @@ export type UserUpdateWithoutDashboardLayoutsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2478,6 +2660,7 @@ export type UserUpdateWithoutDashboardLayoutsInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2499,6 +2682,8 @@ export type UserUncheckedUpdateWithoutDashboardLayoutsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2513,6 +2698,7 @@ export type UserUncheckedUpdateWithoutDashboardLayoutsInput = {
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2531,6 +2717,8 @@ export type UserCreateWithoutDocumentsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2544,6 +2732,7 @@ export type UserCreateWithoutDocumentsInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -2565,6 +2754,8 @@ export type UserUncheckedCreateWithoutDocumentsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2579,6 +2770,7 @@ export type UserUncheckedCreateWithoutDocumentsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2613,6 +2805,8 @@ export type UserUpdateWithoutDocumentsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2626,6 +2820,7 @@ export type UserUpdateWithoutDocumentsInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2647,6 +2842,8 @@ export type UserUncheckedUpdateWithoutDocumentsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2661,6 +2858,7 @@ export type UserUncheckedUpdateWithoutDocumentsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2679,6 +2877,8 @@ export type UserCreateWithoutFavoritesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2692,6 +2892,7 @@ export type UserCreateWithoutFavoritesInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
@@ -2713,6 +2914,8 @@ export type UserUncheckedCreateWithoutFavoritesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2727,6 +2930,7 @@ export type UserUncheckedCreateWithoutFavoritesInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2761,6 +2965,8 @@ export type UserUpdateWithoutFavoritesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2774,6 +2980,7 @@ export type UserUpdateWithoutFavoritesInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -2795,6 +3002,8 @@ export type UserUncheckedUpdateWithoutFavoritesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2809,6 +3018,7 @@ export type UserUncheckedUpdateWithoutFavoritesInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2827,6 +3037,8 @@ export type UserCreateWithoutLease_notificationsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -2841,6 +3053,7 @@ export type UserCreateWithoutLease_notificationsInput = {
   company: Prisma.CompanyCreateNestedOneWithoutUsersInput
   group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
   access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutUserInput
   creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
   updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
   created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
@@ -2861,6 +3074,8 @@ export type UserUncheckedCreateWithoutLease_notificationsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2876,6 +3091,7 @@ export type UserUncheckedCreateWithoutLease_notificationsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutUserInput
   created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
   updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
   created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
@@ -2909,6 +3125,8 @@ export type UserUpdateWithoutLease_notificationsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2923,6 +3141,7 @@ export type UserUpdateWithoutLease_notificationsInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
@@ -2943,6 +3162,8 @@ export type UserUncheckedUpdateWithoutLease_notificationsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2958,6 +3179,167 @@ export type UserUncheckedUpdateWithoutLease_notificationsInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
+  created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
+  updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
+  created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
+  updated_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutUpdaterNestedInput
+}
+
+export type UserCreateWithoutLease_expiry_remindersInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  birth_date: Date | string
+  gender: $Enums.Gender
+  role?: $Enums.Role
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
+  is_active?: boolean
+  photo_url?: string | null
+  phone_country_code?: string | null
+  phone_area_code?: string | null
+  phone?: string | null
+  phone_extension?: string | null
+  has_time_restriction?: boolean
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutUserInput
+  columnPreferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutUserInput
+  dashboardLayouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutUserInput
+  company: Prisma.CompanyCreateNestedOneWithoutUsersInput
+  group?: Prisma.UserGroupCreateNestedOneWithoutMembersInput
+  access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutUserInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutSent_byInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreated_usersInput
+  updater?: Prisma.UserCreateNestedOneWithoutUpdated_usersInput
+  created_users?: Prisma.UserCreateNestedManyWithoutCreatorInput
+  updated_users?: Prisma.UserCreateNestedManyWithoutUpdaterInput
+  created_user_groups?: Prisma.UserGroupCreateNestedManyWithoutCreatorInput
+  updated_user_groups?: Prisma.UserGroupCreateNestedManyWithoutUpdaterInput
+}
+
+export type UserUncheckedCreateWithoutLease_expiry_remindersInput = {
+  id?: string
+  company_id: string
+  name: string
+  email: string
+  password: string
+  birth_date: Date | string
+  gender: $Enums.Gender
+  role?: $Enums.Role
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
+  user_group_id?: string | null
+  is_active?: boolean
+  photo_url?: string | null
+  phone_country_code?: string | null
+  phone_area_code?: string | null
+  phone?: string | null
+  phone_extension?: string | null
+  has_time_restriction?: boolean
+  created_by?: string | null
+  updated_by?: string | null
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
+  columnPreferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutUserInput
+  dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutUserInput
+  access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutUserInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutSent_byInput
+  created_users?: Prisma.UserUncheckedCreateNestedManyWithoutCreatorInput
+  updated_users?: Prisma.UserUncheckedCreateNestedManyWithoutUpdaterInput
+  created_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCreatorInput
+  updated_user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUpdaterInput
+}
+
+export type UserCreateOrConnectWithoutLease_expiry_remindersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedCreateWithoutLease_expiry_remindersInput>
+}
+
+export type UserUpsertWithoutLease_expiry_remindersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedUpdateWithoutLease_expiry_remindersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedCreateWithoutLease_expiry_remindersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLease_expiry_remindersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLease_expiry_remindersInput, Prisma.UserUncheckedUpdateWithoutLease_expiry_remindersInput>
+}
+
+export type UserUpdateWithoutLease_expiry_remindersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  birth_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_area_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_extension?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  has_time_restriction?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
+  columnPreferences?: Prisma.UserColumnPreferenceUpdateManyWithoutUserNestedInput
+  dashboardLayouts?: Prisma.UserDashboardLayoutUpdateManyWithoutUserNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
+  group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
+  access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
+  updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
+  created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
+  updated_users?: Prisma.UserUpdateManyWithoutUpdaterNestedInput
+  created_user_groups?: Prisma.UserGroupUpdateManyWithoutCreatorNestedInput
+  updated_user_groups?: Prisma.UserGroupUpdateManyWithoutUpdaterNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLease_expiry_remindersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  birth_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
+  user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_area_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_extension?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  has_time_restriction?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updated_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
+  columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
+  access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
   created_user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCreatorNestedInput
@@ -2975,6 +3357,8 @@ export type UserCreateManyCompanyInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -2998,6 +3382,8 @@ export type UserUpdateWithoutCompanyInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3011,6 +3397,7 @@ export type UserUpdateWithoutCompanyInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutUpdateManyWithoutUserNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -3031,6 +3418,8 @@ export type UserUncheckedUpdateWithoutCompanyInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3046,6 +3435,7 @@ export type UserUncheckedUpdateWithoutCompanyInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3064,6 +3454,8 @@ export type UserUncheckedUpdateManyWithoutCompanyInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3088,6 +3480,8 @@ export type UserCreateManyCreatorInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -3111,6 +3505,8 @@ export type UserCreateManyUpdaterInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   user_group_id?: string | null
   is_active?: boolean
   photo_url?: string | null
@@ -3133,6 +3529,8 @@ export type UserUpdateWithoutCreatorInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3147,6 +3545,7 @@ export type UserUpdateWithoutCreatorInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
@@ -3167,6 +3566,8 @@ export type UserUncheckedUpdateWithoutCreatorInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3181,6 +3582,7 @@ export type UserUncheckedUpdateWithoutCreatorInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3200,6 +3602,8 @@ export type UserUncheckedUpdateManyWithoutCreatorInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3222,6 +3626,8 @@ export type UserUpdateWithoutUpdaterInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3236,6 +3642,7 @@ export type UserUpdateWithoutUpdaterInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   group?: Prisma.UserGroupUpdateOneWithoutMembersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   created_users?: Prisma.UserUpdateManyWithoutCreatorNestedInput
@@ -3256,6 +3663,8 @@ export type UserUncheckedUpdateWithoutUpdaterInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3270,6 +3679,7 @@ export type UserUncheckedUpdateWithoutUpdaterInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3289,6 +3699,8 @@ export type UserUncheckedUpdateManyWithoutUpdaterInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   user_group_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3312,6 +3724,8 @@ export type UserCreateManyGroupInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  all_companies_access?: boolean
+  allowed_company_ids?: Prisma.UserCreateallowed_company_idsInput | string[]
   is_active?: boolean
   photo_url?: string | null
   phone_country_code?: string | null
@@ -3334,6 +3748,8 @@ export type UserUpdateWithoutGroupInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3347,6 +3763,7 @@ export type UserUpdateWithoutGroupInput = {
   dashboardLayouts?: Prisma.UserDashboardLayoutUpdateManyWithoutUserNestedInput
   company?: Prisma.CompanyUpdateOneRequiredWithoutUsersNestedInput
   access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutSent_byNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreated_usersNestedInput
   updater?: Prisma.UserUpdateOneWithoutUpdated_usersNestedInput
@@ -3368,6 +3785,8 @@ export type UserUncheckedUpdateWithoutGroupInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3382,6 +3801,7 @@ export type UserUncheckedUpdateWithoutGroupInput = {
   columnPreferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutUserNestedInput
   dashboardLayouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutUserNestedInput
   access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutUserNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutUserNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutSent_byNestedInput
   created_users?: Prisma.UserUncheckedUpdateManyWithoutCreatorNestedInput
   updated_users?: Prisma.UserUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3401,6 +3821,8 @@ export type UserUncheckedUpdateManyWithoutGroupInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  all_companies_access?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allowed_company_ids?: Prisma.UserUpdateallowed_company_idsInput | string[]
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3423,6 +3845,7 @@ export type UserCountOutputType = {
   columnPreferences: number
   dashboardLayouts: number
   access_schedules: number
+  lease_expiry_reminders: number
   lease_notifications: number
   created_users: number
   updated_users: number
@@ -3436,6 +3859,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   columnPreferences?: boolean | UserCountOutputTypeCountColumnPreferencesArgs
   dashboardLayouts?: boolean | UserCountOutputTypeCountDashboardLayoutsArgs
   access_schedules?: boolean | UserCountOutputTypeCountAccess_schedulesArgs
+  lease_expiry_reminders?: boolean | UserCountOutputTypeCountLease_expiry_remindersArgs
   lease_notifications?: boolean | UserCountOutputTypeCountLease_notificationsArgs
   created_users?: boolean | UserCountOutputTypeCountCreated_usersArgs
   updated_users?: boolean | UserCountOutputTypeCountUpdated_usersArgs
@@ -3491,6 +3915,13 @@ export type UserCountOutputTypeCountAccess_schedulesArgs<ExtArgs extends runtime
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountLease_expiry_remindersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeaseExpiryReminderWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountLease_notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.LeaseNotificationWhereInput
 }
@@ -3536,6 +3967,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
+  all_companies_access?: boolean
+  allowed_company_ids?: boolean
   user_group_id?: boolean
   is_active?: boolean
   photo_url?: boolean
@@ -3553,6 +3986,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   group?: boolean | Prisma.User$groupArgs<ExtArgs>
   access_schedules?: boolean | Prisma.User$access_schedulesArgs<ExtArgs>
+  lease_expiry_reminders?: boolean | Prisma.User$lease_expiry_remindersArgs<ExtArgs>
   lease_notifications?: boolean | Prisma.User$lease_notificationsArgs<ExtArgs>
   creator?: boolean | Prisma.User$creatorArgs<ExtArgs>
   updater?: boolean | Prisma.User$updaterArgs<ExtArgs>
@@ -3575,6 +4009,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
+  all_companies_access?: boolean
+  allowed_company_ids?: boolean
   user_group_id?: boolean
   is_active?: boolean
   photo_url?: boolean
@@ -3603,6 +4039,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
+  all_companies_access?: boolean
+  allowed_company_ids?: boolean
   user_group_id?: boolean
   is_active?: boolean
   photo_url?: boolean
@@ -3631,6 +4069,8 @@ export type UserSelectScalar = {
   created_at?: boolean
   updated_at?: boolean
   deleted_at?: boolean
+  all_companies_access?: boolean
+  allowed_company_ids?: boolean
   user_group_id?: boolean
   is_active?: boolean
   photo_url?: boolean
@@ -3643,7 +4083,7 @@ export type UserSelectScalar = {
   updated_by?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "name" | "email" | "password" | "birth_date" | "gender" | "role" | "created_at" | "updated_at" | "deleted_at" | "user_group_id" | "is_active" | "photo_url" | "phone_country_code" | "phone_area_code" | "phone" | "phone_extension" | "has_time_restriction" | "created_by" | "updated_by", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "name" | "email" | "password" | "birth_date" | "gender" | "role" | "created_at" | "updated_at" | "deleted_at" | "all_companies_access" | "allowed_company_ids" | "user_group_id" | "is_active" | "photo_url" | "phone_country_code" | "phone_area_code" | "phone" | "phone_extension" | "has_time_restriction" | "created_by" | "updated_by", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   documents?: boolean | Prisma.User$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.User$favoritesArgs<ExtArgs>
@@ -3652,6 +4092,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   group?: boolean | Prisma.User$groupArgs<ExtArgs>
   access_schedules?: boolean | Prisma.User$access_schedulesArgs<ExtArgs>
+  lease_expiry_reminders?: boolean | Prisma.User$lease_expiry_remindersArgs<ExtArgs>
   lease_notifications?: boolean | Prisma.User$lease_notificationsArgs<ExtArgs>
   creator?: boolean | Prisma.User$creatorArgs<ExtArgs>
   updater?: boolean | Prisma.User$updaterArgs<ExtArgs>
@@ -3684,6 +4125,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     company: Prisma.$CompanyPayload<ExtArgs>
     group: Prisma.$UserGroupPayload<ExtArgs> | null
     access_schedules: Prisma.$UserAccessSchedulePayload<ExtArgs>[]
+    lease_expiry_reminders: Prisma.$LeaseExpiryReminderPayload<ExtArgs>[]
     lease_notifications: Prisma.$LeaseNotificationPayload<ExtArgs>[]
     creator: Prisma.$UserPayload<ExtArgs> | null
     updater: Prisma.$UserPayload<ExtArgs> | null
@@ -3704,6 +4146,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     created_at: Date
     updated_at: Date
     deleted_at: Date | null
+    all_companies_access: boolean
+    allowed_company_ids: string[]
     user_group_id: string | null
     /**
      * Situação do usuário. Distinto de `deleted_at`: inativo continua existindo,
@@ -4126,6 +4570,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   company<T extends Prisma.CompanyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CompanyDefaultArgs<ExtArgs>>): Prisma.Prisma__CompanyClient<runtime.Types.Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   group<T extends Prisma.User$groupArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$groupArgs<ExtArgs>>): Prisma.Prisma__UserGroupClient<runtime.Types.Result.GetResult<Prisma.$UserGroupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   access_schedules<T extends Prisma.User$access_schedulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$access_schedulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserAccessSchedulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lease_expiry_reminders<T extends Prisma.User$lease_expiry_remindersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lease_expiry_remindersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseExpiryReminderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   lease_notifications<T extends Prisma.User$lease_notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lease_notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseNotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   creator<T extends Prisma.User$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$creatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   updater<T extends Prisma.User$updaterArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updaterArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -4173,6 +4618,8 @@ export interface UserFieldRefs {
   readonly created_at: Prisma.FieldRef<"User", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"User", 'DateTime'>
   readonly deleted_at: Prisma.FieldRef<"User", 'DateTime'>
+  readonly all_companies_access: Prisma.FieldRef<"User", 'Boolean'>
+  readonly allowed_company_ids: Prisma.FieldRef<"User", 'String[]'>
   readonly user_group_id: Prisma.FieldRef<"User", 'String'>
   readonly is_active: Prisma.FieldRef<"User", 'Boolean'>
   readonly photo_url: Prisma.FieldRef<"User", 'String'>
@@ -4720,6 +5167,30 @@ export type User$access_schedulesArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.UserAccessScheduleScalarFieldEnum | Prisma.UserAccessScheduleScalarFieldEnum[]
+}
+
+/**
+ * User.lease_expiry_reminders
+ */
+export type User$lease_expiry_remindersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LeaseExpiryReminder
+   */
+  select?: Prisma.LeaseExpiryReminderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LeaseExpiryReminder
+   */
+  omit?: Prisma.LeaseExpiryReminderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeaseExpiryReminderInclude<ExtArgs> | null
+  where?: Prisma.LeaseExpiryReminderWhereInput
+  orderBy?: Prisma.LeaseExpiryReminderOrderByWithRelationInput | Prisma.LeaseExpiryReminderOrderByWithRelationInput[]
+  cursor?: Prisma.LeaseExpiryReminderWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeaseExpiryReminderScalarFieldEnum | Prisma.LeaseExpiryReminderScalarFieldEnum[]
 }
 
 /**

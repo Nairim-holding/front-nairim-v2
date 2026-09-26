@@ -12,6 +12,9 @@ export default function Toggle({ checked, onChange, label, disabled = false }: T
     <div className="flex items-center gap-3">
       <button
         type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
         // Trocamos o bg-green-500 pelo bg-brand (sua variável --color-brand-primary)

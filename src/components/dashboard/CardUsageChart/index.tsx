@@ -131,7 +131,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
       detailData={detailData}
       detailColumns={detailColumns}
     >
-      {() => (
+      {({ openDetails }) => (
         <div className="w-full h-full flex flex-col p-3">
           {/* Header com Total das Faturas (Imagem 4 & 5) */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-ui-border-soft shrink-0">
@@ -158,6 +158,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
                 return (
                   <RowHoverTooltip
                     key={`${item.label}-${index}`}
+                  onClick={() => openDetails({ dataIndex: index, name: item.label })}
                     className="flex items-center gap-3 text-xs"
                     title={item.label}
                     rows={[

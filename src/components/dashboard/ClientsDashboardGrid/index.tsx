@@ -6,7 +6,6 @@ import { DashboardLayoutItem } from '@/hooks/useDashboardLayout';
 import DashboardWidgetGrid, { DRAG_HANDLE_CLASS, type DashboardWidget } from '@/components/dashboard/DashboardWidgetGrid';
 import { MetricResponse, MetricWithData } from '@/types/types';
 import NumericCard from '@/components/charts/MetricCard';
-import TenantTenureChart from '@/components/dashboard/TenantTenureChart';
 import {
   COLS_OWNERS, COLS_TENANTS_BY_PROPERTY, COLS_PROPERTIES_PER_OWNER, COLS_AGENCIES, COLS_PROPERTIES_BY_AGENCY,
 } from '@/lib/columns';
@@ -15,7 +14,6 @@ import {
 // Exportados: o botão "Personalizar" mora no cabeçalho da seção (sections/index.tsx),
 // na mesma posição do Financeiro — não mais solto acima do grid.
 export const WIDGET_LABELS: Record<string, string> = {
-  'widget-c1': 'Tempo de Permanência dos Inquilinos por Faixa',
   'widget-c2': 'Total de Proprietários',
   'widget-c3': 'Total de Inquilinos',
   'widget-c4': 'Média de Imóveis por Proprietário',
@@ -57,7 +55,7 @@ function SelfFramedWidget({ children }: { children: ReactNode }) {
 }
 
 type MetricDataKeys = {
-  [K in keyof MetricResponse]: MetricResponse[K] extends MetricWithData ? K : never;
+  [K in keyof MetricResponse]-?: MetricResponse[K] extends MetricWithData ? K : never;
 }[keyof MetricResponse];
 
 function useMetricGetter(metrics: MetricResponse | null) {
@@ -70,8 +68,7 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-c3', x: 3, y: 0, w: 3, h: 3 },
   { i: 'widget-c4', x: 6, y: 0, w: 3, h: 3 },
   { i: 'widget-c5', x: 9, y: 0, w: 3, h: 3 },
-  { i: 'widget-c1', x: 0, y: 3, w: 6, h: 8 },
-  { i: 'widget-c6', x: 6, y: 3, w: 6, h: 8 },
+  { i: 'widget-c6', x: 0, y: 3, w: 12, h: 8 },
 ];
 
 interface ClientsDashboardGridProps {
@@ -87,7 +84,7 @@ interface ClientsDashboardGridProps {
 }
 
 export default function ClientsDashboardGrid({
-  resource = 'clientes-v1',
+  resource = 'clientes-v2',
   metrics,
   startDate,
   endDate,
@@ -106,12 +103,6 @@ export default function ClientsDashboardGrid({
       if (!visibleWidgetIds.includes(id)) return null;
 
       switch (id) {
-        case 'widget-c1':
-          return {
-            body: <TenantTenureChart startDate={startDate} endDate={endDate} />,
-            framed: true,
-          };
-
         case 'widget-c2':
           return {
             framed: false,

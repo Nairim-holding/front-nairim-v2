@@ -100,7 +100,7 @@ export default function EChartsDonut({
                 <span style="color: ${params.color}; font-weight: 700; font-size: 13px;">${params.percent}%</span>
               </div>
               ${!isLarge 
-                ? '<div style="color: ' + tokens.textMuted + '; font-size: 10px; margin-top: 8px; text-align: center;">Clique para expandir</div>' 
+                ? '<div style="color: ' + tokens.textMuted + '; font-size: 10px; margin-top: 8px; text-align: center;">Clique para ver os dados</div>'
                 : '<div style="color: ' + tokens.textMuted + '; font-size: 10px; margin-top: 8px; text-align: center;">Clique na fatia para ver detalhes</div>'
               }
             </div>
@@ -111,7 +111,7 @@ export default function EChartsDonut({
         extraCssText: 'box-shadow: none;'
       },
       legend: {
-        show: true,
+        show: isLarge,
         type: 'scroll', // Permite rolar se houver muitos itens
         orient: 'horizontal', // Horizontal para ficar embaixo
         left: 'center',
@@ -146,9 +146,9 @@ export default function EChartsDonut({
             borderWidth: 2
           },
           label: {
-            show: isLarge, // Oculta labels externas no card pequeno
-            position: 'outside',
-            formatter: '{b}: {d}%',
+            show: true,
+            position: isLarge ? 'outside' : 'inside',
+            formatter: isLarge ? '{b}: {c} ({d}%)' : '{c}\n{d}%',
             color: tokens.textSecondary,
             fontSize: isMobile ? 10 : 12
           },
@@ -172,15 +172,14 @@ export default function EChartsDonut({
     chart.setOption(option);
 
     // Configuração de eventos para gráfico pequeno
-    if (!isLarge) {
-      chart.getZr().on('click', () => {
-        setIsFullscreenModalOpen(true);
-      });
-      
-      chart.getZr().on('mouseover', () => {
-        chart.getZr().setCursorStyle('pointer');
-      });
-    }
+    chart.on('click', (params: any) => {
+      const item = data[params.dataIndex];
+      if (!item) return;
+      setModalData(item.data ?? []);
+      setModalTitle(`${label} - ${item.name}`);
+      setIsFullscreenModalOpen(false);
+      setIsModalOpen(true);
+    });
 
     return chart;
   }, [data, label, palette, tokens]);
@@ -219,44 +218,13 @@ export default function EChartsDonut({
 
   // Efeito para o gráfico em Fullscreen
   useEffect(() => {
-    if (isFullscreenModalOpen && fullscreenChartRef.current) {
-      // Timeout garante que o elemento do modal existe no DOM
-      const timeoutId = setTimeout(() => {
-        if (!fullscreenChartRef.current) return;
-        
-        fullscreenInstance.current = initChart(fullscreenChartRef.current, true);
-        
-        if (fullscreenInstance.current) {
-          // Evento de clique na fatia
-          fullscreenInstance.current.on('click', (params: any) => {
-            if (params.componentType === 'series' && params.data && params.data.data && params.data.data.length > 0) {
-              setModalData(params.data.data);
-              setModalTitle(`${label} - ${params.name}`);
-              setIsFullscreenModalOpen(false);
-              setTimeout(() => setIsModalOpen(true), 300);
-            }
-          });
-        }
-
-        const handleResize = () => fullscreenInstance.current?.resize();
-        window.addEventListener('resize', handleResize);
-        
-        // ResizeObserver também para o modal
-        const resizeObserver = new ResizeObserver(() => {
-           fullscreenInstance.current?.resize();
-        });
-        resizeObserver.observe(fullscreenChartRef.current);
-
-        return () => {
-          window.removeEventListener('resize', handleResize);
-          resizeObserver.disconnect();
-          fullscreenInstance.current?.dispose();
-        };
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isFullscreenModalOpen, initChart, label]);
+    if (!isFullscreenModalOpen || !fullscreenChartRef.current) return;
+    const chart = initChart(fullscreenChartRef.current, true);
+    fullscreenInstance.current = chart;
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(fullscreenChartRef.current);
+    return () => { observer.disconnect(); chart.dispose(); fullscreenInstance.current = null; };
+  }, [isFullscreenModalOpen, initChart]);
 
   const handleOpenAllData = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -312,12 +280,23 @@ export default function EChartsDonut({
         </div>
 
         {/* Container do Gráfico: min-h garante que ele não colapse */}
-        <div 
-          className="relative flex-1 w-full min-h-[220px] cursor-pointer"
-          onClick={() => setIsFullscreenModalOpen(true)}
-          title="Clique para expandir"
-        >
-          <div ref={chartRef} className="w-full h-full absolute inset-0" />
+        <div className="flex flex-1 min-h-0 flex-col sm:flex-row gap-3">
+          <div className="relative min-h-[180px] sm:w-1/2 flex-1" title="Clique em uma fatia para ver os dados">
+            <div ref={chartRef} className="w-full h-full absolute inset-0" />
+          </div>
+          <div className="sm:w-1/2 flex flex-col justify-center gap-2 overflow-y-auto">
+            {data.map((item, index) => {
+              const total = data.reduce((sum, row) => sum + row.value, 0);
+              const max = Math.max(1, ...data.map(row => row.value));
+              return <button key={item.name} type="button" className="text-left rounded p-1 hover:bg-surface-subtle" onClick={() => {
+                setModalData(item.data ?? []); setModalTitle(`${label} - ${item.name}`); setIsModalOpen(true);
+              }}>
+                <span className="flex justify-between gap-2 text-xs text-content"><span>{item.name}</span><strong>{item.value} ({(total ? item.value / total * 100 : 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)</strong></span>
+                <span className="block h-2 mt-1 rounded bg-surface-subtle"><span className="block h-full rounded" style={{ width: `${item.value / max * 100}%`, backgroundColor: palette[index % palette.length] }} /></span>
+              </button>;
+            })}
+            {data.every(item => item.value === 0) && <p className="text-sm text-content-muted">Nenhum imóvel no período.</p>}
+          </div>
         </div>
       </div>
 

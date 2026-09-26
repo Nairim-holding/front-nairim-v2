@@ -28,7 +28,10 @@ export const AUTH_COOKIE = 'authToken';
 /** Nome do cookie de slug da empresa (para redirecionos com slug visível). */
 export const SLUG_COOKIE = 'company_slug';
 
-/** Papéis considerados administradores (idêntico ao backend). */
+/** Papéis considerados administradores (idêntico ao backend).
+ *  MANAGER (Gestor) não entra aqui por decisão de produto: diferente de
+ *  ADMIN, ele nunca tem bypass automático — depende sempre de um grupo de
+ *  permissões configurado, igual ao DEFAULT. */
 const ADMIN_ROLES = ['administrador', 'ADMIN', 'SUPER_ADMIN'];
 const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
 

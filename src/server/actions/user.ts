@@ -1,5 +1,7 @@
 'use server';
 
+import { runWithTenant } from '@/infra/database/tenant-context';
+import { getCompanyAccessUser, assertCompanyAccessGrant } from '@/infra/auth/company-access';
 import { userUseCases } from '@/infra/factories/user-factory';
 import { authUseCases } from '@/infra/factories/auth-factory';
 import {
@@ -34,6 +36,7 @@ export async function createUserAction(input: Record<string, unknown>): Promise<
       if (data.role && data.role !== 'DEFAULT' && session.role !== 'SUPER_ADMIN') {
         throw new ForbiddenError('Apenas super administrador pode atribuir papéis administrativos.');
       }
+      await assertCompanyAccessGrant(session, data);
       await assertUserGroupInTenant(data.user_group_id);
       return userUseCases.create.execute({ ...data, created_by: session.id });
     });
@@ -52,6 +55,7 @@ export async function updateUserAction(id: string, input: Record<string, unknown
       if (data.role !== undefined && session.role !== 'SUPER_ADMIN') {
         throw new ForbiddenError('Apenas super administrador pode alterar a role');
       }
+      await assertCompanyAccessGrant(session, data);
       await assertUserGroupInTenant(data.user_group_id);
       return userUseCases.update.execute(id, { ...data, updated_by: session.id });
     });
@@ -84,9 +88,10 @@ export async function changeUserPasswordAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const data = changeUserPasswordSchema.parse(input);
-    await withTenant((session) => {
+    await withTenant(async (session) => {
       if (session.id !== id) throw new ForbiddenError('Você só pode trocar a própria senha.');
-      return authUseCases.changePassword.execute({ userId: id, ...data });
+      const identity = await getCompanyAccessUser(session.id);
+      return runWithTenant(identity.company_id, () => authUseCases.changePassword.execute({ userId: id, ...data }));
     });
     return null;
   });

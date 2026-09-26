@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { getTokenMaxAgeSeconds } from '@/utils/jwt';
-import { listCompaniesAction, switchCompanyAction } from '@/server/actions/company';
+import { listAccessibleCompaniesAction, switchCompanyAction } from '@/server/actions/company';
 import Image from 'next/image';
 
 interface Company {
@@ -79,10 +79,10 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
 
   // Busca a lista de empresas — listaCompaniesAction retorna formato flat { data: [...], count }
   const fetchCompanies = useCallback(() => {
-    listCompaniesAction({ limit: 100 })
+    listAccessibleCompaniesAction()
       .then(r => {
         if (!r.ok) { setCompanies([]); return; }
-        const list = Array.isArray(r.data?.data) ? (r.data.data as unknown as Company[]) : [];
+        const list = Array.isArray(r.data) ? (r.data as Company[]) : [];
         setCompanies(list);
       })
       .catch(() => {});
@@ -113,8 +113,7 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
     setSwitching(slug);
 
     // Atualiza o slug imediatamente para refletir na UI antes do refresh
-    setCurrentSlug(slug);
-    document.cookie = `company_slug=${slug}; path=/; SameSite=Lax; max-age=7200`;
+
 
     try {
       const result = await switchCompanyAction(slug);
@@ -195,7 +194,7 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
             )}
             {companies.map(c => {
               const label = c.branding?.trade_name ?? c.branding?.company_name ?? c.name;
-              const isActive = c.slug === currentSlug;
+              const isActive = c.id === currentCompany?.id;
               const isLoading = switching === c.slug;
               return (
                 <li key={c.id}>
@@ -220,7 +219,7 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
             })}
           </ul>
 
-          <div className="border-t border-ui-border-soft py-1">
+          {user?.role === 'SUPER_ADMIN' && <div className="border-t border-ui-border-soft py-1">
             <button
               onClick={() => { setDropdownOpen(false); onNavigate?.(); router.push('/dashboard/empresas/cadastrar'); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-content-muted hover:bg-surface-subtle transition-colors duration-150"
@@ -228,7 +227,7 @@ export default function CompanySwitcher({ isOpen, onNavigate }: CompanySwitcherP
               <Plus size={14} />
               <span>Nova empresa</span>
             </button>
-          </div>
+          </div>}
         </div>
       )}
     </div>

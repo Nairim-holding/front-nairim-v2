@@ -162,7 +162,7 @@ export function buildPropertySteps({
           type: 'select',
           required: true,
           disabled: readOnly || hasActiveLease,
-          options: [{ label: 'Disponível', value: 'AVAILABLE' }, { label: 'Ocupado', value: 'OCCUPIED' }],
+          options: [{ label: 'Disponível', value: 'AVAILABLE' }, { label: 'Ocupado', value: 'OCCUPIED' }, { label: 'Vendido', value: 'SOLD' }],
           icon: <Key size={20} />,
           renderBottom: hasActiveLease
             ? () => (
@@ -173,8 +173,6 @@ export function buildPropertySteps({
             : undefined,
           className: 'relative group',
         },
-        { field: 'sale_date', label: 'Data da Venda', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
-        { field: 'sale_value', label: 'Valor de Venda', type: 'text', placeholder: 'R$ 600.000,00', mask: 'money', icon: <Dollar size={20} />, className: 'col-span-full', ...ro },
         { field: 'extra_charges', label: 'Encargos / Custos Extras', type: 'text', placeholder: 'R$ 0,00', mask: 'money', icon: <Dollar size={20} />, className: 'col-span-full', ...ro },
         { field: 'values_notes', label: 'Observações', type: 'textarea', placeholder: 'Anotações adicionais sobre os valores', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
       ],
@@ -213,13 +211,23 @@ export function buildPropertySteps({
     },
   ];
 
+  steps.push({
+    title: 'Dados da Venda', icon: <DollarSign size={20} />,
+    hidden: (values) => values.status !== 'SOLD',
+    fields: [
+      { field: 'sale_date', label: 'Data da Venda', type: 'date', required: true, hidden: (values) => values.status !== 'SOLD', icon: <Calendar size={20} />, ...ro },
+      { field: 'sale_buyer', label: 'Comprador', type: 'text', required: true, hidden: (values) => values.status !== 'SOLD', maxLength: 250, icon: <User size={20} />, ...ro },
+      { field: 'sale_value', label: 'Valor da Venda', type: 'text', required: true, hidden: (values) => values.status !== 'SOLD', mask: 'money', icon: <Dollar size={20} />, ...ro },
+      { field: 'arquivosVenda', label: 'Mídias e documentos da venda', type: 'file', accept: 'image/*,video/mp4,video/webm,.pdf', multiple: true, maxFiles: 30, textButton: 'Selecionar arquivos da venda', className: 'col-span-full', ...ro },
+    ],
+  });
   return steps;
 }
 
 export function validateStep(steps: FormStep[], stepIndex: number, data: Record<string, unknown>): boolean {
   const fields = steps[stepIndex]?.fields ?? [];
   return fields.every((field) => {
-    if (!field.required || field.hidden || field.disabled) return true;
+    if (!field.required || (typeof field.hidden === 'function' ? field.hidden(data) : field.hidden) || field.disabled) return true;
     const value = data[field.field];
     return value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '');
   });

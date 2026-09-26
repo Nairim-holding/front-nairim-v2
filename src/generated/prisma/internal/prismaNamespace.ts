@@ -443,7 +443,8 @@ export const ModelName = {
   AdjustmentIndex: 'AdjustmentIndex',
   AdjustmentIndexValue: 'AdjustmentIndexValue',
   Holiday: 'Holiday',
-  LeaseNotification: 'LeaseNotification'
+  LeaseNotification: 'LeaseNotification',
+  LeaseExpiryReminder: 'LeaseExpiryReminder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -459,7 +460,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "companyBranding" | "agency" | "property" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification"
+    modelProps: "company" | "companyBranding" | "agency" | "property" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3941,6 +3942,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    LeaseExpiryReminder: {
+      payload: Prisma.$LeaseExpiryReminderPayload<ExtArgs>
+      fields: Prisma.LeaseExpiryReminderFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LeaseExpiryReminderFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LeaseExpiryReminderFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        findFirst: {
+          args: Prisma.LeaseExpiryReminderFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LeaseExpiryReminderFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        findMany: {
+          args: Prisma.LeaseExpiryReminderFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>[]
+        }
+        create: {
+          args: Prisma.LeaseExpiryReminderCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        createMany: {
+          args: Prisma.LeaseExpiryReminderCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LeaseExpiryReminderCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>[]
+        }
+        delete: {
+          args: Prisma.LeaseExpiryReminderDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        update: {
+          args: Prisma.LeaseExpiryReminderUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        deleteMany: {
+          args: Prisma.LeaseExpiryReminderDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LeaseExpiryReminderUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LeaseExpiryReminderUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>[]
+        }
+        upsert: {
+          args: Prisma.LeaseExpiryReminderUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeaseExpiryReminderPayload>
+        }
+        aggregate: {
+          args: Prisma.LeaseExpiryReminderAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLeaseExpiryReminder>
+        }
+        groupBy: {
+          args: Prisma.LeaseExpiryReminderGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeaseExpiryReminderGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LeaseExpiryReminderCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeaseExpiryReminderCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4135,6 +4210,8 @@ export const UserScalarFieldEnum = {
   created_at: 'created_at',
   updated_at: 'updated_at',
   deleted_at: 'deleted_at',
+  all_companies_access: 'all_companies_access',
+  allowed_company_ids: 'allowed_company_ids',
   user_group_id: 'user_group_id',
   is_active: 'is_active',
   photo_url: 'photo_url',
@@ -4371,6 +4448,7 @@ export const PropertyValueScalarFieldEnum = {
   deleted_at: 'deleted_at',
   extra_charges: 'extra_charges',
   sale_value: 'sale_value',
+  sale_buyer: 'sale_buyer',
   sale_date: 'sale_date',
   purchase_date: 'purchase_date'
 } as const
@@ -4875,6 +4953,20 @@ export const LeaseNotificationScalarFieldEnum = {
 } as const
 
 export type LeaseNotificationScalarFieldEnum = (typeof LeaseNotificationScalarFieldEnum)[keyof typeof LeaseNotificationScalarFieldEnum]
+
+
+export const LeaseExpiryReminderScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  user_id: 'user_id',
+  lease_id: 'lease_id',
+  end_date: 'end_date',
+  shown_days: 'shown_days',
+  acknowledged_on: 'acknowledged_on',
+  dismissed: 'dismissed'
+} as const
+
+export type LeaseExpiryReminderScalarFieldEnum = (typeof LeaseExpiryReminderScalarFieldEnum)[keyof typeof LeaseExpiryReminderScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -5485,6 +5577,7 @@ export type GlobalOmitConfig = {
   adjustmentIndexValue?: Prisma.AdjustmentIndexValueOmit
   holiday?: Prisma.HolidayOmit
   leaseNotification?: Prisma.LeaseNotificationOmit
+  leaseExpiryReminder?: Prisma.LeaseExpiryReminderOmit
 }
 
 /* Types for Logging */

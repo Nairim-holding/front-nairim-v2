@@ -21,6 +21,7 @@ import {
   Phone,
 } from 'lucide-react';
 import {
+  companyAccessFields,
   SELECT_W,
   PASSWORD_PATTERN,
   PasswordHelpers,
@@ -52,7 +53,7 @@ export default function EditarAdministradorPage() {
   const steps: FormStep[] = useMemo(
     () => [
       {
-        title: 'Dados do Administrador',
+        title: 'Dados do Usuário',
         icon: <User size={20} />,
         fields: [
           {
@@ -60,7 +61,7 @@ export default function EditarAdministradorPage() {
             label: 'Nome',
             type: 'text',
             required: true,
-            placeholder: 'Nome do administrador',
+            placeholder: 'Nome do usuário',
             autoFocus: true,
             icon: <UserIcon size={20} />,
           },
@@ -127,6 +128,7 @@ export default function EditarAdministradorPage() {
         icon: <ShieldCheck size={20} />,
         fields: [
           activeField(),
+          ...(isSuperAdmin ? companyAccessFields(user?.company_id) : []),
           {
             field: 'password',
             label: 'Nova Senha',
@@ -190,6 +192,8 @@ export default function EditarAdministradorPage() {
                   icon: <BadgeCheck size={20} />,
                   className: SELECT_W,
                   options: [
+                    { label: 'Usuário', value: 'DEFAULT' },
+                    { label: 'Gestor', value: 'MANAGER' },
                     { label: 'Administrador', value: 'ADMIN' },
                     { label: 'Super Administrador', value: 'SUPER_ADMIN' },
                   ],
@@ -201,7 +205,7 @@ export default function EditarAdministradorPage() {
         ],
       },
     ],
-    [id, isSuperAdmin, userGroupOptions]
+    [id, isSuperAdmin, userGroupOptions, user?.company_id]
   );
 
   // `useCallback`: está nas dependências do useEffect de fetch do DynamicForm
@@ -219,7 +223,7 @@ export default function EditarAdministradorPage() {
       password_confirm: '',
       user_group_id: userData.user_group_id || '',
       ...profileFormValues(userData),
-      ...(isSuperAdmin && { role: userData.role || 'ADMIN' }),
+      ...(isSuperAdmin && { role: userData.role || 'ADMIN', all_companies_access: userData.all_companies_access === true, allowed_company_ids: userData.allowed_company_ids ?? [] }),
     };
   }, [isSuperAdmin]);
 
@@ -279,14 +283,14 @@ export default function EditarAdministradorPage() {
       }
     }
 
-    showMessage('Administrador atualizado com sucesso!', 'success');
+    showMessage('Usuário atualizado com sucesso!', 'success');
     router.push('/dashboard/administradores');
   };
 
   return (
     <DynamicForm
       resource="users"
-      title="Administrador"
+      title="Usuário"
       basePath="/dashboard/administradores"
       mode="edit"
       id={id}

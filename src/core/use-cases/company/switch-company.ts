@@ -1,3 +1,4 @@
+import { canAccessCompany } from '@/core/entities/company-access';
 import type { CompaniesRepository } from '@/core/repositories/companies-repository';
 import type { TokenSigner } from '@/core/cryptography/token-signer';
 import { ValidationError, NotFoundError, ForbiddenError } from '@/core/errors/domain-errors';
@@ -8,6 +9,9 @@ export interface SwitchCompanyUser {
   name: string;
   email: string;
   role: string;
+  company_id?: string;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
 }
 
 /** Saída do switch (novo token + contexto de empresa). */
@@ -32,9 +36,6 @@ export class SwitchCompanyUseCase {
   ) {}
 
   async execute(currentUser: SwitchCompanyUser, slug: string): Promise<SwitchCompanyOutput> {
-    if (currentUser.role !== 'SUPER_ADMIN') {
-      throw new ForbiddenError('Apenas super administrador pode trocar de empresa.');
-    }
     if (!slug?.trim()) throw new ValidationError('"slug" é obrigatório');
 
     // Company não é tenant-scoped → busca ignora o filtro de empresa. Exige ativa.
@@ -42,6 +43,7 @@ export class SwitchCompanyUseCase {
     if (!target?.company) throw new NotFoundError('Empresa não encontrada ou inativa');
 
     const company = target.company;
+    if (!canAccessCompany(currentUser, company.id)) throw new ForbiddenError('Você não tem acesso a esta empresa.');
     const token = this.tokenSigner.sign(
       {
         id: currentUser.id,

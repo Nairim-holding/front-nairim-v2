@@ -5,6 +5,7 @@ import { useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { FormStep } from '@/types/types';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { useUserGroupOptions } from '@/hooks/useUserGroupOptions';
 import { createUserAction, uploadUserPhotoAction, setUserScheduleAction } from '@/server/actions/user';
@@ -20,6 +21,7 @@ import {
   Phone,
 } from 'lucide-react';
 import {
+  companyAccessFields,
   SELECT_W,
   PASSWORD_PATTERN,
   PasswordHelpers,
@@ -35,6 +37,8 @@ import {
 export default function CadastrarAdministradorPage() {
   const { showMessage } = useMessageContext();
   const router = useRouter();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const { options: userGroupOptions } = useUserGroupOptions();
   // As rotas de foto e agenda são /users/:id/..., e no cadastro ainda não há
   // id. Os valores escolhidos ficam aqui e sobem logo depois de criar o usuário.
@@ -44,7 +48,7 @@ export default function CadastrarAdministradorPage() {
   const steps: FormStep[] = useMemo(
     () => [
       {
-        title: 'Dados do Administrador',
+        title: 'Dados do Usuário',
         icon: <User size={20} />,
         fields: [
           {
@@ -52,7 +56,7 @@ export default function CadastrarAdministradorPage() {
             label: 'Nome',
             type: 'text',
             required: true,
-            placeholder: 'Nome do administrador',
+            placeholder: 'Nome do usuário',
             autoFocus: true,
             icon: <UserIcon size={20} />,
           },
@@ -119,6 +123,10 @@ export default function CadastrarAdministradorPage() {
         icon: <ShieldCheck size={20} />,
         fields: [
           activeField(),
+          ...(isSuperAdmin ? companyAccessFields(user?.company_id) : []),
+          { field: 'role', label: 'Papel', type: 'select', defaultValue: 'DEFAULT', options: isSuperAdmin ? [
+            { label: 'Usuário', value: 'DEFAULT' }, { label: 'Gestor', value: 'MANAGER' }, { label: 'Administrador', value: 'ADMIN' },
+          ] : [{ label: 'Usuário', value: 'DEFAULT' }] },
           {
             field: 'password',
             label: 'Senha',
@@ -171,7 +179,7 @@ export default function CadastrarAdministradorPage() {
         ],
       },
     ],
-    [userGroupOptions]
+    [userGroupOptions, isSuperAdmin, user?.company_id]
   );
 
   const transformResponse = (data: any) => {
@@ -189,7 +197,7 @@ export default function CadastrarAdministradorPage() {
     return {
       ...rest,
       ...profilePayload(data),
-      role: 'ADMIN',
+      role: data.role || 'DEFAULT',
     };
   };
 
@@ -245,14 +253,14 @@ export default function CadastrarAdministradorPage() {
       }
     }
 
-    showMessage('Administrador criado com sucesso!', 'success');
+    showMessage('Usuário criado com sucesso!', 'success');
     router.push('/dashboard/administradores');
   };
 
   return (
     <DynamicForm
       resource="users"
-      title="Administrador"
+      title="Usuário"
       basePath="/dashboard/administradores"
       mode="create"
       draftKey="form:users:create"

@@ -1,17 +1,43 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { FileSpreadsheet, FileText, Printer, RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FileSpreadsheet, FileText, Printer, RefreshCw, RotateCcw } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { getLeaseReportAction } from '@/server/actions/lease-report';
+import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/server/actions/user-preferences';
 import { exportTableToExcel, exportTableToPDF, printReportElement } from '@/lib/reports/exportHelpers';
-import { buildRedemptionRows, type InvestmentRedemptionInput, type LeaseReportResult, type ReferenceMonth } from '@/core/entities/lease-report';
+import { buildRedemptionRows, type InvestmentRedemptionInput, type LeaseReportResult, type LeaseReportRow, type ReferenceMonth } from '@/core/entities/lease-report';
 import MonthSelector from './_components/MonthSelector';
 import LeaseReportTable from './_components/LeaseReportTable';
 import TaxPanels from './_components/TaxPanels';
 import { currentReferenceMonth, describeSelectedMonths, exportFilename, selectionDateRange } from './_lib/referencePeriod';
+import { buildLeaseReportSummaryHTML, LEASE_REPORT_TABLE_STYLES } from './_lib/printLayout';
+
+/** Chave de `resource` reaproveitando o mecanismo genérico de UserColumnPreference. */
+const ROW_ORDER_RESOURCE = 'lease-reports-row-order';
+
+/**
+ * O schema de `saveColumnPreferencesAction` exige array não vazio — não dá
+ * para persistir "sem ordem customizada" como `[]`. Este marcador único
+ * representa esse estado; nunca colide com um `lease_id` de verdade (uuid).
+ */
+const NO_CUSTOM_ORDER = '__default__';
+
+/**
+ * Aplica a ordem salva às linhas do relatório: locações da ordem salva
+ * primeiro (na sequência salva), e o restante (locações novas, fora da
+ * ordem salva) depois, na ordem que já vinha do servidor (alfabética).
+ */
+function applyRowOrder(rows: LeaseReportRow[], order: string[]): LeaseReportRow[] {
+  if (order.length === 0) return rows;
+  const byId = new Map(rows.map((row) => [row.lease_id, row]));
+  const ordered = order.map((id) => byId.get(id)).filter((row): row is LeaseReportRow => !!row);
+  const orderedIds = new Set(ordered.map((row) => row.lease_id));
+  const rest = rows.filter((row) => !orderedIds.has(row.lease_id));
+  return [...ordered, ...rest];
+}
 
 /**
  * Tela do Relatório de Locações (menu Locações > Relatórios).
@@ -31,9 +57,42 @@ export default function LeaseReportsPageContent() {
   const [redemptions, setRedemptions] = useState<InvestmentRedemptionInput[]>([]);
   const [data, setData] = useState<LeaseReportResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [rowOrder, setRowOrder] = useState<string[]>([]);
 
   const tableRef = useRef<HTMLTableElement>(null);
   const panelsRef = useRef<HTMLDivElement>(null);
+
+  // Ordem salva pelo usuário (arrastar-e-soltar na tabela) — carregada uma vez;
+  // reaproveita o mecanismo genérico de UserColumnPreference (columnOrder),
+  // já que este app não tem mais backend próprio para uma tabela dedicada.
+  useEffect(() => {
+    getColumnPreferencesAction(ROW_ORDER_RESOURCE).then((result) => {
+      if (!result.ok) return;
+      const saved = result.data.columnOrder;
+      setRowOrder(saved.length === 1 && saved[0] === NO_CUSTOM_ORDER ? [] : saved);
+    });
+  }, []);
+
+  const dataOrdered = useMemo<LeaseReportResult | null>(() => {
+    if (!data) return null;
+    return { ...data, rows: applyRowOrder(data.rows, rowOrder) };
+  }, [data, rowOrder]);
+
+  const persistRowOrder = useCallback((columnOrder: string[]) => {
+    saveColumnPreferencesAction({ resource: ROW_ORDER_RESOURCE, columnOrder, columnWidths: {} }).then((result) => {
+      if (!result.ok) showMessage('Não foi possível salvar a ordem dos imóveis.', 'error');
+    });
+  }, [showMessage]);
+
+  const handleReorder = useCallback((orderedLeaseIds: string[]) => {
+    setRowOrder(orderedLeaseIds);
+    persistRowOrder(orderedLeaseIds);
+  }, [persistRowOrder]);
+
+  const handleResetOrder = useCallback(() => {
+    setRowOrder([]);
+    persistRowOrder([NO_CUSTOM_ORDER]);
+  }, [persistRowOrder]);
 
   const periodLabel = useMemo(() => describeSelectedMonths(months), [months]);
 
@@ -69,16 +128,25 @@ export default function LeaseReportsPageContent() {
 
   // O quadro de Resgate é calculado aqui: rendimento e IR retido são digitados
   // na tela, então recalcular no servidor a cada tecla só custaria round-trip.
+  // Parte de `dataOrdered` (não de `data`) para que a tabela impressa/exportada
+  // saia na ordem que o usuário arrastou na tela.
   const dataWithRedemptions = useMemo(() => {
-    if (!data) return null;
-    return { ...data, redemptionRows: buildRedemptionRows(data.quarters, redemptions) };
-  }, [data, redemptions]);
+    if (!dataOrdered) return null;
+    return { ...dataOrdered, redemptionRows: buildRedemptionRows(dataOrdered.quarters, redemptions) };
+  }, [dataOrdered, redemptions]);
 
   const filename = useMemo(() => exportFilename(months), [months]);
 
   const handlePrint = useCallback(() => {
-    printReportElement(tableRef.current, printContext, panelsRef.current);
-  }, [printContext]);
+    if (!dataWithRedemptions) return;
+    // Resumo fiscal impresso reproduz o modelo em planilha do cliente
+    // (ver `printLayout.ts`), não o grid de cards do `panelsRef` da tela.
+    const rawSummaryHTML = buildLeaseReportSummaryHTML(dataWithRedemptions, dataWithRedemptions.redemptionRows);
+    printReportElement(tableRef.current, printContext, panelsRef.current, {
+      rawSummaryHTML,
+      extraStyles: LEASE_REPORT_TABLE_STYLES,
+    });
+  }, [printContext, dataWithRedemptions]);
 
   const handleExportExcel = useCallback(() => {
     if (!exportTableToExcel(tableRef.current, filename)) {
@@ -160,9 +228,22 @@ export default function LeaseReportsPageContent() {
             </details>
           )}
           <div className="rounded-xl border border-ui-border-soft bg-surface">
-            <div className="px-3 py-2 border-b border-ui-border-soft">
-              <h2 className="text-sm font-semibold text-content">Locações</h2>
-              <p className="text-[11px] text-content-muted">{periodLabel}</p>
+            <div className="px-3 py-2 border-b border-ui-border-soft flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-semibold text-content">Locações</h2>
+                <p className="text-[11px] text-content-muted">{periodLabel}</p>
+              </div>
+              {!isLoading && !!dataWithRedemptions?.rows.length && rowOrder.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetOrder}
+                  title="Restaurar ordem padrão (alfabética)"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-content-secondary hover:bg-surface-subtle hover:text-content transition-colors"
+                >
+                  <RotateCcw size={13} />
+                  Restaurar ordem padrão
+                </button>
+              )}
             </div>
 
             {isLoading && (
@@ -177,7 +258,14 @@ export default function LeaseReportsPageContent() {
               </div>
             )}
 
-            {!isLoading && dataWithRedemptions && <LeaseReportTable ref={tableRef} data={dataWithRedemptions} />}
+            {!isLoading && dataWithRedemptions && (
+              <>
+                {dataWithRedemptions.rows.length > 1 && (
+                  <p className="px-3 pt-2 text-[11px] text-content-muted">Arraste pela alça à esquerda para reordenar os imóveis.</p>
+                )}
+                <LeaseReportTable ref={tableRef} data={dataWithRedemptions} onReorder={handleReorder} />
+              </>
+            )}
           </div>
 
           {!isLoading && dataWithRedemptions && (

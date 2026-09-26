@@ -228,11 +228,15 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
       title="TEMPO DE LOCAÇÃO"
       subtitle={`${formatPeriodLabel(startDate, endDate)} • ${total} ${total === 1 ? 'locação' : 'locações'}`}
       detailData={detailData}
+      detailForPoint={point => {
+        const bucket = buckets.find(bucket => bucket.shortLabel === point.name || bucket.label === point.name);
+        return detailData.filter(row => row.bucketLabel === bucket?.label);
+      }}
       detailColumns={detailColumns}
       detailGroupBy={detailGroupBy}
       detailTotalLabel="locações"
     >
-      {({ isFullscreen }) =>
+      {({ isFullscreen, openDetails }) =>
         !isLoading && total === 0 ? (
           <div className="flex items-center justify-center h-full text-content-muted text-sm text-center px-4">
             Nenhuma locação vigente no período selecionado.
@@ -270,7 +274,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
                     const barWidthPercent = maxCount > 0 ? Math.max((b.count / maxCount) * 100, b.count > 0 ? 10 : 2) : 2;
 
                     return (
-                      <div key={b.key} className="flex items-center gap-3">
+                      <div key={b.key} role="button" tabIndex={0} onClick={() => openDetails({ dataIndex: index, name: b.label })} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openDetails({ dataIndex: index, name: b.label }); } }} className="flex items-center gap-3">
                         {/* Barra horizontal colorida proporcional */}
                         <div className="w-[50%] flex items-center justify-end">
                           <div
@@ -321,7 +325,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
                 const barWidthPercent = maxCount > 0 ? Math.max((b.count / maxCount) * 100, b.count > 0 ? 16 : 3) : 3;
 
                 return (
-                  <div key={b.key} className="flex items-center gap-2 min-w-0">
+                  <div key={b.key} role="button" tabIndex={0} onClick={() => openDetails({ dataIndex: index, name: b.label })} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openDetails({ dataIndex: index, name: b.label }); } }} className="flex items-center gap-2 min-w-0">
                     {/* Barra horizontal proporcional com valor alinhado */}
                     <div className="w-[45%] flex items-center justify-end">
                       <div

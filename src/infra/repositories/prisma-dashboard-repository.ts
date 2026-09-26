@@ -319,8 +319,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const allDetails = properties.map((p) => ({
       id: p.id,
       title: p.title,
-      type: p.type?.description,
-      status: p.values[0]?.status,
+      type: p.type?.description || 'Outros',
+      status: p.values[0]?.status ?? 'AVAILABLE',
       rentalValue: toNum(p.values[0]?.rental_value),
       areaTotal: p.area_total,
       documentCount: p.documents.length,
@@ -336,7 +336,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
           id: p.id,
           title: p.title,
           documentCount: p.documents.length,
-          type: p.type?.description,
+          type: p.type?.description || 'Outros',
           missingDocuments: missing,
           isComplete,
         };
@@ -354,43 +354,50 @@ export class PrismaDashboardRepository implements DashboardRepository {
         id: p.id,
         title: p.title,
         saleValue: toNum(p.values[0]?.sale_value),
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
       }));
 
     const available = properties
-      .filter((p) => p.values[0]?.status === 'AVAILABLE')
+      .filter((p) => (p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE')
       .map((p) => ({
         id: p.id,
         title: p.title,
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
         areaTotal: p.area_total,
         monthsVacant: calculateVacancyMonths(p.leases, endDate),
       }));
     const occupied = properties
-      .filter((p) => p.values[0]?.status !== 'AVAILABLE')
+      .filter((p) => p.values[0]?.status === 'OCCUPIED')
       .map((p) => ({
         id: p.id,
         title: p.title,
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
-        status: p.values[0]?.status,
+        status: p.values[0]?.status ?? 'AVAILABLE',
       }));
 
-    const currentVacRate = properties.length > 0 ? (available.length / properties.length) * 100 : 0;
+    const rentableCount = properties.filter(p => p.values[0]?.status !== 'SOLD').length;
+    const prevRentableCount = prevProperties.filter(p => p.values[0]?.status !== 'SOLD').length;
+    const propertiesByType: ChartData[] = [...new Set(allDetails.map(p => p.type))].map(name => ({ name, value: allDetails.filter(p => p.type === name).length, data: allDetails.filter(p => p.type === name) }));
+    const propertiesByStatus: ChartData[] = [
+      { name: 'Disponíveis', status: 'AVAILABLE' }, { name: 'Ocupados', status: 'OCCUPIED' }, { name: 'Vendidos', status: 'SOLD' },
+    ].map(({ name, status }) => ({ name, value: allDetails.filter(p => p.status === status).length, data: allDetails.filter(p => p.status === status) }));
+
+    const currentVacRate = rentableCount > 0 ? (available.length / rentableCount) * 100 : 0;
     const prevVacRate =
-      prevProperties.length > 0
-        ? (prevProperties.filter((p) => p.values[0]?.status === 'AVAILABLE').length /
-            prevProperties.length) *
+      prevRentableCount > 0
+        ? (prevProperties.filter((p) => (p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE').length /
+            prevRentableCount) *
           100
         : 0;
 
-    const currentOccRate = properties.length > 0 ? (occupied.length / properties.length) * 100 : 0;
+    const currentOccRate = rentableCount > 0 ? (occupied.length / rentableCount) * 100 : 0;
     const prevOccRate =
-      prevProperties.length > 0
-        ? (prevProperties.filter((p) => p.values[0]?.status !== 'AVAILABLE').length /
-            prevProperties.length) *
+      prevRentableCount > 0
+        ? (prevProperties.filter((p) => p.values[0]?.status === 'OCCUPIED').length /
+            prevRentableCount) *
           100
         : 0;
 
@@ -407,7 +414,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       properties.reduce(
         (acc: Record<string, number>, p) => {
           const type = p.type?.description || 'Outros';
-          if (p.values[0]?.status === 'AVAILABLE') acc[type] = (acc[type] || 0) + 1;
+          if ((p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE') acc[type] = (acc[type] || 0) + 1;
           return acc;
         },
         {},
@@ -431,6 +438,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
         saleValueData,
       ),
       availablePropertiesByType,
+      propertiesByType,
+      propertiesByStatus,
       vacancyRate: calcVariation(currentVacRate, prevVacRate, available),
       occupationRate: calcVariation(currentOccRate, prevOccRate, occupied),
       physicalVacancy: calcVariation(
@@ -449,16 +458,16 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
-    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount] =
+    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount, prevTotalProperties] =
       await Promise.all([
         prisma.owner.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             properties: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 type: true,
                 values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
@@ -468,19 +477,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.owner.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
           },
         }),
 
         prisma.tenant.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             leases: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 property: {
                   include: {
@@ -494,19 +503,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.tenant.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
           },
         }),
 
         prisma.agency.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             properties: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 type: true,
                 values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
@@ -516,10 +525,14 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.agency.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
           },
         }),
+        prisma.property.count({ where: {
+          created_at: { lte: period.previous.end }, deleted_at: null,
+          owner: { deleted_at: null, created_at: { lte: period.previous.end } },
+        } }),
       ]);
 
     const ownersDetails = owners.map((o) => ({
@@ -561,9 +574,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const totalProperties = owners.reduce((acc, o) => acc + o.properties.length, 0);
     const propertiesPerOwnerVal = owners.length > 0 ? totalProperties / owners.length : 0;
 
-    const prevTotalPropertiesEstimate = prevOwnersCount * propertiesPerOwnerVal;
     const prevPropertiesPerOwnerVal =
-      prevOwnersCount > 0 ? prevTotalPropertiesEstimate / prevOwnersCount : 0;
+      prevOwnersCount > 0 ? prevTotalProperties / prevOwnersCount : 0;
 
     return {
       ownersTotal: calcVariation(owners.length, prevOwnersCount, ownersDetails),

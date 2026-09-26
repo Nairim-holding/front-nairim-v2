@@ -212,7 +212,7 @@ export type UserDashboardLayoutOrderByWithRelationInput = {
 
 export type UserDashboardLayoutWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  user_id_resource?: Prisma.UserDashboardLayoutUser_idResourceCompoundUniqueInput
+  company_id_user_id_resource?: Prisma.UserDashboardLayoutCompany_idUser_idResourceCompoundUniqueInput
   AND?: Prisma.UserDashboardLayoutWhereInput | Prisma.UserDashboardLayoutWhereInput[]
   OR?: Prisma.UserDashboardLayoutWhereInput[]
   NOT?: Prisma.UserDashboardLayoutWhereInput | Prisma.UserDashboardLayoutWhereInput[]
@@ -224,7 +224,7 @@ export type UserDashboardLayoutWhereUniqueInput = Prisma.AtLeast<{
   updated_at?: Prisma.DateTimeFilter<"UserDashboardLayout"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
-}, "id" | "user_id_resource">
+}, "id" | "company_id_user_id_resource">
 
 export type UserDashboardLayoutOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -330,7 +330,8 @@ export type UserDashboardLayoutOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type UserDashboardLayoutUser_idResourceCompoundUniqueInput = {
+export type UserDashboardLayoutCompany_idUser_idResourceCompoundUniqueInput = {
+  company_id: string
   user_id: string
   resource: string
 }

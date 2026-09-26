@@ -222,7 +222,7 @@ export type UserColumnPreferenceOrderByWithRelationInput = {
 
 export type UserColumnPreferenceWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  user_id_resource?: Prisma.UserColumnPreferenceUser_idResourceCompoundUniqueInput
+  company_id_user_id_resource?: Prisma.UserColumnPreferenceCompany_idUser_idResourceCompoundUniqueInput
   AND?: Prisma.UserColumnPreferenceWhereInput | Prisma.UserColumnPreferenceWhereInput[]
   OR?: Prisma.UserColumnPreferenceWhereInput[]
   NOT?: Prisma.UserColumnPreferenceWhereInput | Prisma.UserColumnPreferenceWhereInput[]
@@ -236,7 +236,7 @@ export type UserColumnPreferenceWhereUniqueInput = Prisma.AtLeast<{
   updated_at?: Prisma.DateTimeFilter<"UserColumnPreference"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
-}, "id" | "user_id_resource">
+}, "id" | "company_id_user_id_resource">
 
 export type UserColumnPreferenceOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -360,7 +360,8 @@ export type UserColumnPreferenceOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type UserColumnPreferenceUser_idResourceCompoundUniqueInput = {
+export type UserColumnPreferenceCompany_idUser_idResourceCompoundUniqueInput = {
+  company_id: string
   user_id: string
   resource: string
 }

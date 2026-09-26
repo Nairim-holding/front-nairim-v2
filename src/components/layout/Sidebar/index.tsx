@@ -155,7 +155,7 @@ export default function Aside({
         icon: PlusCircle,
         label: "Cadastrar",
         submenu: ([
-          { href: "/dashboard/administradores", icon: UserPlus, label: "Administrador", resource: resourceForHref("/dashboard/administradores") },
+          { href: "/dashboard/administradores", icon: UserPlus, label: "Usuários", resource: resourceForHref("/dashboard/administradores") },
           { href: "/dashboard/grupos-usuario", icon: Users, label: "Grupo de Usuário", resource: resourceForHref("/dashboard/grupos-usuario") },
           ...(isSuperAdmin ? [{ href: "/dashboard/empresas", icon: Briefcase, label: "Empresa", resource: resourceForHref("/dashboard/empresas") }] : []),
           { href: "/dashboard/imoveis", icon: House, label: "Imóvel", resource: resourceForHref("/dashboard/imoveis") },
@@ -288,7 +288,7 @@ export default function Aside({
           )}
         </div>
 
-        {isSuperAdmin && (
+        {user && (
           // `relative z-20`: o dropdown do switcher é absolute e precisa ficar
           // ACIMA dos irmãos seguintes (sino de locações e a nav). Sem um
           // stacking context próprio aqui, esses blocos — que vêm depois no

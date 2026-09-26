@@ -6,6 +6,7 @@ import { AlertTriangle, Bell, BellRing, Building2, ChevronRight, X } from 'lucid
 import type { LeaseOverdueSummary } from '@/server/queries/lease-overdue';
 import { getOverdueLeaseAlertsAction } from '@/server/actions/lease-overdue';
 import { formatCurrency, formatDate } from '@/utils';
+import { LeaseExpiryList, useLeaseExpiryAlerts } from './LeaseExpiryAlerts';
 import LeaseNotificationActions from './LeaseNotificationActions';
 
 const EMPTY: LeaseOverdueSummary = { items: [], total: 0, critical: 0, amount: 0 };
@@ -13,6 +14,8 @@ const EMPTY: LeaseOverdueSummary = { items: [], total: 0, critical: 0, amount: 0
 export default function LeaseOverdueBell({ placement = 'floating' }: { placement?: 'floating' | 'sidebar' }) {
   const [summary, setSummary] = useState<LeaseOverdueSummary>(EMPTY);
   const [open, setOpen] = useState(false);
+  const expiry = useLeaseExpiryAlerts(open);
+  const total = summary.total + expiry.items.length;
   const [loaded, setLoaded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -58,27 +61,27 @@ export default function LeaseOverdueBell({ placement = 'floating' }: { placement
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        aria-label={summary.total > 0 ? `${summary.total} repasses atrasados` : 'Notificações'}
+        aria-label={total > 0 ? `${total} alertas de locações` : 'Notificações'}
         aria-expanded={open}
-        className={`group flex items-center gap-2 rounded-xl border backdrop-blur-md transition-all ${placement === 'sidebar' ? 'w-full justify-start px-3 py-2.5 shadow-none text-sm font-medium' : 'h-11 px-3 shadow-md'} ${summary.total > 0 ? 'border-red-200 bg-red-50/95 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/90 dark:text-red-200' : 'border-ui-border-soft bg-surface/95 text-content-secondary hover:bg-surface-subtle'}`}
+        className={`group flex items-center gap-2 rounded-xl border backdrop-blur-md transition-all ${placement === 'sidebar' ? 'w-full justify-start px-3 py-2.5 shadow-none text-sm font-medium' : 'h-11 px-3 shadow-md'} ${total > 0 ? 'border-red-200 bg-red-50/95 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/90 dark:text-red-200' : 'border-ui-border-soft bg-surface/95 text-content-secondary hover:bg-surface-subtle'}`}
       >
         <span className="relative">
-          {summary.total > 0 ? <BellRing size={20} className="animate-[pulse_2s_ease-in-out_infinite]" /> : <Bell size={20} />}
-          {placement === 'floating' && summary.total > 0 && (
+          {total > 0 ? <BellRing size={20} className="animate-[pulse_2s_ease-in-out_infinite]" /> : <Bell size={20} />}
+          {placement === 'floating' && total > 0 && (
             <span className="absolute -right-2 -top-2 min-w-4 h-4 rounded-full bg-red-600 px-1 text-[10px] font-bold leading-4 text-white text-center">
-              {summary.total > 99 ? '99+' : summary.total}
+              {total > 99 ? '99+' : total}
             </span>
           )}
         </span>
         {placement === 'sidebar' && (
           <>
             <span className="flex-1 text-left">Alertas de locações</span>
-            <span className={`min-w-6 rounded-full px-1.5 py-0.5 text-center text-[11px] font-bold ${summary.total > 0 ? 'bg-red-600 text-white' : 'bg-surface-subtle text-content-muted'}`}>
-              {summary.total > 99 ? '99+' : summary.total}
+            <span className={`min-w-6 rounded-full px-1.5 py-0.5 text-center text-[11px] font-bold ${total > 0 ? 'bg-red-600 text-white' : 'bg-surface-subtle text-content-muted'}`}>
+              {total > 99 ? '99+' : total}
             </span>
           </>
         )}
-        {placement === 'floating' && loaded && summary.total > 0 && <span className="hidden md:inline text-xs font-semibold">{summary.total} repasses atrasados</span>}
+        {placement === 'floating' && loaded && total > 0 && <span className="hidden md:inline text-xs font-semibold">{total} alertas de locações</span>}
       </button>
 
       {open && (
@@ -89,13 +92,14 @@ export default function LeaseOverdueBell({ placement = 'floating' }: { placement
             <div>
               <h2 className="font-semibold text-content">Alertas de locações</h2>
               <p className="mt-0.5 text-xs text-content-muted">
-                {summary.total === 0 ? 'Nenhuma pendência no momento' : `${formatCurrency(summary.amount)} aguardando repasse`}
+                {total === 0 ? 'Nenhuma pendência no momento' : `${formatCurrency(summary.amount)} aguardando repasse`}
               </p>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg p-1 text-content-muted hover:bg-surface-subtle" aria-label="Fechar notificações"><X size={17} /></button>
           </div>
 
-          {summary.total === 0 ? (
+          {expiry.items.length > 0 && <div className="max-h-[40vh] overflow-y-auto border-b border-ui-border-soft"><h3 className="px-4 pt-3 text-sm font-semibold">Locações a vencer</h3><LeaseExpiryList {...expiry} /></div>}
+          {total === 0 ? (
             <div className="p-8 text-center">
               <Bell size={28} className="mx-auto mb-2 text-content-muted" />
               <p className="text-sm font-medium text-content">Tudo em dia</p>

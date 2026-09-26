@@ -28,6 +28,7 @@ const RELATION_FIELD_MAP: Record<string, { type: 'relation' | 'address'; relatio
   type_description: { type: 'relation', relationPath: 'type.description' },
   agency_trade_name: { type: 'relation', relationPath: 'agency.trade_name' },
   status: { type: 'relation', relationPath: 'values.0.status' },
+  'values.status': { type: 'relation', relationPath: 'values.0.status' },
   city: { type: 'address', relationPath: 'addresses.0.address.city' },
   state: { type: 'address', relationPath: 'addresses.0.address.state' },
   district: { type: 'address', relationPath: 'addresses.0.address.district' },
@@ -270,6 +271,7 @@ function buildValueData(values: NonNullable<CreateUnifiedPropertyData['values']>
     status: (values.status as never) || 'AVAILABLE',
     notes: values.notes,
     sale_value: Number(values.sale_value || 0),
+    sale_buyer: values.sale_buyer?.trim() || null,
     extra_charges: Number(values.extra_charges || 0),
     sale_date: values.sale_date ? new Date(values.sale_date) : null,
   };
@@ -371,7 +373,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
         { field: 'bedrooms', type: 'number', label: 'Quartos', description: 'Número de quartos', values: uniqNum(properties.map((p) => p.bedrooms)), searchable: true },
         { field: 'bathrooms', type: 'number', label: 'Banheiros', description: 'Número de banheiros', values: uniqNum(properties.map((p) => p.bathrooms)), searchable: true },
         { field: 'garage_spaces', type: 'number', label: 'Vagas na Garagem', description: 'Número de vagas na garagem', values: uniqNum(properties.map((p) => p.garage_spaces)), searchable: true },
-        { field: 'status', type: 'select', label: 'Disponibilidade', description: 'Status de ocupação do imóvel', options: [{ value: 'AVAILABLE', label: 'Disponível' }, { value: 'OCCUPIED', label: 'Ocupado' }], searchable: false },
+        { field: 'status', type: 'select', label: 'Disponibilidade', description: 'Status de ocupação do imóvel', options: [{ value: 'AVAILABLE', label: 'Disponível' }, { value: 'OCCUPIED', label: 'Ocupado' }, { value: 'SOLD', label: 'Vendido' }], searchable: false },
         // Rótulos em PT-BR: o seletor exibia "true"/"false" cru (Tarefa 1.4).
         { field: 'furnished', type: 'select', label: 'Mobiliado', description: 'Propriedade mobiliada', options: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }], searchable: false },
         { field: 'income_tax_withholding', type: 'select', label: 'IRRF', description: 'Imóvel com Imposto de Renda Retido na Fonte', options: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }], searchable: false },
@@ -527,7 +529,7 @@ export class PrismaPropertiesRepository implements PropertiesRepository {
         }
 
         if (data.values) {
-          const currentValue = await tx.propertyValue.findFirst({ where: { property_id: id, deleted_at: null } });
+          const currentValue = await tx.propertyValue.findFirst({ where: { property_id: id, deleted_at: null }, orderBy: { created_at: 'desc' } });
           const valueData = buildValueData(data.values);
           if (currentValue) {
             await tx.propertyValue.update({ where: { id: currentValue.id }, data: valueData });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildBrandingCss } from './brandingCss';
+import { buildBrandingCss, buildBrandingPreviewCss } from './brandingCss';
 import { pickBrandingFields } from '@/shared/validators/company';
 import type { CompanyBranding } from '@/types/branding';
 
@@ -28,5 +28,17 @@ describe('branding injection protection', () => {
   it('honors an explicit dark card color', () => {
     const css = buildBrandingCss({ card_color: '#ffffff', card_color_dark: '#202020' } as CompanyBranding);
     expect(css.split('body.dark')[1]).toContain('--color-bg-surface: #202020');
+  });
+  it('isolates preview overrides and selects the requested palette', () => {
+    const branding = { primary_color: '#123456', primary_color_dark: '#abcdef' };
+    const light = buildBrandingPreviewCss(branding, 'preview-one', 'light');
+    const dark = buildBrandingPreviewCss(branding, 'preview-two', 'dark');
+    expect(light).toContain('#preview-one.branding-preview');
+    expect(light).toContain('--color-brand-primary: #123456');
+    expect(dark).toContain('#preview-two.branding-preview');
+    expect(dark).toContain('--color-brand-primary: #abcdef');
+    expect(light + dark).not.toContain('body');
+    expect(buildBrandingPreviewCss(branding, 'x, body', 'light')).toBe('');
+    expect(buildBrandingPreviewCss({ primary_color: '</style><script>' }, 'safe', 'light')).toBe('');
   });
 });

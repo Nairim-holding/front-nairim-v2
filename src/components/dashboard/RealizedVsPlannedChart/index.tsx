@@ -133,7 +133,7 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
       detailData={detailData}
       detailColumns={detailColumns}
     >
-      {() => (
+      {({ openDetails }) => (
         isLoading ? (
           <div className="flex items-center justify-center h-full text-content-muted text-sm">
             Carregando...
@@ -150,6 +150,7 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
               return (
                 <RowHoverTooltip
                   key={`${item.label}-${index}`}
+                  onClick={() => openDetails({ dataIndex: index, name: item.label })}
                   className="flex items-center gap-3 text-xs"
                   title={item.label}
                   rows={[

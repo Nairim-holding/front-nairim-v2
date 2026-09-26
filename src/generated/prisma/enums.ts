@@ -31,6 +31,7 @@ export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction]
 
 export const Role = {
   DEFAULT: 'DEFAULT',
+  MANAGER: 'MANAGER',
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN'
 } as const
@@ -40,7 +41,8 @@ export type Role = (typeof Role)[keyof typeof Role]
 
 export const PropertyStatus = {
   OCCUPIED: 'OCCUPIED',
-  AVAILABLE: 'AVAILABLE'
+  AVAILABLE: 'AVAILABLE',
+  SOLD: 'SOLD'
 } as const
 
 export type PropertyStatus = (typeof PropertyStatus)[keyof typeof PropertyStatus]
@@ -52,7 +54,8 @@ export const DocumentType = {
   OTHER: 'OTHER',
   PROPERTY_RECORD: 'PROPERTY_RECORD',
   IMAGE: 'IMAGE',
-  LEASE_CONTRACT: 'LEASE_CONTRACT'
+  LEASE_CONTRACT: 'LEASE_CONTRACT',
+  PROPERTY_SALE: 'PROPERTY_SALE'
 } as const
 
 export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType]

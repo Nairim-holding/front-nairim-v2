@@ -20,6 +20,7 @@ export function parseMetric(value: string | number): number {
 
 export function parseMoney(value: string | number): number {
   if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const digits = value.toString().replace(/\D/g, '');
   if (!digits) return 0;
   return parseFloat(digits) / 100;
@@ -193,6 +194,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     sale_date:      values.sale_date ? formatLocalDate(values.sale_date) : '',
     values_notes:   values.notes ?? '',
     sale_value:     formatMoney(values.sale_value ?? ''),
+    sale_buyer:     values.sale_buyer ?? '',
     extra_charges:  formatMoney(values.extra_charges ?? ''),
     market_value:   formatMoney(values.market_value ?? ''),
 
@@ -202,7 +204,8 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     arquivosMatricula: data.documents?.filter((d: any) => d.type === 'REGISTRATION').map(mapDocument) ?? [],
     arquivosRegistro:  data.documents?.filter((d: any) => d.type === 'PROPERTY_RECORD').map(mapDocument) ?? [],
     arquivosEscritura: data.documents?.filter((d: any) => d.type === 'TITLE_DEED').map(mapDocument) ?? [],
-    arquivosOutros:    data.documents?.filter((d: any) => !['IMAGE', 'REGISTRATION', 'PROPERTY_RECORD', 'TITLE_DEED'].includes(d.type)).map(mapDocument) ?? [],
+    arquivosVenda: data.documents?.filter((d: any) => d.type === 'PROPERTY_SALE').map(mapDocument) ?? [],
+    arquivosOutros:    data.documents?.filter((d: any) => !['IMAGE', 'REGISTRATION', 'PROPERTY_RECORD', 'TITLE_DEED', 'PROPERTY_SALE'].includes(d.type)).map(mapDocument) ?? [],
   };
 }
 
@@ -214,6 +217,7 @@ const DOCUMENT_TYPES = [
   { field: 'arquivosRegistro',  type: 'PROPERTY_RECORD' },
   { field: 'arquivosEscritura', type: 'TITLE_DEED' },
   { field: 'arquivosOutros',    type: 'OTHER' },
+  { field: 'arquivosVenda', type: 'PROPERTY_SALE' },
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,6 +287,7 @@ export function buildPropertyFormData(
     notes:          data.values_notes,
     sale_date:      data.sale_date || null,
     sale_value:     parseMoney(data.sale_value) || 0,
+    sale_buyer:     data.sale_buyer || null,
     extra_charges:  parseMoney(data.extra_charges) || 0,
     market_value:   parseMoney(data.market_value) || null,
   }));

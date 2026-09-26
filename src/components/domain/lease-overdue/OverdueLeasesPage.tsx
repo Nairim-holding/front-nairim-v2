@@ -23,6 +23,7 @@ import {
 import { describeActionError } from '@/shared/actions/action-result';
 import { formatCurrency, formatDate } from '@/utils';
 import { useMessageContext } from '@/contexts';
+import LeaseExpiryAlerts from './LeaseExpiryAlerts';
 import LeaseNotificationActions from './LeaseNotificationActions';
 
 type Filter = 'ALL' | 'UNNOTIFIED' | 'NEGOTIATING' | 'CRITICAL';
@@ -98,6 +99,7 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
 
   return (
     <div className="space-y-4">
+      <LeaseExpiryAlerts />
       {summary.total === 0 ? (
         <div className="rounded-2xl border border-green-200 bg-green-50 p-6 dark:bg-green-950/20 dark:border-green-900">
           <div className="flex items-center gap-3 text-green-700 dark:text-green-300">

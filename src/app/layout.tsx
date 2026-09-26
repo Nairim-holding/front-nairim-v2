@@ -23,6 +23,15 @@ const poppins = localFont({
 const COMPANY_SLUG = 'nairim';
 const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
 
+// Sem isso, o RSC payload deste layout (branding da empresa ativa, lido do
+// cookie `company_slug`) pode ficar cacheado/reutilizado entre tenants
+// diferentes em produção — mesmo risco já documentado e mitigado em
+// src/app/dashboard/layout.tsx, mas que faltava aqui na raiz. Era a causa
+// mais provável do "erro ao trocar de empresa": branding desatualizado de
+// uma empresa aparecendo na sessão de outra logo após o switch.
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = await cookies();
   const slugFromCookie = cookieStore.get('company_slug')?.value;

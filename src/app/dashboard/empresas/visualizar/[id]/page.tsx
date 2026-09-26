@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Loader2, Building2, Globe, ToggleLeft } from 'lucide-react';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
-import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
+import BrandingPreview from '@/components/admin/WhiteLabel/BrandingPreview';
 import type { FormStep } from '@/types/types';
 import type { CompanyBranding } from '@/types/branding';
 import { getCompanyByIdAction } from '@/server/actions/company';

@@ -26,6 +26,10 @@ export class GetMyPermissionsUseCase {
     if (perms === null && ['ADMIN', 'administrador'].includes(role)) {
       return { unrestricted: true, resources: {} };
     }
+    // MANAGER (Gestor) NÃO entra nessa lista de bypass por decisão de produto:
+    // diferente de ADMIN, ele sempre depende de um grupo de permissões
+    // configurado — sem grupo, `perms` é null e o loop abaixo resolve tudo
+    // como `false` (sem acesso), nunca irrestrito.
 
     const resources: Record<string, Record<string, boolean>> = {};
     for (const resource of MENU_RESOURCES) {

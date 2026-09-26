@@ -38,11 +38,17 @@ const valuesSchema = z.object({
   rental_value: z.union([z.number(), z.string()]).nullish(),
   condo_fee: z.union([z.number(), z.string()]).nullish(),
   property_tax: z.union([z.number(), z.string()]).nullish(),
-  status: z.string().min(1, 'Status da propriedade é obrigatório'),
+  status: z.enum(['AVAILABLE', 'OCCUPIED', 'SOLD']),
+  sale_buyer: z.string().trim().max(250).nullish(),
   notes: z.string().nullish(),
   sale_date: z.union([z.string(), z.date()]).nullish(),
   sale_value: z.union([z.number(), z.string()]).nullish(),
   extra_charges: z.union([z.number(), z.string()]).nullish(),
+}).superRefine((values, ctx) => {
+  if (values.status !== 'SOLD') return;
+  if (!values.sale_buyer?.trim()) ctx.addIssue({ code: 'custom', path: ['sale_buyer'], message: 'Informe o comprador.' });
+  if (!values.sale_date || !Number.isFinite(new Date(values.sale_date).getTime())) ctx.addIssue({ code: 'custom', path: ['sale_date'], message: 'Informe uma data de venda válida.' });
+  if (!Number.isFinite(Number(values.sale_value)) || Number(values.sale_value) <= 0) ctx.addIssue({ code: 'custom', path: ['sale_value'], message: 'Informe um valor de venda maior que zero.' });
 });
 
 /** IPTU: exigências condicionais por `payment_condition`, fiéis ao backend. */

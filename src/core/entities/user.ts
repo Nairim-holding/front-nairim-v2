@@ -44,7 +44,7 @@ export const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
 export type Gender = (typeof GENDERS)[number];
 
 /** Valores do enum Role (prisma/schema.prisma). */
-export const ROLES = ['DEFAULT', 'ADMIN', 'SUPER_ADMIN'] as const;
+export const ROLES = ['DEFAULT', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] as const;
 export type Role = (typeof ROLES)[number];
 
 /** Perfil público de usuário retornado pelos endpoints (sem senha/company_id). */
@@ -89,6 +89,8 @@ export interface CreateUserData {
   phone?: string | null;
   phone_extension?: string | null;
   has_time_restriction?: boolean;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
   created_by?: string | null;
 }
 
@@ -108,6 +110,8 @@ export interface UpdateUserData {
   phone?: string | null;
   phone_extension?: string | null;
   has_time_restriction?: boolean;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
   updated_by?: string | null;
 }
 
@@ -125,6 +129,9 @@ export interface UserDetail extends UserProfile {
   phone: string | null;
   phone_extension: string | null;
   has_time_restriction: boolean;
+  company_id?: string;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
   group?: { id: string; description: string } | null;
   access_schedules?: AccessScheduleRow[];
   creator?: { id: string; name: string } | null;

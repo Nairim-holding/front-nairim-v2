@@ -34,7 +34,7 @@ function LegacyWidgetWrapper({ children }: { children: ReactNode }) {
 }
 
 type MetricDataKeys = {
-  [K in keyof MetricResponse]: MetricResponse[K] extends MetricWithData ? K : never;
+  [K in keyof MetricResponse]-?: MetricResponse[K] extends MetricWithData ? K : never;
 }[keyof MetricResponse];
 
 function useMetricGetter(metrics: MetricResponse | null) {

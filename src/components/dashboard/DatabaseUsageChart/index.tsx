@@ -20,8 +20,8 @@ interface CompanyUsage {
   companyId: string;
   companyName: string;
   usedMb: number;
-  quotaMb: number;
-  percent: number;
+  quotaMb: number | null;
+  percent: number | null;
   isCurrent: boolean;
 }
 
@@ -90,10 +90,11 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
   }, []);
 
   const usedMb = current?.usedMb ?? 0;
-  const quotaMb = current?.quotaMb ?? 0;
-  const percent = current?.percent ?? 0;
-  const gaugeColor = colorForPercent(percent);
-  const remainingMb = Math.max(0, quotaMb - usedMb);
+  const quotaMb = current?.quotaMb ?? null;
+  const percent = current?.percent ?? null;
+  const unlimited = quotaMb == null;
+  const gaugeColor = unlimited ? COLOR_OK : colorForPercent(percent ?? 0);
+  const remainingMb = unlimited ? null : Math.max(0, quotaMb - usedMb);
 
   const detailData = useMemo(
     () =>
@@ -110,14 +111,14 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
     () => [
       { key: 'companyName', label: 'Empresa' },
       { key: 'usedMb', label: 'Usado (Megabytes)', format: (v: number) => formatMb(v), summable: true },
-      { key: 'quotaMb', label: 'Contratado (Megabytes)', format: (v: number) => formatMb(v), summable: true },
-      { key: 'percent', label: '% de uso', format: (v: number) => `${formatMb(v)}%` },
+      { key: 'quotaMb', label: 'Contratado (Megabytes)', format: (v: number | null) => (v == null ? 'Sem limite' : formatMb(v)) },
+      { key: 'percent', label: '% de uso', format: (v: number | null) => (v == null ? '—' : `${formatMb(v)}%`) },
     ],
     []
   );
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => {
-    const maxScale = quotaMb > 0 ? quotaMb : 1;
+    const maxScale = quotaMb != null && quotaMb > 0 ? quotaMb : Math.max(usedMb, 1);
     const splitNumber = getSmartSplitNumber(maxScale);
 
     return {
@@ -213,19 +214,25 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
 
           detail: { show: false },
           title: { show: false },
-          data: [{ value: usedMb, name: `${formatMb(percent)}% da cota` }],
+          data: [{ value: usedMb, name: unlimited ? 'Sem limite' : `${formatMb(percent ?? 0)}% da cota` }],
         },
       ],
     };
-  }, [usedMb, quotaMb, percent, gaugeColor, tokens]);
+  }, [usedMb, quotaMb, percent, unlimited, gaugeColor, tokens]);
 
-  const overQuota = percent >= CRITICAL_PERCENT;
-  const nearQuota = percent >= WARNING_PERCENT && !overQuota;
+  const overQuota = !unlimited && (percent ?? 0) >= CRITICAL_PERCENT;
+  const nearQuota = !unlimited && (percent ?? 0) >= WARNING_PERCENT && !overQuota;
 
   return (
     <ChartCard
       title="CONSUMO DE BANCO DE DADOS EM MEGABYTES"
-      subtitle={current ? `${current.companyName} — ${formatMb(usedMb)} de ${formatMb(quotaMb)} MB contratados` : undefined}
+      subtitle={
+        current
+          ? unlimited
+            ? `${current.companyName} — ${formatMb(usedMb)} MB usados (sem limite)`
+            : `${current.companyName} — ${formatMb(usedMb)} de ${formatMb(quotaMb ?? 0)} MB contratados`
+          : undefined
+      }
       detailData={detailData}
       detailColumns={detailColumns}
       isDraggable={isDraggable}
@@ -251,17 +258,21 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
                     className="text-3xl sm:text-4xl font-extrabold tracking-tight"
                     style={{ color: gaugeColor }}
                   >
-                    {formatMb(usedMb)} / {formatMb(quotaMb)} MB
+                    {unlimited ? `${formatMb(usedMb)} MB` : `${formatMb(usedMb)} / ${formatMb(quotaMb ?? 0)} MB`}
                   </span>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-ui-border-soft text-xs font-medium text-content-muted">
-                    <span>{formatMb(percent)}% da cota contratada</span>
-                    <span>•</span>
-                    <span
-                      className="font-bold"
-                      style={{ color: overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK }}
-                    >
-                      {overQuota ? 'Excedido' : nearQuota ? 'Atenção' : 'Saudável'}
-                    </span>
+                    <span>{unlimited ? 'Sem limite contratado' : `${formatMb(percent ?? 0)}% da cota contratada`}</span>
+                    {!unlimited && (
+                      <>
+                        <span>•</span>
+                        <span
+                          className="font-bold"
+                          style={{ color: overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK }}
+                        >
+                          {overQuota ? 'Excedido' : nearQuota ? 'Atenção' : 'Saudável'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -278,46 +289,56 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
                   <div className="p-4 rounded-xl bg-surface-subtle/50 border border-ui-border-soft flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Espaço Ocupado</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-brand/10 text-brand">
-                        {formatMb(percent)}%
-                      </span>
+                      {!unlimited && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-brand/10 text-brand">
+                          {formatMb(percent ?? 0)}%
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-baseline justify-between">
                       <span className="text-xl font-bold text-content">{formatMb(usedMb)} MB</span>
-                      <span className="text-xs text-content-muted">de {formatMb(quotaMb)} MB contratados</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-ui-border-soft overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, percent)}%`, backgroundColor: gaugeColor }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Card Disponível */}
-                  <div className="p-4 rounded-xl bg-surface-subtle/50 border border-ui-border-soft flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Espaço Livre</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-success/10 text-success">
-                        {formatMb(Math.max(0, 100 - percent))}% livre
+                      <span className="text-xs text-content-muted">
+                        {unlimited ? 'sem limite contratado' : `de ${formatMb(quotaMb ?? 0)} MB contratados`}
                       </span>
                     </div>
-                    <span className="text-xl font-bold text-success">{formatMb(remainingMb)} MB</span>
-                    <p className="text-xs text-content-muted">Disponível para novos registros e tabelas</p>
+                    {!unlimited && (
+                      <div className="w-full h-2 rounded-full bg-ui-border-soft overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, percent ?? 0)}%`, backgroundColor: gaugeColor }}
+                        />
+                      </div>
+                    )}
                   </div>
+
+                  {/* Card Disponível (só quando há cota definida) */}
+                  {!unlimited && (
+                    <div className="p-4 rounded-xl bg-surface-subtle/50 border border-ui-border-soft flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Espaço Livre</span>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-success/10 text-success">
+                          {formatMb(Math.max(0, 100 - (percent ?? 0)))}% livre
+                        </span>
+                      </div>
+                      <span className="text-xl font-bold text-success">{formatMb(remainingMb ?? 0)} MB</span>
+                      <p className="text-xs text-content-muted">Disponível para novos registros e tabelas</p>
+                    </div>
+                  )}
 
                   {/* Card Status / Alerta */}
                   <div
                     className="p-4 rounded-xl border flex items-center justify-between"
                     style={{
-                      backgroundColor: overQuota ? `${COLOR_CRITICAL}10` : nearQuota ? `${COLOR_WARNING}10` : 'rgba(16, 185, 129, 0.05)',
-                      borderColor: overQuota ? `${COLOR_CRITICAL}40` : nearQuota ? `${COLOR_WARNING}40` : 'rgba(16, 185, 129, 0.2)',
+                      backgroundColor: unlimited ? 'rgba(148, 163, 184, 0.08)' : overQuota ? `${COLOR_CRITICAL}10` : nearQuota ? `${COLOR_WARNING}10` : 'rgba(16, 185, 129, 0.05)',
+                      borderColor: unlimited ? 'rgba(148, 163, 184, 0.3)' : overQuota ? `${COLOR_CRITICAL}40` : nearQuota ? `${COLOR_WARNING}40` : 'rgba(16, 185, 129, 0.2)',
                     }}
                   >
                     <div>
                       <div className="text-xs font-bold text-content">Status da Cota</div>
                       <div className="text-xs text-content-muted mt-0.5">
-                        {overQuota
+                        {unlimited
+                          ? 'Empresa sem limite de banco de dados configurado.'
+                          : overQuota
                           ? 'A cota contratada foi ultrapassada. Solicite upgrade.'
                           : nearQuota
                           ? 'Consumo próximo do limite contratado.'
@@ -327,11 +348,11 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
                     <span
                       className="text-xs font-extrabold px-2.5 py-1 rounded-lg shrink-0"
                       style={{
-                        backgroundColor: overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK,
+                        backgroundColor: unlimited ? '#94A3B8' : overQuota ? COLOR_CRITICAL : nearQuota ? COLOR_WARNING : COLOR_OK,
                         color: '#FFFFFF',
                       }}
                     >
-                      {overQuota ? 'CRÍTICO' : nearQuota ? 'ATENÇÃO' : 'OK'}
+                      {unlimited ? 'SEM LIMITE' : overQuota ? 'CRÍTICO' : nearQuota ? 'ATENÇÃO' : 'OK'}
                     </span>
                   </div>
                 </div>
@@ -353,10 +374,10 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
                 className="font-bold leading-tight text-center tracking-tight text-xl"
                 style={{ color: gaugeColor }}
               >
-                {formatMb(usedMb)} / {formatMb(quotaMb)} MB
+                {unlimited ? `${formatMb(usedMb)} MB` : `${formatMb(usedMb)} / ${formatMb(quotaMb ?? 0)} MB`}
               </span>
               <span className="text-content-muted text-center font-medium text-[11px]">
-                {formatMb(percent)}% da cota contratada
+                {unlimited ? 'Sem limite contratado' : `${formatMb(percent ?? 0)}% da cota contratada`}
               </span>
             </div>
 
@@ -367,7 +388,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
               >
                 {overQuota
                   ? '⚠️ Limite contratado excedido.'
-                  : `⚠️ Consumo em ${formatMb(percent)}% do limite contratado.`}
+                  : `⚠️ Consumo em ${formatMb(percent ?? 0)}% do limite contratado.`}
               </div>
             )}
           </div>

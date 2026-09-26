@@ -24,7 +24,7 @@ const COLOR_MAPPINGS: ColorMapping[] = [
   { cssVar: '--color-text-primary', lightField: 'text_color', darkField: 'text_color_dark' },
 ];
 
-function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' | 'dark'): string {
+function buildBlock(selector: string, branding: Partial<CompanyBranding>, mode: 'light' | 'dark'): string {
   const lines: string[] = [];
 
   for (const { cssVar, lightField, darkField } of COLOR_MAPPINGS) {
@@ -52,6 +52,12 @@ function buildBlock(selector: string, branding: CompanyBranding, mode: 'light' |
 
   if (lines.length === 0) return '';
   return [`${selector} {`, ...lines, '}'].join('\n');
+}
+
+/** Same overrides as the live tenant, scoped to one preview instead of body. */
+export function buildBrandingPreviewCss(branding: Partial<CompanyBranding>, id: string, mode: 'light' | 'dark'): string {
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return '';
+  return buildBlock(`#${id}.branding-preview`, branding, mode);
 }
 
 export function buildBrandingCss(branding: CompanyBranding | null): string {

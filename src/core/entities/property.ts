@@ -42,6 +42,7 @@ export interface PropertyValueInput {
   notes?: string | null;
   sale_date?: string | Date | null;
   sale_value?: number | null;
+  sale_buyer?: string | null;
   extra_charges?: number | null;
 }
 
@@ -158,6 +159,7 @@ export interface PropertyUploadFiles {
   arquivosRegistro?: PropertyUploadFile[];
   arquivosEscritura?: PropertyUploadFile[];
   arquivosOutros?: PropertyUploadFile[];
+  arquivosVenda?: PropertyUploadFile[];
 }
 
 export interface ListPropertiesParams {

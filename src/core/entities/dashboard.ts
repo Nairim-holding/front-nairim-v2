@@ -44,6 +44,8 @@ export interface PortfolioMetrics {
   countPropertiesWithLessThan3Docs: MetricResult;
   totalPropertiesWithSaleValue?: MetricResult;
   availablePropertiesByType: ChartData[];
+  propertiesByType?: ChartData[];
+  propertiesByStatus?: ChartData[];
   vacancyRate: MetricResult;
   occupationRate: MetricResult;
   physicalVacancy: MetricResult;

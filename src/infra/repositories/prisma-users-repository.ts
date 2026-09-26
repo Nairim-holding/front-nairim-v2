@@ -49,6 +49,9 @@ const PROFILE_SELECT = {
 /** Campos do detalhe (GET /users/:id) — perfil + foto, telefones, auditoria. */
 const DETAIL_SELECT = {
   ...PROFILE_SELECT,
+  company_id: true,
+  all_companies_access: true,
+  allowed_company_ids: true,
   photo_url: true,
   phone_country_code: true,
   phone_area_code: true,
@@ -370,6 +373,8 @@ export class PrismaUsersRepository implements UsersRepository {
     // `company_id` é injetado pela extensão multi-tenant a partir do contexto.
     const user = await prisma.user.create({
       data: {
+        all_companies_access: data.all_companies_access ?? false,
+        allowed_company_ids: data.allowed_company_ids ?? [],
         name: data.name,
         email: data.email,
         password: data.passwordHash,
@@ -397,6 +402,8 @@ export class PrismaUsersRepository implements UsersRepository {
     const user = await prisma.user.update({
       where: { id },
       data: {
+        ...(data.all_companies_access !== undefined ? { all_companies_access: data.all_companies_access } : {}),
+        ...(data.allowed_company_ids !== undefined ? { allowed_company_ids: data.allowed_company_ids } : {}),
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.email !== undefined ? { email: data.email } : {}),
         ...(data.birth_date !== undefined ? { birth_date: data.birth_date } : {}),

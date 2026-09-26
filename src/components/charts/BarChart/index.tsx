@@ -128,6 +128,7 @@ export default function EChartsBar({
           name: label,
           type: 'bar',
           barMaxWidth: 40,
+          label: { show: true, position: 'top', color: tokens.textSecondary },
           itemStyle: {
             borderRadius: [4, 4, 0, 0],
             color: (params: any) => palette[params.dataIndex % palette.length]
@@ -139,10 +140,14 @@ export default function EChartsBar({
 
     chart.setOption(option);
 
-    if (!isLarge) {
-      chart.getZr().on('click', () => setIsFullscreenModalOpen(true));
-      chart.getZr().on('mouseover', () => chart.getZr().setCursorStyle('pointer'));
-    }
+    chart.on('click', (params: any) => {
+      const item = data[params.dataIndex];
+      if (!item) return;
+      setModalData(item.data ?? []);
+      setModalTitle(`${label} - ${item.name}`);
+      setIsFullscreenModalOpen(false);
+      setIsModalOpen(true);
+    });
 
     return chart;
   }, [data, label, palette, tokens]);
@@ -155,39 +160,23 @@ export default function EChartsBar({
       else if (chartRef.current) chartInstance.current = initChart(chartRef.current, false);
     });
     resizeObserver.observe(chartRef.current);
-    window.addEventListener('resize', () => chartInstance.current?.resize());
+    const resize = () => chartInstance.current?.resize();
+    window.addEventListener('resize', resize);
     return () => {
-        window.removeEventListener('resize', () => chartInstance.current?.resize());
+        window.removeEventListener('resize', resize);
         resizeObserver.disconnect();
         chartInstance.current?.dispose();
     };
   }, [initChart]);
 
   useEffect(() => {
-    if (isFullscreenModalOpen && fullscreenChartRef.current) {
-      setTimeout(() => {
-        if (!fullscreenChartRef.current) return;
-        fullscreenInstance.current = initChart(fullscreenChartRef.current, true);
-        if (fullscreenInstance.current) {
-          fullscreenInstance.current.on('click', (params: any) => {
-            const itemData = data[params.dataIndex];
-            if (itemData && itemData.data && itemData.data.length > 0) {
-              setModalData(itemData.data);
-              setModalTitle(`${label} - ${itemData.name}`);
-              setIsFullscreenModalOpen(false);
-              setTimeout(() => setIsModalOpen(true), 300);
-            }
-          });
-        }
-        const handleResize = () => fullscreenInstance.current?.resize();
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            fullscreenInstance.current?.dispose();
-        };
-      }, 100);
-    }
-  }, [isFullscreenModalOpen, initChart, label, data]);
+    if (!isFullscreenModalOpen || !fullscreenChartRef.current) return;
+    const chart = initChart(fullscreenChartRef.current, true);
+    fullscreenInstance.current = chart;
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(fullscreenChartRef.current);
+    return () => { observer.disconnect(); chart.dispose(); fullscreenInstance.current = null; };
+  }, [isFullscreenModalOpen, initChart]);
 
   const handleOpenAllData = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -240,7 +229,7 @@ export default function EChartsBar({
           </div>
         </div>
 
-        <div className="relative flex-1 w-full min-h-[220px] cursor-pointer" onClick={() => setIsFullscreenModalOpen(true)}>
+        <div className="relative flex-1 w-full min-h-[220px] cursor-pointer">
           {data.length === 0 ? (
             <div className="w-full h-full absolute inset-0 flex items-center justify-center text-content-muted text-sm">
               Sem dados no período

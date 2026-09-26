@@ -69,7 +69,7 @@ export function useDashboardLayout(resource: string, defaultLayout: DashboardLay
             await new Promise(resolve => setTimeout(resolve, delayMs));
             return attemptSave();
           }
-          console.error('[useDashboardLayout] Falha ao salvar layout após 3 tentativas:', error);
+          console.error('[useDashboardLayout] Falha ao salvar layout após 3 tentativas:', { resource, layout: newLayout, error });
           showMessage('Erro ao salvar o layout do painel. Tente novamente.', 'error', 5000);
         }
       };

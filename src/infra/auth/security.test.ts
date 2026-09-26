@@ -57,6 +57,19 @@ beforeEach(() => {
 });
 
 describe('session authority', () => {
+  it('accepts a granted company and rejects the same live session after revocation', async () => {
+    mocks.user.mockResolvedValue({ ...liveUser, allowed_company_ids: ['company-b'] });
+    expect(await validateLiveSession({ ...claims, company_id: 'company-b' })).toMatchObject({ role: 'usuário', company_id: 'company-b' });
+    mocks.user.mockResolvedValue({ ...liveUser, allowed_company_ids: [] });
+    await expect(validateLiveSession({ ...claims, company_id: 'company-b' })).rejects.toMatchObject({ statusCode: 401 });
+  });
+  it('does not let administrators grant themselves access to all companies', async () => {
+    mocks.user.mockResolvedValue({ ...liveUser, role: 'ADMIN' });
+    mocks.permissions.mockResolvedValue(null);
+    const result = await updateUserAction('user-a', { all_companies_access: true });
+    expect(result).toMatchObject({ ok: false, status: 403 });
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
   it('uses the current role instead of stale SUPER_ADMIN claims', async () => {
     expect(await validateLiveSession(claims)).toMatchObject({ role: 'usuário' });
   });

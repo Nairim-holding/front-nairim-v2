@@ -3,6 +3,8 @@ import type { UserGroupPermissionsRepository } from '@/core/repositories/user-gr
 import type { PermissionRow, ResolvedPermissions, ResourceCatalogItem } from '@/core/entities/user-group-permission';
 import { MENU_RESOURCES, ACTION_COLUMN, PERMISSION_ACTIONS, type PermissionAction } from '@/shared/utils/menu-resources';
 import { NotFoundError } from '@/core/errors/domain-errors';
+import { canAccessCompany } from '@/core/entities/company-access';
+import { tenantStorage } from '@/infra/database/tenant-context';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
 
 /**
@@ -93,17 +95,17 @@ export class PrismaUserGroupPermissionsRepository implements UserGroupPermission
     // cache: assigning/revoking a group must apply to the next request.
 
     // findFirst é escopado por empresa pela extensão do Prisma.
-    const user = await prisma.user.findFirst({
-      where: { id: userId, deleted_at: null },
+    const user = await tenantStorage.exit(() => prisma.user.findFirst({
+      where: { id: userId, deleted_at: null, is_active: true },
       select: {
-        user_group_id: true,
+        user_group_id: true, company_id: true, role: true, all_companies_access: true, allowed_company_ids: true,
         group: { select: { company_id: true, deleted_at: true, permissions: true } },
       },
-    });
+    }));
 
     let perms: ResolvedPermissions | null;
 
-    if (!user || (user.user_group_id && (!user.group || user.group.deleted_at || user.group.company_id !== companyId()))) {
+    if (!user || !canAccessCompany(user, companyId()) || (user.user_group_id && (!user.group || user.group.deleted_at || user.group.company_id !== user.company_id))) {
       // A missing user or invalid group must never grant unrestricted access.
       perms = new Map();
     } else if (!user.user_group_id) {
@@ -112,7 +114,7 @@ export class PrismaUserGroupPermissionsRepository implements UserGroupPermission
     } else {
       perms = new Map<string, Set<PermissionAction>>();
       for (const row of user.group!.permissions) {
-        if (row.company_id !== companyId()) continue;
+        if (row.company_id !== user.company_id) continue;
         const granted = new Set<PermissionAction>();
         for (const action of PERMISSION_ACTIONS) {
           if (row[ACTION_COLUMN[action] as keyof typeof row] === true) granted.add(action);

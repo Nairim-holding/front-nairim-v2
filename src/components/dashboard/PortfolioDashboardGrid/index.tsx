@@ -21,11 +21,12 @@ export const WIDGET_LABELS: Record<string, string> = {
   'widget-p3': 'Imóveis com Valor de Venda Definido',
   'widget-p4': 'Imóveis por Status de Disponibilidade',
   'widget-p6': 'Taxa de Ocupação',
-  'widget-p5': 'Imóveis na Carteira',
+  'widget-p5': 'Imóveis Sem Locação',
   'widget-p7': 'Taxa de Vacância Física',
   'widget-p8': 'Consumo de Anexos',
   'widget-p9': 'Consumo de Banco de Dados',
   'widget-p10': 'Tempo de Locação',
+  'widget-p11': 'Imóveis por Tipo',
 };
 export const ALL_WIDGET_IDS = Object.keys(WIDGET_LABELS);
 
@@ -42,7 +43,7 @@ function SelfFramedWidget({ children }: { children: ReactNode }) {
 }
 
 type MetricDataKeys = {
-  [K in keyof MetricResponse]: MetricResponse[K] extends MetricWithData ? K : never;
+  [K in keyof MetricResponse]-?: MetricResponse[K] extends MetricWithData ? K : never;
 }[keyof MetricResponse];
 
 function useMetricGetter(metrics: MetricResponse | null) {
@@ -72,6 +73,7 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-p9', x: 6, y: 19, w: 6, h: 8 },
   // Tempo de Locação (pizza) — Tarefa 1.3 do guia de correções
   { i: 'widget-p10', x: 0, y: 27, w: 6, h: 8 },
+  { i: 'widget-p11', x: 6, y: 27, w: 6, h: 8 },
 ];
 
 interface PortfolioDashboardGridProps {
@@ -124,8 +126,8 @@ export default function PortfolioDashboardGrid({
   );
 
   const availabilityDonutData = useMemo(() => [
-    { name: 'Disponíveis', value: get('vacancyRate').result, data: vacancyData },
-    { name: 'Ocupados', value: get('occupationRate').result, data: occupationData },
+    { name: 'Disponíveis', value: vacancyData.length, data: vacancyData },
+    { name: 'Ocupados', value: occupationData.length, data: occupationData },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [vacancyData, occupationData]);
 
@@ -194,7 +196,7 @@ export default function PortfolioDashboardGrid({
             body: (
               <SelfFramedWidget>
                 <EChartsDonut
-                  data={availabilityDonutData}
+                  data={metrics?.propertiesByStatus ?? availabilityDonutData}
                   label="Imóveis por Status de Disponibilidade"
                   detailColumns={COLS_AVAILABILITY_DONUT}
                   dragHandleClassName={DRAG_HANDLE_CLASS}
@@ -210,7 +212,7 @@ export default function PortfolioDashboardGrid({
               <SelfFramedWidget>
                 <EChartsDonut
                   data={typesData}
-                  label="Imóveis na Carteira"
+                  label="Imóveis Sem Locação"
                   colors={['#FF7777', '#77FF7B', '#F9FF53', '#77A2FF', '#E477FF']}
                   detailColumns={COLS_TYPES_DONUT}
                   dragHandleClassName={DRAG_HANDLE_CLASS}
@@ -264,6 +266,8 @@ export default function PortfolioDashboardGrid({
         case 'widget-p10':
           return { body: <TenantTenure startDate={startDate} endDate={endDate} />, framed: true };
 
+        case 'widget-p11':
+          return { framed: false, body: <SelfFramedWidget><EChartsDonut data={metrics?.propertiesByType ?? []} label="Imóveis por Tipo" detailColumns={COLS_TYPES_DONUT} dragHandleClassName={DRAG_HANDLE_CLASS} /></SelfFramedWidget> };
         default:
           return null;
       }

@@ -67,7 +67,7 @@ export const MENU_RESOURCES: MenuResource[] = [
   // ─── Cadastrar ─────────────────────────────────────────────────────────────
   {
     key: 'users',
-    label: 'Administrador',
+    label: 'Usuários',
     group: 'Cadastrar',
     actions: FULL,
     routes: ['/users'],
