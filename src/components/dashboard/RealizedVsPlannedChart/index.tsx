@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
 import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
 import { getPlanningDashboardAction } from '@/server/actions/planning';
@@ -9,14 +10,14 @@ import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
 
 interface SubcategoryDashboard {
-  id?: string;
+  id: string;
   name: string;
   planned_amount: number;
   realized_amount: number;
 }
 
 interface CategoryDashboard {
-  id?: string;
+  id: string;
   name: string;
   type: 'INCOME' | 'EXPENSE';
   planned_amount: number;
@@ -65,8 +66,8 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
   }, [startDate, endDate, filterKey]);
 
   // Remover "Total de Despesas" (global) e extrair subcategorias para o gráfico (Tarefa 7)
-  const items: DualColorBarItem[] = useMemo(() => {
-    const list: DualColorBarItem[] = [];
+  const items = useMemo(() => {
+    const list: (DualColorBarItem & { categoryId: string; subcategoryId?: string })[] = [];
     const validCategories = categories.filter(
       (c) => c.id !== 'expenses-global' && !c.name.toLowerCase().includes('total de despesas')
     );
@@ -78,6 +79,8 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
           const realized = Number(sub.realized_amount ?? 0);
           if (planned > 0 || realized > 0) {
             list.push({
+              categoryId: cat.id,
+              subcategoryId: sub.id,
               label: sub.name,
               reference: planned,
               actual: realized,
@@ -90,6 +93,7 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
         const realized = Number(cat.realized_amount ?? 0);
         if (planned > 0 || realized > 0) {
           list.push({
+            categoryId: cat.id,
             label: cat.name,
             reference: planned,
             actual: realized,
@@ -132,6 +136,14 @@ export default function RealizedVsPlannedChart({ startDate: startDateProp, endDa
       subtitle={periodLabel}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const item = items[point.dataIndex];
+        return item ? loadFinancialChartDetails({
+          source: 'planning', type: 'EXPENSE', startDate, endDate,
+          categoryId: item.categoryId, subcategoryId: item.subcategoryId,
+        }, filters) : Promise.resolve([]);
+      }}
     >
       {({ openDetails }) => (
         isLoading ? (

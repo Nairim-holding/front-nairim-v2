@@ -3,6 +3,8 @@
 import { useCallback, useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
+import { getPeriodRange } from '@/utils/periodRange';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useMonthlySummary } from '@/hooks/useMonthlySummary';
 import { MONTH_LABELS_FULL, formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
@@ -105,7 +107,11 @@ export default function ExpenseRatioChart({ year: yearProp, endDate, filters }: 
       title="% DESPESAS EM RELAÇÃO ÀS RECEITAS"
       subtitle={`Mês atual: ${MONTH_LABELS_FULL[currentMonthIndex]} de ${year}`}
       detailData={detailData}
-      detailForPoint={() => detailData[currentMonthIndex] ? [detailData[currentMonthIndex]] : []}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => loadFinancialChartDetails({
+        source: 'transactions', ...getPeriodRange(year, [currentMonthIndex + 1]),
+        ...(point.name === 'Despesas' ? { type: 'EXPENSE' as const } : { net: true }),
+      }, filters)}
       detailColumns={detailColumns}
     >
       {({ isFullscreen }) => (

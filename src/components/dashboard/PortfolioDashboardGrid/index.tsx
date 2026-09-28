@@ -228,6 +228,7 @@ export default function PortfolioDashboardGrid({
               <SelfFramedWidget>
                 <EChartsGauge
                   label="Taxa de Ocupação"
+                  decimalPlaces={0}
                   value={get('occupationRate').result}
                   color="#10B981"
                   detailData={get('occupationRate').data}
@@ -245,6 +246,7 @@ export default function PortfolioDashboardGrid({
               <SelfFramedWidget>
                 <EChartsGauge
                   label="Taxa de Vacância Física"
+                  decimalPlaces={0}
                   value={get('vacancyRate').result}
                   color="#EF4444"
                   detailData={get('vacancyRate').data}

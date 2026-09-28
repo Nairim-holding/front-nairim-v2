@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getExpenseByCategoryAction } from '@/server/actions/financial-transaction';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
@@ -177,6 +178,13 @@ export default function ExpenseByCategoryChart({ startDate: startDateProp, endDa
       subtitle={formatPeriodLabel(startDate, endDate)}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const category = sortedPercentages[point.dataIndex];
+        return category ? loadFinancialChartDetails({
+          source: 'transactions', type: 'EXPENSE', startDate, endDate, categoryId: category.categoryId,
+        }, filters) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         !isLoading && categories.length === 0 ? (

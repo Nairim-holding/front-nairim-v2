@@ -23,3 +23,20 @@ it('exposes pins only for confirmed addresses and provides review links for all 
     expect(point.propertyId).toBeTruthy();
   }
 });
+
+it('keeps sold properties separate even when they have a previous lease', async () => {
+  const confirmedAddress = { address: { ...address, location_confirmation: locationConfirmation(address) } };
+  findMany.mockResolvedValue([
+    { id: 'sold', title: 'Vendido', leases: [{ id: 'old-lease' }], values: [{ status: 'SOLD' }], addresses: [confirmedAddress] },
+    { id: 'leased', title: 'Locado', leases: [{ id: 'lease' }], values: [{ status: 'AVAILABLE' }], addresses: [confirmedAddress] },
+    { id: 'available', title: 'Disponível', leases: [], values: [{ status: 'AVAILABLE' }], addresses: [confirmedAddress] },
+    { id: 'sold-pending', title: 'Vendido sem endereço', leases: [], values: [{ status: 'SOLD' }], addresses: [] },
+  ]);
+  const { coordinates } = await new PrismaDashboardRepository().getGeolocation(new Date('2026-09-01'), new Date('2026-09-30'));
+  expect(coordinates).toEqual([
+    expect.objectContaining({ propertyId: 'sold', status: 'SOLD', isLeased: false, confirmed: true }),
+    expect.objectContaining({ propertyId: 'leased', status: 'OCCUPIED', isLeased: true }),
+    expect.objectContaining({ propertyId: 'available', status: 'AVAILABLE', isLeased: false }),
+    expect.objectContaining({ propertyId: 'sold-pending', status: 'SOLD', isLeased: false, confirmed: false }),
+  ]);
+});

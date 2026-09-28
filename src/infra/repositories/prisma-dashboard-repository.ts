@@ -2,6 +2,7 @@ import { releaseExpiredProperties } from './property-occupancy';
 import { classifyLeaseReportTransaction } from './prisma-lease-reports-repository';
 import { isLocationConfirmed, coordinate } from '@/shared/utils/property-location';
 import { matchReportLease } from '@/core/entities/lease-report-matching';
+import { getPropertyMapStatus } from '@/core/entities/property-map';
 import prisma from '@/infra/database/prisma';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
 import type { ChartData, ClientsMetrics, FinancialMetrics, GeolocationResponse, PortfolioMetrics } from '@/core/entities/dashboard';
@@ -25,10 +26,9 @@ import {
  *  - `calcVariation` limita a variação a ±100% e arredonda `result`/`variation`
  *    para 2 casas; `isPositive` = variação >= 0 (ou `current >= 0` quando não
  *    há base anterior).
- *  - `countPropertiesWithLessThan3Docs` na verdade conta "propriedades com
- *    documentos", usando REQUIRED_DOCUMENT_TYPES (TITLE_DEED, REGISTRATION,
- *    PROPERTY_RECORD) — uma propriedade é "completa" se tiver AO MENOS UM dos
- *    três (bug do backend preservado fielmente).
+ *  - `countPropertiesWithLessThan3Docs` conta imóveis sem nenhum anexo ativo
+ *    de matrícula, registro ou escritura. Um desses documentos já retira o
+ *    imóvel da lista de pendências; fotos e outros documentos não substituem esses anexos.
  *  - `calculateVacancyMonths`: sem leases → 12; último lease com `end_date >=
  *    data de referência` → 0; senão diferença em meses completos.
  *  - `ownersTotal.propertiesPerOwner` estima o período anterior proporcional
@@ -40,6 +40,9 @@ import {
  */
 
 const REQUIRED_DOCUMENT_TYPES = ['TITLE_DEED', 'REGISTRATION', 'PROPERTY_RECORD'];
+
+const requiredDocumentsOf = (documents: { type: string; deleted_at?: Date | null }[]) =>
+  documents.filter(document => !document.deleted_at && REQUIRED_DOCUMENT_TYPES.includes(document.type));
 
 export { calcVariation, calculateVacancyMonths, decimalToNumber, getPeriodDatesIn };
 
@@ -328,25 +331,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
     }));
 
     const pendingDocs = properties
+      .filter(p => requiredDocumentsOf(p.documents).length === 0)
       .map((p) => {
-        const present = p.documents.map((d) => d.type);
-        const missing = REQUIRED_DOCUMENT_TYPES.filter((t) => !present.includes(t as never));
-        const isComplete = REQUIRED_DOCUMENT_TYPES.some((t) => present.includes(t as never));
         return {
           id: p.id,
           title: p.title,
-          documentCount: p.documents.length,
+          documentCount: 0,
           type: p.type?.description || 'Outros',
-          missingDocuments: missing,
-          isComplete,
+          missingDocuments: REQUIRED_DOCUMENT_TYPES,
+          isComplete: false,
         };
-      })
-      .filter((p) => !p.isComplete);
+      });
 
-    const prevPendingCount = prevProperties.filter((p) => {
-      const present = p.documents.map((d) => d.type);
-      return !REQUIRED_DOCUMENT_TYPES.some((t) => present.includes(t as never));
-    }).length;
+    const prevPendingCount = prevProperties.filter(p => requiredDocumentsOf(p.documents).length === 0).length;
 
     const saleValueData = properties
       .filter((p) => toNum(p.values[0]?.sale_value) > 0)
@@ -630,8 +627,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
     });
 
     const coordinates = properties.flatMap((p) => {
-      const isLeased = p.leases.length > 0 || p.values[0]?.status === 'OCCUPIED';
-      const status = (isLeased ? 'OCCUPIED' : 'AVAILABLE') as 'OCCUPIED' | 'AVAILABLE';
+      const status = getPropertyMapStatus({ status: p.values[0]?.status, isLeased: p.leases.length > 0 });
+      const isLeased = status === 'OCCUPIED';
       const addresses = p.addresses.filter(a => !a.address.deleted_at);
       if (!addresses.length) return [{ lat: null, lng: null, info: p.title, propertyId: p.id, confirmed: false, isLeased, status }];
       return addresses.map(({ address }) => {

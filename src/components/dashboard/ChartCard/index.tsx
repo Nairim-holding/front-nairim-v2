@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Maximize2, FileText, X } from 'lucide-react';
 import DataModal from '@/components/charts/DataModal';
@@ -37,6 +37,8 @@ interface ChartCardProps {
   detailData?: any[];
   detailColumns?: ChartCardColumn[];
   detailForPoint?: (point: ChartPoint) => unknown[];
+  loadDetailForPoint?: (point: ChartPoint) => Promise<unknown[]>;
+  pointDetailColumns?: ChartCardColumn[];
   /** Agrupa o "Ver Dados Detalhados" por um campo dos dados, com subtotal por grupo. */
   detailGroupBy?: ChartCardGroupBy;
   /** Unidade mostrada no rodapé do modal de detalhes ("Total: N <detailTotalLabel>"). */
@@ -62,6 +64,8 @@ export default function ChartCard({
   detailData = [],
   detailColumns,
   detailForPoint,
+  loadDetailForPoint,
+  pointDetailColumns,
   detailGroupBy,
   detailTotalLabel,
   dragHandleClassName = 'widget-drag-handle',
@@ -72,15 +76,41 @@ export default function ChartCard({
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const hasDetailData = detailData.length > 0;
   const [selection, setSelection] = useState<{ title: string; data: unknown[] } | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | undefined>();
+  const detailRequest = useRef(0);
   const openDetails = useCallback((point: ChartPoint) => {
-    const data = detailForPoint ? detailForPoint(point) : point.seriesType === 'gauge'
-      ? detailData : detailData[point.dataIndex] ? [detailData[point.dataIndex]] : [];
-    setSelection({ title: point.name ? `${title} — ${point.name}` : title, data });
+    const requestId = ++detailRequest.current;
+    // Séries sem nome recebem um identificador interno do ECharts com NUL.
+    const seriesLabel = point.seriesName?.includes('\0') ? undefined : point.seriesName;
+    const selectionTitle = [title, point.name, seriesLabel].filter(Boolean).join(' — ');
+    setDetailError(undefined);
     setIsFullscreenOpen(false);
     setIsDataModalOpen(true);
-  }, [detailForPoint, detailData, title]);
+    if (loadDetailForPoint) {
+      setSelection({ title: selectionTitle, data: [] });
+      setIsDetailLoading(true);
+      void loadDetailForPoint(point).then(data => {
+        if (detailRequest.current === requestId) setSelection({ title: selectionTitle, data });
+      }).catch((error: unknown) => {
+        if (detailRequest.current === requestId) {
+          setDetailError(error instanceof Error ? error.message : 'Não foi possível carregar os lançamentos.');
+        }
+      }).finally(() => {
+        if (detailRequest.current === requestId) setIsDetailLoading(false);
+      });
+      return;
+    }
+    setIsDetailLoading(false);
+    const data = detailForPoint ? detailForPoint(point) : point.seriesType === 'gauge'
+      ? detailData : detailData[point.dataIndex] ? [detailData[point.dataIndex]] : [];
+    setSelection({ title: selectionTitle, data });
+  }, [detailForPoint, loadDetailForPoint, detailData, title]);
 
   const openDataModal = () => {
+    ++detailRequest.current;
+    setIsDetailLoading(false);
+    setDetailError(undefined);
     setSelection(null);
     setIsFullscreenOpen(false);
     setTimeout(() => setIsDataModalOpen(true), isFullscreenOpen ? 300 : 0);
@@ -114,16 +144,20 @@ export default function ChartCard({
         </div>
       </div>
 
+      {/* O render prop recebe o callback de clique; a ref só é acessada ao clicar. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
       <div className="flex-1 relative min-h-0">{children({ isFullscreen: false, openDetails })}</div>
 
       <DataModal
         isOpen={isDataModalOpen}
-        onClose={() => setIsDataModalOpen(false)}
+        onClose={() => { ++detailRequest.current; setIsDataModalOpen(false); }}
         title={selection?.title ?? title}
         data={selection?.data ?? detailData}
-        columns={detailColumns}
+        columns={selection && pointDetailColumns ? pointDetailColumns : detailColumns}
+        isLoading={isDetailLoading}
+        error={detailError}
         groupBy={detailGroupBy}
-        totalLabel={detailTotalLabel}
+        totalLabel={selection && loadDetailForPoint ? 'lançamentos' : detailTotalLabel}
       />
 
       {isFullscreenOpen && typeof document !== 'undefined' && createPortal(
@@ -160,6 +194,7 @@ export default function ChartCard({
               </div>
             </div>
             <div className="flex-1 p-3 sm:p-4 md:p-5 relative bg-surface overflow-y-auto custom-scrollbar flex flex-col min-h-0">
+              {/* eslint-disable-next-line react-hooks/refs -- callback executado apenas em eventos */}
               {children({ isFullscreen: true, openDetails })}
             </div>
           </div>

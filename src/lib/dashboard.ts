@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetricResponse } from "@/types/types";
 import { getDashboardSectionAction } from "@/server/actions/dashboard";
+import { getPropertyMapStatus, type PropertyMapStatus } from '@/core/entities/property-map';
 
 export type FilterType = "financial" | "portfolio" | "clients" | "map";
 
@@ -10,9 +11,9 @@ export interface MapCoordinate {
   info: string;
   propertyId?: string;
   confirmed?: boolean;
-  /** true = locado (alfinete roxo); false = disponível (alfinete vermelho). Tarefa 2. */
+  /** O status diferencia os imóveis disponíveis dos vendidos. */
   isLeased: boolean;
-  status: "OCCUPIED" | "AVAILABLE";
+  status: PropertyMapStatus;
 }
 
 export interface DashboardData {
@@ -64,15 +65,18 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
 
   if (section === "map") {
     const raw: any[] = (result.data as { coordinates?: any[] })?.coordinates ?? [];
-    return raw.map((g) => ({
-      lat:  g.lat == null ? null : Number(g.lat),
-      lng:  g.lng == null ? null : Number(g.lng),
-      info: String(g.info ?? ""),
-      propertyId: g.propertyId,
-      confirmed: g.confirmed === true,
-      isLeased: Boolean(g.isLeased ?? g.status === "OCCUPIED"),
-      status: (g.status === "OCCUPIED" ? "OCCUPIED" : "AVAILABLE") as "OCCUPIED" | "AVAILABLE",
-    })) as T;
+    return raw.map((g) => {
+      const status = getPropertyMapStatus(g);
+      return {
+        lat: g.lat == null ? null : Number(g.lat),
+        lng: g.lng == null ? null : Number(g.lng),
+        info: String(g.info ?? ""),
+        propertyId: g.propertyId,
+        confirmed: g.confirmed === true,
+        isLeased: status === 'OCCUPIED',
+        status,
+      };
+    }) as T;
   }
 
   return result.data as T;

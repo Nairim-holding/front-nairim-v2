@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useMonthlySummaryMulti } from '@/hooks/useMonthlySummaryMulti';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
@@ -133,6 +134,14 @@ export default function YearlyIncomeExpenseChart({ years: yearsProp, filters }: 
       title="RECEITAS VS DESPESAS POR ANO"
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const selected = yearTotals[point.dataIndex];
+        return selected ? loadFinancialChartDetails({
+          source: 'transactions', startDate: `${selected.year}-01-01`, endDate: `${selected.year}-12-31`,
+          type: point.seriesName === 'Receitas' ? 'INCOME' : 'EXPENSE',
+        }, filters) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         <div className="w-full h-full flex flex-col p-3 gap-1">

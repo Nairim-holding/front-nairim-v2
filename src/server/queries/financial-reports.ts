@@ -3,6 +3,7 @@ import { financialTransactionUseCases } from '@/infra/factories/financial-transa
 import { withPermission } from '@/infra/auth/session';
 import {
   expenseByCategoryQuerySchema,
+  financialChartDetailQuerySchema,
   monthlySummaryMultiQuerySchema,
   monthlySummaryQuerySchema,
   parseMultiYears,
@@ -16,6 +17,17 @@ import type {
   SubcategoryBreakdownResult,
   TransactionDocument,
 } from '@/core/entities/financial-transaction';
+import type { FinancialChartDetailRow } from '@/core/entities/financial-chart-detail';
+
+export async function getFinancialChartDetailsData(
+  raw: Record<string, unknown>,
+  filters?: Record<string, unknown>,
+): Promise<FinancialChartDetailRow[]> {
+  const query = financialChartDetailQuerySchema.parse(raw);
+  return withPermission('financial-transactions', 'view', () =>
+    financialTransactionUseCases.getChartDetails.execute(query, filters),
+  );
+}
 
 /**
  * Queries (leitura) de relatórios financeiros e anexos de lançamento.

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import Select, { type Option } from '@/components/ui/Select';
 import { getSubcategoryBreakdownAction } from '@/server/actions/financial-transaction';
@@ -219,6 +220,14 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
       subtitle={categoryName ? `Categoria: ${categoryName} · Total: ${formatCurrency(total)}` : undefined}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const subcategory = percentages[point.dataIndex];
+        return subcategory && selectedCategoryId ? loadFinancialChartDetails({
+          source: 'transactions', startDate, endDate, categoryId: selectedCategoryId,
+          subcategoryId: subcategory.subcategoryId,
+        }, { ...filters, category_id: selectedCategoryId }) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         <div className="w-full min-w-0 h-full flex flex-col p-3 gap-2">

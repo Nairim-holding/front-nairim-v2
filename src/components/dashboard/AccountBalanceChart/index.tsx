@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -122,6 +123,13 @@ export default function AccountBalanceChart() {
       subtitle="Saldo corrente de todas as contas ativas"
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const account = accounts[point.dataIndex];
+        return account ? loadFinancialChartDetails({
+          source: 'balance', institutionId: account.institutionId,
+        }) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         <div className="w-full h-full flex flex-col p-3 gap-2">

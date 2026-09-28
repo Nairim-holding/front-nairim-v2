@@ -31,6 +31,8 @@ interface GroupByConfig {
 }
 
 interface DataModalProps {
+  isLoading?: boolean;
+  error?: string;
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -122,7 +124,7 @@ function formatCellValue(value: any, key?: string): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DataModal({ isOpen, onClose, title, data, columns, groupBy, totalLabel = 'registros' }: DataModalProps) {
+export default function DataModal({ isOpen, onClose, title, data, columns, groupBy, totalLabel = 'registros', isLoading = false, error }: DataModalProps) {
   // Trava o scroll da página por baixo do modal enquanto ele está aberto,
   // restaurando o valor original ao fechar (sem isso, a página some por trás
   // do overlay mas continua rolando junto com o mouse/teclado).
@@ -246,7 +248,11 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
             </div>
 
             <div className="flex-1 overflow-auto">
-              {data.length === 0 ? (
+              {isLoading || error ? (
+                <div className="flex justify-center items-center h-full text-content-muted" role={error ? 'alert' : 'status'}>
+                  {error || 'Carregando lançamentos...'}
+                </div>
+              ) : data.length === 0 ? (
                 <div className="flex justify-center items-center h-full text-content-muted">
                   Nenhum dado disponível
                 </div>

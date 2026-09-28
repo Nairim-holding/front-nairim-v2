@@ -133,11 +133,11 @@ export const COLS_OCCUPATION_GAUGE = [
 ];
 
 export const COLS_VACANCY_GAUGE = [
-  col("id",          "ID"),
   col("title",       "Imóvel"),
   col("rentalValue", "Valor Aluguel", { format: formatCurrency, summable: true }),
   col("type",        "Tipo"),
-  col("areaTotal",   "Area Total (m²)", { format: formatValueOrDash, summable: true }),
+  col("areaTotal",   "Área Total (m²)", { format: (value: unknown) =>
+    value == null || value === '' ? '' : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), summable: true }),
 ];
 
 // ─── Clients ───────────────────────────────────────────────────────────────

@@ -34,11 +34,14 @@ import {
 import {
   getAvailableYearsData,
   getExpenseByCategoryData,
+  getFinancialChartDetailsData,
   getMonthlySummaryData,
   getMonthlySummaryMultiData,
   getSubcategoryBreakdownData,
   getTransactionDocumentsData,
 } from '@/server/queries/financial-reports';
+import type { FinancialChartDetailQuery, FinancialChartDetailRow } from '@/core/entities/financial-chart-detail';
+
 import { leaseCreditReconciliationUseCases } from '@/infra/factories/lease-credit-reconciliation-factory';
 import {
   completeCreditReconciliationSchema,
@@ -55,6 +58,13 @@ import type {
  * Substituem os endpoints de `/financial-transaction`.
  * Guarda: `withTenant`. Camada: server. Origem: TransactionController.
  */
+
+export async function getFinancialChartDetailsAction(
+  query: FinancialChartDetailQuery,
+  filters?: Record<string, unknown>,
+): Promise<ActionResult<FinancialChartDetailRow[]>> {
+  return runAction(() => getFinancialChartDetailsData({ ...query }, filters));
+}
 
 export async function createFinancialTransactionAction(
   input: Record<string, unknown>,
