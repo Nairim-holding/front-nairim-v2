@@ -62,6 +62,7 @@ export type PropertyValueMinAggregateOutputType = {
   extra_charges: runtime.Decimal | null
   sale_value: runtime.Decimal | null
   sale_buyer: string | null
+  sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
 }
@@ -82,6 +83,7 @@ export type PropertyValueMaxAggregateOutputType = {
   extra_charges: runtime.Decimal | null
   sale_value: runtime.Decimal | null
   sale_buyer: string | null
+  sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
 }
@@ -102,6 +104,7 @@ export type PropertyValueCountAggregateOutputType = {
   extra_charges: number
   sale_value: number
   sale_buyer: number
+  sale_notes: number
   sale_date: number
   purchase_date: number
   _all: number
@@ -144,6 +147,7 @@ export type PropertyValueMinAggregateInputType = {
   extra_charges?: true
   sale_value?: true
   sale_buyer?: true
+  sale_notes?: true
   sale_date?: true
   purchase_date?: true
 }
@@ -164,6 +168,7 @@ export type PropertyValueMaxAggregateInputType = {
   extra_charges?: true
   sale_value?: true
   sale_buyer?: true
+  sale_notes?: true
   sale_date?: true
   purchase_date?: true
 }
@@ -184,6 +189,7 @@ export type PropertyValueCountAggregateInputType = {
   extra_charges?: true
   sale_value?: true
   sale_buyer?: true
+  sale_notes?: true
   sale_date?: true
   purchase_date?: true
   _all?: true
@@ -291,6 +297,7 @@ export type PropertyValueGroupByOutputType = {
   extra_charges: runtime.Decimal | null
   sale_value: runtime.Decimal | null
   sale_buyer: string | null
+  sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
   _count: PropertyValueCountAggregateOutputType | null
@@ -334,6 +341,7 @@ export type PropertyValueWhereInput = {
   extra_charges?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
+  sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
@@ -355,6 +363,7 @@ export type PropertyValueOrderByWithRelationInput = {
   extra_charges?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_value?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_buyer?: Prisma.SortOrderInput | Prisma.SortOrder
+  sale_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_date?: Prisma.SortOrderInput | Prisma.SortOrder
   purchase_date?: Prisma.SortOrderInput | Prisma.SortOrder
   property?: Prisma.PropertyOrderByWithRelationInput
@@ -379,6 +388,7 @@ export type PropertyValueWhereUniqueInput = Prisma.AtLeast<{
   extra_charges?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
+  sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
@@ -400,6 +410,7 @@ export type PropertyValueOrderByWithAggregationInput = {
   extra_charges?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_value?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_buyer?: Prisma.SortOrderInput | Prisma.SortOrder
+  sale_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_date?: Prisma.SortOrderInput | Prisma.SortOrder
   purchase_date?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.PropertyValueCountOrderByAggregateInput
@@ -428,6 +439,7 @@ export type PropertyValueScalarWhereWithAggregatesInput = {
   extra_charges?: Prisma.DecimalNullableWithAggregatesFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.DecimalNullableWithAggregatesFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.StringNullableWithAggregatesFilter<"PropertyValue"> | string | null
+  sale_notes?: Prisma.StringNullableWithAggregatesFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableWithAggregatesFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableWithAggregatesFilter<"PropertyValue"> | Date | string | null
 }
@@ -447,6 +459,7 @@ export type PropertyValueCreateInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
   property: Prisma.PropertyCreateNestedOneWithoutValuesInput
@@ -468,6 +481,7 @@ export type PropertyValueUncheckedCreateInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
 }
@@ -487,6 +501,7 @@ export type PropertyValueUpdateInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   property?: Prisma.PropertyUpdateOneRequiredWithoutValuesNestedInput
@@ -508,6 +523,7 @@ export type PropertyValueUncheckedUpdateInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -528,6 +544,7 @@ export type PropertyValueCreateManyInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
 }
@@ -547,6 +564,7 @@ export type PropertyValueUpdateManyMutationInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -567,6 +585,7 @@ export type PropertyValueUncheckedUpdateManyInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -597,6 +616,7 @@ export type PropertyValueCountOrderByAggregateInput = {
   extra_charges?: Prisma.SortOrder
   sale_value?: Prisma.SortOrder
   sale_buyer?: Prisma.SortOrder
+  sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
 }
@@ -627,6 +647,7 @@ export type PropertyValueMaxOrderByAggregateInput = {
   extra_charges?: Prisma.SortOrder
   sale_value?: Prisma.SortOrder
   sale_buyer?: Prisma.SortOrder
+  sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
 }
@@ -647,6 +668,7 @@ export type PropertyValueMinOrderByAggregateInput = {
   extra_charges?: Prisma.SortOrder
   sale_value?: Prisma.SortOrder
   sale_buyer?: Prisma.SortOrder
+  sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
 }
@@ -722,6 +744,7 @@ export type PropertyValueCreateWithoutPropertyInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
 }
@@ -741,6 +764,7 @@ export type PropertyValueUncheckedCreateWithoutPropertyInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
 }
@@ -790,6 +814,7 @@ export type PropertyValueScalarWhereInput = {
   extra_charges?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
+  sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
 }
@@ -809,6 +834,7 @@ export type PropertyValueCreateManyPropertyInput = {
   extra_charges?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: string | null
+  sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
 }
@@ -828,6 +854,7 @@ export type PropertyValueUpdateWithoutPropertyInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -847,6 +874,7 @@ export type PropertyValueUncheckedUpdateWithoutPropertyInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -866,6 +894,7 @@ export type PropertyValueUncheckedUpdateManyWithoutPropertyInput = {
   extra_charges?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_value?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   sale_buyer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -888,6 +917,7 @@ export type PropertyValueSelect<ExtArgs extends runtime.Types.Extensions.Interna
   extra_charges?: boolean
   sale_value?: boolean
   sale_buyer?: boolean
+  sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
@@ -909,6 +939,7 @@ export type PropertyValueSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   extra_charges?: boolean
   sale_value?: boolean
   sale_buyer?: boolean
+  sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
@@ -930,6 +961,7 @@ export type PropertyValueSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   extra_charges?: boolean
   sale_value?: boolean
   sale_buyer?: boolean
+  sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
@@ -951,11 +983,12 @@ export type PropertyValueSelectScalar = {
   extra_charges?: boolean
   sale_value?: boolean
   sale_buyer?: boolean
+  sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
 }
 
-export type PropertyValueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "property_id" | "purchase_value" | "market_value" | "rental_value" | "condo_fee" | "property_tax" | "status" | "notes" | "created_at" | "updated_at" | "deleted_at" | "extra_charges" | "sale_value" | "sale_buyer" | "sale_date" | "purchase_date", ExtArgs["result"]["propertyValue"]>
+export type PropertyValueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "property_id" | "purchase_value" | "market_value" | "rental_value" | "condo_fee" | "property_tax" | "status" | "notes" | "created_at" | "updated_at" | "deleted_at" | "extra_charges" | "sale_value" | "sale_buyer" | "sale_notes" | "sale_date" | "purchase_date", ExtArgs["result"]["propertyValue"]>
 export type PropertyValueInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
 }
@@ -987,6 +1020,7 @@ export type $PropertyValuePayload<ExtArgs extends runtime.Types.Extensions.Inter
     extra_charges: runtime.Decimal | null
     sale_value: runtime.Decimal | null
     sale_buyer: string | null
+    sale_notes: string | null
     sale_date: Date | null
     purchase_date: Date | null
   }, ExtArgs["result"]["propertyValue"]>
@@ -1428,6 +1462,7 @@ export interface PropertyValueFieldRefs {
   readonly extra_charges: Prisma.FieldRef<"PropertyValue", 'Decimal'>
   readonly sale_value: Prisma.FieldRef<"PropertyValue", 'Decimal'>
   readonly sale_buyer: Prisma.FieldRef<"PropertyValue", 'String'>
+  readonly sale_notes: Prisma.FieldRef<"PropertyValue", 'String'>
   readonly sale_date: Prisma.FieldRef<"PropertyValue", 'DateTime'>
   readonly purchase_date: Prisma.FieldRef<"PropertyValue", 'DateTime'>
 }

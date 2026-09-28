@@ -619,6 +619,7 @@ model PropertyValue {
   extra_charges  Decimal?       @db.Decimal(20, 2)
   sale_value     Decimal?       @db.Decimal(20, 2)
   sale_buyer     String?
+  sale_notes     String?
   sale_date      DateTime?      @db.Date
   purchase_date  DateTime?      @db.Date
   property       Property       @relation(fields: [property_id], references: [id])

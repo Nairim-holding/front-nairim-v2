@@ -272,6 +272,7 @@ function buildValueData(values: NonNullable<CreateUnifiedPropertyData['values']>
     notes: values.notes,
     sale_value: Number(values.sale_value || 0),
     sale_buyer: values.sale_buyer?.trim() || null,
+    sale_notes: values.sale_notes,
     extra_charges: Number(values.extra_charges || 0),
     sale_date: values.sale_date ? new Date(values.sale_date) : null,
   };

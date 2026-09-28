@@ -43,6 +43,7 @@ export interface PropertyValueInput {
   sale_date?: string | Date | null;
   sale_value?: number | null;
   sale_buyer?: string | null;
+  sale_notes?: string | null;
   extra_charges?: number | null;
 }
 

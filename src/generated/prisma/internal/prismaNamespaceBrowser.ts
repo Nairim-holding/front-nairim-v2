@@ -511,6 +511,7 @@ export const PropertyValueScalarFieldEnum = {
   extra_charges: 'extra_charges',
   sale_value: 'sale_value',
   sale_buyer: 'sale_buyer',
+  sale_notes: 'sale_notes',
   sale_date: 'sale_date',
   purchase_date: 'purchase_date'
 } as const

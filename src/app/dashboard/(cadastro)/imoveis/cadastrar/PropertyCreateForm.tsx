@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../_lib/propertySteps';
 import { buildPropertyFormData } from '../_lib/propertyTransform';
+import { resolvePropertyQuickCreates } from '../_lib/propertyQuickCreate';
 import { createUnifiedPropertyAction } from '@/server/actions/property';
 
 
@@ -38,7 +39,8 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = useCallback(async (data: any) => {
-    const fd = buildPropertyFormData(data, user?.id ?? '');
+    const resolved = await resolvePropertyQuickCreates(data);
+    const fd = buildPropertyFormData(resolved, user?.id ?? '');
     const result = await createUnifiedPropertyAction(fd);
     if (!result.ok) {
       if (result.status === 400 && result.errors) {

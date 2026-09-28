@@ -40,6 +40,7 @@ const valuesSchema = z.object({
   property_tax: z.union([z.number(), z.string()]).nullish(),
   status: z.enum(['AVAILABLE', 'OCCUPIED', 'SOLD']),
   sale_buyer: z.string().trim().max(250).nullish(),
+  sale_notes: z.string().nullish(),
   notes: z.string().nullish(),
   sale_date: z.union([z.string(), z.date()]).nullish(),
   sale_value: z.union([z.number(), z.string()]).nullish(),

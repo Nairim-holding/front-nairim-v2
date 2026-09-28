@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import DynamicForm from '@/components/form/DynamicForm';
 import { buildPropertySteps, validateStep, type SelectOption } from '../../_lib/propertySteps';
 import { buildPropertyFormData, transformPropertyData } from '../../_lib/propertyTransform';
+import { resolvePropertyQuickCreates } from '../../_lib/propertyQuickCreate';
 import { updateUnifiedPropertyAction, getPropertyByIdAction } from '@/server/actions/property';
 import { findOccupyingLease } from '@/shared/utils/property-occupancy';
 
@@ -53,7 +54,8 @@ export default function PropertyEditForm({ id, propertyData, ownerOptions, typeO
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = useCallback(async (data: any) => {
-    const fd = buildPropertyFormData(data, user?.id ?? '', propertyData?.documents ?? []);
+    const resolved = await resolvePropertyQuickCreates(data);
+    const fd = buildPropertyFormData(resolved, user?.id ?? '', propertyData?.documents ?? []);
 
     const result = await updateUnifiedPropertyAction(id, fd);
     if (!result.ok) {

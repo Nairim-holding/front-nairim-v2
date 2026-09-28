@@ -39,6 +39,7 @@ interface QuickCreateAutocompleteProps {
    * `md`: altura/padding iguais aos demais campos de formulário (ex.: modais).
    */
   size?: 'sm' | 'md';
+  ariaLabel?: string;
 }
 
 const normalize = (s: string) =>
@@ -54,7 +55,8 @@ export default function QuickCreateAutocomplete({
   groups,
   currentLabel,
   allowCreate = true,
-  size = 'sm'
+  size = 'sm',
+  ariaLabel,
 }: QuickCreateAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -195,6 +197,7 @@ export default function QuickCreateAutocomplete({
         <input
           ref={inputRef}
           type="text"
+          aria-label={ariaLabel}
           value={isOpen ? query : selectedLabel}
           onChange={e => {
             setQuery(e.target.value);

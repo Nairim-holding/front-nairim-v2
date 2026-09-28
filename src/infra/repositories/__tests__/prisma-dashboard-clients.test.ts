@@ -15,7 +15,13 @@ const start = new Date('2026-09-01T00:00:00Z');
 const end = new Date('2026-09-30T00:00:00Z');
 
 describe('dashboard portfolios and owner totals', () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => {
+    vi.resetAllMocks();
+    for (const model of [db.owner, db.tenant, db.agency, db.property]) {
+      model.findMany.mockResolvedValue([]);
+      model.count.mockResolvedValue(0);
+    }
+  });
   it('counts existing owners, tenants and agencies through the selected end, with actual previous averages', async () => {
     db.owner.findMany.mockResolvedValue([{ id: 'owner', name: 'Maria', properties: [property('p1'), property('p2')] }]);
     db.owner.count.mockResolvedValue(1);
@@ -30,9 +36,44 @@ describe('dashboard portfolios and owner totals', () => {
     expect(result.agenciesTotal.result).toBe(1);
     expect(result.propertiesPerOwner).toMatchObject({ result: 2, variation: 100 });
     expect(result.propertiesByAgency[0]).toMatchObject({ name: 'Imobiliária', value: 1 });
+    expect(result.propertiesByAgency).toHaveLength(1);
     for (const find of [db.owner.findMany, db.tenant.findMany, db.agency.findMany]) {
       expect(find.mock.calls[0][0].where.created_at).toEqual({ lte: end });
     }
+  });
+  it('includes unassigned properties in Nenhuma with their details alongside registered agencies', async () => {
+    db.agency.findMany.mockResolvedValue([{
+      id: 'agency', trade_name: 'Imobiliária', legal_name: 'Imobiliária Ltda', properties: [property('assigned')],
+    }]);
+    db.agency.count.mockResolvedValue(1);
+    db.property.findMany.mockResolvedValue([property('unassigned'), property('unassigned-occupied', 'OCCUPIED')]);
+
+    const result = await new PrismaDashboardRepository().getClients(start, end);
+
+    expect(result.propertiesByAgency).toMatchObject([
+      { name: 'Imobiliária', value: 1, data: [{ id: 'assigned', agency: { id: 'agency' } }] },
+      { name: 'Nenhuma', value: 2, data: [
+        { id: 'unassigned', title: 'unassigned', type: 'Casa', status: 'AVAILABLE', rentalValue: 2000, areaTotal: 100, agency: null },
+        { id: 'unassigned-occupied', status: 'OCCUPIED', agency: null },
+      ] },
+    ]);
+    expect(result.propertiesByAgency.reduce((sum, group) => sum + group.value, 0)).toBe(3);
+    expect(result.agenciesTotal.result).toBe(1);
+    expect(db.property.findMany).toHaveBeenCalledWith({
+      where: { agency_id: null, deleted_at: null, created_at: { lte: end } },
+      include: {
+        type: true,
+        values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
+      },
+    });
+  });
+  it('shows Nenhuma even when no agencies are registered', async () => {
+    db.property.findMany.mockResolvedValue([property('unassigned')]);
+
+    const result = await new PrismaDashboardRepository().getClients(start, end);
+
+    expect(result.propertiesByAgency).toMatchObject([{ name: 'Nenhuma', value: 1, data: [{ id: 'unassigned' }] }]);
+    expect(result.agenciesTotal.result).toBe(0);
   });
   it('counts all property types and sold properties separately from occupation and vacancy', async () => {
     db.property.findMany.mockResolvedValueOnce([

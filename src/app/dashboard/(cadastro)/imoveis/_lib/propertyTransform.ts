@@ -195,6 +195,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     values_notes:   values.notes ?? '',
     sale_value:     formatMoney(values.sale_value ?? ''),
     sale_buyer:     values.sale_buyer ?? '',
+    sale_notes:     values.sale_notes ?? '',
     extra_charges:  formatMoney(values.extra_charges ?? ''),
     market_value:   formatMoney(values.market_value ?? ''),
 
@@ -288,6 +289,7 @@ export function buildPropertyFormData(
     sale_date:      data.sale_date || null,
     sale_value:     parseMoney(data.sale_value) || 0,
     sale_buyer:     data.sale_buyer || null,
+    sale_notes:     data.sale_notes || null,
     extra_charges:  parseMoney(data.extra_charges) || 0,
     market_value:   parseMoney(data.market_value) || null,
   }));

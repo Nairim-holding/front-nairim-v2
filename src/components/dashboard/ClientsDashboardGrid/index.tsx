@@ -193,7 +193,7 @@ export default function ClientsDashboardGrid({
                     // `agency` vem como objeto no detalhe, então o rótulo do
                     // grupo sai do nome fantasia (com fallback na razão social).
                     key: 'agency',
-                    label: (row) => row?.agency?.tradeName || row?.agency?.legalName || '—',
+                    label: (row) => row?.agency?.tradeName || row?.agency?.legalName || 'Nenhuma',
                     unitLabel: (n) => `Total de ${n} ${n === 1 ? 'imóvel' : 'imóveis'}`,
                   }}
                   detailTotalLabel="imóveis"

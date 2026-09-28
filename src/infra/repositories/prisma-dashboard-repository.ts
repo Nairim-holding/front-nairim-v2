@@ -455,7 +455,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
-    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount, prevTotalProperties] =
+    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount, prevTotalProperties, propertiesWithoutAgency] =
       await Promise.all([
         prisma.owner.findMany({
           where: {
@@ -530,6 +530,17 @@ export class PrismaDashboardRepository implements DashboardRepository {
           created_at: { lte: period.previous.end }, deleted_at: null,
           owner: { deleted_at: null, created_at: { lte: period.previous.end } },
         } }),
+        prisma.property.findMany({
+          where: {
+            agency_id: null,
+            deleted_at: null,
+            created_at: { lte: period.current.end },
+          },
+          include: {
+            type: true,
+            values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
+          },
+        }),
       ]);
 
     const ownersDetails = owners.map((o) => ({
@@ -574,6 +585,40 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const prevPropertiesPerOwnerVal =
       prevOwnersCount > 0 ? prevTotalProperties / prevOwnersCount : 0;
 
+    const propertiesByAgency: ChartData[] = agencies.map((a) => ({
+      name: a.trade_name || a.legal_name,
+      value: a.properties.length,
+      data: a.properties.map((p) => ({
+        id: p.id,
+        title: p.title,
+        type: p.type?.description,
+        status: p.values[0]?.status,
+        rentalValue: toNum(p.values[0]?.rental_value),
+        areaTotal: p.area_total,
+        agency: {
+          id: a.id,
+          tradeName: a.trade_name,
+          legalName: a.legal_name,
+        },
+      })),
+    }));
+
+    if (propertiesWithoutAgency.length > 0) {
+      propertiesByAgency.push({
+        name: 'Nenhuma',
+        value: propertiesWithoutAgency.length,
+        data: propertiesWithoutAgency.map((p) => ({
+          id: p.id,
+          title: p.title,
+          type: p.type?.description,
+          status: p.values[0]?.status,
+          rentalValue: toNum(p.values[0]?.rental_value),
+          areaTotal: p.area_total,
+          agency: null,
+        })),
+      });
+    }
+
     return {
       ownersTotal: calcVariation(owners.length, prevOwnersCount, ownersDetails),
 
@@ -587,23 +632,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
       agenciesTotal: calcVariation(agencies.length, prevAgenciesCount, agenciesDetails),
 
-      propertiesByAgency: agencies.map((a) => ({
-        name: a.trade_name || a.legal_name,
-        value: a.properties.length,
-        data: a.properties.map((p) => ({
-          id: p.id,
-          title: p.title,
-          type: p.type?.description,
-          status: p.values[0]?.status,
-          rentalValue: toNum(p.values[0]?.rental_value),
-          areaTotal: p.area_total,
-          agency: {
-            id: a.id,
-            tradeName: a.trade_name,
-            legalName: a.legal_name,
-          },
-        })),
-      })),
+      propertiesByAgency,
     };
   }
 

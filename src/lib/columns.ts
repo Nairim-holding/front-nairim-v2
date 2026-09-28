@@ -173,5 +173,5 @@ export const COLS_PROPERTIES_BY_AGENCY = [
   col("title",       "Imóvel"),
   col("rentalValue", "Valor",       { format: formatCurrency, summable: true }),
   col("status",      "Status",      { format: formatStatus }),
-  col("agency",      "Imobiliária", { format: formatAgency }),
+  col("agency",      "Imobiliária", { format: (v: any) => v ? formatAgency(v) : 'Nenhuma' }),
 ];
