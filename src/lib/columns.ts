@@ -24,7 +24,7 @@ const col = (key: string, label: string, extra?: Partial<{ width: string; format
 export const COLS_AVG_RENTAL = [
   col("title",       "Imóvel",          { width: "250px" }),
   col("type",        "Tipo",            { width: "120px" }),
-  col("rentalValue", "Valor do Aluguel",{ width: "150px", format: formatCurrency, summable: true }),
+  col("rentalValue", "Valor Bruto da Locação",{ width: "170px", format: formatCurrency, summable: true }),
   col("valuePerSqm", "Valor/m²",        { width: "100px", format: (v: any) => `R$ ${v?.toFixed(2)}` }),
   col("areaTotal",   "Área Total",      { width: "100px", format: formatSqm, summable: true }),
   col("owner",       "Proprietário",    { width: "150px" }),
@@ -133,11 +133,11 @@ export const COLS_OCCUPATION_GAUGE = [
 ];
 
 export const COLS_VACANCY_GAUGE = [
-  col("id",          "ID"),
   col("title",       "Imóvel"),
   col("rentalValue", "Valor Aluguel", { format: formatCurrency, summable: true }),
   col("type",        "Tipo"),
-  col("areaTotal",   "Area Total (m²)", { format: formatValueOrDash, summable: true }),
+  col("areaTotal",   "Área Total (m²)", { format: (value: unknown) =>
+    value == null || value === '' ? '' : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), summable: true }),
 ];
 
 // ─── Clients ───────────────────────────────────────────────────────────────
@@ -173,5 +173,5 @@ export const COLS_PROPERTIES_BY_AGENCY = [
   col("title",       "Imóvel"),
   col("rentalValue", "Valor",       { format: formatCurrency, summable: true }),
   col("status",      "Status",      { format: formatStatus }),
-  col("agency",      "Imobiliária", { format: formatAgency }),
+  col("agency",      "Imobiliária", { format: (v: any) => v ? formatAgency(v) : 'Nenhuma' }),
 ];

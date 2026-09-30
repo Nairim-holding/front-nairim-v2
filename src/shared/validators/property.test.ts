@@ -23,3 +23,14 @@ describe('property update with legacy IPTU', () => {
     expect(result.iptus[0].property_tax_cash_due_date).toBe('2026-01-20');
   });
 });
+
+describe('sale details', () => {
+  const values = { status: 'SOLD', sale_buyer: 'Comprador', sale_date: '2026-09-26', sale_value: 450000 };
+  it('requires buyer, date and a positive finite price for a sold property', () => {
+    expect(createUnifiedPropertySchema.safeParse({ ...property, values }).success).toBe(true);
+    for (const patch of [{ sale_buyer: '' }, { sale_date: null }, { sale_date: 'invalid' }, { sale_value: 0 }, { sale_value: -1 }, { sale_value: 'Infinity' }]) {
+      expect(createUnifiedPropertySchema.safeParse({ ...property, values: { ...values, ...patch } }).success).toBe(false);
+    }
+    expect(createUnifiedPropertySchema.safeParse(property).success).toBe(true);
+  });
+});

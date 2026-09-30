@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
+import { ChartDrilldownContext, type ChartPoint } from '@/components/dashboard/ChartCard';
 import * as echarts from 'echarts';
 
 interface EchartsSurfaceProps {
@@ -15,6 +16,7 @@ interface EchartsSurfaceProps {
  * Cada instância (normal vs. tela cheia) tem seu próprio container e chart.
  */
 export default function EchartsSurface({ isFullscreen, isLoading, buildOption }: EchartsSurfaceProps) {
+  const openDetails = useContext(ChartDrilldownContext);
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<echarts.ECharts | null>(null);
 
@@ -26,6 +28,7 @@ export default function EchartsSurface({ isFullscreen, isLoading, buildOption }:
 
     const chart = echarts.init(containerRef.current);
     chart.setOption(buildOption(isFullscreen));
+    if (openDetails) chart.on('click', params => openDetails(params as unknown as ChartPoint));
     instanceRef.current = chart;
 
     const resizeObserver = new ResizeObserver(() => instanceRef.current?.resize());
@@ -39,7 +42,7 @@ export default function EchartsSurface({ isFullscreen, isLoading, buildOption }:
       instanceRef.current?.dispose();
       instanceRef.current = null;
     };
-  }, [buildOption, isFullscreen, isLoading]);
+  }, [buildOption, isFullscreen, isLoading, openDetails]);
 
   if (isLoading) {
     return (

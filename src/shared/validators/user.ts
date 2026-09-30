@@ -45,6 +45,8 @@ export const createUserSchema = z.object({
   photo_url: z.string().nullable().optional(),
   ...phoneFields,
   has_time_restriction: z.boolean().optional(),
+  all_companies_access: z.boolean().optional(),
+  allowed_company_ids: z.array(z.string().min(1)).max(1000).optional(),
 });
 export type CreateUserBody = z.infer<typeof createUserSchema>;
 
@@ -61,6 +63,8 @@ export const updateUserSchema = z.object({
   photo_url: z.string().nullable().optional(),
   ...phoneFields,
   has_time_restriction: z.boolean().optional(),
+  all_companies_access: z.boolean().optional(),
+  allowed_company_ids: z.array(z.string().min(1)).max(1000).optional(),
 });
 export type UpdateUserBody = z.infer<typeof updateUserSchema>;
 

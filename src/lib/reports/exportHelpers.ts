@@ -30,10 +30,21 @@ async function fetchLogoAsDataUrl(logoUrl: string | null): Promise<{ dataUrl: st
   }
 }
 
+/**
+ * Remove da tabela nós que só existem para a tela (ex: alça de arrastar do
+ * Relatório de Locações, marcada com `.no-export`) antes de exportar/imprimir
+ * — não é fórmula, valor nem imóvel: entraria como coluna vazia no Excel/PDF.
+ */
+function stripNonExportNodes(tableEl: HTMLTableElement): HTMLTableElement {
+  const clone = tableEl.cloneNode(true) as HTMLTableElement;
+  clone.querySelectorAll('.no-export').forEach((node) => node.remove());
+  return clone;
+}
+
 /** Exporta a tabela renderizada (DOM) para Excel — mesmo padrão do Planejamento. */
 export function exportTableToExcel(tableEl: HTMLTableElement | null, filename: string): boolean {
   if (!tableEl) return false;
-  const worksheet = XLSX.utils.table_to_sheet(tableEl);
+  const worksheet = XLSX.utils.table_to_sheet(stripNonExportNodes(tableEl));
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório');
   XLSX.writeFile(workbook, `${filename}.xlsx`);
@@ -94,7 +105,7 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
   cursorY += 8;
 
   autoTable(doc, {
-    html: tableEl,
+    html: stripNonExportNodes(tableEl),
     startY: cursorY + 10,
     horizontalPageBreak: true,
     styles: { fontSize: 7, cellPadding: 3 },
@@ -115,6 +126,7 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
  */
 function staticHTMLOf(el: HTMLElement): string {
   const clone = el.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll('.no-export').forEach((node) => node.remove());
   const originals = el.querySelectorAll('input, select, textarea');
 
   clone.querySelectorAll('input, select, textarea').forEach((node, index) => {
@@ -128,13 +140,31 @@ function staticHTMLOf(el: HTMLElement): string {
   return clone.outerHTML;
 }
 
+export interface PrintReportOptions {
+  /**
+   * HTML pronto para o bloco de resumo, substituindo o clone de `summaryEl`.
+   * Usado pelo Relatório de Locações: o modelo impresso do cliente tem um
+   * arranjo de quadros bem diferente do grid de cards da tela (ver
+   * `buildLeaseReportSummaryHTML`), então CSS sozinho não chegava lá — a
+   * estrutura HTML mesma precisa ser outra, não só o estilo.
+   */
+  rawSummaryHTML?: string;
+  /** CSS adicional, injetado depois do bloco padrão — regras específicas de um relatório. */
+  extraStyles?: string;
+}
+
 /**
  * Abre uma janela só com o conteúdo do relatório e dispara a impressão do
  * navegador. Cabeçalho com dados da empresa (Tarefa 4.3): logo, CNPJ,
  * endereço, período, filtros aplicados, quem emitiu e quando — presente só na
  * 1ª página via `break-after: avoid` no CSS de impressão.
  */
-export async function printReportElement(el: HTMLElement | null, context: ReportPrintContext, summaryEl?: HTMLElement | null): Promise<boolean> {
+export async function printReportElement(
+  el: HTMLElement | null,
+  context: ReportPrintContext,
+  summaryEl?: HTMLElement | null,
+  options?: PrintReportOptions,
+): Promise<boolean> {
   if (!el) return false;
 
   const company = await fetchReportPrintHeaderData();
@@ -157,9 +187,8 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   // esse cabeçalho porque o contexto já deixa claro que é o resumo (é o único
   // bloco fora da tabela); isoladamente numa página impressa, sem essa pista,
   // o bloco de números soltos no fim do documento perde contexto.
-  const summaryHTML = summaryEl
-    ? `<h3 class="report-summary-title">${context.summaryTitle ?? 'Resumo'}</h3>${staticHTMLOf(summaryEl)}`
-    : '';
+  const summaryHTML = options?.rawSummaryHTML
+    ?? (summaryEl ? `<h3 class="report-summary-title">${context.summaryTitle ?? 'Resumo'}</h3>${staticHTMLOf(summaryEl)}` : '');
 
   const html = `<!doctype html>
 <html>
@@ -255,6 +284,7 @@ export async function printReportElement(el: HTMLElement | null, context: Report
   }
   .report-panel table { font-size: 11px; }
   .report-panel-note { padding: 6px 10px; font-size: 10px; color: #475569; border-top: 1px solid #e2e8f0; }
+  ${options?.extraStyles ?? ''}
 </style>
 </head>
 <body>

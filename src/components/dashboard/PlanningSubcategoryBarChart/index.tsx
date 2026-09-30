@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getPlanningDashboardAction } from '@/server/actions/planning';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
@@ -12,17 +13,26 @@ import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 
 interface SubcategoryDashboard {
-  id?: string;
+  id: string;
   name: string;
   realized_amount: number;
 }
 
 interface CategoryDashboard {
-  id?: string;
+  id: string;
   name: string;
   realized_amount: number;
   subcategories?: SubcategoryDashboard[];
 }
+
+interface SubcategoryBarItem {
+  categoryId: string;
+  subcategoryId?: string;
+  name: string;
+  value: number;
+}
+
+const itemKey = (item: SubcategoryBarItem) => `${item.categoryId}:${item.subcategoryId ?? ''}`;
 
 /** Anos inteiros cobertos por [startDate, endDate] (ISO), em ordem crescente. */
 function yearsInRange(startDate: string, endDate: string): number[] {
@@ -129,15 +139,15 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
   const isGlobalTotalRow = (c: CategoryDashboard) =>
     c.id === `${type.toLowerCase()}s-global` || c.name.toLowerCase().startsWith('total de');
 
-  function flattenSubcategories(list: CategoryDashboard[]): { name: string; value: number }[] {
-    const out: { name: string; value: number }[] = [];
+  function flattenSubcategories(list: CategoryDashboard[]): SubcategoryBarItem[] {
+    const out: SubcategoryBarItem[] = [];
     for (const cat of list.filter((c) => !isGlobalTotalRow(c))) {
       if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
         for (const sub of cat.subcategories) {
-          if (sub.realized_amount > 0) out.push({ name: sub.name, value: sub.realized_amount });
+          if (sub.realized_amount > 0) out.push({ categoryId: cat.id, subcategoryId: sub.id, name: sub.name, value: sub.realized_amount });
         }
       } else if (cat.realized_amount > 0) {
-        out.push({ name: cat.name, value: cat.realized_amount });
+        out.push({ categoryId: cat.id, name: cat.name, value: cat.realized_amount });
       }
     }
     return out;
@@ -148,19 +158,20 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
 
     // Total por subcategoria somando todos os anos — é o que dita a altura da
     // barra e a ordenação; o detalhamento por ano só aparece no tooltip.
-    const totals = new Map<string, number>();
+    const totals = new Map<string, SubcategoryBarItem>();
     for (const year of years) {
-      for (const { name, value } of flattenSubcategories(categoriesByYear[year] ?? [])) {
-        totals.set(name, (totals.get(name) ?? 0) + value);
+      for (const item of flattenSubcategories(categoriesByYear[year] ?? [])) {
+        const key = itemKey(item);
+        totals.set(key, { ...item, value: (totals.get(key)?.value ?? 0) + item.value });
       }
     }
-    return [...totals.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    return [...totals.values()].sort((a, b) => b.value - a.value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories, categoriesByYear, isMultiYear, years.join(',')]);
 
-  /** Valor da subcategoria `name` no `year`, ou 0 se não houve lançamento. */
+  /** Valor da mesma categoria/subcategoria no ano, ou 0 se não houve lançamento. */
   const valueForYear = useCallback(
-    (name: string, year: number) => flattenSubcategories(categoriesByYear[year] ?? []).find((i) => i.name === name)?.value ?? 0,
+    (entry: SubcategoryBarItem, year: number) => flattenSubcategories(categoriesByYear[year] ?? []).find((i) => itemKey(i) === itemKey(entry))?.value ?? 0,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [categoriesByYear]
   );
@@ -191,7 +202,7 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
       if (isMultiYear) {
         const pct = (value: number) => (total > 0 ? `${((value / total) * 100).toFixed(2).replace('.', ',')}%` : '0,00%');
         const yearRows = years.map((year) => {
-          const value = valueForYear(name, year);
+          const value = entry ? valueForYear(entry, year) : 0;
           return {
             label: `${name} - ${year}`,
             value,
@@ -261,6 +272,14 @@ export default function PlanningSubcategoryBarChart({ type, title, startDate: st
       subtitle={periodLabel}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const item = items[point.dataIndex];
+        return item ? loadFinancialChartDetails({
+          source: 'planning', type, startDate, endDate,
+          categoryId: item.categoryId, subcategoryId: item.subcategoryId,
+        }, filters) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         !isLoading && items.length === 0 ? (

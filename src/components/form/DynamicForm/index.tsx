@@ -125,7 +125,7 @@ export default function DynamicFormManager({
   basePath,
   mode,
   id,
-  steps,
+  steps: allSteps,
   fields,
   onSubmitSuccess,
   onCancel,
@@ -150,6 +150,7 @@ export default function DynamicFormManager({
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(defaultStep);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const steps = useMemo(() => allSteps?.filter(step => !step.hidden?.(formValues)), [allSteps, formValues]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [internalCompletedSteps, setInternalCompletedSteps] = useState<number[]>([]);
 
@@ -321,7 +322,7 @@ export default function DynamicFormManager({
   // resetava o formulário a cada mudança.
   useEffect(() => {
     setFormValues(prev => {
-      const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
+      const allFields = allSteps ? allSteps.flatMap(step => step.fields || []) : fields || [];
       let mutated = false;
       const next: Record<string, any> = { ...prev };
 
@@ -378,7 +379,7 @@ export default function DynamicFormManager({
       setInitialSnapshot(snap => snap ?? {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps, fields]);
+  }, [allSteps, fields]);
 
   useEffect(() => {
     if (mode !== 'create' && id) {
@@ -405,7 +406,7 @@ export default function DynamicFormManager({
       const applyLoadedData = (formData: Record<string, any>) => {
         const updatedValues: Record<string, any> = {};
 
-        const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
+        const allFields = allSteps ? allSteps.flatMap(step => step.fields || []) : fields || [];
 
         allFields.forEach(field => {
           const value = formData[field.field];
@@ -421,15 +422,15 @@ export default function DynamicFormManager({
           return merged;
         });
 
-        if (steps && !externalCompletedSteps) {
-          const allStepsCompleted = steps.map((_, index) => index);
+        if (allSteps && !externalCompletedSteps) {
+          const allStepsCompleted = allSteps.map((_, index) => index);
           setInternalCompletedSteps(allStepsCompleted);
         }
       };
 
       fetchData();
     }
-  }, [mode, id, resource, router, showMessage, title, basePath, transformData, steps, fields, externalCompletedSteps, fetchResource]);
+  }, [mode, id, resource, router, showMessage, title, basePath, transformData, allSteps, fields, externalCompletedSteps, fetchResource]);
 
   const validateField = (field: FormFieldDef, value: any): string | null => {
     if (isViewMode) return null;
@@ -528,7 +529,7 @@ export default function DynamicFormManager({
   const validateAllSteps = (): boolean => {
     if (isViewMode) return true;
     
-    const allFields = steps ? steps.flatMap(step => step.fields || []) : fields || [];
+    const allFields = allSteps ? allSteps.flatMap(step => step.fields || []) : fields || [];
     const newErrors: Record<string, string> = {};
     
     allFields.forEach(field => {

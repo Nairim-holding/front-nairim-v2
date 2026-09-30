@@ -262,6 +262,7 @@ export type CompanyWhereInput = {
   investment_settings?: Prisma.XOR<Prisma.InvestmentSettingsNullableScalarRelationFilter, Prisma.InvestmentSettingsWhereInput> | null
   adjustment_indexes?: Prisma.AdjustmentIndexListRelationFilter
   holidays?: Prisma.HolidayListRelationFilter
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderListRelationFilter
   lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
@@ -304,6 +305,7 @@ export type CompanyOrderByWithRelationInput = {
   investment_settings?: Prisma.InvestmentSettingsOrderByWithRelationInput
   adjustment_indexes?: Prisma.AdjustmentIndexOrderByRelationAggregateInput
   holidays?: Prisma.HolidayOrderByRelationAggregateInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderOrderByRelationAggregateInput
   lease_notifications?: Prisma.LeaseNotificationOrderByRelationAggregateInput
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   favorites?: Prisma.FavoriteOrderByRelationAggregateInput
@@ -349,6 +351,7 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   investment_settings?: Prisma.XOR<Prisma.InvestmentSettingsNullableScalarRelationFilter, Prisma.InvestmentSettingsWhereInput> | null
   adjustment_indexes?: Prisma.AdjustmentIndexListRelationFilter
   holidays?: Prisma.HolidayListRelationFilter
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderListRelationFilter
   lease_notifications?: Prisma.LeaseNotificationListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
@@ -421,6 +424,7 @@ export type CompanyCreateInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -463,6 +467,7 @@ export type CompanyUncheckedCreateInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -505,6 +510,7 @@ export type CompanyUpdateInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -547,6 +553,7 @@ export type CompanyUncheckedUpdateInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1095,6 +1102,20 @@ export type CompanyUpdateOneRequiredWithoutLease_notificationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutLease_notificationsInput, Prisma.CompanyUpdateWithoutLease_notificationsInput>, Prisma.CompanyUncheckedUpdateWithoutLease_notificationsInput>
 }
 
+export type CompanyCreateNestedOneWithoutLease_expiry_remindersInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedCreateWithoutLease_expiry_remindersInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutLease_expiry_remindersInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutLease_expiry_remindersNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedCreateWithoutLease_expiry_remindersInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutLease_expiry_remindersInput
+  upsert?: Prisma.CompanyUpsertWithoutLease_expiry_remindersInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutLease_expiry_remindersInput, Prisma.CompanyUpdateWithoutLease_expiry_remindersInput>, Prisma.CompanyUncheckedUpdateWithoutLease_expiry_remindersInput>
+}
+
 export type CompanyCreateWithoutBrandingInput = {
   id?: string
   name: string
@@ -1125,6 +1146,7 @@ export type CompanyCreateWithoutBrandingInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -1166,6 +1188,7 @@ export type CompanyUncheckedCreateWithoutBrandingInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -1223,6 +1246,7 @@ export type CompanyUpdateWithoutBrandingInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -1264,6 +1288,7 @@ export type CompanyUncheckedUpdateWithoutBrandingInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1305,6 +1330,7 @@ export type CompanyCreateWithoutAgenciesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -1346,6 +1372,7 @@ export type CompanyUncheckedCreateWithoutAgenciesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -1403,6 +1430,7 @@ export type CompanyUpdateWithoutAgenciesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -1444,6 +1472,7 @@ export type CompanyUncheckedUpdateWithoutAgenciesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1485,6 +1514,7 @@ export type CompanyCreateWithoutPropertiesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -1526,6 +1556,7 @@ export type CompanyUncheckedCreateWithoutPropertiesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -1583,6 +1614,7 @@ export type CompanyUpdateWithoutPropertiesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -1624,6 +1656,7 @@ export type CompanyUncheckedUpdateWithoutPropertiesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1665,6 +1698,7 @@ export type CompanyCreateWithoutUsersInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -1706,6 +1740,7 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -1763,6 +1798,7 @@ export type CompanyUpdateWithoutUsersInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -1804,6 +1840,7 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1846,6 +1883,7 @@ export type CompanyCreateWithoutUser_access_schedulesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -1887,6 +1925,7 @@ export type CompanyUncheckedCreateWithoutUser_access_schedulesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -1944,6 +1983,7 @@ export type CompanyUpdateWithoutUser_access_schedulesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -1985,6 +2025,7 @@ export type CompanyUncheckedUpdateWithoutUser_access_schedulesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2026,6 +2067,7 @@ export type CompanyCreateWithoutUser_groupsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -2067,6 +2109,7 @@ export type CompanyUncheckedCreateWithoutUser_groupsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -2124,6 +2167,7 @@ export type CompanyUpdateWithoutUser_groupsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -2165,6 +2209,7 @@ export type CompanyUncheckedUpdateWithoutUser_groupsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2206,6 +2251,7 @@ export type CompanyCreateWithoutUser_group_permissionsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -2247,6 +2293,7 @@ export type CompanyUncheckedCreateWithoutUser_group_permissionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -2304,6 +2351,7 @@ export type CompanyUpdateWithoutUser_group_permissionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -2345,6 +2393,7 @@ export type CompanyUncheckedUpdateWithoutUser_group_permissionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2386,6 +2435,7 @@ export type CompanyCreateWithoutUser_column_preferencesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -2427,6 +2477,7 @@ export type CompanyUncheckedCreateWithoutUser_column_preferencesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -2484,6 +2535,7 @@ export type CompanyUpdateWithoutUser_column_preferencesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -2525,6 +2577,7 @@ export type CompanyUncheckedUpdateWithoutUser_column_preferencesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2566,6 +2619,7 @@ export type CompanyCreateWithoutUser_dashboard_layoutsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -2607,6 +2661,7 @@ export type CompanyUncheckedCreateWithoutUser_dashboard_layoutsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -2664,6 +2719,7 @@ export type CompanyUpdateWithoutUser_dashboard_layoutsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -2705,6 +2761,7 @@ export type CompanyUncheckedUpdateWithoutUser_dashboard_layoutsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2746,6 +2803,7 @@ export type CompanyCreateWithoutDocumentsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -2787,6 +2845,7 @@ export type CompanyUncheckedCreateWithoutDocumentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -2844,6 +2903,7 @@ export type CompanyUpdateWithoutDocumentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -2885,6 +2945,7 @@ export type CompanyUncheckedUpdateWithoutDocumentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2925,6 +2986,7 @@ export type CompanyCreateWithoutOwnersInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -2966,6 +3028,7 @@ export type CompanyUncheckedCreateWithoutOwnersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -3023,6 +3086,7 @@ export type CompanyUpdateWithoutOwnersInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -3064,6 +3128,7 @@ export type CompanyUncheckedUpdateWithoutOwnersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3105,6 +3170,7 @@ export type CompanyCreateWithoutTenantsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -3146,6 +3212,7 @@ export type CompanyUncheckedCreateWithoutTenantsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -3203,6 +3270,7 @@ export type CompanyUpdateWithoutTenantsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -3244,6 +3312,7 @@ export type CompanyUncheckedUpdateWithoutTenantsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3285,6 +3354,7 @@ export type CompanyCreateWithoutLeasesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -3326,6 +3396,7 @@ export type CompanyUncheckedCreateWithoutLeasesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -3383,6 +3454,7 @@ export type CompanyUpdateWithoutLeasesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -3424,6 +3496,7 @@ export type CompanyUncheckedUpdateWithoutLeasesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3465,6 +3538,7 @@ export type CompanyCreateWithoutProperty_typesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -3506,6 +3580,7 @@ export type CompanyUncheckedCreateWithoutProperty_typesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -3563,6 +3638,7 @@ export type CompanyUpdateWithoutProperty_typesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -3604,6 +3680,7 @@ export type CompanyUncheckedUpdateWithoutProperty_typesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3646,6 +3723,7 @@ export type CompanyCreateWithoutFavoritesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -3687,6 +3765,7 @@ export type CompanyUncheckedCreateWithoutFavoritesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -3744,6 +3823,7 @@ export type CompanyUpdateWithoutFavoritesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -3785,6 +3865,7 @@ export type CompanyUncheckedUpdateWithoutFavoritesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3825,6 +3906,7 @@ export type CompanyCreateWithoutFinancial_institutionsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -3866,6 +3948,7 @@ export type CompanyUncheckedCreateWithoutFinancial_institutionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -3923,6 +4006,7 @@ export type CompanyUpdateWithoutFinancial_institutionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -3964,6 +4048,7 @@ export type CompanyUncheckedUpdateWithoutFinancial_institutionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4005,6 +4090,7 @@ export type CompanyCreateWithoutCategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4046,6 +4132,7 @@ export type CompanyUncheckedCreateWithoutCategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -4103,6 +4190,7 @@ export type CompanyUpdateWithoutCategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -4144,6 +4232,7 @@ export type CompanyUncheckedUpdateWithoutCategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4185,6 +4274,7 @@ export type CompanyCreateWithoutSubcategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4226,6 +4316,7 @@ export type CompanyUncheckedCreateWithoutSubcategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -4283,6 +4374,7 @@ export type CompanyUpdateWithoutSubcategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -4324,6 +4416,7 @@ export type CompanyUncheckedUpdateWithoutSubcategoriesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4366,6 +4459,7 @@ export type CompanyCreateWithoutIptu_audit_settingsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4407,6 +4501,7 @@ export type CompanyUncheckedCreateWithoutIptu_audit_settingsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -4464,6 +4559,7 @@ export type CompanyUpdateWithoutIptu_audit_settingsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -4505,6 +4601,7 @@ export type CompanyUncheckedUpdateWithoutIptu_audit_settingsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4545,6 +4642,7 @@ export type CompanyCreateWithoutCardsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4586,6 +4684,7 @@ export type CompanyUncheckedCreateWithoutCardsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -4643,6 +4742,7 @@ export type CompanyUpdateWithoutCardsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -4684,6 +4784,7 @@ export type CompanyUncheckedUpdateWithoutCardsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4725,6 +4826,7 @@ export type CompanyCreateWithoutCentersInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4766,6 +4868,7 @@ export type CompanyUncheckedCreateWithoutCentersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -4823,6 +4926,7 @@ export type CompanyUpdateWithoutCentersInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -4864,6 +4968,7 @@ export type CompanyUncheckedUpdateWithoutCentersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4905,6 +5010,7 @@ export type CompanyCreateWithoutSuppliersInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -4946,6 +5052,7 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5003,6 +5110,7 @@ export type CompanyUpdateWithoutSuppliersInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5044,6 +5152,7 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5085,6 +5194,7 @@ export type CompanyCreateWithoutTransactionsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -5126,6 +5236,7 @@ export type CompanyUncheckedCreateWithoutTransactionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5183,6 +5294,7 @@ export type CompanyUpdateWithoutTransactionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5224,6 +5336,7 @@ export type CompanyUncheckedUpdateWithoutTransactionsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5265,6 +5378,7 @@ export type CompanyCreateWithoutInvoicesInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -5306,6 +5420,7 @@ export type CompanyUncheckedCreateWithoutInvoicesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5363,6 +5478,7 @@ export type CompanyUpdateWithoutInvoicesInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5404,6 +5520,7 @@ export type CompanyUncheckedUpdateWithoutInvoicesInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5445,6 +5562,7 @@ export type CompanyCreateWithoutRecurring_configsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -5486,6 +5604,7 @@ export type CompanyUncheckedCreateWithoutRecurring_configsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5543,6 +5662,7 @@ export type CompanyUpdateWithoutRecurring_configsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5584,6 +5704,7 @@ export type CompanyUncheckedUpdateWithoutRecurring_configsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5625,6 +5746,7 @@ export type CompanyCreateWithoutPlanningsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -5666,6 +5788,7 @@ export type CompanyUncheckedCreateWithoutPlanningsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5723,6 +5846,7 @@ export type CompanyUpdateWithoutPlanningsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5764,6 +5888,7 @@ export type CompanyUncheckedUpdateWithoutPlanningsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5805,6 +5930,7 @@ export type CompanyCreateWithoutInvestmentsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -5846,6 +5972,7 @@ export type CompanyUncheckedCreateWithoutInvestmentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -5903,6 +6030,7 @@ export type CompanyUpdateWithoutInvestmentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -5944,6 +6072,7 @@ export type CompanyUncheckedUpdateWithoutInvestmentsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5985,6 +6114,7 @@ export type CompanyCreateWithoutInvestment_settingsInput = {
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -6026,6 +6156,7 @@ export type CompanyUncheckedCreateWithoutInvestment_settingsInput = {
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -6083,6 +6214,7 @@ export type CompanyUpdateWithoutInvestment_settingsInput = {
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -6124,6 +6256,7 @@ export type CompanyUncheckedUpdateWithoutInvestment_settingsInput = {
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6165,6 +6298,7 @@ export type CompanyCreateWithoutAdjustment_indexesInput = {
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -6206,6 +6340,7 @@ export type CompanyUncheckedCreateWithoutAdjustment_indexesInput = {
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -6263,6 +6398,7 @@ export type CompanyUpdateWithoutAdjustment_indexesInput = {
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -6304,6 +6440,7 @@ export type CompanyUncheckedUpdateWithoutAdjustment_indexesInput = {
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6345,6 +6482,7 @@ export type CompanyCreateWithoutHolidaysInput = {
   investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
@@ -6386,6 +6524,7 @@ export type CompanyUncheckedCreateWithoutHolidaysInput = {
   investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
@@ -6443,6 +6582,7 @@ export type CompanyUpdateWithoutHolidaysInput = {
   investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
@@ -6484,6 +6624,7 @@ export type CompanyUncheckedUpdateWithoutHolidaysInput = {
   investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
   lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6526,6 +6667,7 @@ export type CompanyCreateWithoutLease_notificationsInput = {
   investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
@@ -6567,6 +6709,7 @@ export type CompanyUncheckedCreateWithoutLease_notificationsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
   holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
@@ -6624,6 +6767,7 @@ export type CompanyUpdateWithoutLease_notificationsInput = {
   investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
@@ -6665,6 +6809,191 @@ export type CompanyUncheckedUpdateWithoutLease_notificationsInput = {
   investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
   adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
   holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutLease_expiry_remindersInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutLease_expiry_remindersInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutLease_expiry_remindersInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedCreateWithoutLease_expiry_remindersInput>
+}
+
+export type CompanyUpsertWithoutLease_expiry_remindersInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedUpdateWithoutLease_expiry_remindersInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedCreateWithoutLease_expiry_remindersInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutLease_expiry_remindersInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutLease_expiry_remindersInput, Prisma.CompanyUncheckedUpdateWithoutLease_expiry_remindersInput>
+}
+
+export type CompanyUpdateWithoutLease_expiry_remindersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutLease_expiry_remindersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
   user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6701,6 +7030,7 @@ export type CompanyCountOutputType = {
   investments: number
   adjustment_indexes: number
   holidays: number
+  lease_expiry_reminders: number
   lease_notifications: number
   documents: number
   favorites: number
@@ -6732,6 +7062,7 @@ export type CompanyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   investments?: boolean | CompanyCountOutputTypeCountInvestmentsArgs
   adjustment_indexes?: boolean | CompanyCountOutputTypeCountAdjustment_indexesArgs
   holidays?: boolean | CompanyCountOutputTypeCountHolidaysArgs
+  lease_expiry_reminders?: boolean | CompanyCountOutputTypeCountLease_expiry_remindersArgs
   lease_notifications?: boolean | CompanyCountOutputTypeCountLease_notificationsArgs
   documents?: boolean | CompanyCountOutputTypeCountDocumentsArgs
   favorites?: boolean | CompanyCountOutputTypeCountFavoritesArgs
@@ -6895,6 +7226,13 @@ export type CompanyCountOutputTypeCountHolidaysArgs<ExtArgs extends runtime.Type
 /**
  * CompanyCountOutputType without action
  */
+export type CompanyCountOutputTypeCountLease_expiry_remindersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeaseExpiryReminderWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
 export type CompanyCountOutputTypeCountLease_notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.LeaseNotificationWhereInput
 }
@@ -6980,6 +7318,7 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   investment_settings?: boolean | Prisma.Company$investment_settingsArgs<ExtArgs>
   adjustment_indexes?: boolean | Prisma.Company$adjustment_indexesArgs<ExtArgs>
   holidays?: boolean | Prisma.Company$holidaysArgs<ExtArgs>
+  lease_expiry_reminders?: boolean | Prisma.Company$lease_expiry_remindersArgs<ExtArgs>
   lease_notifications?: boolean | Prisma.Company$lease_notificationsArgs<ExtArgs>
   documents?: boolean | Prisma.Company$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Company$favoritesArgs<ExtArgs>
@@ -7049,6 +7388,7 @@ export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   investment_settings?: boolean | Prisma.Company$investment_settingsArgs<ExtArgs>
   adjustment_indexes?: boolean | Prisma.Company$adjustment_indexesArgs<ExtArgs>
   holidays?: boolean | Prisma.Company$holidaysArgs<ExtArgs>
+  lease_expiry_reminders?: boolean | Prisma.Company$lease_expiry_remindersArgs<ExtArgs>
   lease_notifications?: boolean | Prisma.Company$lease_notificationsArgs<ExtArgs>
   documents?: boolean | Prisma.Company$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Company$favoritesArgs<ExtArgs>
@@ -7088,6 +7428,7 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     investment_settings: Prisma.$InvestmentSettingsPayload<ExtArgs> | null
     adjustment_indexes: Prisma.$AdjustmentIndexPayload<ExtArgs>[]
     holidays: Prisma.$HolidayPayload<ExtArgs>[]
+    lease_expiry_reminders: Prisma.$LeaseExpiryReminderPayload<ExtArgs>[]
     lease_notifications: Prisma.$LeaseNotificationPayload<ExtArgs>[]
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     favorites: Prisma.$FavoritePayload<ExtArgs>[]
@@ -7526,6 +7867,7 @@ export interface Prisma__CompanyClient<T, Null = never, ExtArgs extends runtime.
   investment_settings<T extends Prisma.Company$investment_settingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$investment_settingsArgs<ExtArgs>>): Prisma.Prisma__InvestmentSettingsClient<runtime.Types.Result.GetResult<Prisma.$InvestmentSettingsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   adjustment_indexes<T extends Prisma.Company$adjustment_indexesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$adjustment_indexesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdjustmentIndexPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   holidays<T extends Prisma.Company$holidaysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$holidaysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HolidayPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lease_expiry_reminders<T extends Prisma.Company$lease_expiry_remindersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$lease_expiry_remindersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseExpiryReminderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   lease_notifications<T extends Prisma.Company$lease_notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$lease_notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeaseNotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   documents<T extends Prisma.Company$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   favorites<T extends Prisma.Company$favoritesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8480,6 +8822,30 @@ export type Company$holidaysArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.HolidayScalarFieldEnum | Prisma.HolidayScalarFieldEnum[]
+}
+
+/**
+ * Company.lease_expiry_reminders
+ */
+export type Company$lease_expiry_remindersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LeaseExpiryReminder
+   */
+  select?: Prisma.LeaseExpiryReminderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LeaseExpiryReminder
+   */
+  omit?: Prisma.LeaseExpiryReminderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeaseExpiryReminderInclude<ExtArgs> | null
+  where?: Prisma.LeaseExpiryReminderWhereInput
+  orderBy?: Prisma.LeaseExpiryReminderOrderByWithRelationInput | Prisma.LeaseExpiryReminderOrderByWithRelationInput[]
+  cursor?: Prisma.LeaseExpiryReminderWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeaseExpiryReminderScalarFieldEnum | Prisma.LeaseExpiryReminderScalarFieldEnum[]
 }
 
 /**

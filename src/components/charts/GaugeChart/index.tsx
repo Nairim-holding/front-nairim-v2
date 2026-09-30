@@ -12,6 +12,7 @@ import { getThemeTokens } from "@/utils";
 interface GaugeCardProps {
   value: number;
   max?: number;
+  decimalPlaces?: number;
   label?: string;
   color?: string;
   loading?: boolean;
@@ -24,6 +25,7 @@ interface GaugeCardProps {
 export default function EChartsGauge({
   value,
   max = 100,
+  decimalPlaces = 1,
   label = "",
   color,
   detailData = [],
@@ -91,11 +93,11 @@ export default function EChartsGauge({
           <div style="font-weight: 600; color: ${tokens.textInverse}; margin-bottom: 6px; font-size: 14px;">${label}</div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
             <span style="color: ${tokens.textSecondary}; font-size: 13px;">Percentual:</span>
-            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${percentage.toFixed(1)}%</span>
+            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${percentage.toFixed(decimalPlaces)}%</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span style="color: ${tokens.textSecondary}; font-size: 13px;">Valor:</span>
-            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${value.toFixed(2)}/${max}</span>
+            <span style="color: ${gaugeColor}; font-weight: 600; font-size: 13px;">${value.toFixed(decimalPlaces === 0 ? 0 : 2)}/${max}</span>
           </div>
           <div style="color: ${tokens.textMuted}; font-size: 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid ${tokens.borderSoft};">
             Clique no percentual para ver detalhes
@@ -189,7 +191,7 @@ export default function EChartsGauge({
           detail: {
             show: true,
             valueAnimation: true,
-            formatter: '{value}%',
+            formatter: (val: number) => `${val.toFixed(decimalPlaces)}%`,
             color: gaugeColor,
             fontSize: isLarge ? (isMobile ? 22 : 28) : 11,
             fontWeight: 'bold',
@@ -214,7 +216,7 @@ export default function EChartsGauge({
         }
       ]
     };
-  }, [value, max, label, gaugeColor, percentage, tokens]);
+  }, [value, max, label, gaugeColor, percentage, tokens, decimalPlaces]);
 
   const initChart = useCallback((container: HTMLDivElement, isLarge = false) => {
     const chart = echarts.init(container);
@@ -234,7 +236,7 @@ export default function EChartsGauge({
       chart.getZr().on('mouseover', (params: any) => {
         if (params.target && params.target.style) {
           const style = params.target.style;
-          if (style.text === `${percentage.toFixed(1)}%`) {
+          if (style.text === `${percentage.toFixed(decimalPlaces)}%`) {
             chart.getZr().setCursorStyle('pointer');
           }
         }
@@ -246,7 +248,7 @@ export default function EChartsGauge({
     }
 
     return chart;
-  }, [buildOption, percentage, detailData]);
+  }, [buildOption, percentage, detailData, decimalPlaces]);
 
   useEffect(() => {
     if (!chartRef.current) return;

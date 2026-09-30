@@ -34,7 +34,7 @@ function LegacyWidgetWrapper({ children }: { children: ReactNode }) {
 }
 
 type MetricDataKeys = {
-  [K in keyof MetricResponse]: MetricResponse[K] extends MetricWithData ? K : never;
+  [K in keyof MetricResponse]-?: MetricResponse[K] extends MetricWithData ? K : never;
 }[keyof MetricResponse];
 
 function useMetricGetter(metrics: MetricResponse | null) {
@@ -53,7 +53,7 @@ export function AvgRentalWidget({ metrics }: LegacyWidgetProps) {
     <LegacyWidgetWrapper>
       <NumericCard
         value={value}
-        label="Ticket Médio do Aluguel"
+        label="Ticket Médio da Locação"
         variation={String(get('averageRentalTicket').variation)}
         positive={get('averageRentalTicket').isPositive}
         detailData={get('averageRentalTicket').data}

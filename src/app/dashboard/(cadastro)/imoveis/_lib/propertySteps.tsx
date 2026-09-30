@@ -3,7 +3,8 @@
 
 // Steps builder — contains JSX (icons), must be used in Client Components only.
 
-import type { FormStep } from '@/types/types';
+import type { FormFieldDef, FormStep } from '@/types/types';
+import QuickCreateAutocomplete, { isQuickCreateSentinel } from '@/components/ui/QuickCreateAutocomplete';
 import IptuManager from '@/components/domain/financial/IptuManager';
 import PropertyLocationPicker from '@/components/map/PropertyLocationPicker';
 import { parseMoney } from './propertyTransform';
@@ -58,6 +59,47 @@ export function buildPropertySteps({
   // Postal data is a suggestion; users must be able to correct the address.
   const autoFilled = ro;
 
+  const financialField = (
+    field: string,
+    label: string,
+    options: NonNullable<FormFieldDef['options']>,
+    parentField?: string,
+    className?: string,
+  ): FormFieldDef => ({
+    field,
+    label,
+    type: readOnly ? 'select' : 'custom',
+    defaultValue: '',
+    options,
+    icon: <Landmark size={20} />,
+    className,
+    ...ro,
+    render: (value, formValues, onChange) => (
+      <>
+        <QuickCreateAutocomplete
+          value={value ?? ''}
+          onChange={(nextValue) => onChange?.(nextValue)}
+          options={typeof options === 'function' ? options(formValues) : options}
+          disabled={readOnly || (!!parentField && !formValues?.[parentField])}
+          allowCreate={!readOnly}
+          ariaLabel={label}
+          placeholder={parentField && !formValues?.[parentField] ? 'Selecione uma categoria primeiro' : 'Selecione ou digite para cadastrar...'}
+          size="md"
+        />
+        {!parentField && field.includes('category_id') && isQuickCreateSentinel(value) && (
+          <p className="mt-1 text-xs text-content-muted">Será cadastrada como receita ao salvar o imóvel.</p>
+        )}
+      </>
+    ),
+  });
+
+  const subcategoryOptionsFor = (categoryField: string) => (formValues: Record<string, unknown>) => [
+    { label: 'Nenhuma', value: '' },
+    ...subcategoriesRaw
+      .filter((s) => s.category_id === formValues?.[categoryField])
+      .map((s) => ({ label: s.name || 'Sem nome', value: s.id })),
+  ];
+
   const steps: FormStep[] = [
     {
       title: 'Dados do Imóvel',
@@ -108,49 +150,13 @@ export function buildPropertySteps({
       title: 'Valores e Condições',
       icon: <DollarSign size={20} />,
       fields: [
-        { field: 'category_id', label: 'Categoria (Financeiro)', type: 'select', required: false, searchable: true, autoOpen: false, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
-        {
-          field: 'subcategory_id',
-          label: 'Subcategoria (Financeiro)',
-          type: 'select',
-          required: false,
-          searchable: true,
-          options: (formValues: any) => {
-            const categoryId = formValues?.category_id;
-            if (!categoryId) return [{ label: 'Nenhuma', value: '' }];
-            return [
-              { label: 'Nenhuma', value: '' },
-              ...subcategoriesRaw
-                .filter((s) => s.category_id === categoryId)
-                .map((s) => ({ label: s.name || 'Sem nome', value: s.id })),
-            ];
-          },
-          icon: <Landmark size={20} />,
-          ...ro,
-        } as any,
-        { field: 'center_id', label: 'Centro de Custo (Crédito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...creditCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
-        { field: 'debit_center_id', label: 'Centro de Custo (Débito)', type: 'select', required: false, options: [{ label: 'Nenhum', value: '' }, ...debitCenterOptions], icon: <Landmark size={20} />, className: 'col-span-full', ...ro },
+        financialField('category_id', 'Categoria (Financeiro)', [{ label: 'Nenhuma', value: '' }, ...categoryOptions]),
+        financialField('subcategory_id', 'Subcategoria (Financeiro)', subcategoryOptionsFor('category_id'), 'category_id'),
+        financialField('center_id', 'Centro de Custo (Crédito)', [{ label: 'Nenhum', value: '' }, ...creditCenterOptions], undefined, 'col-span-full'),
+        financialField('debit_center_id', 'Centro de Custo (Débito)', [{ label: 'Nenhum', value: '' }, ...debitCenterOptions], undefined, 'col-span-full'),
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
-        { field: 'iptu_refund_category_id', label: 'Categoria (Restituição IPTU)', type: 'select', required: false, searchable: true, autoOpen: false, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, ...ro } as any,
-        {
-          field: 'iptu_refund_subcategory_id',
-          label: 'Subcategoria (Restituição IPTU)',
-          type: 'select',
-          required: false,
-          searchable: true,
-          options: (formValues: any) => {
-            const categoryId = formValues?.iptu_refund_category_id;
-            if (!categoryId) return [{ label: 'Nenhuma', value: '' }];
-            return [
-              { label: 'Nenhuma', value: '' },
-              ...subcategoriesRaw
-                .filter((s) => s.category_id === categoryId)
-                .map((s) => ({ label: s.name || 'Sem nome', value: s.id })),
-            ];
-          },
-          icon: <Landmark size={20} />,
-          ...ro,
-        } as any,
+        financialField('iptu_refund_category_id', 'Categoria (Restituição IPTU)', [{ label: 'Nenhuma', value: '' }, ...categoryOptions]),
+        financialField('iptu_refund_subcategory_id', 'Subcategoria (Restituição IPTU)', subcategoryOptionsFor('iptu_refund_category_id'), 'iptu_refund_category_id'),
         { field: 'purchase_value', label: 'Valor do Imóvel (Compra)', type: 'text', placeholder: 'R$ 500.000,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
         { field: 'rental_value', label: 'Valor Aluguel', type: 'text', required: false, placeholder: 'R$ 3.000,00', mask: 'money', icon: <Key size={20} />, ...ro },
         { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },
@@ -162,7 +168,7 @@ export function buildPropertySteps({
           type: 'select',
           required: true,
           disabled: readOnly || hasActiveLease,
-          options: [{ label: 'Disponível', value: 'AVAILABLE' }, { label: 'Ocupado', value: 'OCCUPIED' }],
+          options: [{ label: 'Disponível', value: 'AVAILABLE' }, { label: 'Ocupado', value: 'OCCUPIED' }, { label: 'Vendido', value: 'SOLD' }],
           icon: <Key size={20} />,
           renderBottom: hasActiveLease
             ? () => (
@@ -173,8 +179,6 @@ export function buildPropertySteps({
             : undefined,
           className: 'relative group',
         },
-        { field: 'sale_date', label: 'Data da Venda', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },
-        { field: 'sale_value', label: 'Valor de Venda', type: 'text', placeholder: 'R$ 600.000,00', mask: 'money', icon: <Dollar size={20} />, className: 'col-span-full', ...ro },
         { field: 'extra_charges', label: 'Encargos / Custos Extras', type: 'text', placeholder: 'R$ 0,00', mask: 'money', icon: <Dollar size={20} />, className: 'col-span-full', ...ro },
         { field: 'values_notes', label: 'Observações', type: 'textarea', placeholder: 'Anotações adicionais sobre os valores', rows: 3, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
       ],
@@ -213,13 +217,24 @@ export function buildPropertySteps({
     },
   ];
 
+  steps.push({
+    title: 'Dados da Venda', icon: <DollarSign size={20} />,
+    hidden: (values) => values.status !== 'SOLD',
+    fields: [
+      { field: 'sale_date', label: 'Data da Venda', type: 'date', required: true, hidden: (values) => values.status !== 'SOLD', icon: <Calendar size={20} />, ...ro },
+      { field: 'sale_buyer', label: 'Comprador', type: 'text', required: true, hidden: (values) => values.status !== 'SOLD', maxLength: 250, icon: <User size={20} />, ...ro },
+      { field: 'sale_value', label: 'Valor da Venda', type: 'text', required: true, hidden: (values) => values.status !== 'SOLD', mask: 'money', icon: <Dollar size={20} />, ...ro },
+      { field: 'sale_notes', label: 'Observação', type: 'textarea', placeholder: 'Informações adicionais sobre o processo de venda do imóvel', rows: 4, icon: <FileText size={20} />, className: 'col-span-full', ...ro },
+      { field: 'arquivosVenda', label: 'Mídias e documentos da venda', type: 'file', accept: 'image/*,video/mp4,video/webm,.pdf', multiple: true, maxFiles: 30, textButton: 'Selecionar arquivos da venda', className: 'col-span-full', ...ro },
+    ],
+  });
   return steps;
 }
 
 export function validateStep(steps: FormStep[], stepIndex: number, data: Record<string, unknown>): boolean {
   const fields = steps[stepIndex]?.fields ?? [];
   return fields.every((field) => {
-    if (!field.required || field.hidden || field.disabled) return true;
+    if (!field.required || (typeof field.hidden === 'function' ? field.hidden(data) : field.hidden) || field.disabled) return true;
     const value = data[field.field];
     return value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '');
   });

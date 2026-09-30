@@ -10,7 +10,7 @@
  */
 
 import { listPropertiesAction, deletePropertyAction, getPropertyFiltersAction } from '@/server/actions/property';
-import { listLeasesAction, updateLeaseAction, deleteLeaseAction, permanentlyDeleteLeaseAction, getLeaseFiltersAction } from '@/server/actions/lease';
+import { listLeasesAction, cancelLeaseAction, deleteLeaseAction, permanentlyDeleteLeaseAction, getLeaseFiltersAction } from '@/server/actions/lease';
 import { listTenantsAction, deleteTenantAction, getTenantFiltersAction } from '@/server/actions/tenant';
 import { listOwnersAction, deleteOwnerAction, getOwnerFiltersAction } from '@/server/actions/owner';
 import { listAgenciesAction, deleteAgencyAction, getAgencyFiltersAction } from '@/server/actions/agency';
@@ -97,7 +97,12 @@ export const TABLE_DATA_SOURCES: Record<string, TableDataSource> = {
     filters: filtersFetcher(getLeaseFiltersAction),
     delete: deleteHandler(deleteLeaseAction),
     cancelLease: async (id, data) => {
-      const result = await updateLeaseAction(id, data);
+      const result = await cancelLeaseAction(id, {
+        date: data.canceled_at,
+        reason: data.cancellation_justification,
+        cancellation_penalty: data.cancellation_penalty,
+        other_cancellation_amounts: data.other_cancellation_amounts,
+      });
       if (!result.ok) return { ok: false, error: result.error ?? 'Erro ao cancelar locação.' };
       return { ok: true };
     },

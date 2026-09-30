@@ -586,6 +586,7 @@ const MODEL_FIELDS: Record<string, string[]> = {
     'property_tax',
     'status',
     'sale_value',
+    'sale_notes',
     'sale_date',
     'purchase_date',
     'notes',

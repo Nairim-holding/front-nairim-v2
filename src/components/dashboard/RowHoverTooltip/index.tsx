@@ -14,6 +14,7 @@ interface RowHoverTooltipProps {
   /** Classes do próprio elemento da linha (o wrapper É a linha, não um filho extra). */
   className?: string;
   children: ReactNode;
+  onClick?: () => void;
 }
 
 /**
@@ -26,7 +27,7 @@ interface RowHoverTooltipProps {
  * própria linha — a linha vive num container com `overflow-y-auto` (a lista
  * de cartões/subcategorias), que cortava a legenda (só um canto aparecia).
  */
-export default function RowHoverTooltip({ title, rows, className, children }: RowHoverTooltipProps) {
+export default function RowHoverTooltip({ title, rows, className, children, onClick }: RowHoverTooltipProps) {
   const triggerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
 
@@ -42,6 +43,10 @@ export default function RowHoverTooltip({ title, rows, className, children }: Ro
     <>
       <div
         ref={triggerRef}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onClick={onClick}
+        onKeyDown={event => { if (onClick && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onClick(); } }}
         className={className}
         onMouseEnter={show}
         onMouseLeave={hide}

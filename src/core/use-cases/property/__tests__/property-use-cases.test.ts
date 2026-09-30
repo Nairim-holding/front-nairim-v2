@@ -95,6 +95,20 @@ function seed(repo: InMemoryPropertiesRepository, over: Partial<Property> = {}) 
 }
 
 describe('Property use-cases', () => {
+  it('stores sale attachments separately from the public image gallery', async () => {
+    const repo = new InMemoryPropertiesRepository();
+    const storage = new FakeStorage();
+    await new CreateUnifiedPropertyUseCase(repo, storage).execute({ data: baseData, userId: 'u',
+      files: { arquivosVenda: [{ buffer: Buffer.from('sale'), filename: 'contrato.pdf', contentType: 'application/pdf' }] } });
+    expect(repo.documents[0].type).toBe('PROPERTY_SALE');
+  });
+  it('refuses a sale while a lease still occupies the property', async () => {
+    const repo = new InMemoryPropertiesRepository();
+    seed(repo, { leases: [{ status: 'ACTIVE', end_date: '2099-01-01' }] });
+    await expect(new UpdateUnifiedPropertyUseCase(repo, new FakeStorage()).execute('p-1', {
+      data: { ...baseData, values: { status: 'SOLD', sale_buyer: 'Buyer', sale_date: '2026-09-26', sale_value: 100000 } }, files: {}, userId: 'u',
+    })).rejects.toThrow('locação vigente');
+  });
   let repo: InMemoryPropertiesRepository;
   let storage: FakeStorage;
 

@@ -56,6 +56,8 @@ export interface CreateUserInput {
   phone?: string | null;
   phone_extension?: string | null;
   has_time_restriction?: boolean;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
   created_by?: string | null;
 }
 
@@ -92,6 +94,8 @@ export class CreateUserUseCase {
       phone: input.phone,
       phone_extension: input.phone_extension,
       has_time_restriction: input.has_time_restriction,
+      all_companies_access: input.all_companies_access,
+      allowed_company_ids: input.allowed_company_ids,
       created_by: input.created_by,
     });
   }
@@ -113,6 +117,8 @@ export interface UpdateUserInput {
   phone?: string | null;
   phone_extension?: string | null;
   has_time_restriction?: boolean;
+  all_companies_access?: boolean;
+  allowed_company_ids?: string[];
   updated_by?: string | null;
 }
 
@@ -140,6 +146,8 @@ export class UpdateUserUseCase {
     }
 
     return this.users.update(id, {
+      ...(input.all_companies_access !== undefined ? { all_companies_access: input.all_companies_access } : {}),
+      ...(input.allowed_company_ids !== undefined ? { allowed_company_ids: input.allowed_company_ids } : {}),
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.email !== undefined ? { email: input.email } : {}),
       ...(input.birth_date !== undefined ? { birth_date: new Date(input.birth_date) } : {}),

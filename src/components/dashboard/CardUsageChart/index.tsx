@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import { type DualColorBarItem } from '@/components/dashboard/DualColorBarChart';
 import RowHoverTooltip from '@/components/dashboard/RowHoverTooltip';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
@@ -85,16 +86,16 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
 
   // Só entram cartões com limite configurado: percentual sobre limite não faz
   // sentido para um cartão sem limite definido.
+  const chartCards = useMemo(() => cards.filter(c => c.limit > 0), [cards]);
   const items: DualColorBarItem[] = useMemo(
-    () => cards
-      .filter((c) => c.limit > 0)
+    () => chartCards
       .map((c) => ({
         label: c.name,
         reference: c.limit,
         actual: c.consumed,
         percentage: Math.round((c.consumed / c.limit) * 1000) / 10,
       })),
-    [cards]
+    [chartCards]
   );
 
   const periodLabel = formatPeriodLabel(startDate, endDate);
@@ -130,8 +131,15 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
       subtitle={periodLabel}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const card = chartCards[point.dataIndex];
+        return card ? loadFinancialChartDetails({
+          source: 'cards', startDate, endDate, cardId: card.cardId,
+        }, filters) : Promise.resolve([]);
+      }}
     >
-      {() => (
+      {({ openDetails }) => (
         <div className="w-full h-full flex flex-col p-3">
           {/* Header com Total das Faturas (Imagem 4 & 5) */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-ui-border-soft shrink-0">
@@ -158,6 +166,7 @@ export default function CardUsageChart({ startDate: startDateProp, endDate: endD
                 return (
                   <RowHoverTooltip
                     key={`${item.label}-${index}`}
+                  onClick={() => openDetails({ dataIndex: index, name: item.label })}
                     className="flex items-center gap-3 text-xs"
                     title={item.label}
                     rows={[

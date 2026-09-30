@@ -1,3 +1,5 @@
+import { tenantStorage } from '@/infra/database/tenant-context';
+import { canAccessCompany } from '@/core/entities/company-access';
 import prisma from '@/infra/database/prisma';
 import type { DecodedSessionToken } from '@/core/cryptography/token-signer';
 import { assertSessionClaims } from '@/core/cryptography/session-claims';
@@ -7,15 +9,15 @@ import { isWithinAccessSchedule } from './access-schedule';
 /** Recheck server-side authority on every request, including token refresh. */
 export async function validateLiveSession(claims: unknown): Promise<DecodedSessionToken> {
   assertSessionClaims(claims);
-  const user = await prisma.user.findFirst({
+  const user = await tenantStorage.exit(() => prisma.user.findFirst({
     where: { id: claims.id, deleted_at: null, is_active: true },
     select: {
       id: true, name: true, email: true, role: true, company_id: true,
-      has_time_restriction: true,
+      has_time_restriction: true, all_companies_access: true, allowed_company_ids: true,
       access_schedules: { select: { day_of_week: true, start_time: true, end_time: true } },
     },
-  });
-  if (!user || (user.role !== 'SUPER_ADMIN' && user.company_id !== claims.company_id)) {
+  }));
+  if (!user || !canAccessCompany(user, claims.company_id)) {
     throw new UnauthorizedError('Sessão revogada. Faça login novamente.');
   }
   if (user.has_time_restriction && !isWithinAccessSchedule(user.access_schedules)) {

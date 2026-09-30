@@ -1,43 +1,26 @@
 'use client';
 
-import { use, useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { use, useMemo, useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMessageContext } from '@/contexts';
 import DynamicFormManager from '@/components/form/DynamicForm';
-import ColorInput from '@/components/admin/WhiteLabel/ColorInput';
+import { companyThemeStep } from '@/components/admin/WhiteLabel/themeFields';
+import { BRANDING_COLOR_KEYS } from '@/lib/brandingTheme';
 import AssetUploader from '@/components/admin/WhiteLabel/AssetUploader';
 import SuperAdminOnly from '@/components/protections/SuperAdminOnly';
-import { BrandingPreview } from '@/components/admin/WhiteLabel/WhiteLabelManager';
 import type { FormStep } from '@/types/types';
-import type { CompanyBranding } from '@/types/branding';
-import { Building2, Globe, ToggleLeft, Type, Sun, Moon, Image as ImageIcon, Eye, Database, MapPin } from 'lucide-react';
+import { Building2, Globe, ToggleLeft, Type, Image as ImageIcon, Database, MapPin } from 'lucide-react';
 import { COMPANY_IDENTITY_FIELDS, COMPANY_IDENTITY_FIELD_KEYS } from '@/lib/companyIdentity';
-import { generateDarkColorsFromLight } from '@/lib/colorUtils';
 import { getCompanyByIdAction, updateCompanyAction, checkSlugAction } from '@/server/actions/company';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-const COLOR_FIELDS: { key: string; label: string; defaultValue: string }[] = [
-  { key: 'primary_color', label: 'Cor primária', defaultValue: '#8b5cf6' },
-  { key: 'secondary_color', label: 'Cor secundária', defaultValue: '#6d28d9' },
-  { key: 'accent_color', label: 'Cor de destaque', defaultValue: '#ec4899' },
-  { key: 'success_color', label: 'Cor de sucesso', defaultValue: '#10b981' },
-  { key: 'warning_color', label: 'Cor de aviso', defaultValue: '#f59e0b' },
-  { key: 'error_color', label: 'Cor de erro', defaultValue: '#ef4444' },
-  { key: 'info_color', label: 'Cor de informação', defaultValue: '#3b82f6' },
-  { key: 'bg_color', label: 'Cor de fundo', defaultValue: '#ffffff' },
-  { key: 'card_color', label: 'Cor de cards', defaultValue: '#ffffff' },
-  { key: 'border_color', label: 'Cor de bordas', defaultValue: '#cccccc' },
-  { key: 'text_color', label: 'Cor de texto', defaultValue: '#171717' },
-];
-
 const BRANDING_TEXT_FIELDS = ['company_name', 'trade_name', 'app_title', 'app_description'];
 const BRANDING_ASSET_FIELDS = ['logo_url', 'logo_sidebar_url', 'logo_dark_url', 'favicon_url', 'og_image_url'];
 const BRANDING_COLOR_FIELDS = [
-  ...COLOR_FIELDS.map(c => c.key),
-  ...COLOR_FIELDS.map(c => `${c.key}_dark`),
+  ...BRANDING_COLOR_KEYS,
 ];
 const ALL_BRANDING_FIELDS = [
   ...BRANDING_TEXT_FIELDS,
@@ -52,55 +35,6 @@ const IDENTITY_SPAN_CLASS: Record<'full' | 'half' | 'third', string> = {
   third: 'col-span-full sm:col-span-4',
 };
 
-const isEmptyColorValue = (value: unknown): boolean => (
-  value === undefined ||
-  value === null ||
-  value === '' ||
-  (Array.isArray(value) && value.length === 0)
-);
-
-function colorStep(title: string, icon: React.ReactNode, suffix: '' | '_dark', helperText?: string): FormStep {
-  return {
-    title,
-    icon,
-    fields: [
-      ...(helperText ? [{
-        field: `__helper_${suffix || 'light'}`,
-        label: '',
-        type: 'custom' as const,
-        className: 'col-span-full',
-        render: () => <p className="text-xs text-content-muted -mt-2">{helperText}</p>,
-      }] : []),
-      ...COLOR_FIELDS.map(({ key, label, defaultValue }) => ({
-        field: `${key}${suffix}`,
-        label,
-        type: 'custom' as const,
-        className: 'col-span-1',
-        defaultValue: suffix === '_dark' ? undefined : defaultValue,
-        render: (
-          value: unknown,
-          formValues: Record<string, unknown> | undefined,
-          onChange?: (value: unknown) => void,
-        ) => (
-          <ColorInput
-            value={typeof value === 'string' ? value : ''}
-            onChange={v => onChange?.(v)}
-            defaultValue={
-              suffix === '_dark' && typeof formValues?.[key] === 'string'
-                ? formValues[key]
-                : defaultValue
-            }
-          />
-        ),
-      })),
-    ],
-  };
-}
-
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
 export default function EditarEmpresaPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
@@ -108,8 +42,7 @@ export default function EditarEmpresaPage({ params }: Props) {
   const { showMessage } = useMessageContext();
   const [slugCheckError, setSlugCheckError] = useState<string | null>(null);
   const [initialSlug, setInitialSlug] = useState<string | null>(null);
-  const defaultStep = searchParams?.get('new') === 'true' ? 2 : 0;
-  const lastSuggestedDarkColors = useRef<Record<string, string>>({});
+  const defaultStep = searchParams?.get('new') === 'true' ? 3 : 0;
 
   useEffect(() => {
     async function fetchCompany() {
@@ -165,38 +98,6 @@ export default function EditarEmpresaPage({ params }: Props) {
     return null;
   }, [generateSlug]);
 
-  const handleStepComplete = useCallback((stepIndex: number, formValues: Record<string, unknown>) => {
-    // Step 3 é o "Tema Light" na edição: Identificação, Geral, Branding, Tema Light, Tema Dark, Preview.
-    if (stepIndex !== 3) return;
-
-    const lightColors: Record<string, string> = {};
-    COLOR_FIELDS.forEach(({ key }) => {
-      const value = formValues[key];
-      if (typeof value === 'string' && value) {
-        lightColors[key] = value;
-      }
-    });
-
-    const generatedDarkColors = generateDarkColorsFromLight(lightColors);
-    const suggestedPatch: Record<string, string> = {};
-
-    for (const [field, suggestedColor] of Object.entries(generatedDarkColors)) {
-      const currentValue = formValues[field];
-      const previousSuggestion = lastSuggestedDarkColors.current[field];
-
-      if (isEmptyColorValue(currentValue) || currentValue === previousSuggestion) {
-        suggestedPatch[field] = suggestedColor;
-      }
-    }
-
-    lastSuggestedDarkColors.current = generatedDarkColors;
-
-    if (Object.keys(suggestedPatch).length > 0) {
-      showMessage('Cores do tema dark sugeridas com base nas cores light!', 'info');
-      return suggestedPatch;
-    }
-  }, [showMessage]);
-
   const steps: FormStep[] = useMemo(() => [
     {
       title: 'Identificação',
@@ -233,7 +134,7 @@ export default function EditarEmpresaPage({ params }: Props) {
           field: 'db_quota_mb',
           label: 'Limite de banco de dados (MB)',
           type: 'number',
-          placeholder: 'Em branco = limite padrão do sistema',
+          placeholder: 'Em branco = sem limite de banco de dados',
           icon: <Database size={20} />,
           showIncrementButtons: false,
           validation: {
@@ -350,29 +251,8 @@ export default function EditarEmpresaPage({ params }: Props) {
         },
       ],
     },
-    colorStep('Tema Light', <Sun size={20} />, ''),
-    colorStep('Tema Dark', <Moon size={20} />, '_dark'),
-    {
-      title: 'Preview',
-      icon: <Eye size={20} />,
-      fields: [
-        {
-          field: '__preview',
-          label: '',
-          type: 'custom',
-          className: 'col-span-full',
-          render: (_value, formValues) => (
-            <BrandingPreview
-              branding={{
-                ...Object.fromEntries(ALL_BRANDING_FIELDS.map(key => [key, formValues?.[key] || null])),
-                company_info: null,
-              } as unknown as CompanyBranding}
-            />
-          ),
-        },
-      ],
-    },
-  ], [checkSlugUnique, slugCheckError]);
+    companyThemeStep(),
+  ], [checkSlugUnique, slugCheckError, id]);
 
   // `useCallback`: está nas dependências do useEffect de fetch do
   // DynamicForm — sem memoizar, disparava refetch em loop a cada render.
@@ -384,8 +264,8 @@ export default function EditarEmpresaPage({ params }: Props) {
       name: d?.name ?? '',
       slug: d?.slug ?? '',
       is_active: d?.is_active ?? true,
-      // Sem limite próprio, o campo fica vazio (usa o padrão do ambiente) —
-      // não zero, que o backend rejeitaria como cota inválida.
+      // Sem limite próprio, o campo fica vazio (empresa sem limite) — não
+      // zero, que o backend rejeitaria como cota inválida.
       db_quota_mb: d?.db_quota_mb ?? '',
     };
     for (const key of ALL_BRANDING_FIELDS) {
@@ -399,14 +279,15 @@ export default function EditarEmpresaPage({ params }: Props) {
       name: data.name,
       slug: typeof data.slug === 'string' ? data.slug.toLowerCase().trim() : data.slug,
       is_active: data.is_active,
-      // Em branco vai como null: a empresa volta ao limite padrão do ambiente.
+      // Em branco vai como null: a empresa fica sem limite de banco de dados.
       db_quota_mb:
         data.db_quota_mb === '' || data.db_quota_mb === null || data.db_quota_mb === undefined
           ? null
           : Number(data.db_quota_mb),
     };
     for (const key of ALL_BRANDING_FIELDS) {
-      if (data[key]) payload[key] = data[key];
+      if ((BRANDING_COLOR_KEYS as readonly string[]).includes(key)) payload[key] = data[key] || null;
+      else if (data[key]) payload[key] = data[key];
     }
 
     const result = await updateCompanyAction(id, payload);
@@ -426,7 +307,6 @@ export default function EditarEmpresaPage({ params }: Props) {
         fetchResource={getCompanyByIdAction}
         onSubmit={handleSubmit}
         onFieldChange={handleFieldChange}
-        onStepComplete={handleStepComplete}
         onSubmitSuccess={() => {
           showMessage('Empresa atualizada com sucesso!', 'success');
           router.push('/dashboard/empresas');

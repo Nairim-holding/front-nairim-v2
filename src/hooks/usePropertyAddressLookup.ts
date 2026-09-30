@@ -9,6 +9,7 @@ export function usePropertyAddressLookup(showMessage: (message: string, type: 'i
 
   const handleFieldChange = useCallback(async (field: string, value: unknown) => {
     if (field === 'category_id') return { subcategory_id: '' };
+    if (field === 'iptu_refund_category_id') return { iptu_refund_subcategory_id: '' };
     if (['street', 'number', 'district', 'city', 'state', 'country', 'location'].includes(field)) request.current?.abort();
     if (field !== 'zip_code') return null;
     request.current?.abort();

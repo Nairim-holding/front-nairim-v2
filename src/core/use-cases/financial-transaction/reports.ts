@@ -8,6 +8,15 @@ import type {
   TransactionEntityFilters,
 } from '@/core/entities/financial-transaction';
 import { ValidationError } from '@/core/errors/domain-errors';
+import type { FinancialChartDetailQuery, FinancialChartDetailsRepository } from '@/core/entities/financial-chart-detail';
+
+export class GetFinancialChartDetailsUseCase {
+  constructor(private readonly transactions: FinancialChartDetailsRepository) {}
+
+  async execute(query: FinancialChartDetailQuery, rawFilters?: Record<string, unknown>) {
+    return this.transactions.getChartDetails(query, parseFilters(rawFilters));
+  }
+}
 
 /**
  * Casos de uso de relatórios financeiros (agregações usadas pelos gráficos do

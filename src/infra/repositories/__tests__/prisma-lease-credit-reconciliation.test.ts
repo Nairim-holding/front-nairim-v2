@@ -7,7 +7,7 @@ vi.mock('@/infra/database/prisma', () => ({ default: {
 import { PrismaLeaseCreditReconciliationRepository } from '../prisma-lease-credit-reconciliation-repository';
 
 const input = { credit_date: '2026-06-22', credited_amount: 1000, financial_institution_id: 'bank', agency_ids: ['agency'] };
-const lease = () => ({ id: 'lease', start_date: new Date('2025-01-01'), end_date: new Date('2026-06-01'), rent_due_day: 5, tax_due_day: 20, condo_due_day: null, rent_amount: 1000, commission_amount: 100, agency_commission: 10, agency: null, tenant: { name: 'Inquilino' }, property: { title: 'Imóvel', income_tax_withholding: false, agency: { trade_name: 'Imobiliária' }, addresses: [{ address: { city: 'Garça', state: 'SP' } }] } });
+const lease = () => ({ id: 'lease', property_id: 'property', contract_number: 'lease', canceled_at: null, start_date: new Date('2025-01-01'), end_date: new Date('2026-06-01'), rent_due_day: 5, tax_due_day: 20, condo_due_day: null, rent_amount: 1000, commission_amount: 100, agency_commission: 10, agency: null, tenant: { name: 'Inquilino' }, property: { title: 'Imóvel', income_tax_withholding: false, agency: { trade_name: 'Imobiliária' }, addresses: [{ address: { city: 'Garça', state: 'SP' } }] } });
 const transaction = (id: string, description: string, amount: number, date = '2026-06-20') => ({ id, lease_id: 'lease', description, amount, effective_date: new Date(`${date}T00:00:00Z`) });
 
 describe('busca de imóveis por crédito de locação', () => {
@@ -31,6 +31,20 @@ describe('busca de imóveis por crédito de locação', () => {
     mocks.transactions.mockResolvedValue([transaction('rent', 'Aluguel', 1100, '2026-04-03')]);
     expect(await new PrismaLeaseCreditReconciliationRepository().search('company', { ...input, credit_date: '2026-04-06' })).toHaveLength(1);
   });
+  it('reconhece o crédito de segunda-feira dos lançamentos de domingo', async () => {
+    mocks.transactions.mockResolvedValue([
+      transaction('rent', 'Aluguel - Contrato 3793/26', 1000, '2026-09-20'),
+      transaction('commission', 'Comissão - Contrato 3793/26', 70, '2026-09-20'),
+      transaction('iptu', 'Restituição IPTU - Contrato 3793/26', 45.63, '2026-09-20'),
+    ]);
+    const candidates = await new PrismaLeaseCreditReconciliationRepository().search('company', {
+      ...input, credit_date: '2026-09-21', credited_amount: 975.63,
+    });
+    expect(candidates[0]).toMatchObject({
+      rent_due_date: '2026-09-20', net_amount: 975.63, amount_matches: true,
+      pending_transaction_ids: ['rent', 'commission', 'iptu'],
+    });
+  });
   it('não inclui lançamentos de outro vencimento nem despesas avulsas', async () => {
     mocks.transactions.mockResolvedValue([transaction('rent', 'Aluguel', 1000), transaction('old', 'Aluguel', 1000, '2026-06-19'), transaction('other', 'Manutenção', 200)]);
     const result = await new PrismaLeaseCreditReconciliationRepository().search('company', input);
@@ -43,5 +57,32 @@ describe('busca de imóveis por crédito de locação', () => {
     mocks.transactions.mockResolvedValue([]);
     expect((await repo.complete('company', { ...input, lease_id: 'lease' })).updated_transactions).toBe(0);
     expect(mocks.update).toHaveBeenCalledOnce();
+  });
+
+  it('inclui IPTU avulso da conta associado ao mesmo imóvel e altera a data de todos ao concluir', async () => {
+    mocks.leases.mockResolvedValue([
+      { ...lease(), id: 'current', contract_number: '4843/26', end_date: new Date('2027-07-04') },
+      { ...lease(), id: 'previous', contract_number: '4573/25', end_date: new Date('2026-07-04') },
+    ]);
+    mocks.transactions.mockResolvedValue([
+      { ...transaction('rent', 'Aluguel do imóvel - Contrato 4843/26', 1030, '2026-09-25'), lease_id: 'current' },
+      { ...transaction('commission', 'Comissão - Contrato 4843/26', 72.10, '2026-09-25'), lease_id: 'current' },
+      { ...transaction('iptu', 'Restituição IPTU - Contrato 4573/25 - Receita 6/9', 58.91, '2026-09-25'), lease_id: null },
+    ]);
+    const search = { ...input, credit_date: '2026-09-25', credited_amount: 1016.81 };
+    const repo = new PrismaLeaseCreditReconciliationRepository();
+    const candidates = await repo.search('company', search);
+    expect(candidates.find((candidate) => candidate.lease_id === 'current')).toMatchObject({
+      property_tax_refund: 58.91, net_amount: 1016.81, amount_matches: true,
+      pending_transaction_ids: ['rent', 'commission', 'iptu'],
+    });
+    expect(mocks.transactions.mock.calls[0][0].where.OR).toContainEqual({ lease_id: null });
+
+    await repo.complete('company', { ...search, lease_id: 'current' });
+    expect(mocks.update.mock.calls[0][0]).toMatchObject({
+      where: { company_id: 'company', financial_institution_id: 'bank', id: { in: ['rent', 'commission', 'iptu'] } },
+      data: { status: 'COMPLETED', effective_date: new Date('2026-09-25T00:00:00Z') },
+    });
+    expect(mocks.update.mock.calls[0][0].where).not.toHaveProperty('lease_id');
   });
 });

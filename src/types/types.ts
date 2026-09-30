@@ -94,6 +94,7 @@ export interface FormFieldDef {
 
 export interface FormStep {
   title: string;
+  hidden?: (formValues: Record<string, any>) => boolean;
   icon?: React.ReactNode;
   fields: FormFieldDef[];
 }
@@ -142,6 +143,8 @@ export interface MetricResponse {
   vacancyRate: MetricWithData;
   occupationRate: MetricWithData;
 
+  propertiesByType?: Array<{ name: string; value: number; data?: MetricDataItem[] }>;
+  propertiesByStatus?: Array<{ name: string; value: number; data?: MetricDataItem[] }>;
   availablePropertiesByType: Array<{
     name: string;
     value: number;

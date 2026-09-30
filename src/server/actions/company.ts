@@ -1,5 +1,6 @@
 'use server';
 
+import { getCompanyAccessUser, listAccessibleCompanies } from '@/infra/auth/company-access';
 import { companyUseCases } from '@/infra/factories/company-factory';
 import { pickBrandingFields, switchCompanySchema } from '@/shared/validators/company';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
@@ -88,8 +89,9 @@ export async function switchCompanyAction(slug: string): Promise<ActionResult<Sw
   return runAction(async () => {
     const session = await requireSession();
     const { slug: parsedSlug } = switchCompanySchema.parse({ slug });
+    const access = await getCompanyAccessUser(session.id);
     const result = await companyUseCases.switchCompany.execute(
-      { id: session.id, name: session.name, email: session.email, role: session.role },
+      { ...access, id: session.id, name: session.name, email: session.email, role: session.role },
       parsedSlug,
     );
     await setSessionCookie(result.token, result.company.slug);
@@ -177,4 +179,12 @@ export async function listCompaniesAction(raw: Record<string, unknown>): Promise
 /** Configuração de filtros do DataTable de empresas. Origem: GET /companies/filters. */
 export async function getCompanyFiltersAction(_raw?: Record<string, unknown>): Promise<ActionResult<Record<string, unknown>>> {
   return runAction(() => getCompanyFiltersData());
+}
+
+/** Minimal company list for the switcher, limited to the current user's grants. */
+export async function listAccessibleCompaniesAction() {
+  return runAction(async () => {
+    const session = await requireSession();
+    return listAccessibleCompanies(session.id);
+  });
 }

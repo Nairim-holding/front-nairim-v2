@@ -1,3 +1,4 @@
+import { findOccupyingLease } from '@/shared/utils/property-occupancy';
 import type { PropertiesRepository } from '@/core/repositories/properties-repository';
 import type { Storage } from '@/core/storage/storage';
 import type { Property, PropertyUploadFiles, UpdateUnifiedPropertyData } from '@/core/entities/property';
@@ -9,6 +10,7 @@ const FILE_TYPE_BY_FIELD: Record<keyof PropertyUploadFiles, string> = {
   arquivosRegistro: 'PROPERTY_RECORD',
   arquivosEscritura: 'TITLE_DEED',
   arquivosOutros: 'OTHER',
+  arquivosVenda: 'PROPERTY_SALE',
 };
 
 export interface UpdateUnifiedPropertyInput {
@@ -43,6 +45,9 @@ export class UpdateUnifiedPropertyUseCase {
 
     const existing = await this.properties.findById(id);
     if (!existing) throw new NotFoundError('Propriedade não encontrada');
+    if (data.values?.status === 'SOLD' && findOccupyingLease(existing.leases as { status: string; end_date: Date }[])) {
+      throw new ValidationError('Encerre ou cancele a locação vigente antes de registrar a venda.');
+    }
 
     if (!(await this.properties.ownerExists(data.owner_id))) {
       throw new NotFoundError('Proprietário não encontrado');

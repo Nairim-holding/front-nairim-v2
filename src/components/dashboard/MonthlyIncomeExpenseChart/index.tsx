@@ -4,6 +4,8 @@ import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
+import { getPeriodRange } from '@/utils/periodRange';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { useMonthlySummaryMulti } from '@/hooks/useMonthlySummaryMulti';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -169,6 +171,14 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
       subtitle={subtitle}
       detailData={detailData}
       detailColumns={detailColumns}
+      pointDetailColumns={FINANCIAL_DETAIL_COLUMNS}
+      loadDetailForPoint={point => {
+        const month = flatMonths[point.dataIndex];
+        return month ? loadFinancialChartDetails({
+          source: 'transactions', ...getPeriodRange(month.year, [month.month]),
+          type: point.seriesName === 'Receitas' ? 'INCOME' : 'EXPENSE',
+        }, filters) : Promise.resolve([]);
+      }}
     >
       {({ isFullscreen }) => (
         <div className="w-full h-full overflow-x-auto overflow-y-hidden">

@@ -16,6 +16,7 @@ import {
 import {
   GetAvailableYearsUseCase,
   GetExpenseByCategoryUseCase,
+  GetFinancialChartDetailsUseCase,
   GetMonthlySummaryMultiUseCase,
   GetMonthlySummaryUseCase,
   GetSubcategoryBreakdownUseCase,
@@ -45,6 +46,7 @@ export const financialTransactionUseCases = {
   getMonthlySummaryMulti: new GetMonthlySummaryMultiUseCase(transactions),
   getAvailableYears: new GetAvailableYearsUseCase(transactions),
   getExpenseByCategory: new GetExpenseByCategoryUseCase(transactions),
+  getChartDetails: new GetFinancialChartDetailsUseCase(transactions),
   getSubcategoryBreakdown: new GetSubcategoryBreakdownUseCase(transactions),
   uploadDocuments: new UploadTransactionDocumentsUseCase(transactions, minioStorage),
   removeDocument: new RemoveTransactionDocumentUseCase(transactions, minioStorage),

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import Checkbox from '@/components/ui/Checkbox';
 import { getUserScheduleAction } from '@/server/actions/user';
@@ -98,15 +98,46 @@ export default function AccessScheduleGrid({
   const rows = useMemo(() => (Array.isArray(value) ? value : []), [value]);
   const grid = useMemo(() => expandToGrid(rows), [rows]);
 
-  const toggleCell = (day: number, hour: number) => {
+  // Durante o arraste, mantemos uma cópia local mutável da grade e só
+  // propagamos via onChange no mouseup — evita recalcular compressFromGrid
+  // (e re-renderizar o formulário pai) a cada célula tocada pelo cursor.
+  const [dragGrid, setDragGrid] = useState<boolean[][] | null>(null);
+  const dragValueRef = useRef(false);
+  const displayGrid = dragGrid ?? grid;
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setDragGrid((current) => {
+        if (current && onChange) onChange(compressFromGrid(current));
+        return null;
+      });
+    };
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, [onChange]);
+
+  const startDrag = useCallback((day: number, hour: number) => {
     if (disabled || !onChange) return;
+    const value = !grid[day][hour];
+    dragValueRef.current = value;
     const next = grid.map((r) => [...r]);
-    next[day][hour] = !next[day][hour];
-    onChange(compressFromGrid(next));
+    next[day][hour] = value;
+    setDragGrid(next);
+  }, [disabled, onChange, grid]);
+
+  const dragOverCell = (day: number, hour: number) => {
+    if (disabled || !onChange || !dragGrid) return;
+    setDragGrid((current) => {
+      if (!current) return current;
+      const next = current.map((r) => [...r]);
+      next[day][hour] = dragValueRef.current;
+      return next;
+    });
   };
 
   const toggleDay = (day: number, on: boolean) => {
     if (disabled || !onChange) return;
+    setDragGrid(null);
     const next = grid.map((r) => [...r]);
     next[day] = Array(24).fill(on);
     onChange(compressFromGrid(next));
@@ -114,6 +145,7 @@ export default function AccessScheduleGrid({
 
   const clearAll = () => {
     if (disabled || !onChange) return;
+    setDragGrid(null);
     onChange([]);
   };
 
@@ -159,9 +191,9 @@ export default function AccessScheduleGrid({
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="select-none">
             {WEEKDAYS.map((label, day) => {
-              const dayFull = grid[day].every(Boolean);
+              const dayFull = displayGrid[day].every(Boolean);
               return (
                 <tr key={label} className="border-t border-ui-border">
                   <td className="sticky left-0 z-10 bg-card px-3 py-1.5">
@@ -181,10 +213,11 @@ export default function AccessScheduleGrid({
                       <button
                         type="button"
                         disabled={disabled}
-                        onClick={() => toggleCell(day, h)}
+                        onMouseDown={(e) => { e.preventDefault(); startDrag(day, h); }}
+                        onMouseEnter={() => dragOverCell(day, h)}
                         title={`${label} ${String(h).padStart(2, '0')}:00–${String((h + 1) % 24).padStart(2, '0')}:00`}
                         className={`w-full h-6 rounded transition-colors ${
-                          grid[day][h]
+                          displayGrid[day][h]
                             ? 'bg-green-500 dark:bg-green-600'
                             : 'bg-page hover:bg-ui-border'
                         } ${disabled ? 'cursor-default' : 'cursor-pointer'}`}

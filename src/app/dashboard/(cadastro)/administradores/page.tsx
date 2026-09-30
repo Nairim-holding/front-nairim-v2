@@ -5,7 +5,7 @@ import Section from '@/components/layout/PageSection';
 import SkeletonTable from '@/components/table/TableSkeleton';
 import AdministradoresTable from './_components/AdministradoresTable';
 
-export const metadata: Metadata = { title: 'Administradores' };
+export const metadata: Metadata = { title: 'Usuários' };
 
 const COLUMNS: ColumnDef[] = [
   { field: 'name',       label: 'Nome',               sortParam: 'name',              type: 'text' },
@@ -19,7 +19,7 @@ const COLUMNS: ColumnDef[] = [
 
 export default function AdministradoresPage() {
   return (
-    <Section title="Administradores">
+    <Section title="Usuários">
       <Suspense fallback={<SkeletonTable />}>
         <AdministradoresTable columns={COLUMNS} />
       </Suspense>

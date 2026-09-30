@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Maximize2, X } from "lucide-react";
+import { Filter, Maximize2, X } from "lucide-react";
+import { getPropertyMapStatus, type PropertyMapStatus } from '@/core/entities/property-map';
 import { useTheme } from "@/contexts/ThemeContext";
 import { getThemeTokens, getThemedTileUrl, getTileAttribution } from "@/utils";
 
@@ -25,13 +26,22 @@ const createPinIcon = (fillColor: string) => {
 
 const leasedIcon = createPinIcon("#8b5cf6"); // Roxa (Locado)
 const availableIcon = createPinIcon("#ef4444"); // Vermelha (Disponível)
+const soldIcon = createPinIcon("#374151"); // Cinza escuro (Vendido)
+
+const STATUS_OPTIONS = [
+  { status: 'OCCUPIED', label: 'Locados', color: '#8b5cf6', icon: leasedIcon, title: 'Imóvel Locado', textClass: 'text-purple-600' },
+  { status: 'AVAILABLE', label: 'Disponíveis', color: '#ef4444', icon: availableIcon, title: 'Disponível para Locação', textClass: 'text-red-600' },
+  { status: 'SOLD', label: 'Vendidos', color: '#374151', icon: soldIcon, title: 'Imóvel Vendido', textClass: 'text-gray-700 dark:text-gray-300' },
+] as const;
+const ALL_STATUSES: PropertyMapStatus[] = STATUS_OPTIONS.map(option => option.status);
 
 interface MapCoordinate {
   lat: number;
   lng: number;
   info: string;
   isLeased?: boolean;
-  status?: 'OCCUPIED' | 'AVAILABLE';
+  status?: PropertyMapStatus;
+  propertyId?: string;
 }
 
 interface LeafletMapProps {
@@ -77,11 +87,12 @@ function MapController({
     } else if (allLocations.length > 0) {
       // Se não tem seleção, ajusta a câmera para caber TODOS os imóveis
       const bounds = L.latLngBounds(allLocations.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+      // Trocas rápidas de filtro/tela cheia não deixam uma transição de zoom pendente.
+      map.fitBounds(bounds, { padding: [50, 50], animate: false });
     } else {
       // Sem nenhum imóvel com coordenadas: cai na sede (Garça/SP) em vez de
       // deixar a câmera presa no zoom inicial do Brasil inteiro.
-      map.setView(GARCA_SP_CENTER, GARCA_SP_ZOOM);
+      map.setView(GARCA_SP_CENTER, GARCA_SP_ZOOM, { animate: false });
     }
   }, [selectedLocation, allLocations, map]);
 
@@ -117,12 +128,16 @@ function MapController({
   );
 }
 
-type StatusFilter = 'ALL' | 'OCCUPIED' | 'AVAILABLE';
-
 interface MapCanvasProps {
   data: MapCoordinate[];
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  selectedStatuses: PropertyMapStatus[];
+  onStatusesChange: (statuses: PropertyMapStatus[]) => void;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
+  selectedPoint: MapCoordinate | null;
+  onSelect: (point: MapCoordinate | null) => void;
 }
 
 /**
@@ -130,12 +145,10 @@ interface MapCanvasProps {
  * quanto no overlay de tela cheia, cada um com sua própria instância do
  * Leaflet (MapContainer não pode ser reaproveitado entre containers DOM).
  */
-function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPoint, setSelectedPoint] = useState<MapCoordinate | null>(null);
+function MapCanvas({ data, isFullscreen, onToggleFullscreen, selectedStatuses, onStatusesChange, searchTerm, onSearchChange, selectedPoint, onSelect }: MapCanvasProps) {
   const [worldGeoJson, setWorldGeoJson] = useState<any>(null);
-  // Clicar na legenda restringe os alfinetes exibidos ao status escolhido.
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const tokens = getThemeTokens();
   const isDark = theme === "dark";
@@ -151,50 +164,60 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
       .catch(err => console.error("Erro ao carregar fronteiras:", err));
   }, []);
 
+  useEffect(() => {
+    if (!isFilterOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) setIsFilterOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [isFilterOpen]);
+
   const filteredData = useMemo(() => {
-    if (statusFilter === 'ALL') return data;
-    return data.filter((p) => (p.isLeased || p.status === 'OCCUPIED' ? 'OCCUPIED' : 'AVAILABLE') === statusFilter);
-  }, [data, statusFilter]);
+    const search = searchTerm.trim().toLocaleLowerCase('pt-BR');
+    return data.filter(point => selectedStatuses.includes(getPropertyMapStatus(point)) &&
+      (!search || point.info.toLocaleLowerCase('pt-BR').includes(search)));
+  }, [data, selectedStatuses, searchTerm]);
 
   // Filtra sugestões no input
   const filteredSuggestions = useMemo(() => {
     if (!searchTerm) return [];
-    return filteredData.filter(item =>
-      item.info.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return filteredData;
   }, [searchTerm, filteredData]);
 
   const handleSelect = (point: MapCoordinate) => {
-    setSearchTerm(point.info);
-    setSelectedPoint(point);
+    onSearchChange(point.info);
+    onSelect(point);
   };
 
   const handleClear = () => {
-    setSearchTerm("");
-    setSelectedPoint(null);
+    onSearchChange("");
+    onSelect(null);
   };
 
-  const toggleStatusFilter = (status: 'OCCUPIED' | 'AVAILABLE') => {
-    setSelectedPoint(null);
-    setStatusFilter((prev) => (prev === status ? 'ALL' : status));
+  const toggleStatusFilter = (status: PropertyMapStatus) => {
+    onStatusesChange(selectedStatuses.includes(status)
+      ? selectedStatuses.filter(selected => selected !== status)
+      : [...selectedStatuses, status]);
   };
-
-  const occupiedCount = useMemo(() => data.filter((p) => p.isLeased || p.status === 'OCCUPIED').length, [data]);
-  const availableCount = data.length - occupiedCount;
+  const statusCounts = useMemo(() => STATUS_OPTIONS.map(option => ({
+    ...option, count: data.filter(point => getPropertyMapStatus(point) === option.status).length,
+  })), [data]);
 
   return (
     <div className="relative w-full h-full bg-surface rounded-xl border border-ui-border-strong shadow-sm overflow-hidden group z-0">
 
       {/* --- INPUT DE BUSCA FLUTUANTE --- */}
-      <div className="absolute top-4 left-4 z-[1000] w-full max-w-md px-2">
-        <div className="relative shadow-lg">
+      <div className="absolute top-4 left-4 right-16 z-[1000] max-w-xl">
+        <div className="flex gap-2">
+        <div className="relative shadow-lg flex-1 min-w-0">
           <input
             type="text"
             placeholder="Buscar rua, bairro ou imóvel..."
             value={searchTerm}
             onChange={(e) => {
-              setSearchTerm(e.target.value);
-              if (!e.target.value) setSelectedPoint(null);
+              onSearchChange(e.target.value);
+              onSelect(null);
             }}
             className="w-full pl-10 pr-10 py-3 bg-surface border border-ui-border-soft rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
           />
@@ -207,11 +230,44 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
           {searchTerm && (
             <button
               onClick={handleClear}
+              aria-label="Limpar busca de endereço"
               className="absolute right-3 top-3 text-content-placeholder hover:text-content-secondary"
             >
               ✕
             </button>
           )}
+        </div>
+
+        <div ref={filterRef} className="relative shrink-0">
+          <button
+            type="button"
+            aria-label="Filtrar imóveis por status"
+            aria-expanded={isFilterOpen}
+            onClick={() => setIsFilterOpen(open => !open)}
+            className="h-full flex items-center gap-2 px-3 py-3 bg-surface border border-ui-border-soft rounded-lg shadow-lg text-sm text-content-secondary hover:bg-surface-subtle"
+          >
+            <Filter size={18} />
+            <span className="hidden sm:inline">Filtro</span>
+            {selectedStatuses.length !== ALL_STATUSES.length && <span className="text-xs font-semibold">{selectedStatuses.length}</span>}
+          </button>
+          {isFilterOpen && (
+            <div className="absolute top-full right-0 mt-2 w-56 bg-surface rounded-lg shadow-xl border border-ui-border-soft p-3 text-sm text-content">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold">Status dos imóveis</span>
+                <button type="button" onClick={() => onStatusesChange(ALL_STATUSES)} className="text-brand hover:underline">Todos</button>
+              </div>
+              <div role="group" aria-label="Status dos imóveis" className="space-y-2">
+                {STATUS_OPTIONS.map(option => (
+                  <label key={option.status} className="flex items-center gap-2 cursor-pointer rounded-md p-1 hover:bg-surface-subtle">
+                    <input type="checkbox" checked={selectedStatuses.includes(option.status)} onChange={() => toggleStatusFilter(option.status)} className="accent-brand" />
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: option.color }} />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         </div>
 
         {/* Lista de Sugestões */}
@@ -228,6 +284,11 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
               </div>
             ))}
           </div>
+        )}
+        {filteredData.length === 0 && (
+          <p role="status" className="mt-2 bg-surface rounded-lg shadow-lg border border-ui-border-soft p-3 text-sm text-content-secondary">
+            Nenhum imóvel encontrado para os filtros selecionados.
+          </p>
         )}
       </div>
 
@@ -256,7 +317,7 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
 
         {/* 2. Camada de Máscara (Mundo Cinza) e Controlador de Zoom */}
         <MapController
-          selectedLocation={selectedPoint}
+          selectedLocation={selectedPoint && filteredData.includes(selectedPoint) ? selectedPoint : null}
           allLocations={filteredData}
           worldData={worldGeoJson}
           themeColors={{
@@ -269,12 +330,13 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
 
         {/* 3. Marcadores dos Imóveis */}
         {filteredData.map((point, idx) => {
-          const isLeased = point.isLeased || point.status === 'OCCUPIED';
+          const option = STATUS_OPTIONS.find(option => option.status === getPropertyMapStatus(point))!;
           return (
             <Marker
-              key={idx}
+              key={`${point.propertyId ?? idx}-${point.lat}-${point.lng}`}
               position={[point.lat, point.lng]}
-              icon={isLeased ? leasedIcon : availableIcon}
+              icon={option.icon}
+              alt={`${option.title}: ${point.info}`}
               eventHandlers={{
                 click: () => handleSelect(point),
               }}
@@ -283,16 +345,16 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
                   acompanha o cursor em vez de ficar preso à ponta do pin). */}
               <Tooltip direction="top" offset={[0, -38]} opacity={1} sticky>
                 <div className="text-xs">
-                  <strong className={isLeased ? 'text-purple-600' : 'text-red-600'}>
-                    {isLeased ? 'Imóvel Locado' : 'Disponível para Locação'}
+                  <strong className={option.textClass}>
+                    {option.title}
                   </strong>
                   <div className="text-content-secondary">{point.info}</div>
                 </div>
               </Tooltip>
               <Popup className="custom-popup">
                 <div className="p-1">
-                  <strong className={`block text-sm mb-1 ${isLeased ? 'text-purple-600' : 'text-red-600'}`}>
-                    {isLeased ? 'Imóvel Locado' : 'Disponível para Locação'}
+                  <strong className={`block text-sm mb-1 ${option.textClass}`}>
+                    {option.title}
                   </strong>
                   <p className="text-content-secondary text-xs m-0">{point.info}</p>
                 </div>
@@ -302,36 +364,23 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
         })}
       </MapContainer>
 
-      {/* Legenda Fixa — clicável: filtra os alfinetes exibidos por status.
-          Clicar de novo no mesmo item volta a mostrar todos. */}
+      {/* A legenda oferece atalhos para um status; o filtro permite combinar vários. */}
       <div className="absolute bottom-6 right-6 bg-surface backdrop-blur px-4 py-3 rounded-xl shadow-lg border border-ui-border-soft text-xs text-content-secondary z-[1000] flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => toggleStatusFilter('OCCUPIED')}
-          title="Mostrar somente imóveis locados"
-          className={`flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
-            statusFilter === 'OCCUPIED' ? 'bg-[#8b5cf6]/10 ring-1 ring-[#8b5cf6]/40' : 'hover:bg-surface-subtle'
-          }`}
-        >
-          <span className="w-3 h-3 rounded-full bg-[#8b5cf6] border border-surface shadow-sm shrink-0"></span>
-          <span className="font-medium">Imóvel Locado (Roxo)</span>
-          <span className="text-content-muted ml-auto">{occupiedCount}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleStatusFilter('AVAILABLE')}
-          title="Mostrar somente imóveis disponíveis"
-          className={`flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
-            statusFilter === 'AVAILABLE' ? 'bg-[#ef4444]/10 ring-1 ring-[#ef4444]/40' : 'hover:bg-surface-subtle'
-          }`}
-        >
-          <span className="w-3 h-3 rounded-full bg-[#ef4444] border border-surface shadow-sm shrink-0"></span>
-          <span className="font-medium">Disponível para Locação (Vermelho)</span>
-          <span className="text-content-muted ml-auto">{availableCount}</span>
-        </button>
+        {statusCounts.map(option => (
+          <button key={option.status} type="button"
+            onClick={() => onStatusesChange(selectedStatuses.length === 1 && selectedStatuses[0] === option.status ? ALL_STATUSES : [option.status])}
+            title={`Mostrar somente imóveis ${option.label.toLowerCase()}`}
+            aria-pressed={selectedStatuses.length === 1 && selectedStatuses[0] === option.status}
+            className="flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 transition-colors hover:bg-surface-subtle aria-pressed:bg-surface-subtle aria-pressed:ring-1 aria-pressed:ring-ui-border-strong"
+          >
+            <span className="w-3 h-3 rounded-full border border-surface shadow-sm shrink-0" style={{ backgroundColor: option.color }} />
+            <span className="font-medium">{option.label}</span>
+            <span className="text-content-muted ml-auto">{option.count}</span>
+          </button>
+        ))}
         <div className="flex items-center gap-2 pt-1 border-t border-ui-border-soft text-[11px] text-content-muted">
           <span>
-            {statusFilter === 'ALL'
+            {selectedStatuses.length === ALL_STATUSES.length && !searchTerm
               ? `Total de Imóveis: ${data.length}`
               : `Exibindo ${filteredData.length} de ${data.length} imóveis`}
           </span>
@@ -349,6 +398,18 @@ function MapCanvas({ data, isFullscreen, onToggleFullscreen }: MapCanvasProps) {
 
 export default function LeafletMap({ data = [], loading = false }: LeafletMapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<PropertyMapStatus[]>(ALL_STATUSES);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPoint, setSelectedPoint] = useState<MapCoordinate | null>(null);
+  const selectionProps = {
+    selectedStatuses, searchTerm, selectedPoint,
+    onSearchChange: setSearchTerm,
+    onSelect: setSelectedPoint,
+    onStatusesChange: (statuses: PropertyMapStatus[]) => {
+      setSelectedStatuses(statuses);
+      setSelectedPoint(null);
+    },
+  };
 
   // Trava o scroll do body e permite fechar com Esc enquanto em tela cheia.
   useEffect(() => {
@@ -378,13 +439,13 @@ export default function LeafletMap({ data = [], loading = false }: LeafletMapPro
   return (
     <>
       <div className="w-full h-[calc(100vh-140px)] min-h-[500px]">
-        <MapCanvas data={data} isFullscreen={false} onToggleFullscreen={() => setIsFullscreen(true)} />
+        <MapCanvas data={data} {...selectionProps} isFullscreen={false} onToggleFullscreen={() => setIsFullscreen(true)} />
       </div>
 
       {isFullscreen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[1400] bg-black/60 p-3 sm:p-6">
           <div className="w-full h-full">
-            <MapCanvas data={data} isFullscreen onToggleFullscreen={() => setIsFullscreen(false)} />
+            <MapCanvas data={data} {...selectionProps} isFullscreen onToggleFullscreen={() => setIsFullscreen(false)} />
           </div>
         </div>,
         document.body

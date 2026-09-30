@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
     // Upload de restauração de backup muda Server Actions até 50 MB (igual ao
     // multer `fileSize: 50MB` do POST /backup/restore).
     serverActions: { bodySizeLimit: '50mb' },
+    // O middleware roda em quase todas as rotas de página (ver matcher em
+    // src/middleware.ts) e por padrão trunca o corpo da requisição em 10MB
+    // ANTES de chegar na Server Action — mesmo com `serverActions.bodySizeLimit`
+    // acima em 50mb. Uploads de documentos (ex.: contrato de locação em PDF)
+    // maiores que 10MB ficavam truncados, quebrando o parser de multipart com
+    // "Unexpected end of form" (era esse erro real por trás do digest mascarado
+    // que aparecia como "houve erro ao sincronizar os arquivos").
+    proxyClientMaxBodySize: '50mb',
   },
   typescript: {
     ignoreBuildErrors: false,

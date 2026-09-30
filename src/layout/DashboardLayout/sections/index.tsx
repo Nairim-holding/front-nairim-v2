@@ -246,7 +246,7 @@ export function ClientsSection({
   const { years, setYears, selectedMonths, setSelectedMonths, isCleared, clearPeriod, startDate, endDate } =
     useSectionPeriod(onRangeChange);
 
-  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('clientes-v1', CLIENTS_WIDGET_IDS);
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('clientes-v2', CLIENTS_WIDGET_IDS);
 
   return (
     <SectionShell>

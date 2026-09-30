@@ -279,3 +279,8 @@ export type Holiday = Prisma.HolidayModel
  * Histórico de avisos de atraso enviados à imobiliária.
  */
 export type LeaseNotification = Prisma.LeaseNotificationModel
+/**
+ * Model LeaseExpiryReminder
+ * 
+ */
+export type LeaseExpiryReminder = Prisma.LeaseExpiryReminderModel

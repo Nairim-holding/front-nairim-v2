@@ -2,16 +2,25 @@
 
 import Image from 'next/image';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useBranding } from '@/contexts/BrandingContext';
 
 export const LoginLogo = () => {
   const { isDark } = useTheme();
+  const { logoUrl, logoDarkUrl, companyName, primaryColor, secondaryColor } = useBranding();
 
-  // Na tela de login, sempre usa a logo padrão e cores padrão
-  // O usuário ainda não está logado, então não há branding customizado a considerar
-  const primaryColor = '#8b5cf6';
-  const secondaryColor = '#6d28d9';
   const gradient = `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 84.79%, ${secondaryColor}66 100%)`;
-  const src = '/logo-login.svg';
+  // Empresa sem logo customizada: não mostra nenhuma logo genérica — só o
+  // gradiente de fundo com as cores da marca (ou as cores padrão do sistema).
+  const src = (isDark && logoDarkUrl) || logoUrl;
+
+  if (!src) {
+    return (
+      <>
+        <section className="w-full p-10 lg:hidden" style={{ background: gradient }} />
+        <section className="hidden lg:flex w-full" style={{ background: gradient }} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -22,10 +31,11 @@ export const LoginLogo = () => {
       >
         <Image
           src={src}
-          alt="Nairim logo"
+          alt={companyName}
           width={200}
           height={72}
           className="mb-4"
+          unoptimized
           priority
         />
       </section>
@@ -37,10 +47,11 @@ export const LoginLogo = () => {
       >
         <Image
           src={src}
-          alt="Nairim logo"
+          alt={companyName}
           width={601}
           height={217}
           className="xl:px-10"
+          unoptimized
           priority
           fetchPriority="high"
         />

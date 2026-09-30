@@ -36,7 +36,7 @@ const TENANT_MODELS = new Set([
   // AdjustmentIndexValue fica de fora de propósito — é escopado pelo
   // indexador pai, que já vem filtrado por empresa (mesmo caso de
   // InvestmentTransaction).
-  'AdjustmentIndex', 'Holiday', 'LeaseNotification',
+  'AdjustmentIndex', 'Holiday', 'LeaseNotification', 'LeaseExpiryReminder',
 ]);
 
 /** Injeta company_id no `where` das queries de leitura. */

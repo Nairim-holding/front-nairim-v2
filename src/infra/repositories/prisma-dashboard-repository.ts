@@ -1,5 +1,8 @@
 import { releaseExpiredProperties } from './property-occupancy';
+import { classifyLeaseReportTransaction } from './prisma-lease-reports-repository';
 import { isLocationConfirmed, coordinate } from '@/shared/utils/property-location';
+import { matchReportLease } from '@/core/entities/lease-report-matching';
+import { getPropertyMapStatus } from '@/core/entities/property-map';
 import prisma from '@/infra/database/prisma';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
 import type { ChartData, ClientsMetrics, FinancialMetrics, GeolocationResponse, PortfolioMetrics } from '@/core/entities/dashboard';
@@ -23,10 +26,9 @@ import {
  *  - `calcVariation` limita a variação a ±100% e arredonda `result`/`variation`
  *    para 2 casas; `isPositive` = variação >= 0 (ou `current >= 0` quando não
  *    há base anterior).
- *  - `countPropertiesWithLessThan3Docs` na verdade conta "propriedades com
- *    documentos", usando REQUIRED_DOCUMENT_TYPES (TITLE_DEED, REGISTRATION,
- *    PROPERTY_RECORD) — uma propriedade é "completa" se tiver AO MENOS UM dos
- *    três (bug do backend preservado fielmente).
+ *  - `countPropertiesWithLessThan3Docs` conta imóveis sem nenhum anexo ativo
+ *    de matrícula, registro ou escritura. Um desses documentos já retira o
+ *    imóvel da lista de pendências; fotos e outros documentos não substituem esses anexos.
  *  - `calculateVacancyMonths`: sem leases → 12; último lease com `end_date >=
  *    data de referência` → 0; senão diferença em meses completos.
  *  - `ownersTotal.propertiesPerOwner` estima o período anterior proporcional
@@ -39,6 +41,9 @@ import {
 
 const REQUIRED_DOCUMENT_TYPES = ['TITLE_DEED', 'REGISTRATION', 'PROPERTY_RECORD'];
 
+const requiredDocumentsOf = (documents: { type: string; deleted_at?: Date | null }[]) =>
+  documents.filter(document => !document.deleted_at && REQUIRED_DOCUMENT_TYPES.includes(document.type));
+
 export { calcVariation, calculateVacancyMonths, decimalToNumber, getPeriodDatesIn };
 
 export class PrismaDashboardRepository implements DashboardRepository {
@@ -47,7 +52,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
-    const [properties, prevProperties] = await Promise.all([
+    const [properties, prevProperties, leases, currentRentTransactions, previousRentTransactions] = await Promise.all([
       prisma.property.findMany({
         where: {
           created_at: { gte: period.current.start, lte: period.current.end },
@@ -80,27 +85,81 @@ export class PrismaDashboardRepository implements DashboardRepository {
           },
         },
       }),
+      prisma.lease.findMany({
+        where: { deleted_at: null },
+        select: {
+          id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+          property_id: true,
+          property: {
+            select: {
+              title: true, area_total: true,
+              type: { select: { description: true } },
+              owner: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      prisma.transaction.findMany({
+        where: {
+          deleted_at: null, status: 'COMPLETED', is_transfer: false,
+          effective_date: { gte: period.current.start, lte: period.current.end },
+        },
+        select: {
+          amount: true, description: true, effective_date: true, lease_id: true,
+          is_cancellation_charge: true,
+          category: { select: { type: true } },
+          subcategory: { select: { name: true } },
+        },
+      }),
+      prisma.transaction.findMany({
+        where: {
+          deleted_at: null, status: 'COMPLETED', is_transfer: false,
+          effective_date: { gte: period.previous.start, lte: period.previous.end },
+        },
+        select: {
+          amount: true, description: true, effective_date: true, lease_id: true,
+          is_cancellation_charge: true,
+          category: { select: { type: true } },
+          subcategory: { select: { name: true } },
+        },
+      }),
     ]);
 
-    const avgRentalData = properties
-      .filter((p) => toNum(p.values[0]?.rental_value) > 0)
-      .map((p) => ({
-        id: p.id,
-        title: p.title,
-        rentalValue: toNum(p.values[0]?.rental_value),
-        type: p.type?.description,
-        areaTotal: p.area_total,
-        valuePerSqm:
-          p.area_total > 0 && p.values[0]?.rental_value != null
-            ? Number((toNum(p.values[0]?.rental_value) / p.area_total).toFixed(2))
-            : 0,
-        owner: p.owner?.name,
-      }));
-    const prevAvgValue =
-      prevProperties.length > 0
-        ? prevProperties.reduce((acc, p) => acc + toNum(p.values[0]?.rental_value), 0) /
-          prevProperties.length
-        : 0;
+    // Mesmo conceito de receita bruta do Relatório de Locações: somente
+    // lançamentos de aluguel concluídos, sem comissão, IPTU ou multa.
+    // Cada imóvel entra uma vez no divisor, ainda que tenha mais de um contrato.
+    const leasesById = new Map(leases.map((lease) => [lease.id, lease]));
+    const grossByProperty = (transactions: typeof currentRentTransactions) => {
+      const totals = new Map<string, number>();
+      for (const transaction of transactions) {
+        if (classifyLeaseReportTransaction(transaction) !== 'rent') continue;
+        const lease = transaction.lease_id
+          ? leasesById.get(transaction.lease_id)
+          : matchReportLease(transaction.description, transaction.effective_date, leases);
+        if (!lease) continue;
+        totals.set(lease.property_id, (totals.get(lease.property_id) ?? 0) + toNum(transaction.amount));
+      }
+      return totals;
+    };
+    const currentGrossByProperty = grossByProperty(currentRentTransactions);
+    const previousGrossByProperty = grossByProperty(previousRentTransactions);
+    const propertyDetails = new Map(leases.map((lease) => [lease.property_id, lease.property]));
+    const avgRentalData = [...currentGrossByProperty].map(([id, rentalValue]) => {
+      const property = propertyDetails.get(id);
+      const areaTotal = property?.area_total ?? 0;
+      return {
+        id,
+        title: property?.title ?? '—',
+        rentalValue,
+        type: property?.type?.description,
+        areaTotal,
+        valuePerSqm: areaTotal > 0 ? Number((rentalValue / areaTotal).toFixed(2)) : 0,
+        owner: property?.owner?.name,
+      };
+    });
+    const prevAvgValue = previousGrossByProperty.size > 0
+      ? [...previousGrossByProperty.values()].reduce((sum, value) => sum + value, 0) / previousGrossByProperty.size
+      : 0;
 
     const activeRentalData = properties
       .filter((p) => toNum(p.values[0]?.rental_value) > 0 && p.values[0]?.status === 'AVAILABLE')
@@ -263,8 +322,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const allDetails = properties.map((p) => ({
       id: p.id,
       title: p.title,
-      type: p.type?.description,
-      status: p.values[0]?.status,
+      type: p.type?.description || 'Outros',
+      status: p.values[0]?.status ?? 'AVAILABLE',
       rentalValue: toNum(p.values[0]?.rental_value),
       areaTotal: p.area_total,
       documentCount: p.documents.length,
@@ -272,25 +331,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
     }));
 
     const pendingDocs = properties
+      .filter(p => requiredDocumentsOf(p.documents).length === 0)
       .map((p) => {
-        const present = p.documents.map((d) => d.type);
-        const missing = REQUIRED_DOCUMENT_TYPES.filter((t) => !present.includes(t as never));
-        const isComplete = REQUIRED_DOCUMENT_TYPES.some((t) => present.includes(t as never));
         return {
           id: p.id,
           title: p.title,
-          documentCount: p.documents.length,
-          type: p.type?.description,
-          missingDocuments: missing,
-          isComplete,
+          documentCount: 0,
+          type: p.type?.description || 'Outros',
+          missingDocuments: REQUIRED_DOCUMENT_TYPES,
+          isComplete: false,
         };
-      })
-      .filter((p) => !p.isComplete);
+      });
 
-    const prevPendingCount = prevProperties.filter((p) => {
-      const present = p.documents.map((d) => d.type);
-      return !REQUIRED_DOCUMENT_TYPES.some((t) => present.includes(t as never));
-    }).length;
+    const prevPendingCount = prevProperties.filter(p => requiredDocumentsOf(p.documents).length === 0).length;
 
     const saleValueData = properties
       .filter((p) => toNum(p.values[0]?.sale_value) > 0)
@@ -298,43 +351,50 @@ export class PrismaDashboardRepository implements DashboardRepository {
         id: p.id,
         title: p.title,
         saleValue: toNum(p.values[0]?.sale_value),
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
       }));
 
     const available = properties
-      .filter((p) => p.values[0]?.status === 'AVAILABLE')
+      .filter((p) => (p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE')
       .map((p) => ({
         id: p.id,
         title: p.title,
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
         areaTotal: p.area_total,
         monthsVacant: calculateVacancyMonths(p.leases, endDate),
       }));
     const occupied = properties
-      .filter((p) => p.values[0]?.status !== 'AVAILABLE')
+      .filter((p) => p.values[0]?.status === 'OCCUPIED')
       .map((p) => ({
         id: p.id,
         title: p.title,
-        type: p.type?.description,
+        type: p.type?.description || 'Outros',
         rentalValue: toNum(p.values[0]?.rental_value),
-        status: p.values[0]?.status,
+        status: p.values[0]?.status ?? 'AVAILABLE',
       }));
 
-    const currentVacRate = properties.length > 0 ? (available.length / properties.length) * 100 : 0;
+    const rentableCount = properties.filter(p => p.values[0]?.status !== 'SOLD').length;
+    const prevRentableCount = prevProperties.filter(p => p.values[0]?.status !== 'SOLD').length;
+    const propertiesByType: ChartData[] = [...new Set(allDetails.map(p => p.type))].map(name => ({ name, value: allDetails.filter(p => p.type === name).length, data: allDetails.filter(p => p.type === name) }));
+    const propertiesByStatus: ChartData[] = [
+      { name: 'Disponíveis', status: 'AVAILABLE' }, { name: 'Ocupados', status: 'OCCUPIED' }, { name: 'Vendidos', status: 'SOLD' },
+    ].map(({ name, status }) => ({ name, value: allDetails.filter(p => p.status === status).length, data: allDetails.filter(p => p.status === status) }));
+
+    const currentVacRate = rentableCount > 0 ? (available.length / rentableCount) * 100 : 0;
     const prevVacRate =
-      prevProperties.length > 0
-        ? (prevProperties.filter((p) => p.values[0]?.status === 'AVAILABLE').length /
-            prevProperties.length) *
+      prevRentableCount > 0
+        ? (prevProperties.filter((p) => (p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE').length /
+            prevRentableCount) *
           100
         : 0;
 
-    const currentOccRate = properties.length > 0 ? (occupied.length / properties.length) * 100 : 0;
+    const currentOccRate = rentableCount > 0 ? (occupied.length / rentableCount) * 100 : 0;
     const prevOccRate =
-      prevProperties.length > 0
-        ? (prevProperties.filter((p) => p.values[0]?.status !== 'AVAILABLE').length /
-            prevProperties.length) *
+      prevRentableCount > 0
+        ? (prevProperties.filter((p) => p.values[0]?.status === 'OCCUPIED').length /
+            prevRentableCount) *
           100
         : 0;
 
@@ -351,7 +411,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       properties.reduce(
         (acc: Record<string, number>, p) => {
           const type = p.type?.description || 'Outros';
-          if (p.values[0]?.status === 'AVAILABLE') acc[type] = (acc[type] || 0) + 1;
+          if ((p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE') acc[type] = (acc[type] || 0) + 1;
           return acc;
         },
         {},
@@ -375,6 +435,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
         saleValueData,
       ),
       availablePropertiesByType,
+      propertiesByType,
+      propertiesByStatus,
       vacancyRate: calcVariation(currentVacRate, prevVacRate, available),
       occupationRate: calcVariation(currentOccRate, prevOccRate, occupied),
       physicalVacancy: calcVariation(
@@ -393,16 +455,16 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
-    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount] =
+    const [owners, prevOwnersCount, tenants, prevTenantsCount, agencies, prevAgenciesCount, prevTotalProperties, propertiesWithoutAgency] =
       await Promise.all([
         prisma.owner.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             properties: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 type: true,
                 values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
@@ -412,19 +474,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.owner.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
           },
         }),
 
         prisma.tenant.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             leases: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 property: {
                   include: {
@@ -438,19 +500,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.tenant.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
           },
         }),
 
         prisma.agency.findMany({
           where: {
-            created_at: { gte: period.current.start, lte: period.current.end },
+            created_at: { lte: period.current.end },
             deleted_at: null,
           },
           include: {
             properties: {
-              where: { deleted_at: null },
+              where: { deleted_at: null, created_at: { lte: period.current.end } },
               include: {
                 type: true,
                 values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
@@ -460,8 +522,23 @@ export class PrismaDashboardRepository implements DashboardRepository {
         }),
         prisma.agency.count({
           where: {
-            created_at: { gte: period.previous.start, lte: period.previous.end },
+            created_at: { lte: period.previous.end },
             deleted_at: null,
+          },
+        }),
+        prisma.property.count({ where: {
+          created_at: { lte: period.previous.end }, deleted_at: null,
+          owner: { deleted_at: null, created_at: { lte: period.previous.end } },
+        } }),
+        prisma.property.findMany({
+          where: {
+            agency_id: null,
+            deleted_at: null,
+            created_at: { lte: period.current.end },
+          },
+          include: {
+            type: true,
+            values: { where: { deleted_at: null }, orderBy: { created_at: 'desc' }, take: 1 },
           },
         }),
       ]);
@@ -505,9 +582,42 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const totalProperties = owners.reduce((acc, o) => acc + o.properties.length, 0);
     const propertiesPerOwnerVal = owners.length > 0 ? totalProperties / owners.length : 0;
 
-    const prevTotalPropertiesEstimate = prevOwnersCount * propertiesPerOwnerVal;
     const prevPropertiesPerOwnerVal =
-      prevOwnersCount > 0 ? prevTotalPropertiesEstimate / prevOwnersCount : 0;
+      prevOwnersCount > 0 ? prevTotalProperties / prevOwnersCount : 0;
+
+    const propertiesByAgency: ChartData[] = agencies.map((a) => ({
+      name: a.trade_name || a.legal_name,
+      value: a.properties.length,
+      data: a.properties.map((p) => ({
+        id: p.id,
+        title: p.title,
+        type: p.type?.description,
+        status: p.values[0]?.status,
+        rentalValue: toNum(p.values[0]?.rental_value),
+        areaTotal: p.area_total,
+        agency: {
+          id: a.id,
+          tradeName: a.trade_name,
+          legalName: a.legal_name,
+        },
+      })),
+    }));
+
+    if (propertiesWithoutAgency.length > 0) {
+      propertiesByAgency.push({
+        name: 'Nenhuma',
+        value: propertiesWithoutAgency.length,
+        data: propertiesWithoutAgency.map((p) => ({
+          id: p.id,
+          title: p.title,
+          type: p.type?.description,
+          status: p.values[0]?.status,
+          rentalValue: toNum(p.values[0]?.rental_value),
+          areaTotal: p.area_total,
+          agency: null,
+        })),
+      });
+    }
 
     return {
       ownersTotal: calcVariation(owners.length, prevOwnersCount, ownersDetails),
@@ -522,23 +632,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
       agenciesTotal: calcVariation(agencies.length, prevAgenciesCount, agenciesDetails),
 
-      propertiesByAgency: agencies.map((a) => ({
-        name: a.trade_name || a.legal_name,
-        value: a.properties.length,
-        data: a.properties.map((p) => ({
-          id: p.id,
-          title: p.title,
-          type: p.type?.description,
-          status: p.values[0]?.status,
-          rentalValue: toNum(p.values[0]?.rental_value),
-          areaTotal: p.area_total,
-          agency: {
-            id: a.id,
-            tradeName: a.trade_name,
-            legalName: a.legal_name,
-          },
-        })),
-      })),
+      propertiesByAgency,
     };
   }
 
@@ -562,8 +656,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
     });
 
     const coordinates = properties.flatMap((p) => {
-      const isLeased = p.leases.length > 0 || p.values[0]?.status === 'OCCUPIED';
-      const status = (isLeased ? 'OCCUPIED' : 'AVAILABLE') as 'OCCUPIED' | 'AVAILABLE';
+      const status = getPropertyMapStatus({ status: p.values[0]?.status, isLeased: p.leases.length > 0 });
+      const isLeased = status === 'OCCUPIED';
       const addresses = p.addresses.filter(a => !a.address.deleted_at);
       if (!addresses.length) return [{ lat: null, lng: null, info: p.title, propertyId: p.id, confirmed: false, isLeased, status }];
       return addresses.map(({ address }) => {

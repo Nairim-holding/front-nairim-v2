@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { createContext, useCallback, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Maximize2, FileText, X } from 'lucide-react';
 import DataModal from '@/components/charts/DataModal';
@@ -22,8 +22,12 @@ export interface ChartCardGroupBy {
   unitLabel?: (count: number) => string;
 }
 
+export interface ChartPoint { dataIndex: number; name?: string; seriesName?: string; seriesType?: string }
+export const ChartDrilldownContext = createContext<((point: ChartPoint) => void) | undefined>(undefined);
+
 export interface ChartCardRenderOpts {
   isFullscreen: boolean;
+  openDetails: (point: ChartPoint) => void;
 }
 
 interface ChartCardProps {
@@ -32,6 +36,9 @@ interface ChartCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   detailData?: any[];
   detailColumns?: ChartCardColumn[];
+  detailForPoint?: (point: ChartPoint) => unknown[];
+  loadDetailForPoint?: (point: ChartPoint) => Promise<unknown[]>;
+  pointDetailColumns?: ChartCardColumn[];
   /** Agrupa o "Ver Dados Detalhados" por um campo dos dados, com subtotal por grupo. */
   detailGroupBy?: ChartCardGroupBy;
   /** Unidade mostrada no rodapé do modal de detalhes ("Total: N <detailTotalLabel>"). */
@@ -56,6 +63,9 @@ export default function ChartCard({
   subtitle,
   detailData = [],
   detailColumns,
+  detailForPoint,
+  loadDetailForPoint,
+  pointDetailColumns,
   detailGroupBy,
   detailTotalLabel,
   dragHandleClassName = 'widget-drag-handle',
@@ -65,14 +75,49 @@ export default function ChartCard({
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const hasDetailData = detailData.length > 0;
+  const [selection, setSelection] = useState<{ title: string; data: unknown[] } | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | undefined>();
+  const detailRequest = useRef(0);
+  const openDetails = useCallback((point: ChartPoint) => {
+    const requestId = ++detailRequest.current;
+    // Séries sem nome recebem um identificador interno do ECharts com NUL.
+    const seriesLabel = point.seriesName?.includes('\0') ? undefined : point.seriesName;
+    const selectionTitle = [title, point.name, seriesLabel].filter(Boolean).join(' — ');
+    setDetailError(undefined);
+    setIsFullscreenOpen(false);
+    setIsDataModalOpen(true);
+    if (loadDetailForPoint) {
+      setSelection({ title: selectionTitle, data: [] });
+      setIsDetailLoading(true);
+      void loadDetailForPoint(point).then(data => {
+        if (detailRequest.current === requestId) setSelection({ title: selectionTitle, data });
+      }).catch((error: unknown) => {
+        if (detailRequest.current === requestId) {
+          setDetailError(error instanceof Error ? error.message : 'Não foi possível carregar os lançamentos.');
+        }
+      }).finally(() => {
+        if (detailRequest.current === requestId) setIsDetailLoading(false);
+      });
+      return;
+    }
+    setIsDetailLoading(false);
+    const data = detailForPoint ? detailForPoint(point) : point.seriesType === 'gauge'
+      ? detailData : detailData[point.dataIndex] ? [detailData[point.dataIndex]] : [];
+    setSelection({ title: selectionTitle, data });
+  }, [detailForPoint, loadDetailForPoint, detailData, title]);
 
   const openDataModal = () => {
+    ++detailRequest.current;
+    setIsDetailLoading(false);
+    setDetailError(undefined);
+    setSelection(null);
     setIsFullscreenOpen(false);
     setTimeout(() => setIsDataModalOpen(true), isFullscreenOpen ? 300 : 0);
   };
 
   return (
-    <>
+    <ChartDrilldownContext.Provider value={openDetails}>
       <div
         className={`${isDraggable ? `${dragHandleClassName} cursor-move` : ''} px-4 py-3 border-b border-ui-border-soft shrink-0 flex items-center justify-between gap-2`}
       >
@@ -99,16 +144,20 @@ export default function ChartCard({
         </div>
       </div>
 
-      <div className="flex-1 relative min-h-0">{children({ isFullscreen: false })}</div>
+      {/* O render prop recebe o callback de clique; a ref só é acessada ao clicar. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
+      <div className="flex-1 relative min-h-0">{children({ isFullscreen: false, openDetails })}</div>
 
       <DataModal
         isOpen={isDataModalOpen}
-        onClose={() => setIsDataModalOpen(false)}
-        title={title}
-        data={detailData}
-        columns={detailColumns}
+        onClose={() => { ++detailRequest.current; setIsDataModalOpen(false); }}
+        title={selection?.title ?? title}
+        data={selection?.data ?? detailData}
+        columns={selection && pointDetailColumns ? pointDetailColumns : detailColumns}
+        isLoading={isDetailLoading}
+        error={detailError}
         groupBy={detailGroupBy}
-        totalLabel={detailTotalLabel}
+        totalLabel={selection && loadDetailForPoint ? 'lançamentos' : detailTotalLabel}
       />
 
       {isFullscreenOpen && typeof document !== 'undefined' && createPortal(
@@ -145,12 +194,13 @@ export default function ChartCard({
               </div>
             </div>
             <div className="flex-1 p-3 sm:p-4 md:p-5 relative bg-surface overflow-y-auto custom-scrollbar flex flex-col min-h-0">
-              {children({ isFullscreen: true })}
+              {/* eslint-disable-next-line react-hooks/refs -- callback executado apenas em eventos */}
+              {children({ isFullscreen: true, openDetails })}
             </div>
           </div>
         </div>,
         document.body
       )}
-    </>
+    </ChartDrilldownContext.Provider>
   );
 }

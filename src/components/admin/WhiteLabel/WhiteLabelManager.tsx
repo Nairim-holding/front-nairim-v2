@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Image as ImageIcon, Palette, Moon, Sun, Eye, Loader2, Save } from 'lucide-react';
+import { Building2, Image as ImageIcon, Palette, Loader2, Save } from 'lucide-react';
 import { useMessageContext } from '@/contexts';
 import type { CompanyBranding } from '@/types/branding';
 import {
@@ -10,20 +10,19 @@ import {
   COMPANY_IDENTITY_FIELD_KEYS,
   type CompanyIdentityKey,
 } from '@/lib/companyIdentity';
-import { buildBrandingCss } from '@/lib/brandingCss';
-import ColorInput from './ColorInput';
+import ThemeEditor from './ThemeEditor';
+import { BRANDING_COLOR_KEYS } from '@/lib/brandingTheme';
+export { default as BrandingPreview } from './BrandingPreview';
 import AssetUploader from './AssetUploader';
 import { getMyBrandingAction, updateBrandingAction } from '@/server/actions/company';
 import type { BrandingAssetField } from '@/core/entities/company';
 
-type TabId = 'geral' | 'branding' | 'tema-light' | 'tema-dark' | 'preview';
+type TabId = 'geral' | 'branding' | 'tema';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'geral', label: 'Geral', icon: <Building2 size={18} /> },
   { id: 'branding', label: 'Branding', icon: <ImageIcon size={18} /> },
-  { id: 'tema-light', label: 'Tema Light', icon: <Sun size={18} /> },
-  { id: 'tema-dark', label: 'Tema Dark', icon: <Moon size={18} /> },
-  { id: 'preview', label: 'Preview', icon: <Eye size={18} /> },
+  { id: 'tema', label: 'Tema e aparência', icon: <Palette size={18} /> },
 ];
 
 const TEXT_FIELDS: { field: keyof FormState; label: string; placeholder?: string; multiline?: boolean }[] = [
@@ -33,38 +32,10 @@ const TEXT_FIELDS: { field: keyof FormState; label: string; placeholder?: string
   { field: 'app_description', label: 'Descrição (meta description / compartilhamento)', placeholder: 'Breve descrição da plataforma', multiline: true },
 ];
 
-const COLOR_FIELDS: { key: ColorKey; label: string; defaultValue: string }[] = [
-  { key: 'primary', label: 'Cor primária', defaultValue: '#8b5cf6' },
-  { key: 'secondary', label: 'Cor secundária', defaultValue: '#6d28d9' },
-  { key: 'accent', label: 'Cor de destaque', defaultValue: '#ec4899' },
-  { key: 'success', label: 'Cor de sucesso', defaultValue: '#10b981' },
-  { key: 'warning', label: 'Cor de aviso', defaultValue: '#f59e0b' },
-  { key: 'error', label: 'Cor de erro', defaultValue: '#ef4444' },
-  { key: 'info', label: 'Cor de informação', defaultValue: '#3b82f6' },
-  { key: 'bg', label: 'Cor de fundo', defaultValue: '#ffffff' },
-  { key: 'card', label: 'Cor de cards', defaultValue: '#ffffff' },
-  { key: 'border', label: 'Cor de bordas', defaultValue: '#cccccc' },
-  { key: 'text', label: 'Cor de texto', defaultValue: '#171717' },
-];
-
-type ColorKey = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'info' | 'bg' | 'card' | 'border' | 'text';
-
-const LIGHT_FIELD_BY_KEY: Record<ColorKey, keyof FormState> = {
-  primary: 'primary_color', secondary: 'secondary_color', accent: 'accent_color',
-  success: 'success_color', warning: 'warning_color', error: 'error_color', info: 'info_color',
-  bg: 'bg_color', card: 'card_color', border: 'border_color', text: 'text_color',
-};
-
-const DARK_FIELD_BY_KEY: Record<ColorKey, keyof FormState> = {
-  primary: 'primary_color_dark', secondary: 'secondary_color_dark', accent: 'accent_color_dark',
-  success: 'success_color_dark', warning: 'warning_color_dark', error: 'error_color_dark', info: 'info_color_dark',
-  bg: 'bg_color_dark', card: 'card_color_dark', border: 'border_color_dark', text: 'text_color_dark',
-};
-
 const COLOR_AND_TEXT_FIELDS = [
   'company_name', 'trade_name', 'app_title', 'app_description',
   ...COMPANY_IDENTITY_FIELD_KEYS,
-  ...Object.values(LIGHT_FIELD_BY_KEY), ...Object.values(DARK_FIELD_BY_KEY),
+  ...BRANDING_COLOR_KEYS,
 ] as const;
 
 type FormState = Record<
@@ -117,8 +88,8 @@ export default function WhiteLabelManager() {
         const result = await getMyBrandingAction();
         if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
         if (!cancelled) setForm(brandingToForm(result.data as CompanyBranding | null));
-      } catch (err: any) {
-        if (!cancelled) showMessage(err?.message ?? 'Erro ao carregar configurações de marca', 'error');
+      } catch (err: unknown) {
+        if (!cancelled) showMessage(err instanceof Error ? err.message : 'Erro ao carregar configurações de marca', 'error');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -141,36 +112,18 @@ export default function WhiteLabelManager() {
     try {
       const payload: Record<string, unknown> = {};
       for (const field of COLOR_AND_TEXT_FIELDS) {
-        payload[field] = form[field] || undefined;
+        payload[field] = form[field] || ((BRANDING_COLOR_KEYS as readonly string[]).includes(field) ? null : undefined);
       }
       const result = await updateBrandingAction(payload);
       if (!result.ok) throw new Error(result.error ?? `Erro ${result.status}`);
       showMessage('Identidade visual atualizada com sucesso!', 'success');
       router.refresh();
-    } catch (err: any) {
-      showMessage(err?.message ?? 'Erro ao salvar identidade visual', 'error');
+    } catch (err: unknown) {
+      showMessage(err instanceof Error ? err.message : 'Erro ao salvar identidade visual', 'error');
     } finally {
       setSaving(false);
     }
   }, [form, showMessage, router]);
-
-  // Monta um objeto compatível com CompanyBranding para gerar o preview ao vivo
-  const previewBranding = useMemo<CompanyBranding>(() => ({
-    company_name: form.company_name || null,
-    logo_url: form.logo_url || null,
-    favicon_url: form.favicon_url || null,
-    company_info: null,
-    trade_name: form.trade_name || null,
-    app_title: form.app_title || null,
-    app_description: form.app_description || null,
-    logo_sidebar_url: form.logo_sidebar_url || null,
-    logo_dark_url: form.logo_dark_url || null,
-    og_image_url: form.og_image_url || null,
-    ...Object.fromEntries(COLOR_FIELDS.flatMap(({ key }) => ([
-      [LIGHT_FIELD_BY_KEY[key], form[LIGHT_FIELD_BY_KEY[key]] || null],
-      [DARK_FIELD_BY_KEY[key], form[DARK_FIELD_BY_KEY[key]] || null],
-    ]))),
-  } as unknown as CompanyBranding), [form]);
 
   if (loading) {
     return (
@@ -313,111 +266,8 @@ export default function WhiteLabelManager() {
           </div>
         )}
 
-        {activeTab === 'tema-light' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {COLOR_FIELDS.map(({ key, label, defaultValue }) => (
-              <ColorInput
-                key={`light-${key}`}
-                label={label}
-                value={form[LIGHT_FIELD_BY_KEY[key]]}
-                onChange={v => setField(LIGHT_FIELD_BY_KEY[key], v)}
-                defaultValue={defaultValue}
-              />
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'tema-dark' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {COLOR_FIELDS.map(({ key, label, defaultValue }) => (
-              <ColorInput
-                key={`dark-${key}`}
-                label={label}
-                value={form[DARK_FIELD_BY_KEY[key]]}
-                onChange={v => setField(DARK_FIELD_BY_KEY[key], v)}
-                defaultValue={form[LIGHT_FIELD_BY_KEY[key]] || defaultValue}
-              />
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'preview' && <BrandingPreview branding={previewBranding} />}
+        {activeTab === 'tema' && <ThemeEditor values={form} onChange={(field, value) => setField(field as keyof FormState, value)} />}
       </div>
     </div>
-  );
-}
-
-export function BrandingPreview({ branding }: { branding: CompanyBranding }) {
-  const css = useMemo(() => buildBrandingCss(branding), [branding]);
-  const name = branding.trade_name || branding.company_name || 'Sua Empresa';
-
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-xs text-content-muted">
-        Pré-visualização ao vivo — reflete exatamente as variáveis CSS que serão aplicadas ao sistema.
-      </p>
-      {css && <style dangerouslySetInnerHTML={{ __html: css.replace(/:root/g, '.wl-preview-light').replace(/\.dark/g, '.wl-preview-dark') }} />}
-
-      <PreviewMockup className="wl-preview-light" title={`${name} — Tema Light`} logoUrl={branding.logo_url} />
-      <PreviewMockup className="wl-preview-dark" title={`${name} — Tema Dark`} logoUrl={branding.logo_dark_url ?? branding.logo_url} />
-    </div>
-  );
-}
-
-function PreviewMockup({ className, title, logoUrl }: { className: string; title: string; logoUrl: string | null }) {
-  return (
-    <div
-      className={`${className} rounded-xl border p-5 flex flex-col gap-4`}
-      style={{
-        background: 'var(--color-bg-page)',
-        borderColor: 'var(--color-border-default)',
-        color: 'var(--color-text-primary)',
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={title} className="h-8 w-auto object-contain" />
-          ) : (
-            <div className="h-8 w-8 rounded-md" style={{ background: 'var(--color-brand-primary)' }} />
-          )}
-          <span className="font-medium">{title}</span>
-        </div>
-        <div className="flex gap-2">
-          <span className="px-3 py-1 rounded-full text-xs font-medium text-white" style={{ background: 'var(--color-brand-primary)' }}>Primária</span>
-          <span className="px-3 py-1 rounded-full text-xs font-medium text-white" style={{ background: 'var(--color-brand-primary-hover)' }}>Secundária</span>
-        </div>
-      </div>
-
-      <div
-        className="rounded-lg p-4 flex flex-col gap-3"
-        style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-default)' }}
-      >
-        <span className="text-sm" style={{ color: 'var(--color-text-primary)' }}>Card de exemplo com texto e ações</span>
-        <div className="flex flex-wrap gap-2">
-          <PreviewBadge color="var(--color-success)" label="Sucesso" />
-          <PreviewBadge color="var(--color-warning)" label="Aviso" />
-          <PreviewBadge color="var(--color-error)" label="Erro" />
-          <PreviewBadge color="var(--color-info)" label="Info" />
-          <PreviewBadge color="var(--color-accent)" label="Destaque" />
-        </div>
-        <button
-          type="button"
-          className="self-start px-4 py-2 rounded-lg text-sm font-medium text-white"
-          style={{ background: 'var(--color-brand-primary)' }}
-        >
-          Botão de ação
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function PreviewBadge({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="px-2.5 py-1 rounded-md text-xs font-medium text-white" style={{ background: color }}>
-      {label}
-    </span>
   );
 }

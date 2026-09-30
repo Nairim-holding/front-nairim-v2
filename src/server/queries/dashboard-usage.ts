@@ -3,7 +3,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import prisma from '@/infra/database/prisma';
 import { minioStorage } from '@/infra/storage/minio-storage';
-import { env } from '@/infra/config/env';
 import { withPermission } from '@/infra/auth/session';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
 import {
@@ -248,7 +247,11 @@ export async function getDatabaseUsageData(): Promise<DatabaseUsageResult> {
     const usage: CompanyDatabaseUsage[] = companies.map((company) => {
       const usedBytes = bytesByCompany.get(company.id) ?? 0;
       const usedMb = usedBytes / BYTES_PER_MB;
-      const quotaMb = company.db_quota_mb ?? env.DEFAULT_DB_QUOTA_MB;
+      // `db_quota_mb` não informado = sem limite (não usa mais um teto padrão
+      // do ambiente): `quotaMb`/`percent` ficam `null` e a UI trata como
+      // "sem limite contratado" em vez de calcular um percentual contra um
+      // teto arbitrário.
+      const quotaMb = company.db_quota_mb ?? null;
 
       return {
         companyId: company.id,
@@ -256,7 +259,7 @@ export async function getDatabaseUsageData(): Promise<DatabaseUsageResult> {
         usedBytes,
         usedMb: round2(usedMb),
         quotaMb,
-        percent: quotaMb > 0 ? round2((usedMb / quotaMb) * 100) : 0,
+        percent: quotaMb != null && quotaMb > 0 ? round2((usedMb / quotaMb) * 100) : null,
         isCurrent: company.id === companyId,
       };
     });

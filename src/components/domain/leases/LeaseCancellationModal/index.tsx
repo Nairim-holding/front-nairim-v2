@@ -49,7 +49,7 @@ const clampDate = (value: string, min?: string, max?: string) => {
 /**
  * Modal de Cancelamento de Locação (3 etapas):
  *  1. Data + Motivo + encargos opcionais (custas/juros/multas).
- *  2. Listagem dos lançamentos do período (data → término) para o usuário
+ *  2. Listagem dos lançamentos a partir da data para o usuário
  *     confirmar quais excluir. Concluídos vêm desmarcados por padrão.
  *  3. (Só se houver encargos) Configuração do lançamento de encargo (conta,
  *     categoria, subcategoria, centro de receita, contato, data, valor).
@@ -351,7 +351,7 @@ export default function LeaseCancellationModal({
         {step === 2 && (
           <div className="mt-4 space-y-3">
             <p className="text-[13px] text-content-secondary">
-              Lançamentos de <strong>{formatDate(date)}</strong> até o término do contrato. Marque os que deseja excluir.
+              Lançamentos a partir de <strong>{formatDate(date)}</strong>. Marque os que deseja excluir.
               Concluídos (pagos) vêm desmarcados por segurança.
             </p>
 

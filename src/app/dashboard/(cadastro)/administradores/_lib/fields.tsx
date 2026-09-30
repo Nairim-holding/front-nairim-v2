@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import CompanyAccessFields from '@/components/domain/users/CompanyAccessFields';
 import { Check, Circle, Phone, Hash, Globe, PhoneCall, Clock, Camera, Power, Wand2 } from 'lucide-react';
 import type { FormFieldDef } from '@/types/types';
 import Toggle from '@/components/ui/Toggle';
@@ -222,6 +223,7 @@ export function activeField(readOnly = false): FormFieldDef {
     type: 'custom',
     className: 'w-full',
     icon: <Power size={20} />,
+    defaultValue: true,
     render: (value: any, _formValues: any, onChange: any) => (
       <Toggle
         checked={value === true}
@@ -343,4 +345,14 @@ export function schedulePayload(data: any) {
       ? data.access_schedules
       : [],
   };
+}
+
+export function companyAccessFields(homeCompanyId?: string, readOnly = false): FormFieldDef[] {
+  return [
+    { field: 'all_companies_access', label: '', type: 'checkbox', hidden: true, defaultValue: false },
+    { field: 'allowed_company_ids', label: '', type: 'custom', className: 'col-span-full', defaultValue: [],
+      render: (value, formValues, onChange, setFieldValue) => <CompanyAccessFields
+        value={Array.isArray(value) ? value : []} onChange={onChange} all={formValues?.all_companies_access === true}
+        onAllChange={all => setFieldValue?.('all_companies_access', all)} homeCompanyId={homeCompanyId} readOnly={readOnly} /> },
+  ];
 }

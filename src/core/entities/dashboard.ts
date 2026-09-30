@@ -7,6 +7,8 @@
  * Camada: core. Origem: api-nairim-v2/src/services/DashboardService.ts.
  */
 
+import type { PropertyMapStatus } from './property-map';
+
 /** Seções do dashboard (uma por endpoint do backend). */
 export type DashboardSection = 'financial' | 'portfolio' | 'clients' | 'map';
 
@@ -44,6 +46,8 @@ export interface PortfolioMetrics {
   countPropertiesWithLessThan3Docs: MetricResult;
   totalPropertiesWithSaleValue?: MetricResult;
   availablePropertiesByType: ChartData[];
+  propertiesByType?: ChartData[];
+  propertiesByStatus?: ChartData[];
   vacancyRate: MetricResult;
   occupationRate: MetricResult;
   physicalVacancy: MetricResult;
@@ -64,7 +68,7 @@ export interface GeolocationPoint {
   propertyId?: string;
   confirmed?: boolean;
   isLeased?: boolean;
-  status?: 'OCCUPIED' | 'AVAILABLE';
+  status?: PropertyMapStatus;
 }
 
 export interface GeolocationResponse {

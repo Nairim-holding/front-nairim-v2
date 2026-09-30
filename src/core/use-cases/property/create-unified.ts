@@ -10,6 +10,7 @@ const FILE_TYPE_BY_FIELD: Record<keyof PropertyUploadFiles, string> = {
   arquivosRegistro: 'PROPERTY_RECORD',
   arquivosEscritura: 'TITLE_DEED',
   arquivosOutros: 'OTHER',
+  arquivosVenda: 'PROPERTY_SALE',
 };
 
 export interface CreateUnifiedPropertyInput {

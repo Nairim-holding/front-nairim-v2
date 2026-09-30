@@ -28,7 +28,7 @@ async function toUploadFile(file: File): Promise<PropertyUploadFile> {
 }
 
 /** Nomes dos campos de arquivo aceitos no fluxo unificado de imóveis. */
-const PROPERTY_FILE_FIELDS = ['arquivosImagens', 'arquivosMatricula', 'arquivosRegistro', 'arquivosEscritura', 'arquivosOutros'] as const;
+const PROPERTY_FILE_FIELDS = ['arquivosImagens', 'arquivosMatricula', 'arquivosRegistro', 'arquivosEscritura', 'arquivosOutros', 'arquivosVenda'] as const;
 
 /** Extrai todos os arquivos de um FormData de imóvel, agrupados por campo. */
 export async function readPropertyUploadFiles(fd: FormData): Promise<PropertyUploadFiles> {

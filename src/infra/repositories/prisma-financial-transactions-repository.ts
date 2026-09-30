@@ -26,7 +26,8 @@ import type {
   TransferResult,
   UpdateTransactionData,
 } from '@/core/entities/financial-transaction';
-import { parseLocalDate, displayDate } from '@/shared/utils/date-utils';
+import { parseLocalDate, displayDate, formatLocalDate } from '@/shared/utils/date-utils';
+import type { FinancialChartDetailQuery, FinancialChartDetailRow } from '@/core/entities/financial-chart-detail';
 import {
   buildPropagatedDescription,
   parseSeriesDescription,
@@ -1287,6 +1288,73 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   // ─── Relatórios / agregações (Módulo 11 — Dashboard) ──────────────────────
+
+  async getChartDetails(
+    query: FinancialChartDetailQuery,
+    filters: TransactionEntityFilters = {},
+  ): Promise<FinancialChartDetailRow[]> {
+    const { source } = query;
+    const range = source !== 'balance'
+      ? { gte: parseLocalDate(query.startDate!), lte: parseLocalDate(query.endDate!) }
+      : undefined;
+    const conditions: Record<string, unknown>[] = [];
+    const entityFilters = this.buildEntityFilterWhere(filters);
+    // O planejamento filtra descrições por igualdade, como seu dashboard.
+    if (source === 'planning' && filters.description?.length) {
+      delete entityFilters.OR;
+      conditions.push({ description: { in: filters.description } });
+    }
+    conditions.push(entityFilters);
+    if (query.categoryId) conditions.push({ category_id: query.categoryId });
+    if (query.subcategoryId !== undefined) conditions.push({ subcategory_id: query.subcategoryId });
+    if (query.cardId) conditions.push({ card_id: query.cardId });
+    if (query.institutionId) conditions.push({ financial_institution_id: query.institutionId });
+
+    if (source === 'cards') {
+      conditions.push({ OR: [{ event_date: range }, { effective_date: range }] });
+    } else if (source === 'balance') {
+      conditions.push({ effective_date: { lte: new Date() } });
+    } else {
+      conditions.push({ [source === 'planning' ? 'effective_date' : 'event_date']: range });
+    }
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        deleted_at: null,
+        ...(source === 'transactions' || source === 'cards' ? { NOT: { is_transfer: true } } : {}),
+        ...(source === 'planning' || source === 'balance' ? { status: 'COMPLETED' as const } : {}),
+        category: { type: query.type ?? (source === 'cards' ? 'EXPENSE' : { in: ['INCOME', 'EXPENSE'] }) },
+        AND: conditions,
+      } as never,
+      select: {
+        id: true, event_date: true, effective_date: true, description: true, amount: true, status: true,
+        category: { select: { name: true, type: true } },
+        subcategory: { select: { name: true } },
+        financial_institution: { select: { name: true } },
+        card: { select: { name: true } },
+        supplier: { select: { legal_name: true, trade_name: true } },
+        center: { select: { name: true } },
+      },
+      orderBy: [{ [source === 'planning' || source === 'balance' ? 'effective_date' : 'event_date']: 'asc' }, { id: 'asc' }],
+    });
+
+    return transactions.map(t => ({
+      id: t.id,
+      eventDate: formatLocalDate(t.event_date),
+      effectiveDate: formatLocalDate(t.effective_date),
+      description: t.description ?? '',
+      type: t.category?.type === 'INCOME' ? 'Receita' : 'Despesa',
+      category: t.category?.name ?? 'Sem categoria',
+      subcategory: t.subcategory?.name ?? 'Sem subcategoria',
+      institution: t.financial_institution?.name ?? '',
+      card: t.card?.name ?? '',
+      supplier: t.supplier?.trade_name || t.supplier?.legal_name || '',
+      center: t.center?.name ?? '',
+      status: t.status,
+      // No saldo, débitos negativos fazem o total da tabela coincidir com a barra.
+      value: Number(t.amount) * ((source === 'balance' || query.net) && t.category?.type === 'EXPENSE' ? -1 : 1),
+    }));
+  }
 
   /** Converte os filtros do botão Filtro (Tarefa 5.1) num `where` do Prisma. */
   private buildEntityFilterWhere(filters: TransactionEntityFilters = {}): Record<string, { in: string[] } | { OR: { description: { contains: string; mode: 'insensitive' } }[] }> {

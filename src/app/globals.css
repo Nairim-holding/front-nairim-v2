@@ -6,7 +6,8 @@ html {
   scroll-behavior: smooth;
 }
 
-body {
+body,
+.branding-preview[data-theme="light"] {
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-subtle: #f3f4f6;
@@ -59,7 +60,8 @@ body {
   --chart-series-6: #ec4899;
 }
 
-body.dark {
+body.dark,
+.branding-preview[data-theme="dark"] {
   --color-bg-page: #0f1115;
   --color-bg-surface: #12101d;
   --color-bg-subtle: #1f2937;

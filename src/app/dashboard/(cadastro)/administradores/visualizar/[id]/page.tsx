@@ -42,7 +42,7 @@ export default function VisualizarAdministradorPage() {
   const steps: FormStep[] = useMemo(
     () => [
       {
-        title: 'Dados do Administrador',
+        title: 'Dados do Usuário',
         icon: <User size={20} />,
         fields: [
           { field: 'name', label: 'Nome', type: 'text', readOnly: true, icon: <UserIcon size={20} /> },
@@ -117,7 +117,7 @@ export default function VisualizarAdministradorPage() {
   return (
     <DynamicForm
       resource="users"
-      title="Administrador"
+      title="Usuário"
       basePath="/dashboard/administradores"
       mode="view"
       id={id}

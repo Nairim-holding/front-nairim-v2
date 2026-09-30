@@ -161,7 +161,8 @@ describe('Company use-cases', () => {
 
   describe('SwitchCompanyUseCase', () => {
     const user = { id: 'u1', name: 'M', email: 'm@x', role: 'SUPER_ADMIN' };
-    it.each(['DEFAULT', 'ADMIN', 'administrador', 'usuário'])('recusa troca de empresa por %s', async (role) => {
+    it.each(['DEFAULT', 'ADMIN', 'administrador', 'usuário'])('recusa troca sem concessão por %s', async (role) => {
+      await repo.create({ name: 'Destino', slug: 'destino' });
       const uc = new SwitchCompanyUseCase(repo, new FakeTokenSigner(), '12h');
       await expect(uc.execute({ ...user, role }, 'destino')).rejects.toMatchObject({ statusCode: 403 });
     });

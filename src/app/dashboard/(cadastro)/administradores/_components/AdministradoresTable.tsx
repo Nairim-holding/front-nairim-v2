@@ -59,7 +59,7 @@ export default function AdministradoresTable({ columns }: AdministradoresTablePr
     <DynamicTableManager
       key={tableKey}
       resource="users"
-      title="Administradores"
+      title="Usuários"
       columns={columns}
       basePath="/dashboard/administradores"
       autoFocusSearch

@@ -24,14 +24,15 @@ export interface StorageUsageResult {
   totalFiles: number;
 }
 
-/** Consumo de banco de uma empresa (usado/contratado). */
+/** Consumo de banco de uma empresa (usado/contratado). `quotaMb`/`percent`
+ *  são `null` quando a empresa não tem cota configurada (sem limite). */
 export interface CompanyDatabaseUsage {
   companyId: string;
   companyName: string;
   usedBytes: number;
   usedMb: number;
-  quotaMb: number;
-  percent: number;
+  quotaMb: number | null;
+  percent: number | null;
   isCurrent: boolean;
 }
 

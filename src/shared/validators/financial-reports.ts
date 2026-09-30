@@ -24,6 +24,24 @@ export const monthlySummaryMultiQuerySchema = z.object({}).passthrough();
 
 const dateField = z.string().refine(isValidIsoDateString, 'Informe uma data válida no formato YYYY-MM-DD');
 
+export const financialChartDetailQuerySchema = z.object({
+  source: z.enum(['transactions', 'planning', 'cards', 'balance']),
+  startDate: dateField.optional(),
+  endDate: dateField.optional(),
+  type: z.enum(['INCOME', 'EXPENSE']).optional(),
+  categoryId: z.string().min(1).optional(),
+  subcategoryId: z.string().min(1).nullable().optional(),
+  cardId: z.string().min(1).optional(),
+  institutionId: z.string().min(1).optional(),
+  net: z.boolean().optional(),
+}).refine(value => value.source === 'balance' || (!!value.startDate && !!value.endDate), {
+  message: 'Informe o período do gráfico', path: ['startDate'],
+}).refine(value => !value.startDate || !value.endDate || value.startDate <= value.endDate, {
+  message: 'startDate não pode ser maior que endDate', path: ['startDate'],
+}).refine(value => value.source !== 'balance' || !!value.institutionId, {
+  message: 'Informe a conta selecionada', path: ['institutionId'],
+});
+
 export const expenseByCategoryQuerySchema = z
   .object({
     startDate: dateField,

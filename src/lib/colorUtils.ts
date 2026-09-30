@@ -182,7 +182,7 @@ export function convertLightToDarkColor(lightColor: string, colorType: string): 
 
     case 'text_color':
       // Texto claro para dark mode
-      return isDarkColor(lightColor) ? lightColor : '#f3f4f6';
+      return isDarkColor(lightColor) ? '#f3f4f6' : lightColor;
 
     case 'border_color':
       // Bordas mais escuras
