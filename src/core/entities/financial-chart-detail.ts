@@ -1,8 +1,10 @@
 import type { TransactionEntityFilters } from './financial-transaction';
+import type { ReportRegime } from './financial-report';
 
 /** Cada fonte mantém as mesmas datas e regras usadas no valor do gráfico. */
 export interface FinancialChartDetailQuery {
   source: 'transactions' | 'planning' | 'cards' | 'balance';
+  regime?: ReportRegime;
   startDate?: string;
   endDate?: string;
   type?: 'INCOME' | 'EXPENSE';

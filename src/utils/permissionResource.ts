@@ -25,6 +25,7 @@ export function normalizeResourceKey(resource: string): string {
  * duas listas que possam divergir com o tempo.
  */
 export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
+  { path: '/dashboard/reparos', resource: 'repairs' },
   { path: '/dashboard', resource: 'dashboard' },
   { path: '/dashboard/administradores', resource: 'users' },
   { path: '/dashboard/grupos-usuario', resource: 'user-groups' },

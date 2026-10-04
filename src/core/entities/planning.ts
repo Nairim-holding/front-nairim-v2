@@ -16,6 +16,8 @@
  * Camada: core. Origem: api-nairim-v2/src/services/PlanningService.ts.
  */
 
+import type { TransactionEntityFilters } from './financial-transaction';
+
 export type PlanningType = 'FIXED' | 'VARIABLE';
 
 /** Valor planejado de um mês (PlanningMonth). */
@@ -53,9 +55,7 @@ export interface UpsertPlanningData {
 }
 
 /** Filtros do botão Filtro aplicados às transações agregadas (sem `status`). */
-export interface PlanningDashboardFilters {
-  [field: string]: string[];
-}
+export type PlanningDashboardFilters = TransactionEntityFilters;
 
 export interface MonthlyData {
   month: number;

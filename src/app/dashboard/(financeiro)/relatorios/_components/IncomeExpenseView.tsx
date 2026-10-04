@@ -84,11 +84,11 @@ const SIDE_STYLES = {
     subcategoryText: 'text-emerald-700/80 dark:text-emerald-400/80',
   },
   expense: {
-    headerBg: 'bg-orange-50 dark:bg-orange-950/40',
-    headerText: 'text-orange-800 dark:text-orange-300',
-    categoryBg: 'bg-orange-50/60 dark:bg-orange-950/20',
-    categoryText: 'text-orange-900 dark:text-orange-200',
-    subcategoryText: 'text-orange-700/80 dark:text-orange-400/80',
+    headerBg: 'bg-red-50 dark:bg-red-950/40',
+    headerText: 'text-red-800 dark:text-red-300',
+    categoryBg: 'bg-red-50/60 dark:bg-red-950/20',
+    categoryText: 'text-red-900 dark:text-red-200',
+    subcategoryText: 'text-red-700/80 dark:text-red-400/80',
   },
 } as const;
 
@@ -132,12 +132,14 @@ function SideTable({
         : side.groups.map((g) => (
             <Fragment key={g.categoryId}>
               <tr className={`text-sm font-semibold border-b border-ui-border-soft ${style.categoryBg} ${style.categoryText}`}>
-                <td className="px-3 py-1.5" colSpan={10}>{g.category}</td>
+                <td className="px-3 py-1.5" colSpan={9}>{g.category}</td>
                 <td className="px-3 py-1.5 text-right">{formatCurrency(g.total)}</td>
+                <td />
               </tr>
               <ReportDetailRows
                 items={sortDetailItems(g.items, detailSortField, detailSortDir)}
                 rowClassName={`${style.subcategoryText} pl-4`}
+                amountClassName={variant === 'income' ? 'text-emerald-600' : 'text-red-600'}
               />
             </Fragment>
           ))}
@@ -224,7 +226,7 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
           <MiniBarChart side={data.receitas} color="#10b981" />
         </div>
         <div className="bg-surface border border-ui-border-soft rounded-lg p-2">
-          <h3 className="text-xs font-semibold text-orange-600 dark:text-orange-400 px-2 pt-1 pb-1">Despesas</h3>
+          <h3 className="text-xs font-semibold text-red-600 dark:text-red-400 px-2 pt-1 pb-1">Despesas</h3>
           <MiniBarChart side={data.despesas} color="#f97316" />
         </div>
       </div>
@@ -249,15 +251,21 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
               como estava; esta linha existe para acompanhar a tabela na
               impressão/exportação, que usam só o elemento <table>. */}
           <tfoot>
+            <tr className="text-sm font-bold text-red-600 bg-surface-subtle">
+              <td className="px-3 py-2.5" colSpan={reportKind === 'sintetico' ? 10 : 9}>Total das Despesas</td>
+              <td className="px-3 py-2.5 text-right whitespace-nowrap">{formatCurrency(data.summary.totalDespesas)}</td>
+              {reportKind === 'analitico' && <td />}
+            </tr>
             <tr className="text-sm font-bold text-content bg-surface-subtle border-t-2 border-ui-border">
-              <td className="px-3 py-2.5" colSpan={10}>Total do Período</td>
+              <td className="px-3 py-2.5" colSpan={reportKind === 'sintetico' ? 10 : 9}>Total do Período</td>
               <td
                 className={`px-3 py-2.5 text-right font-bold ${
-                  data.summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'
+                  data.summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
                 }`}
               >
                 {formatCurrency(data.summary.balancoPeriodo)}
               </td>
+              {reportKind === 'analitico' && <td />}
             </tr>
           </tfoot>
         </table>
@@ -274,17 +282,17 @@ const IncomeExpenseView = forwardRef<ReportViewHandle, IncomeExpenseViewProps>(f
         </div>
         <div className="flex justify-between">
           <span className="text-content-secondary">Total de Despesas no Período</span>
-          <span className="font-medium text-orange-600 dark:text-orange-400">{formatCurrency(data.summary.totalDespesas)}</span>
+          <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(data.summary.totalDespesas)}</span>
         </div>
         <div className="flex justify-between border-t border-ui-border-soft pt-1.5">
           <span className="text-content-secondary">Balanço no Período</span>
-          <span className={`font-semibold ${data.summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+          <span className={`font-semibold ${data.summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {formatCurrency(data.summary.balancoPeriodo)}
           </span>
         </div>
         <div className="flex justify-between">
           <span className="text-content-secondary font-semibold">Saldo Final</span>
-          <span className={`font-bold ${data.summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+          <span className={`font-bold ${data.summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {formatCurrency(data.summary.saldoFinal)}
           </span>
         </div>

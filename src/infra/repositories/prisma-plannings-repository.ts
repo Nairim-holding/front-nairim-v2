@@ -1,3 +1,4 @@
+import { financialDateField } from '@/core/entities/financial-report';
 import prisma from '@/infra/database/prisma';
 import type { PlanningsRepository } from '@/core/repositories/plannings-repository';
 import type {
@@ -180,6 +181,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
     sumPlannedOverPeriod = false,
   ): Promise<PlanningDashboardResponse> {
     const start = parseLocalDate(startDate);
+    const dateField = financialDateField(filters?.regime);
     const end = parseLocalDate(endDate);
     end.setUTCHours(23, 59, 59, 999);
 
@@ -229,7 +231,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
       where: {
         deleted_at: null,
         status: 'COMPLETED',
-        effective_date: { gte: start, lte: end },
+        [dateField]: { gte: start, lte: end },
         ...extraWhere,
       },
       select: {
@@ -237,6 +239,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
         subcategory_id: true,
         amount: true,
         effective_date: true,
+        event_date: true,
         category: { select: { type: true } },
       },
     });
@@ -246,7 +249,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
     for (const tx of transactions) {
       const catId = tx.category_id;
       const subId = tx.subcategory_id ?? '';
-      const mk = monthKey(tx.effective_date);
+      const mk = monthKey(tx[dateField]);
       const amount = Number(tx.amount);
 
       if (!txByCategory.has(catId)) txByCategory.set(catId, new Map());
@@ -261,7 +264,7 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
       catTxMap.set(mk, (catTxMap.get(mk) ?? 0) + amount);
     }
 
-    const previousBalance = await this.calculatePreviousBalance(start);
+    const previousBalance = await this.calculatePreviousBalance(start, dateField);
 
     const monthKeys = months.map((m) => `${m.year}-${String(m.month).padStart(2, '0')}`);
 
@@ -519,12 +522,12 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
     return { min: round2(Math.min(...totals)), max: round2(Math.max(...totals)) };
   }
 
-  private async calculatePreviousBalance(beforeDate: Date): Promise<number> {
+  private async calculatePreviousBalance(beforeDate: Date, dateField: 'effective_date' | 'event_date' = 'effective_date'): Promise<number> {
     const transactions = await prisma.transaction.findMany({
       where: {
         deleted_at: null,
         status: 'COMPLETED',
-        effective_date: { lt: beforeDate },
+        [dateField]: { lt: beforeDate },
       },
       select: { amount: true, category: { select: { type: true } } },
     });

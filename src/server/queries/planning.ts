@@ -15,7 +15,7 @@ import type {
 export async function getPlanningDashboardData(
   raw: Record<string, unknown>,
 ): Promise<PlanningDashboardResponse> {
-  const { startDate, endDate } = planningDashboardQuerySchema.parse(raw);
+  const { startDate, endDate, regime } = planningDashboardQuerySchema.parse(raw);
 
   // Mesma convenção do botão de Filtro de Lançamentos: chave repetida =
   // seleção múltipla (sem prefixo `filter[...]`).
@@ -30,6 +30,7 @@ export async function getPlanningDashboardData(
   ] as const;
 
   const filters: PlanningDashboardFilters = {};
+  if (regime) filters.regime = regime;
   for (const field of FILTER_FIELDS) {
     const value = raw[field];
     if (value === undefined) continue;

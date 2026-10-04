@@ -6,6 +6,7 @@ import { Filter } from "lucide-react";
 import { MetricResponse } from "@/types/types";
 import { MapCoordinate } from "@/lib/dashboard";
 import { getPeriodRange, CLEARED_PERIOD_START } from "@/utils/periodRange";
+import type { ReportRegime } from '@/core/entities/financial-report';
 import FinancialDashboardHeader from "@/components/dashboard/FinancialDashboardHeader";
 import FinancialDashboardGrid, { WIDGET_LABELS as FINANCIAL_WIDGET_LABELS, ALL_WIDGET_IDS as FINANCIAL_WIDGET_IDS } from "@/components/dashboard/FinancialDashboardGrid";
 import PeriodFilterHeader from "@/components/dashboard/PeriodFilter";
@@ -111,6 +112,8 @@ export function FinancialSection({
   // — reflete nos gráficos de transações (Receitas e Despesas, Realizado VS
   // Planejado, % por Categoria, Detalhamento por Subcategoria).
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
+  const [regime, setRegime] = useState<ReportRegime>('caixa');
+  const chartFilters = useMemo(() => ({ ...appliedFilters, regime }), [appliedFilters, regime]);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const filtersFetcher = useCallback(async (applied?: Record<string, unknown>) => {
     const result = await getTransactionFiltersAction(applied ?? {});
@@ -162,6 +165,9 @@ export function FinancialSection({
           {/* Só o Financeiro usa este header: é o seletor de período padrão MAIS os
               totais de Receitas/Despesas/Resultado, que só existem nesta aba. */}
           <FinancialDashboardHeader
+            regime={regime}
+            onRegimeChange={setRegime}
+            filters={chartFilters}
             years={years}
             selectedMonths={selectedMonths}
             onYearsChange={setYears}
@@ -177,7 +183,7 @@ export function FinancialSection({
         years={years}
         startDate={startDate}
         endDate={endDate}
-        filters={appliedFilters}
+        filters={chartFilters}
         visibleWidgetIds={visibleWidgetIds}
       />
 

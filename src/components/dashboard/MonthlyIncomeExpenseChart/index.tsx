@@ -79,10 +79,10 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
 
   const buildOption = useCallback((isLarge: boolean): EChartsOption => ({
     backgroundColor: 'transparent',
-    tooltip: getCustomEchartsTooltipConfig((params: any) => {
+    tooltip: getCustomEchartsTooltipConfig((params) => {
       const itemsArray = Array.isArray(params) ? params : [params];
       const header = itemsArray[0]?.axisValueLabel || itemsArray[0]?.name || '';
-      const items = itemsArray.map((item: any) => ({
+      const items = itemsArray.map((item) => ({
         label: item.seriesName || '',
         value: Number(item.value ?? 0),
         color: item.seriesName === 'Receitas' ? tokens.success : tokens.chartSeries[0],
@@ -167,7 +167,7 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
 
   return (
     <ChartCard
-      title="RECEITAS E DESPESAS"
+      title={`RECEITAS E DESPESAS — ${filters?.regime === 'competencia' ? 'Competência' : 'Caixa'}`}
       subtitle={subtitle}
       detailData={detailData}
       detailColumns={detailColumns}

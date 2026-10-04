@@ -243,6 +243,8 @@ export type CompanyWhereInput = {
   branding?: Prisma.XOR<Prisma.CompanyBrandingNullableScalarRelationFilter, Prisma.CompanyBrandingWhereInput> | null
   users?: Prisma.UserListRelationFilter
   properties?: Prisma.PropertyListRelationFilter
+  repairs?: Prisma.RepairListRelationFilter
+  repair_media?: Prisma.RepairMediaListRelationFilter
   property_types?: Prisma.PropertyTypeListRelationFilter
   owners?: Prisma.OwnerListRelationFilter
   agencies?: Prisma.AgencyListRelationFilter
@@ -286,6 +288,8 @@ export type CompanyOrderByWithRelationInput = {
   branding?: Prisma.CompanyBrandingOrderByWithRelationInput
   users?: Prisma.UserOrderByRelationAggregateInput
   properties?: Prisma.PropertyOrderByRelationAggregateInput
+  repairs?: Prisma.RepairOrderByRelationAggregateInput
+  repair_media?: Prisma.RepairMediaOrderByRelationAggregateInput
   property_types?: Prisma.PropertyTypeOrderByRelationAggregateInput
   owners?: Prisma.OwnerOrderByRelationAggregateInput
   agencies?: Prisma.AgencyOrderByRelationAggregateInput
@@ -332,6 +336,8 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   branding?: Prisma.XOR<Prisma.CompanyBrandingNullableScalarRelationFilter, Prisma.CompanyBrandingWhereInput> | null
   users?: Prisma.UserListRelationFilter
   properties?: Prisma.PropertyListRelationFilter
+  repairs?: Prisma.RepairListRelationFilter
+  repair_media?: Prisma.RepairMediaListRelationFilter
   property_types?: Prisma.PropertyTypeListRelationFilter
   owners?: Prisma.OwnerListRelationFilter
   agencies?: Prisma.AgencyListRelationFilter
@@ -405,6 +411,8 @@ export type CompanyCreateInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -448,6 +456,8 @@ export type CompanyUncheckedCreateInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -491,6 +501,8 @@ export type CompanyUpdateInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -534,6 +546,8 @@ export type CompanyUncheckedUpdateInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -708,6 +722,34 @@ export type CompanyUpdateOneRequiredWithoutPropertiesNestedInput = {
   upsert?: Prisma.CompanyUpsertWithoutPropertiesInput
   connect?: Prisma.CompanyWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutPropertiesInput, Prisma.CompanyUpdateWithoutPropertiesInput>, Prisma.CompanyUncheckedUpdateWithoutPropertiesInput>
+}
+
+export type CompanyCreateNestedOneWithoutRepairsInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutRepairsInput, Prisma.CompanyUncheckedCreateWithoutRepairsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutRepairsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutRepairsNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutRepairsInput, Prisma.CompanyUncheckedCreateWithoutRepairsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutRepairsInput
+  upsert?: Prisma.CompanyUpsertWithoutRepairsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutRepairsInput, Prisma.CompanyUpdateWithoutRepairsInput>, Prisma.CompanyUncheckedUpdateWithoutRepairsInput>
+}
+
+export type CompanyCreateNestedOneWithoutRepair_mediaInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutRepair_mediaInput, Prisma.CompanyUncheckedCreateWithoutRepair_mediaInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutRepair_mediaInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutRepair_mediaNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutRepair_mediaInput, Prisma.CompanyUncheckedCreateWithoutRepair_mediaInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutRepair_mediaInput
+  upsert?: Prisma.CompanyUpsertWithoutRepair_mediaInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutRepair_mediaInput, Prisma.CompanyUpdateWithoutRepair_mediaInput>, Prisma.CompanyUncheckedUpdateWithoutRepair_mediaInput>
 }
 
 export type CompanyCreateNestedOneWithoutUsersInput = {
@@ -1127,6 +1169,8 @@ export type CompanyCreateWithoutBrandingInput = {
   db_quota_mb?: number | null
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -1169,6 +1213,8 @@ export type CompanyUncheckedCreateWithoutBrandingInput = {
   db_quota_mb?: number | null
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -1227,6 +1273,8 @@ export type CompanyUpdateWithoutBrandingInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -1269,6 +1317,8 @@ export type CompanyUncheckedUpdateWithoutBrandingInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1312,6 +1362,8 @@ export type CompanyCreateWithoutAgenciesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
@@ -1354,6 +1406,8 @@ export type CompanyUncheckedCreateWithoutAgenciesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
@@ -1412,6 +1466,8 @@ export type CompanyUpdateWithoutAgenciesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
@@ -1454,6 +1510,8 @@ export type CompanyUncheckedUpdateWithoutAgenciesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1495,6 +1553,8 @@ export type CompanyCreateWithoutPropertiesInput = {
   db_quota_mb?: number | null
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -1537,6 +1597,8 @@ export type CompanyUncheckedCreateWithoutPropertiesInput = {
   db_quota_mb?: number | null
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -1595,6 +1657,8 @@ export type CompanyUpdateWithoutPropertiesInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -1637,6 +1701,392 @@ export type CompanyUncheckedUpdateWithoutPropertiesInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutRepairsInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutRepairsInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutRepairsInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutRepairsInput, Prisma.CompanyUncheckedCreateWithoutRepairsInput>
+}
+
+export type CompanyUpsertWithoutRepairsInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutRepairsInput, Prisma.CompanyUncheckedUpdateWithoutRepairsInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutRepairsInput, Prisma.CompanyUncheckedCreateWithoutRepairsInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutRepairsInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutRepairsInput, Prisma.CompanyUncheckedUpdateWithoutRepairsInput>
+}
+
+export type CompanyUpdateWithoutRepairsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutRepairsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUncheckedUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUncheckedUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUncheckedUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUncheckedUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUncheckedUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutRepair_mediaInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutRepair_mediaInput = {
+  id?: string
+  name: string
+  slug: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  db_quota_mb?: number | null
+  branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
+  agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
+  tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutCompanyInput
+  financial_institutions?: Prisma.FinancialInstitutionUncheckedCreateNestedManyWithoutCompanyInput
+  cards?: Prisma.CardUncheckedCreateNestedManyWithoutCompanyInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCompanyInput
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutCompanyInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutCompanyInput
+  subcategories?: Prisma.SubcategoryUncheckedCreateNestedManyWithoutCompanyInput
+  centers?: Prisma.CenterUncheckedCreateNestedManyWithoutCompanyInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutCompanyInput
+  plannings?: Prisma.PlanningUncheckedCreateNestedManyWithoutCompanyInput
+  investments?: Prisma.InvestmentUncheckedCreateNestedManyWithoutCompanyInput
+  investment_settings?: Prisma.InvestmentSettingsUncheckedCreateNestedOneWithoutCompanyInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUncheckedCreateNestedManyWithoutCompanyInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutCompanyInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUncheckedCreateNestedManyWithoutCompanyInput
+  lease_notifications?: Prisma.LeaseNotificationUncheckedCreateNestedManyWithoutCompanyInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutCompanyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutCompanyInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUncheckedCreateNestedManyWithoutCompanyInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUncheckedCreateNestedManyWithoutCompanyInput
+  user_groups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutCompanyInput
+  user_group_permissions?: Prisma.UserGroupPermissionUncheckedCreateNestedManyWithoutCompanyInput
+  user_access_schedules?: Prisma.UserAccessScheduleUncheckedCreateNestedManyWithoutCompanyInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUncheckedCreateNestedOneWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutRepair_mediaInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutRepair_mediaInput, Prisma.CompanyUncheckedCreateWithoutRepair_mediaInput>
+}
+
+export type CompanyUpsertWithoutRepair_mediaInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutRepair_mediaInput, Prisma.CompanyUncheckedUpdateWithoutRepair_mediaInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutRepair_mediaInput, Prisma.CompanyUncheckedCreateWithoutRepair_mediaInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutRepair_mediaInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutRepair_mediaInput, Prisma.CompanyUncheckedUpdateWithoutRepair_mediaInput>
+}
+
+export type CompanyUpdateWithoutRepair_mediaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
+  agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
+  tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutCompanyNestedInput
+  financial_institutions?: Prisma.FinancialInstitutionUpdateManyWithoutCompanyNestedInput
+  cards?: Prisma.CardUpdateManyWithoutCompanyNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCompanyNestedInput
+  invoices?: Prisma.InvoiceUpdateManyWithoutCompanyNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutCompanyNestedInput
+  subcategories?: Prisma.SubcategoryUpdateManyWithoutCompanyNestedInput
+  centers?: Prisma.CenterUpdateManyWithoutCompanyNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutCompanyNestedInput
+  plannings?: Prisma.PlanningUpdateManyWithoutCompanyNestedInput
+  investments?: Prisma.InvestmentUpdateManyWithoutCompanyNestedInput
+  investment_settings?: Prisma.InvestmentSettingsUpdateOneWithoutCompanyNestedInput
+  adjustment_indexes?: Prisma.AdjustmentIndexUpdateManyWithoutCompanyNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutCompanyNestedInput
+  lease_expiry_reminders?: Prisma.LeaseExpiryReminderUpdateManyWithoutCompanyNestedInput
+  lease_notifications?: Prisma.LeaseNotificationUpdateManyWithoutCompanyNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutCompanyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutCompanyNestedInput
+  user_column_preferences?: Prisma.UserColumnPreferenceUpdateManyWithoutCompanyNestedInput
+  user_dashboard_layouts?: Prisma.UserDashboardLayoutUpdateManyWithoutCompanyNestedInput
+  user_groups?: Prisma.UserGroupUpdateManyWithoutCompanyNestedInput
+  user_group_permissions?: Prisma.UserGroupPermissionUpdateManyWithoutCompanyNestedInput
+  user_access_schedules?: Prisma.UserAccessScheduleUpdateManyWithoutCompanyNestedInput
+  iptu_audit_settings?: Prisma.IptuAuditSettingsUpdateOneWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutRepair_mediaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1679,6 +2129,8 @@ export type CompanyCreateWithoutUsersInput = {
   db_quota_mb?: number | null
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -1721,6 +2173,8 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   db_quota_mb?: number | null
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -1779,6 +2233,8 @@ export type CompanyUpdateWithoutUsersInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -1821,6 +2277,8 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   db_quota_mb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1864,6 +2322,8 @@ export type CompanyCreateWithoutUser_access_schedulesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -1906,6 +2366,8 @@ export type CompanyUncheckedCreateWithoutUser_access_schedulesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -1964,6 +2426,8 @@ export type CompanyUpdateWithoutUser_access_schedulesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2006,6 +2470,8 @@ export type CompanyUncheckedUpdateWithoutUser_access_schedulesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2048,6 +2514,8 @@ export type CompanyCreateWithoutUser_groupsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -2090,6 +2558,8 @@ export type CompanyUncheckedCreateWithoutUser_groupsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -2148,6 +2618,8 @@ export type CompanyUpdateWithoutUser_groupsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2190,6 +2662,8 @@ export type CompanyUncheckedUpdateWithoutUser_groupsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2232,6 +2706,8 @@ export type CompanyCreateWithoutUser_group_permissionsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -2274,6 +2750,8 @@ export type CompanyUncheckedCreateWithoutUser_group_permissionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -2332,6 +2810,8 @@ export type CompanyUpdateWithoutUser_group_permissionsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2374,6 +2854,8 @@ export type CompanyUncheckedUpdateWithoutUser_group_permissionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2416,6 +2898,8 @@ export type CompanyCreateWithoutUser_column_preferencesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -2458,6 +2942,8 @@ export type CompanyUncheckedCreateWithoutUser_column_preferencesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -2516,6 +3002,8 @@ export type CompanyUpdateWithoutUser_column_preferencesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2558,6 +3046,8 @@ export type CompanyUncheckedUpdateWithoutUser_column_preferencesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2600,6 +3090,8 @@ export type CompanyCreateWithoutUser_dashboard_layoutsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -2642,6 +3134,8 @@ export type CompanyUncheckedCreateWithoutUser_dashboard_layoutsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -2700,6 +3194,8 @@ export type CompanyUpdateWithoutUser_dashboard_layoutsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2742,6 +3238,8 @@ export type CompanyUncheckedUpdateWithoutUser_dashboard_layoutsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2784,6 +3282,8 @@ export type CompanyCreateWithoutDocumentsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -2826,6 +3326,8 @@ export type CompanyUncheckedCreateWithoutDocumentsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -2884,6 +3386,8 @@ export type CompanyUpdateWithoutDocumentsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -2926,6 +3430,8 @@ export type CompanyUncheckedUpdateWithoutDocumentsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2968,6 +3474,8 @@ export type CompanyCreateWithoutOwnersInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
@@ -3010,6 +3518,8 @@ export type CompanyUncheckedCreateWithoutOwnersInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
@@ -3068,6 +3578,8 @@ export type CompanyUpdateWithoutOwnersInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
@@ -3110,6 +3622,8 @@ export type CompanyUncheckedUpdateWithoutOwnersInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3152,6 +3666,8 @@ export type CompanyCreateWithoutTenantsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -3194,6 +3710,8 @@ export type CompanyUncheckedCreateWithoutTenantsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -3252,6 +3770,8 @@ export type CompanyUpdateWithoutTenantsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -3294,6 +3814,8 @@ export type CompanyUncheckedUpdateWithoutTenantsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3336,6 +3858,8 @@ export type CompanyCreateWithoutLeasesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -3378,6 +3902,8 @@ export type CompanyUncheckedCreateWithoutLeasesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -3436,6 +3962,8 @@ export type CompanyUpdateWithoutLeasesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -3478,6 +4006,8 @@ export type CompanyUncheckedUpdateWithoutLeasesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3520,6 +4050,8 @@ export type CompanyCreateWithoutProperty_typesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantCreateNestedManyWithoutCompanyInput
@@ -3562,6 +4094,8 @@ export type CompanyUncheckedCreateWithoutProperty_typesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
   tenants?: Prisma.TenantUncheckedCreateNestedManyWithoutCompanyInput
@@ -3620,6 +4154,8 @@ export type CompanyUpdateWithoutProperty_typesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUpdateManyWithoutCompanyNestedInput
@@ -3662,6 +4198,8 @@ export type CompanyUncheckedUpdateWithoutProperty_typesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
   tenants?: Prisma.TenantUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3704,6 +4242,8 @@ export type CompanyCreateWithoutFavoritesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -3746,6 +4286,8 @@ export type CompanyUncheckedCreateWithoutFavoritesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -3804,6 +4346,8 @@ export type CompanyUpdateWithoutFavoritesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -3846,6 +4390,8 @@ export type CompanyUncheckedUpdateWithoutFavoritesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3888,6 +4434,8 @@ export type CompanyCreateWithoutFinancial_institutionsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -3930,6 +4478,8 @@ export type CompanyUncheckedCreateWithoutFinancial_institutionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -3988,6 +4538,8 @@ export type CompanyUpdateWithoutFinancial_institutionsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4030,6 +4582,8 @@ export type CompanyUncheckedUpdateWithoutFinancial_institutionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4072,6 +4626,8 @@ export type CompanyCreateWithoutCategoriesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -4114,6 +4670,8 @@ export type CompanyUncheckedCreateWithoutCategoriesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -4172,6 +4730,8 @@ export type CompanyUpdateWithoutCategoriesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4214,6 +4774,8 @@ export type CompanyUncheckedUpdateWithoutCategoriesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4256,6 +4818,8 @@ export type CompanyCreateWithoutSubcategoriesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -4298,6 +4862,8 @@ export type CompanyUncheckedCreateWithoutSubcategoriesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -4356,6 +4922,8 @@ export type CompanyUpdateWithoutSubcategoriesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4398,6 +4966,8 @@ export type CompanyUncheckedUpdateWithoutSubcategoriesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4440,6 +5010,8 @@ export type CompanyCreateWithoutIptu_audit_settingsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -4482,6 +5054,8 @@ export type CompanyUncheckedCreateWithoutIptu_audit_settingsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -4540,6 +5114,8 @@ export type CompanyUpdateWithoutIptu_audit_settingsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4582,6 +5158,8 @@ export type CompanyUncheckedUpdateWithoutIptu_audit_settingsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4624,6 +5202,8 @@ export type CompanyCreateWithoutCardsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -4666,6 +5246,8 @@ export type CompanyUncheckedCreateWithoutCardsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -4724,6 +5306,8 @@ export type CompanyUpdateWithoutCardsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4766,6 +5350,8 @@ export type CompanyUncheckedUpdateWithoutCardsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4808,6 +5394,8 @@ export type CompanyCreateWithoutCentersInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -4850,6 +5438,8 @@ export type CompanyUncheckedCreateWithoutCentersInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -4908,6 +5498,8 @@ export type CompanyUpdateWithoutCentersInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -4950,6 +5542,8 @@ export type CompanyUncheckedUpdateWithoutCentersInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4992,6 +5586,8 @@ export type CompanyCreateWithoutSuppliersInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5034,6 +5630,8 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -5092,6 +5690,8 @@ export type CompanyUpdateWithoutSuppliersInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -5134,6 +5734,8 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5176,6 +5778,8 @@ export type CompanyCreateWithoutTransactionsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5218,6 +5822,8 @@ export type CompanyUncheckedCreateWithoutTransactionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -5276,6 +5882,8 @@ export type CompanyUpdateWithoutTransactionsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -5318,6 +5926,8 @@ export type CompanyUncheckedUpdateWithoutTransactionsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5360,6 +5970,8 @@ export type CompanyCreateWithoutInvoicesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5402,6 +6014,8 @@ export type CompanyUncheckedCreateWithoutInvoicesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -5460,6 +6074,8 @@ export type CompanyUpdateWithoutInvoicesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -5502,6 +6118,8 @@ export type CompanyUncheckedUpdateWithoutInvoicesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5544,6 +6162,8 @@ export type CompanyCreateWithoutRecurring_configsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5586,6 +6206,8 @@ export type CompanyUncheckedCreateWithoutRecurring_configsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -5644,6 +6266,8 @@ export type CompanyUpdateWithoutRecurring_configsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -5686,6 +6310,8 @@ export type CompanyUncheckedUpdateWithoutRecurring_configsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5728,6 +6354,8 @@ export type CompanyCreateWithoutPlanningsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5770,6 +6398,8 @@ export type CompanyUncheckedCreateWithoutPlanningsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -5828,6 +6458,8 @@ export type CompanyUpdateWithoutPlanningsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -5870,6 +6502,8 @@ export type CompanyUncheckedUpdateWithoutPlanningsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5912,6 +6546,8 @@ export type CompanyCreateWithoutInvestmentsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -5954,6 +6590,8 @@ export type CompanyUncheckedCreateWithoutInvestmentsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6012,6 +6650,8 @@ export type CompanyUpdateWithoutInvestmentsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6054,6 +6694,8 @@ export type CompanyUncheckedUpdateWithoutInvestmentsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6096,6 +6738,8 @@ export type CompanyCreateWithoutInvestment_settingsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -6138,6 +6782,8 @@ export type CompanyUncheckedCreateWithoutInvestment_settingsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6196,6 +6842,8 @@ export type CompanyUpdateWithoutInvestment_settingsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6238,6 +6886,8 @@ export type CompanyUncheckedUpdateWithoutInvestment_settingsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6280,6 +6930,8 @@ export type CompanyCreateWithoutAdjustment_indexesInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -6322,6 +6974,8 @@ export type CompanyUncheckedCreateWithoutAdjustment_indexesInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6380,6 +7034,8 @@ export type CompanyUpdateWithoutAdjustment_indexesInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6422,6 +7078,8 @@ export type CompanyUncheckedUpdateWithoutAdjustment_indexesInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6464,6 +7122,8 @@ export type CompanyCreateWithoutHolidaysInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -6506,6 +7166,8 @@ export type CompanyUncheckedCreateWithoutHolidaysInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6564,6 +7226,8 @@ export type CompanyUpdateWithoutHolidaysInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6606,6 +7270,8 @@ export type CompanyUncheckedUpdateWithoutHolidaysInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6648,6 +7314,8 @@ export type CompanyCreateWithoutLease_notificationsInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -6690,6 +7358,8 @@ export type CompanyUncheckedCreateWithoutLease_notificationsInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6748,6 +7418,8 @@ export type CompanyUpdateWithoutLease_notificationsInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6790,6 +7462,8 @@ export type CompanyUncheckedUpdateWithoutLease_notificationsInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6832,6 +7506,8 @@ export type CompanyCreateWithoutLease_expiry_remindersInput = {
   branding?: Prisma.CompanyBrandingCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyCreateNestedManyWithoutCompanyInput
@@ -6874,6 +7550,8 @@ export type CompanyUncheckedCreateWithoutLease_expiry_remindersInput = {
   branding?: Prisma.CompanyBrandingUncheckedCreateNestedOneWithoutCompanyInput
   users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
   properties?: Prisma.PropertyUncheckedCreateNestedManyWithoutCompanyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutCompanyInput
+  repair_media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutCompanyInput
   property_types?: Prisma.PropertyTypeUncheckedCreateNestedManyWithoutCompanyInput
   owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutCompanyInput
   agencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCompanyInput
@@ -6932,6 +7610,8 @@ export type CompanyUpdateWithoutLease_expiry_remindersInput = {
   branding?: Prisma.CompanyBrandingUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUpdateManyWithoutCompanyNestedInput
@@ -6974,6 +7654,8 @@ export type CompanyUncheckedUpdateWithoutLease_expiry_remindersInput = {
   branding?: Prisma.CompanyBrandingUncheckedUpdateOneWithoutCompanyNestedInput
   users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
   properties?: Prisma.PropertyUncheckedUpdateManyWithoutCompanyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutCompanyNestedInput
+  repair_media?: Prisma.RepairMediaUncheckedUpdateManyWithoutCompanyNestedInput
   property_types?: Prisma.PropertyTypeUncheckedUpdateManyWithoutCompanyNestedInput
   owners?: Prisma.OwnerUncheckedUpdateManyWithoutCompanyNestedInput
   agencies?: Prisma.AgencyUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7012,6 +7694,8 @@ export type CompanyUncheckedUpdateWithoutLease_expiry_remindersInput = {
 export type CompanyCountOutputType = {
   users: number
   properties: number
+  repairs: number
+  repair_media: number
   property_types: number
   owners: number
   agencies: number
@@ -7044,6 +7728,8 @@ export type CompanyCountOutputType = {
 export type CompanyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | CompanyCountOutputTypeCountUsersArgs
   properties?: boolean | CompanyCountOutputTypeCountPropertiesArgs
+  repairs?: boolean | CompanyCountOutputTypeCountRepairsArgs
+  repair_media?: boolean | CompanyCountOutputTypeCountRepair_mediaArgs
   property_types?: boolean | CompanyCountOutputTypeCountProperty_typesArgs
   owners?: boolean | CompanyCountOutputTypeCountOwnersArgs
   agencies?: boolean | CompanyCountOutputTypeCountAgenciesArgs
@@ -7095,6 +7781,20 @@ export type CompanyCountOutputTypeCountUsersArgs<ExtArgs extends runtime.Types.E
  */
 export type CompanyCountOutputTypeCountPropertiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PropertyWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
+export type CompanyCountOutputTypeCountRepairsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
+export type CompanyCountOutputTypeCountRepair_mediaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairMediaWhereInput
 }
 
 /**
@@ -7299,6 +7999,8 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   branding?: boolean | Prisma.Company$brandingArgs<ExtArgs>
   users?: boolean | Prisma.Company$usersArgs<ExtArgs>
   properties?: boolean | Prisma.Company$propertiesArgs<ExtArgs>
+  repairs?: boolean | Prisma.Company$repairsArgs<ExtArgs>
+  repair_media?: boolean | Prisma.Company$repair_mediaArgs<ExtArgs>
   property_types?: boolean | Prisma.Company$property_typesArgs<ExtArgs>
   owners?: boolean | Prisma.Company$ownersArgs<ExtArgs>
   agencies?: boolean | Prisma.Company$agenciesArgs<ExtArgs>
@@ -7369,6 +8071,8 @@ export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   branding?: boolean | Prisma.Company$brandingArgs<ExtArgs>
   users?: boolean | Prisma.Company$usersArgs<ExtArgs>
   properties?: boolean | Prisma.Company$propertiesArgs<ExtArgs>
+  repairs?: boolean | Prisma.Company$repairsArgs<ExtArgs>
+  repair_media?: boolean | Prisma.Company$repair_mediaArgs<ExtArgs>
   property_types?: boolean | Prisma.Company$property_typesArgs<ExtArgs>
   owners?: boolean | Prisma.Company$ownersArgs<ExtArgs>
   agencies?: boolean | Prisma.Company$agenciesArgs<ExtArgs>
@@ -7409,6 +8113,8 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     branding: Prisma.$CompanyBrandingPayload<ExtArgs> | null
     users: Prisma.$UserPayload<ExtArgs>[]
     properties: Prisma.$PropertyPayload<ExtArgs>[]
+    repairs: Prisma.$RepairPayload<ExtArgs>[]
+    repair_media: Prisma.$RepairMediaPayload<ExtArgs>[]
     property_types: Prisma.$PropertyTypePayload<ExtArgs>[]
     owners: Prisma.$OwnerPayload<ExtArgs>[]
     agencies: Prisma.$AgencyPayload<ExtArgs>[]
@@ -7848,6 +8554,8 @@ export interface Prisma__CompanyClient<T, Null = never, ExtArgs extends runtime.
   branding<T extends Prisma.Company$brandingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$brandingArgs<ExtArgs>>): Prisma.Prisma__CompanyBrandingClient<runtime.Types.Result.GetResult<Prisma.$CompanyBrandingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   users<T extends Prisma.Company$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   properties<T extends Prisma.Company$propertiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$propertiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PropertyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  repairs<T extends Prisma.Company$repairsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$repairsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  repair_media<T extends Prisma.Company$repair_mediaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$repair_mediaArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   property_types<T extends Prisma.Company$property_typesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$property_typesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PropertyTypePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   owners<T extends Prisma.Company$ownersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$ownersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OwnerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agencies<T extends Prisma.Company$agenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$agenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8371,6 +9079,54 @@ export type Company$propertiesArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.PropertyScalarFieldEnum | Prisma.PropertyScalarFieldEnum[]
+}
+
+/**
+ * Company.repairs
+ */
+export type Company$repairsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Repair
+   */
+  select?: Prisma.RepairSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Repair
+   */
+  omit?: Prisma.RepairOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairInclude<ExtArgs> | null
+  where?: Prisma.RepairWhereInput
+  orderBy?: Prisma.RepairOrderByWithRelationInput | Prisma.RepairOrderByWithRelationInput[]
+  cursor?: Prisma.RepairWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairScalarFieldEnum | Prisma.RepairScalarFieldEnum[]
+}
+
+/**
+ * Company.repair_media
+ */
+export type Company$repair_mediaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RepairMedia
+   */
+  select?: Prisma.RepairMediaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RepairMedia
+   */
+  omit?: Prisma.RepairMediaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairMediaInclude<ExtArgs> | null
+  where?: Prisma.RepairMediaWhereInput
+  orderBy?: Prisma.RepairMediaOrderByWithRelationInput | Prisma.RepairMediaOrderByWithRelationInput[]
+  cursor?: Prisma.RepairMediaWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairMediaScalarFieldEnum | Prisma.RepairMediaScalarFieldEnum[]
 }
 
 /**

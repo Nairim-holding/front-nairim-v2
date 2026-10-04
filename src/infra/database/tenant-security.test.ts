@@ -18,6 +18,11 @@ import { injectCreate, injectRead, injectUpdate } from './prisma';
 import { runWithTenant } from './tenant-context';
 
 describe('Prisma tenant isolation', () => {
+  it.each(['Repair', 'RepairMedia'])('scopes %s reads and prevents ownership changes', model => {
+    expect(runWithTenant('a', () => injectRead(model, { where: { id: 'foreign', company_id: 'b' } })).where).toEqual({ id: 'foreign', company_id: 'a' });
+    expect(runWithTenant('a', () => injectCreate(model, { data: { company_id: 'b' } })).data).toEqual({ company_id: 'a' });
+    expect(runWithTenant('a', () => injectUpdate(model, { where: { id: 'foreign' }, data: { company_id: 'b' } }))).toEqual({ where: { id: 'foreign', company_id: 'a' }, data: {} });
+  });
   it('does not accept company_id overrides in filters', () => {
     const args = runWithTenant('a', () => injectRead('Property', { where: { id: 'target', company_id: 'b', OR: [{ company_id: 'b' }] } }));
     expect(args.where).toEqual({ id: 'target', company_id: 'a', OR: [{ company_id: 'b' }] });

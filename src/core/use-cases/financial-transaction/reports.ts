@@ -31,6 +31,12 @@ export class GetFinancialChartDetailsUseCase {
 function parseFilters(raw?: Record<string, unknown>): TransactionEntityFilters {
   const filters: TransactionEntityFilters = {};
   if (!raw) return filters;
+  if (raw.regime !== undefined) {
+    if (raw.regime !== 'caixa' && raw.regime !== 'competencia') {
+      throw new ValidationError('Informe o regime Caixa ou Competência');
+    }
+    filters.regime = raw.regime;
+  }
   const FIELDS = [
     'category_id',
     'subcategory_id',

@@ -14,6 +14,7 @@ import SubcategoryBreakdownChart from '@/components/dashboard/SubcategoryBreakdo
 import ResumoReceitasChart from '@/components/dashboard/ResumoReceitasChart';
 import ResumoDespesasChart from '@/components/dashboard/ResumoDespesasChart';
 import YearlyIncomeExpenseChart from '@/components/dashboard/YearlyIncomeExpenseChart';
+import CenterIncomeExpenseChart from '@/components/dashboard/CenterIncomeExpenseChart';
 import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
 import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 import {
@@ -24,6 +25,7 @@ import { FinancialWidgetProps } from './types';
 
 // Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
 export const WIDGET_LABELS: Record<string, string> = {
+  'widget-20': 'Receitas e Despesas por Centro',
   'widget-11': 'Ticket Médio da Locação',
   'widget-12': 'Valor Total de Aluguel do Portfólio',
   'widget-13': 'Total de Impostos e Taxas',
@@ -47,6 +49,7 @@ export const WIDGET_LABELS: Record<string, string> = {
 // das props (ex.: AccountBalanceChart, que é um saldo atual, não histórico)
 // simplesmente a ignora.
 const REAL_WIDGETS: Record<string, ComponentType<FinancialWidgetProps>> = {
+  'widget-20': CenterIncomeExpenseChart,
   'widget-1': MonthlyIncomeExpenseChart,
   'widget-2': ExpenseRatioChart,
   'widget-3': ExpenseByCategoryChart,
@@ -88,6 +91,7 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-17', x: 0, y: 41, w: 6, h: 8 },
   { i: 'widget-18', x: 6, y: 41, w: 6, h: 8 },
   { i: 'widget-19', x: 0, y: 49, w: 12, h: 9 },
+  { i: 'widget-20', x: 0, y: 58, w: 12, h: 10 },
 ];
 
 /** Corrige layouts já salvos por usuários com a altura antiga destes widgets. */
@@ -132,7 +136,7 @@ export default function FinancialDashboardGrid({
       const RealWidget = REAL_WIDGETS[id];
       if (RealWidget) {
         return {
-          body: <RealWidget year={year} years={years} startDate={startDate} endDate={endDate} filters={filters} />,
+          body: <RealWidget key={String(filters?.regime ?? 'caixa')} year={year} years={years} startDate={startDate} endDate={endDate} filters={filters} />,
           framed: true,
           // Este card tem dropdown de categoria, que precisa escapar do cartão.
           overflowVisible: id === 'widget-10',

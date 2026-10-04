@@ -14,6 +14,8 @@
  * Camada: core. Origem: models do prisma (Transaction, RecurringConfig).
  */
 
+import type { ReportRegime } from './financial-report';
+
 export type TransactionStatus = 'PENDING' | 'COMPLETED';
 
 export type PaymentMode = 'PARCELADO' | 'RECORRENTE';
@@ -276,6 +278,8 @@ export interface RelatedTransactionsResult {
 
 /** Filtros do botão Filtro (Tarefa 5.1) — chave repetida = seleção múltipla. */
 export interface TransactionEntityFilters {
+  /** Caixa por padrão, como no relatório de Receitas x Despesas. */
+  regime?: ReportRegime;
   category_id?: string[];
   subcategory_id?: string[];
   financial_institution_id?: string[];

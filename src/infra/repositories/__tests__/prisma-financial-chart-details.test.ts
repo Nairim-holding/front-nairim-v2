@@ -38,15 +38,15 @@ describe('lançamentos que compõem os gráficos financeiros', () => {
     expect(where).not.toHaveProperty('status');
     expect(where.AND).toEqual(expect.arrayContaining([
       expect.objectContaining({ category_id: { in: ['fixed', 'variable'] }, supplier_id: { in: ['supplier'] } }),
-      { category_id: 'variable' }, { event_date: dateRange },
+      { category_id: 'variable' }, { effective_date: dateRange },
     ]));
   });
 
-  it('usa competência e o tipo de série nos gráficos mensais e anuais', async () => {
+  it('usa Caixa por padrão e o tipo de série nos gráficos mensais e anuais', async () => {
     await repository.getChartDetails({ source: 'transactions', type: 'INCOME', ...period });
     const where = mocks.findMany.mock.calls[0][0].where;
     expect(where.category).toEqual({ type: 'INCOME' });
-    expect(where.AND).toContainEqual({ event_date: dateRange });
+    expect(where.AND).toContainEqual({ effective_date: dateRange });
   });
 
   it('separa lançamentos sem subcategoria de todas as outras subcategorias', async () => {

@@ -100,7 +100,8 @@ export function ReportDetailHeaderRow({ sortField = null, sortDir = 'asc', onSor
   );
 }
 
-export function ReportDetailRows({ items, rowClassName = '' }: { items: ReportItemRow[]; rowClassName?: string }) {
+export function ReportDetailRows({ items, amountClassName = 'text-content',
+  rowClassName = '' }: { items: ReportItemRow[]; rowClassName?: string; amountClassName?: string }) {
   return (
     <>
       {items.map((item) => (
@@ -114,7 +115,7 @@ export function ReportDetailRows({ items, rowClassName = '' }: { items: ReportIt
           <td className="px-3 py-1.5">{item.supplier?.name ?? '-'}</td>
           <td className="px-3 py-1.5">{item.description}</td>
           <td className="px-3 py-1.5">{item.center?.name ?? '-'}</td>
-          <td className="px-3 py-1.5 text-right font-medium text-content">{formatCurrency(item.amount)}</td>
+          <td className={`px-3 py-1.5 text-right whitespace-nowrap font-medium ${amountClassName}`}>{formatCurrency(item.amount)}</td>
           <td className="px-3 py-1.5">{STATUS_LABEL[item.status] ?? item.status}</td>
         </tr>
       ))}

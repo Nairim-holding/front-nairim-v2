@@ -13,6 +13,11 @@
  */
 
 export type ReportRegime = 'caixa' | 'competencia';
+
+/** Mesma data de referência para relatórios, gráficos e seus lançamentos. */
+export function financialDateField(regime?: ReportRegime): 'effective_date' | 'event_date' {
+  return regime === 'competencia' ? 'event_date' : 'effective_date';
+}
 export type ReportGroupBy = 'description' | 'day' | 'category' | 'subcategory' | 'contact' | 'center';
 export type DfcGroupBy = 'day' | 'subcategory';
 export type ReportStatus = 'PENDING' | 'COMPLETED';

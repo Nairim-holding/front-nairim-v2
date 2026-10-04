@@ -1,3 +1,4 @@
+import { escapeReportHTML } from './reportPresentation';
 import { getMyBrandingAction } from '@/server/actions/company';
 import { formatCompanyAddress } from '@/lib/companyIdentity';
 import type { CompanyBranding } from '@/types/branding';
@@ -86,13 +87,13 @@ export function buildReportPrintHeaderHTML(company: ReportPrintHeaderData | null
   const companyBlock = company
     ? `
       <div style="display:flex; align-items:flex-start; gap:12px;">
-        ${company.logoUrl ? `<img src="${company.logoUrl}" alt="Logo" style="height:48px; width:auto; object-fit:contain;" />` : ''}
+        ${company.logoUrl ? `<img src="${escapeReportHTML(company.logoUrl)}" alt="Logo" style="height:48px; width:auto; object-fit:contain;" />` : ''}
         <div>
-          <div style="font-weight:700; font-size:14px;">${company.companyName}</div>
-          ${company.legalName ? `<div style="font-size:11px; color:#475569;">${company.legalName}</div>` : ''}
-          ${company.cnpj ? `<div style="font-size:11px; color:#475569;">CNPJ: ${company.cnpj}</div>` : ''}
-          ${company.phone || company.email ? `<div style="font-size:11px; color:#475569;">Fone: ${company.phone ?? company.email}</div>` : ''}
-          ${company.address ? `<div style="font-size:11px; color:#475569;">${company.address}</div>` : ''}
+          <div style="font-weight:700; font-size:14px;">${escapeReportHTML(company.companyName)}</div>
+          ${company.legalName ? `<div style="font-size:11px; color:#475569;">${escapeReportHTML(company.legalName)}</div>` : ''}
+          ${company.cnpj ? `<div style="font-size:11px; color:#475569;">CNPJ: ${escapeReportHTML(company.cnpj)}</div>` : ''}
+          ${company.phone || company.email ? `<div style="font-size:11px; color:#475569;">Fone: ${escapeReportHTML(company.phone ?? company.email)}</div>` : ''}
+          ${company.address ? `<div style="font-size:11px; color:#475569;">${escapeReportHTML(company.address)}</div>` : ''}
         </div>
       </div>
     `
@@ -103,16 +104,16 @@ export function buildReportPrintHeaderHTML(company: ReportPrintHeaderData | null
       ${companyBlock}
       <div style="text-align:right; font-size:11px; color:#475569;">
         <div>Emitido por</div>
-        <div style="font-weight:600; color:#111;">${context.userName}</div>
+        <div style="font-weight:600; color:#111;">${escapeReportHTML(context.userName)}</div>
         <div>Impresso em</div>
         <div style="font-weight:600; color:#111;">${printedAt}</div>
       </div>
     </div>
     <div style="text-align:center; margin-bottom:10px;">
-      <div style="font-weight:700; font-size:15px;">${context.reportTitle}</div>
+      <div style="font-weight:700; font-size:15px;">${escapeReportHTML(context.reportTitle)}</div>
       <div style="font-size:11px; color:#475569; margin-top:2px;">
-        ${context.periodLabel ?? `Período: ${formatDateDisplay(context.dateRange.from)} a ${formatDateDisplay(context.dateRange.to)}`}
-        ${context.filterLabels.length > 0 ? ` &middot; Filtros: ${context.filterLabels.join(', ')}` : ''}
+        ${escapeReportHTML(context.periodLabel ?? `Período: ${formatDateDisplay(context.dateRange.from)} a ${formatDateDisplay(context.dateRange.to)}`)}
+        ${context.filterLabels.length > 0 ? ` &middot; Filtros: ${escapeReportHTML(context.filterLabels.join(', '))}` : ''}
       </div>
     </div>
   `;

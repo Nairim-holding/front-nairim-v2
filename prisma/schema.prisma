@@ -24,6 +24,8 @@ model Company {
   branding                CompanyBranding?
   users                   User[]
   properties              Property[]
+  repairs                 Repair[]
+  repair_media            RepairMedia[]
   property_types          PropertyType[]
   owners                  Owner[]
   agencies                Agency[]
@@ -187,6 +189,7 @@ model Property {
   documents           Document[]
   favorites           Favorite[]
   leases              Lease[]
+  repairs             Repair[]
   agency              Agency?           @relation(fields: [agency_id], references: [id])
   owner               Owner             @relation(fields: [owner_id], references: [id])
   type                PropertyType      @relation(fields: [type_id], references: [id])
@@ -210,6 +213,49 @@ model Property {
   @@index([iptu_refund_category_id])
   @@index([iptu_refund_subcategory_id])
   @@index([company_id])
+}
+
+model Repair {
+  id                 String    @id @default(uuid())
+  company_id         String
+  property_id        String
+  event_date         DateTime  @db.Date
+  event_type         String    @db.VarChar(20)
+  problem_type       String    @db.VarChar(40)
+  description        String
+  professional       String
+  service_amount     Decimal   @db.Decimal(20, 2)
+  materials_amount   Decimal   @db.Decimal(20, 2)
+  payment_method     String
+  payment_conditions String
+  status             String    @default("PLANNED") @db.VarChar(20)
+  start_date         DateTime? @db.Date
+  completion_date    DateTime? @db.Date
+  notes              String?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  deleted_at         DateTime?
+  company            Company   @relation(fields: [company_id], references: [id])
+  property           Property  @relation(fields: [property_id], references: [id])
+  media              RepairMedia[]
+
+  @@index([company_id, event_date])
+  @@index([property_id])
+}
+
+model RepairMedia {
+  id           String   @id @default(uuid())
+  company_id   String
+  repair_id    String
+  stage        String   @db.VarChar(10)
+  filename     String
+  url          String
+  content_type String
+  created_at   DateTime @default(now())
+  company      Company  @relation(fields: [company_id], references: [id])
+  repair       Repair   @relation(fields: [repair_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id, repair_id])
 }
 
 model PropertyIptu {

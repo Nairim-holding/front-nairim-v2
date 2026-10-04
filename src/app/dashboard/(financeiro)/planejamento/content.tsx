@@ -5,6 +5,7 @@ import { RefreshCw, Calendar, FileSpreadsheet, FileText, Filter } from 'lucide-r
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { styleReportPDFCell, numberReportPDFPages } from '@/lib/reports/reportPresentation';
 import { useSearchParams } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
@@ -475,9 +476,12 @@ export default function PlanningPageContent() {
     autoTable(doc, {
       html: tableEl,
       horizontalPageBreak: true,
+      showFoot: 'lastPage',
+      didParseCell: styleReportPDFCell,
       styles: { fontSize: 6, cellPadding: 2 },
-      margin: { left: 20, right: 20 },
+      margin: { left: 20, right: 20, bottom: 32 },
     });
+    numberReportPDFPages(doc);
     doc.save(`planejamento_${dateRange.from}_a_${dateRange.to}.pdf`);
   }, [dateRange, showMessage]);
 

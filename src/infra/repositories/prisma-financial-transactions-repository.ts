@@ -1,3 +1,4 @@
+import { financialDateField } from '@/core/entities/financial-report';
 import { randomUUID } from 'node:crypto';
 import prisma from '@/infra/database/prisma';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
@@ -1294,6 +1295,8 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     filters: TransactionEntityFilters = {},
   ): Promise<FinancialChartDetailRow[]> {
     const { source } = query;
+    const dateField = source === 'balance'
+      ? 'effective_date' : financialDateField(query.regime ?? filters.regime);
     const range = source !== 'balance'
       ? { gte: parseLocalDate(query.startDate!), lte: parseLocalDate(query.endDate!) }
       : undefined;
@@ -1315,7 +1318,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     } else if (source === 'balance') {
       conditions.push({ effective_date: { lte: new Date() } });
     } else {
-      conditions.push({ [source === 'planning' ? 'effective_date' : 'event_date']: range });
+      conditions.push({ [dateField]: range });
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -1335,7 +1338,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         supplier: { select: { legal_name: true, trade_name: true } },
         center: { select: { name: true } },
       },
-      orderBy: [{ [source === 'planning' || source === 'balance' ? 'effective_date' : 'event_date']: 'asc' }, { id: 'asc' }],
+      orderBy: [{ [dateField]: 'asc' }, { id: 'asc' }],
     });
 
     return transactions.map(t => ({
@@ -1374,6 +1377,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async getMonthlySummaryMulti(years: number[], filters: TransactionEntityFilters = {}): Promise<MonthlySummaryMultiResult> {
+    const dateField = financialDateField(filters.regime);
     const uniqueYears = Array.from(new Set(years.map((y) => Number(y)).filter((y) => !Number.isNaN(y)))).sort((a, b) => a - b);
     if (uniqueYears.length === 0) return [];
 
@@ -1384,25 +1388,25 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       where: {
         deleted_at: null,
         NOT: { is_transfer: true },
-        event_date: { gte: startDate, lte: endDate },
+        [dateField]: { gte: startDate, lte: endDate },
         ...this.buildEntityFilterWhere(filters),
       },
       select: {
-        event_date: true,
+        event_date: true, effective_date: true,
         amount: true,
         category: { select: { type: true } },
       },
-    })) as unknown as Array<{ event_date: Date; amount: unknown; category: { type: string } | null }>;
+    })) as unknown as Array<{ event_date: Date; effective_date: Date; amount: unknown; category: { type: string } | null }>;
 
     const byYear = new Map<number, { month: number; income: number; expense: number }[]>(
       uniqueYears.map((y) => [y, Array.from({ length: 12 }, (_, i) => ({ month: i + 1, income: 0, expense: 0 }))]),
     );
 
     for (const t of transactions) {
-      const transactionYear = t.event_date.getUTCFullYear();
+      const transactionYear = t[dateField].getUTCFullYear();
       const months = byYear.get(transactionYear);
       if (!months) continue;
-      const monthIndex = t.event_date.getUTCMonth();
+      const monthIndex = t[dateField].getUTCMonth();
       const amount = Number(t.amount);
       if (t.category?.type === 'INCOME') months[monthIndex].income += amount;
       else if (t.category?.type === 'EXPENSE') months[monthIndex].expense += amount;
@@ -1414,20 +1418,21 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   async getAvailableYears(): Promise<AvailableYearsResult> {
     const transactions = (await prisma.transaction.findMany({
       where: { deleted_at: null, NOT: { is_transfer: true } },
-      select: { event_date: true },
-    })) as unknown as Array<{ event_date: Date }>;
+      select: { event_date: true, effective_date: true },
+    })) as unknown as Array<{ event_date: Date; effective_date: Date }>;
 
-    const years = Array.from(new Set(transactions.map((t) => t.event_date.getUTCFullYear())));
+    const years = Array.from(new Set(transactions.flatMap((t) => [t.event_date.getUTCFullYear(), t.effective_date.getUTCFullYear()])));
     years.sort((a, b) => b - a);
 
     return { years };
   }
 
   async getExpenseByCategory(startDate: Date, endDate: Date, filters: TransactionEntityFilters = {}): Promise<ExpenseByCategoryResult> {
+    const dateField = financialDateField(filters.regime);
     const baseWhere = {
       deleted_at: null,
       NOT: { is_transfer: true },
-      event_date: { gte: startDate, lte: endDate },
+      [dateField]: { gte: startDate, lte: endDate },
       ...this.buildEntityFilterWhere(filters),
     };
 
@@ -1443,7 +1448,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       }),
       prisma.transaction.findMany({
         where: { ...baseWhere, category: { type: 'EXPENSE' } },
-        select: { category_id: true, amount: true, event_date: true },
+        select: { category_id: true, amount: true, event_date: true, effective_date: true },
       }),
     ]);
 
@@ -1457,7 +1462,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
 
     const byYearByCategory = new Map<string, Map<number, number>>();
     for (const t of expenseTransactions as any[]) {
-      const year = t.event_date.getUTCFullYear();
+      const year = t[dateField].getUTCFullYear();
       const perYear = byYearByCategory.get(t.category_id) ?? new Map<number, number>();
       perYear.set(year, (perYear.get(year) ?? 0) + Number(t.amount));
       byYearByCategory.set(t.category_id, perYear);
@@ -1491,10 +1496,11 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     })) as unknown as { id: string; name: string } | null;
     if (!category) throw new NotFoundError('Categoria não encontrada');
 
+    const dateField = financialDateField(filters.regime);
     const baseWhere = {
       deleted_at: null,
       NOT: { is_transfer: true },
-      event_date: { gte: startDate, lte: endDate },
+      [dateField]: { gte: startDate, lte: endDate },
       ...this.buildEntityFilterWhere(filters),
       // A subcategoria pedida nunca pode ser sobrescrita por um category_id do filtro global.
       category_id: categoryId,
@@ -1508,7 +1514,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       }),
       prisma.transaction.findMany({
         where: baseWhere,
-        select: { subcategory_id: true, amount: true, event_date: true },
+        select: { subcategory_id: true, amount: true, event_date: true, effective_date: true },
       }),
     ]);
 
@@ -1521,7 +1527,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     const byYearBySubcategory = new Map<string, Map<number, number>>();
     for (const t of transactions as any[]) {
       const key = t.subcategory_id ?? 'none';
-      const year = t.event_date.getUTCFullYear();
+      const year = t[dateField].getUTCFullYear();
       const perYear = byYearBySubcategory.get(key) ?? new Map<number, number>();
       perYear.set(year, (perYear.get(year) ?? 0) + Number(t.amount));
       byYearBySubcategory.set(key, perYear);

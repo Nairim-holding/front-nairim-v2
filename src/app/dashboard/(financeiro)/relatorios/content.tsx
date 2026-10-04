@@ -91,7 +91,7 @@ export default function RelatoriosPageContent() {
   }, [filename]);
 
   const handleExportPDF = useCallback(() => {
-    exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, printContext);
+    exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, printContext, activeViewRef.current?.getSummaryElement?.() ?? null);
   }, [filename, printContext]);
 
   const hideTypeFilter = selected.section === 'despesas' || selected.section === 'receitas';
@@ -168,7 +168,7 @@ export default function RelatoriosPageContent() {
             )}
 
             {selected.section === 'fluxo' && selected.item === 'demonstrativo' && (
-              <DemonstrativoView key="demonstrativo" ref={activeViewRef} dateRange={dateRange} regime={regime} filters={filters} />
+              <DemonstrativoView reportKind={reportKind} key={`demonstrativo-${reportKind}`} ref={activeViewRef} dateRange={dateRange} regime={regime} filters={filters} />
             )}
           </div>
         </div>

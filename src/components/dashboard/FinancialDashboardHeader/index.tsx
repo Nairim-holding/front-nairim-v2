@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { PeriodFilterSelector } from '@/components/dashboard/PeriodFilter';
 import { useMonthlySummaryMulti } from '@/hooks/useMonthlySummaryMulti';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
+import type { ReportRegime } from '@/core/entities/financial-report';
 
 function TotalTile({
   label,
@@ -37,6 +38,9 @@ function TotalTile({
 }
 
 interface FinancialDashboardHeaderProps {
+  regime?: ReportRegime;
+  onRegimeChange?: (regime: ReportRegime) => void;
+  filters?: Record<string, unknown>;
   years: number[];
   selectedMonths: number[];
   onYearsChange: (years: number[]) => void;
@@ -52,8 +56,9 @@ interface FinancialDashboardHeaderProps {
  * ele os gráficos do grid abaixo — este componente é controlado, não dono do
  * estado.
  */
-export default function FinancialDashboardHeader({ years, selectedMonths, onYearsChange, onMonthsChange, isCleared, onClear }: FinancialDashboardHeaderProps) {
-  const { byYear, isLoading } = useMonthlySummaryMulti(years);
+export default function FinancialDashboardHeader({ years, selectedMonths, onYearsChange, onMonthsChange, isCleared, onClear, regime = 'caixa', onRegimeChange, filters }: FinancialDashboardHeaderProps) {
+  const summaryFilters = useMemo(() => ({ ...filters, regime }), [filters, regime]);
+  const { byYear, isLoading } = useMonthlySummaryMulti(years, summaryFilters);
 
   // Soma os meses selecionados em CADA ano escolhido (Tarefa 5.2: mais de um
   // ano soma tudo junto nos tiles do topo).
@@ -83,6 +88,19 @@ export default function FinancialDashboardHeader({ years, selectedMonths, onYear
         isCleared={isCleared}
         onClear={onClear}
       />
+
+      <label className="flex flex-col gap-1 text-xs text-content-muted shrink-0">
+        Regime
+        <select
+          aria-label="Regime"
+          value={regime}
+          onChange={event => onRegimeChange?.(event.target.value as ReportRegime)}
+          className="rounded-lg border border-ui-border bg-surface text-content px-3 py-2 text-sm"
+        >
+          <option value="caixa">Caixa</option>
+          <option value="competencia">Competência</option>
+        </select>
+      </label>
 
       <div className="hidden lg:block w-px self-stretch bg-ui-border-soft" />
 

@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { reportText, reportValueColor, escapeReportHTML, styleReportPDFCell, numberReportPDFPages } from './reportPresentation';
 import { fetchReportPrintHeaderData, buildReportPrintHeaderHTML, type ReportPrintContext } from './printHeader';
 
 /**
@@ -56,7 +57,7 @@ export function exportTableToExcel(tableEl: HTMLTableElement | null, filename: s
  * (modo html do autoTable). Cabeçalho com dados da empresa (Tarefa 4.3 do
  * guia de correções) desenhado como texto antes da tabela, só na 1ª página.
  */
-export async function exportTableToPDF(tableEl: HTMLTableElement | null, filename: string, context: ReportPrintContext): Promise<boolean> {
+export async function exportTableToPDF(tableEl: HTMLTableElement | null, filename: string, context: ReportPrintContext, summaryEl?: HTMLElement | null): Promise<boolean> {
   if (!tableEl) return false;
   const company = await fetchReportPrintHeaderData();
   const logo = await fetchLogoAsDataUrl(company?.logoUrl ?? null);
@@ -77,7 +78,7 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
   if (company?.companyName) {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(company.companyName, textX, cursorY);
+    doc.text(reportText(company.companyName), textX, cursorY);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     cursorY += 12;
@@ -85,7 +86,7 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
       .filter(Boolean)
       .join('  ·  ');
     if (details) {
-      doc.text(details, textX, cursorY);
+      doc.text(reportText(details), textX, cursorY);
       cursorY += 14;
     }
   }
@@ -94,14 +95,16 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
 
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(context.reportTitle, 20, cursorY);
+  doc.text(reportText(context.reportTitle), 20, cursorY);
   doc.setFont('helvetica', 'normal');
   cursorY += 12;
   doc.setFontSize(8);
   const periodLine = (context.periodLabel
     ?? `Período: ${context.dateRange.from.split('-').reverse().join('/')} a ${context.dateRange.to.split('-').reverse().join('/')}`)
     + (context.filterLabels.length > 0 ? `  ·  Filtros: ${context.filterLabels.join(', ')}` : '');
-  doc.text(periodLine, 20, cursorY);
+  doc.text(reportText(periodLine), 20, cursorY);
+  cursorY += 12;
+  doc.text(reportText(`Emitido por ${context.userName}`), 20, cursorY);
   cursorY += 8;
 
   autoTable(doc, {
@@ -109,8 +112,30 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
     startY: cursorY + 10,
     horizontalPageBreak: true,
     styles: { fontSize: 7, cellPadding: 3 },
-    margin: { left: 20, right: 20 },
+    showFoot: 'lastPage',
+    footStyles: { fillColor: [226, 232, 240], textColor: [17, 24, 39], fontStyle: 'bold' },
+    margin: { left: 20, right: 20, bottom: 32 },
+    didParseCell: styleReportPDFCell,
   });
+  if (summaryEl) {
+    const rows = Array.from(summaryEl.children).map(row => Array.from(row.querySelectorAll('span')).map(span => reportText(span.textContent ?? '')));
+    const lastY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+    autoTable(doc, { head: [[context.summaryTitle ?? 'Resumo', '']], body: rows,
+      startY: lastY + 16, margin: { left: doc.internal.pageSize.getWidth() - 350, right: 20, bottom: 32 },
+      styles: { fontSize: 8, cellPadding: 5, lineWidth: 0.5, lineColor: [203, 213, 225] },
+      headStyles: { fillColor: [226, 232, 240], textColor: [17, 24, 39] },
+      columnStyles: { 1: { halign: 'right', cellWidth: 110 } }, theme: 'grid',
+      didParseCell: data => {
+        styleReportPDFCell(data);
+        if (data.section === 'body' && data.column.index === 1) {
+          const source = summaryEl.children[data.row.index]?.querySelectorAll('span')[1];
+          const color = reportValueColor(source?.className ?? '');
+          if (color) data.cell.styles.textColor = color;
+        }
+      },
+    });
+  }
+  numberReportPDFPages(doc);
   doc.save(`${filename}.pdf`);
   return true;
 }
@@ -166,6 +191,9 @@ export async function printReportElement(
   options?: PrintReportOptions,
 ): Promise<boolean> {
   if (!el) return false;
+  // Reserve the popup during the click, before fetching company data or images.
+  const printWindow = window.open('', '_blank', 'width=1024,height=768');
+  if (!printWindow) return false;
 
   const company = await fetchReportPrintHeaderData();
 
@@ -178,6 +206,7 @@ export async function printReportElement(
   // export em PDF já usava), e o que entra no HTML é o base64 — a janela de
   // impressão não precisa buscar nada de fora.
   const logo = await fetchLogoAsDataUrl(company?.logoUrl ?? null);
+  if (printWindow.closed) return false;
   const companyForHeader = company
     ? { ...company, logoUrl: logo?.dataUrl ?? company.logoUrl }
     : null;
@@ -191,17 +220,25 @@ export async function printReportElement(
     ?? (summaryEl ? `<h3 class="report-summary-title">${context.summaryTitle ?? 'Resumo'}</h3>${staticHTMLOf(summaryEl)}` : '');
 
   const html = `<!doctype html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<title>${context.reportTitle}</title>
+<title>${escapeReportHTML(context.reportTitle)}</title>
 <style>
   body { font-family: Arial, Helvetica, sans-serif; padding: 24px; color: #111; }
   .cabecalho-impressao { break-after: avoid; page-break-after: avoid; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
   th { background: #f1f5f9; }
-  @media print { body { padding: 0; } }
+  @page {
+    margin: 12mm 10mm 17mm;
+    @bottom-right { content: "Página " counter(page) "/" counter(pages); font: 9pt Arial, sans-serif; color: #475569; }
+  }
+  @media print { body { padding: 0; } * { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  tfoot { display: table-row-group; }
+  tr { break-inside: avoid; }
+  .text-right { text-align: right; white-space: nowrap; }
+  .report-summary { break-inside: avoid; margin-left: auto; max-width: 420px; }
 
   /*
    * Destaque das linhas de subtotal de grupo (Tarefa 4.3-E) — a tela já marca
@@ -247,7 +284,7 @@ export async function printReportElement(
   }
   .max-w-md.ml-auto {
     max-width: 420px; margin-left: auto; border: 1px solid #cbd5e1; border-top: none;
-    border-radius: 0 0 6px 6px; padding: 14px 16px; font-size: 13px;
+    border-radius: 0 0 6px 6px; padding: 14px 16px; font-size: 13px; border-top: 1px solid #cbd5e1;
   }
   .max-w-md.ml-auto > div {
     display: flex; justify-content: space-between; align-items: baseline;
@@ -256,8 +293,8 @@ export async function printReportElement(
   .max-w-md.ml-auto > div:last-child { border-bottom: none; padding-top: 8px; }
   .max-w-md.ml-auto > div > span:first-child { color: #475569; }
   .max-w-md.ml-auto > div > span:last-child { font-weight: 600; }
-  .text-emerald-600, .text-emerald-400 { color: #059669 !important; }
-  .text-red-600, .text-red-400 { color: #dc2626 !important; }
+  .text-emerald-600, .text-emerald-400, .text-emerald-700, .text-emerald-300 { color: #059669 !important; }
+  .text-red-600, .text-red-400, .text-red-700, .text-red-300, .text-red-800, .text-red-900 { color: #dc2626 !important; }
   /* Débito usa laranja na tela (Extrato); sem equivalente aqui a coluna e a
      linha de Total do Período saíam pretas na impressão. */
   .text-orange-600, .text-orange-400 { color: #ea580c !important; }
@@ -290,7 +327,7 @@ export async function printReportElement(
 <body>
 <div class="cabecalho-impressao">${headerHTML}</div>
 ${staticHTMLOf(el)}
-${summaryHTML}
+${options?.rawSummaryHTML !== undefined ? summaryHTML : `<div class="report-summary">${summaryHTML}</div>`}
 </body>
 </html>`;
 
@@ -303,28 +340,29 @@ ${summaryHTML}
   // Blob com `text/html;charset=utf-8` remove essa ambiguidade — o encoding
   // vem do próprio Content-Type da resposta, não de uma tag processada em
   // paralelo com o parse.
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const blob = new Blob(['\uFEFF', html.normalize('NFC')], { type: 'text/html;charset=utf-8' });
   const blobUrl = URL.createObjectURL(blob);
-  const printWindow = window.open(blobUrl, '_blank', 'width=1024,height=768');
-  if (!printWindow) {
-    URL.revokeObjectURL(blobUrl);
-    return false;
-  }
 
-  // Um único disparo de print(): `onload` cobre o caso comum, mas em alguns
-  // navegadores o documento já está 'complete' quando chegamos aqui e o
-  // evento load nunca chega a disparar — daí o fallback por readyState. Os
-  // dois branches são mutuamente exclusivos (nunca os dois chamam print()),
-  // o que evita abrir múltiplos diálogos de impressão para o mesmo clique.
-  const triggerPrint = () => {
+  // Navegar a janela reservada substitui seus handlers de load. Aguarde o
+  // documento blob estar pronto, sem imprimir o about:blank inicial.
+  let triggered = false;
+  const triggerPrint = async () => {
+    if (triggered || printWindow.location.href !== blobUrl) return;
+    triggered = true;
+    await printWindow.document.fonts.ready;
+    await Promise.all(Array.from(printWindow.document.images).map(img => img.decode().catch(() => {})));
+    if (printWindow.closed) { URL.revokeObjectURL(blobUrl); return; }
     printWindow.focus();
     printWindow.print();
     URL.revokeObjectURL(blobUrl);
   };
-  if (printWindow.document.readyState === 'complete') {
-    triggerPrint();
-  } else {
-    printWindow.onload = triggerPrint;
-  }
+  printWindow.location.replace(blobUrl);
+  let attempts = 0;
+  const waitForDocument = () => {
+    if (printWindow.closed || attempts++ >= 600) { URL.revokeObjectURL(blobUrl); return; }
+    if (printWindow.location.href === blobUrl && printWindow.document.readyState === 'complete') void triggerPrint();
+    else window.setTimeout(waitForDocument, 50);
+  };
+  waitForDocument();
   return true;
 }

@@ -1,3 +1,4 @@
+import { financialDateField } from '@/core/entities/financial-report';
 import prisma from '@/infra/database/prisma';
 import type { FinancialReportsRepository } from '@/core/repositories/financial-reports-repository';
 import type {
@@ -181,7 +182,7 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
    * filtros multi-seleção de FKs.
    */
   private buildBaseWhere(params: ReportParams): { where: Record<string, unknown>; dateField: 'effective_date' | 'event_date'; start: Date } {
-    const dateField = params.regime === 'competencia' ? 'event_date' : 'effective_date';
+    const dateField = financialDateField(params.regime);
 
     const start = parseLocalDate(params.startDate);
     const end = parseLocalDate(params.endDate);

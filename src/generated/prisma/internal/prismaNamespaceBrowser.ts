@@ -55,6 +55,8 @@ export const ModelName = {
   CompanyBranding: 'CompanyBranding',
   Agency: 'Agency',
   Property: 'Property',
+  Repair: 'Repair',
+  RepairMedia: 'RepairMedia',
   PropertyIptu: 'PropertyIptu',
   User: 'User',
   UserAccessSchedule: 'UserAccessSchedule',
@@ -236,6 +238,45 @@ export const PropertyScalarFieldEnum = {
 } as const
 
 export type PropertyScalarFieldEnum = (typeof PropertyScalarFieldEnum)[keyof typeof PropertyScalarFieldEnum]
+
+
+export const RepairScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  property_id: 'property_id',
+  event_date: 'event_date',
+  event_type: 'event_type',
+  problem_type: 'problem_type',
+  description: 'description',
+  professional: 'professional',
+  service_amount: 'service_amount',
+  materials_amount: 'materials_amount',
+  payment_method: 'payment_method',
+  payment_conditions: 'payment_conditions',
+  status: 'status',
+  start_date: 'start_date',
+  completion_date: 'completion_date',
+  notes: 'notes',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  deleted_at: 'deleted_at'
+} as const
+
+export type RepairScalarFieldEnum = (typeof RepairScalarFieldEnum)[keyof typeof RepairScalarFieldEnum]
+
+
+export const RepairMediaScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  repair_id: 'repair_id',
+  stage: 'stage',
+  filename: 'filename',
+  url: 'url',
+  content_type: 'content_type',
+  created_at: 'created_at'
+} as const
+
+export type RepairMediaScalarFieldEnum = (typeof RepairMediaScalarFieldEnum)[keyof typeof RepairMediaScalarFieldEnum]
 
 
 export const PropertyIptuScalarFieldEnum = {

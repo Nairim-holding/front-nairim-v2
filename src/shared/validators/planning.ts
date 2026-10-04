@@ -35,6 +35,7 @@ export const planningUpsertSchema = z
 
 export const planningDashboardQuerySchema = z
   .object({
+    regime: z.enum(['caixa', 'competencia']).optional(),
     startDate: z
       .string()
       .refine(isValidIsoDateString, 'startDate deve ser uma data válida no formato YYYY-MM-DD'),

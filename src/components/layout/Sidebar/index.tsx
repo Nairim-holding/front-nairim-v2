@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu,
+  Wrench,
   Pin,
   Home,
   Moon,
@@ -192,6 +193,7 @@ export default function Aside({
           { href: "/dashboard/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/relatorios"), isSeparatorBefore: true },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
+      { href: "/dashboard/reparos", icon: Wrench, label: "Reparos", resource: resourceForHref("/dashboard/reparos") },
       { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações", resource: resourceForHref("/dashboard/configuracoes") },
       {
         href: "#",

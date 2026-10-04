@@ -22,7 +22,8 @@ export const FINANCIAL_DETAIL_COLUMNS: ChartCardColumn[] = [
 ];
 
 export async function loadFinancialChartDetails(query: FinancialChartDetailQuery, filters?: Record<string, unknown>) {
-  const result = await getFinancialChartDetailsAction(query, filters);
+  const regime = query.regime ?? (filters?.regime === 'competencia' ? 'competencia' : 'caixa');
+  const result = await getFinancialChartDetailsAction({ ...query, regime }, filters);
   if (!result.ok) throw new Error(result.error || 'Não foi possível carregar os lançamentos.');
   return result.data;
 }

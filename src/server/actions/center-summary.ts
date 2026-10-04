@@ -1,0 +1,33 @@
+'use server';
+import prisma from '@/infra/database/prisma';
+import { withPermission } from '@/infra/auth/session';
+import { runAction } from '@/shared/actions/action-result';
+import { reportParamsSchema } from '@/shared/validators/financial-report';
+import { parseLocalDate } from '@/shared/utils/date-utils';
+import { buildCenterSummary } from '@/core/entities/center-summary';
+import { financialDateField } from '@/core/entities/financial-report';
+
+export async function getCenterSummaryAction(raw: Record<string, unknown>) {
+  return runAction(() => withPermission('financial-transactions', 'view', async () => {
+    const query = reportParamsSchema.parse(raw);
+    const fields = ['center_id','category_id','subcategory_id','financial_institution_id','card_id','supplier_id'];
+    const filters: Record<string, unknown> = {};
+    for (const field of fields) {
+      const value = raw[field]; const ids = (Array.isArray(value) ? value : [value]).filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length) filters[field] = { in: ids };
+    }
+    const descriptions = (Array.isArray(raw.description) ? raw.description : [raw.description]).filter((v): v is string => typeof v === 'string' && !!v);
+    const dateField = financialDateField(query.regime);
+    const totals = await prisma.transaction.groupBy({ by: ['center_id','category_id'],
+      where: { deleted_at: null, NOT: { is_transfer: true }, status: query.status, ...filters,
+        category: { type: query.type ?? { in: ['INCOME','EXPENSE'] } },
+        [dateField]: { gte: parseLocalDate(query.startDate), lte: parseLocalDate(query.endDate) },
+        ...(descriptions.length ? { OR: descriptions.map(description => ({ description: { contains: description, mode: 'insensitive' as const } })) } : {}),
+      }, _sum: { amount: true } });
+    const [centers, categories] = await Promise.all([
+      prisma.center.findMany({ where: { id: { in: totals.flatMap(t => t.center_id ? [t.center_id] : []) } }, select: { id: true, name: true } }),
+      prisma.category.findMany({ where: { id: { in: totals.map(t => t.category_id) } }, select: { id: true, type: true } }),
+    ]);
+    return buildCenterSummary(totals.map(t => ({ ...t, amount: Number(t._sum.amount ?? 0) })), centers, categories);
+  }));
+}

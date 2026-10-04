@@ -6,7 +6,7 @@ import { Plus, Minus, AlertTriangle } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { buildReportActionParams } from '../_lib/buildReportQuery';
 import { getDemonstrativoReportAction } from '@/server/actions/financial-report';
-import type { ReportFiltersState, ReportGroupRow, ReportItemRow, ReportRegime, ReportViewHandle } from '../_lib/types';
+import type { ReportKind, ReportFiltersState, ReportGroupRow, ReportItemRow, ReportRegime, ReportViewHandle } from '../_lib/types';
 
 const STATUS_LABEL: Record<string, string> = { PENDING: 'Pendente', COMPLETED: 'Concluído' };
 
@@ -39,7 +39,7 @@ function DfcItemRow({ item }: { item: ReportItemRow }) {
           {meta ? ` · ${meta}` : ''}
         </div>
       </td>
-      <td className="px-3 py-1.5 text-right align-top">{formatCurrency(item.amount)}</td>
+      <td className="px-3 py-1.5 text-right align-top whitespace-nowrap">{formatCurrency(item.amount)}</td>
     </tr>
   );
 }
@@ -66,6 +66,7 @@ interface DfcResponse {
 interface DemonstrativoViewProps {
   dateRange: { from: string; to: string };
   regime: ReportRegime;
+  reportKind: ReportKind;
   filters: ReportFiltersState;
 }
 
@@ -75,7 +76,7 @@ function formatSigned(value: number, sign: 1 | -1): string {
 }
 
 const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(function DemonstrativoView(
-  { dateRange, regime, filters },
+  { dateRange, regime, filters, reportKind },
   ref
 ) {
   const tableRef = useRef<HTMLTableElement>(null);
@@ -101,7 +102,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
         if (!result.ok) throw new Error(result.error);
         // A action serializa `event_date`/`effective_date: Date` para string no
         // round-trip servidor→cliente — mesmo shape que DfcResponse já espera.
-        if (!cancelled) setData(result.data as unknown as DfcResponse);
+        if (!cancelled) { setData(result.data as unknown as DfcResponse); setExpanded(new Set()); setExpandedGroups(new Set()); }
       } catch (error) {
         console.error('[DemonstrativoView] Erro ao carregar demonstrativo:', error);
         if (!cancelled) setData(null);
@@ -215,7 +216,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
           <tbody>
             {data.lines.map((line) => {
               const isExpandable = line.kind === 'line';
-              const isOpen = expanded.has(line.key);
+              const isOpen = reportKind === 'analitico' ? !expanded.has(line.key) : expanded.has(line.key);
               const valueColor =
                 line.kind === 'line'
                   ? line.sign < 0
@@ -235,7 +236,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
 
               return (
                 <Fragment key={line.key}>
-                  <tr className={`border-b border-ui-border-soft/60 ${rowBg}`}>
+                  <tr className={`border-b border-ui-border-soft/60 ${rowBg} ${line.kind === 'final' ? valueColor : ''}`}>
                     <td className="px-3 py-2 w-8">
                       {isExpandable && line.groups.length > 0 && (
                         <button
@@ -248,18 +249,18 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                         </button>
                       )}
                     </td>
-                    <td className={`px-3 py-2 text-sm ${line.kind === 'line' ? 'text-content-secondary' : 'font-bold text-content'}`}>
+                    <td className={`px-3 py-2 text-sm ${line.kind === 'line' ? 'text-content-secondary' : `font-bold ${line.kind === 'final' ? valueColor : 'text-content'}`}`}>
                       {line.kind === 'final' ? '= ' : line.kind === 'subtotal' ? '→ ' : ''}
-                      {line.label}
+                      {line.kind === 'final' ? `Resultado (${line.total < 0 ? 'Prejuízo' : 'Lucro'})` : line.label}
                     </td>
-                    <td className={`px-3 py-2 text-sm text-right font-semibold ${valueColor}`}>
+                    <td className={`px-3 py-2 text-sm text-right whitespace-nowrap font-semibold ${valueColor}`}>
                       {formatSigned(line.total, line.sign)}
                     </td>
                   </tr>
                   {isOpen &&
                     line.groups.map((g) => {
                       const groupKey = `${line.key}:${g.key}`;
-                      const isGroupOpen = expandedGroups.has(groupKey);
+                      const isGroupOpen = reportKind === 'analitico' ? !expandedGroups.has(groupKey) : expandedGroups.has(groupKey);
                       return (
                         <Fragment key={groupKey}>
                           <tr className="text-xs text-content-secondary border-b border-ui-border-soft/40">
@@ -276,7 +277,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                               )}
                             </td>
                             <td className="px-3 py-1.5 pl-6">{g.label}</td>
-                            <td className="px-3 py-1.5 text-right">{formatCurrency(g.total)}</td>
+                            <td className="px-3 py-1.5 text-right whitespace-nowrap">{formatCurrency(g.total)}</td>
                           </tr>
                           {isGroupOpen && g.items.map((item) => <DfcItemRow key={item.id} item={item} />)}
                         </Fragment>

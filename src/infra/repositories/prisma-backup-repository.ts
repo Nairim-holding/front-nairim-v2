@@ -3,7 +3,7 @@ import type { BackupRepository } from '@/core/repositories/backup-repository';
 import type { BackupMeta, BackupPayload } from '@/core/entities/backup';
 import { BACKUP_FORMAT_VERSION } from '@/core/entities/backup';
 import { buildChecksum } from '@/core/utils/backup-filename';
-import { NotFoundError } from '@/core/errors/domain-errors';
+import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
 
 /**
  * Implementação Prisma de {@link BackupRepository}.
@@ -65,6 +65,8 @@ export class PrismaBackupRepository implements BackupRepository {
       favorites,
       userColumnPreferences,
       userDashboardLayouts,
+      repairs,
+      repairMedia,
     ] = await Promise.all([
       prisma.companyBranding.findMany(byCompany),
       prisma.propertyType.findMany(byCompany),
@@ -88,6 +90,8 @@ export class PrismaBackupRepository implements BackupRepository {
       prisma.favorite.findMany(byCompany),
       prisma.userColumnPreference.findMany(byCompany),
       prisma.userDashboardLayout.findMany(byCompany),
+      prisma.repair.findMany(byCompany),
+      prisma.repairMedia.findMany(byCompany),
     ]);
 
     const agencyIds = idsOf(agencies);
@@ -176,6 +180,8 @@ export class PrismaBackupRepository implements BackupRepository {
       contacts,
       propertyValues,
       propertyIptus,
+      repairs,
+      repairMedia,
     };
 
     const checksum = buildChecksum(data);
@@ -200,6 +206,8 @@ export class PrismaBackupRepository implements BackupRepository {
     const { data } = backupData;
 
     await prisma.$transaction(async (tx) => {
+      await tx.repairMedia.deleteMany({ where: { company_id: companyId } });
+      await tx.repair.deleteMany({ where: { company_id: companyId } });
       // ─── Deleta os dados da empresa em ordem FK-safe (filhos antes de pais) ───
       await tx.agencyAddress.deleteMany({ where: { agency: { company_id: companyId } } });
       await tx.propertyAddress.deleteMany({ where: { property: { company_id: companyId } } });
@@ -377,6 +385,20 @@ export class PrismaBackupRepository implements BackupRepository {
       }
 
       // Documentos e preferências (últimas, relações leves)
+      if (Array.isArray(data.repairs) && data.repairs.length > 0) {
+        const records = data.repairs as Record<string, unknown>[];
+        const propertyIds = [...new Set(records.map(row => String(row.property_id ?? '')))];
+        const ownedProperties = await tx.property.count({ where: { company_id: companyId, id: { in: propertyIds } } });
+        if (ownedProperties !== propertyIds.length) throw new ValidationError('O backup contém reparos vinculados a imóveis de outra empresa ou inexistentes.');
+        await tx.repair.createMany({ data: records.map(row => ({ ...row, company_id: companyId })) as never });
+      }
+      if (Array.isArray(data.repairMedia) && data.repairMedia.length > 0) {
+        const records = data.repairMedia as Record<string, unknown>[];
+        const repairIds = [...new Set(records.map(row => String(row.repair_id ?? '')))];
+        const ownedRepairs = await tx.repair.count({ where: { company_id: companyId, id: { in: repairIds } } });
+        if (ownedRepairs !== repairIds.length) throw new ValidationError('O backup contém mídias vinculadas a reparos de outra empresa ou inexistentes.');
+        await tx.repairMedia.createMany({ data: records.map(row => ({ ...row, company_id: companyId })) as never });
+      }
       if (Array.isArray(data.documents) && data.documents.length > 0) {
         await tx.document.createMany({ data: data.documents as any });
       }

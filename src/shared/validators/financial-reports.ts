@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { isValidIsoDateString } from '@/shared/utils/date-utils';
 
+const regimeField = z.enum(['caixa', 'competencia']).optional();
+
 /**
  * Schemas Zod dos endpoints de relatório financeiro (Módulo 9g/11).
  * Substituem os `req.query` lidos no TransactionController:
@@ -17,15 +19,17 @@ import { isValidIsoDateString } from '@/shared/utils/date-utils';
 export const monthlySummaryQuerySchema = z
   .object({
     year: z.coerce.number().int().min(1).default(new Date().getFullYear()),
+    regime: regimeField,
   })
   .passthrough();
 
-export const monthlySummaryMultiQuerySchema = z.object({}).passthrough();
+export const monthlySummaryMultiQuerySchema = z.object({ regime: regimeField }).passthrough();
 
 const dateField = z.string().refine(isValidIsoDateString, 'Informe uma data válida no formato YYYY-MM-DD');
 
 export const financialChartDetailQuerySchema = z.object({
   source: z.enum(['transactions', 'planning', 'cards', 'balance']),
+  regime: regimeField,
   startDate: dateField.optional(),
   endDate: dateField.optional(),
   type: z.enum(['INCOME', 'EXPENSE']).optional(),
@@ -44,6 +48,7 @@ export const financialChartDetailQuerySchema = z.object({
 
 export const expenseByCategoryQuerySchema = z
   .object({
+    regime: regimeField,
     startDate: dateField,
     endDate: dateField,
   })
@@ -55,6 +60,7 @@ export const expenseByCategoryQuerySchema = z
 
 export const subcategoryBreakdownQuerySchema = z
   .object({
+    regime: regimeField,
     categoryId: z.string().min(1, 'categoryId é obrigatório'),
     startDate: dateField,
     endDate: dateField,

@@ -178,7 +178,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
                 <td className="px-3 py-2 text-content" colSpan={8}>
                   Saldo Anterior
                 </td>
-                <td className={`px-3 py-2 text-right font-bold ${summary.saldoAnterior < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+                <td className={`px-3 py-2 text-right font-bold ${summary.saldoAnterior < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {formatCurrency(summary.saldoAnterior)}
                 </td>
               </tr>
@@ -205,7 +205,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
                 <td className="px-3 py-1.5 text-right text-orange-600 dark:text-orange-400">
                   {item.debit > 0 ? formatCurrency(item.debit) : ''}
                 </td>
-                <td className={`px-3 py-1.5 text-right font-medium ${item.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+                <td className={`px-3 py-1.5 text-right font-medium ${item.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {formatCurrency(item.balance)}
                 </td>
               </tr>
@@ -227,7 +227,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
                 <td className="px-3 py-2 text-right font-bold text-orange-600 dark:text-orange-400">
                   {formatCurrency(summary.totalDespesas)}
                 </td>
-                <td className={`px-3 py-2 text-right font-bold ${summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+                <td className={`px-3 py-2 text-right font-bold ${summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {formatCurrency(summary.saldoFinal)}
                 </td>
               </tr>
@@ -252,13 +252,13 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
           </div>
           <div className="flex justify-between border-t border-ui-border-soft pt-1.5">
             <span className="text-content-secondary">Balanço no Período</span>
-            <span className={`font-semibold ${summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+            <span className={`font-semibold ${summary.balancoPeriodo < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {formatCurrency(summary.balancoPeriodo)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-content-secondary font-semibold">Saldo Final</span>
-            <span className={`font-bold ${summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-content'}`}>
+            <span className={`font-bold ${summary.saldoFinal < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {formatCurrency(summary.saldoFinal)}
             </span>
           </div>

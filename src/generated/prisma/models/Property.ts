@@ -431,6 +431,7 @@ export type PropertyWhereInput = {
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
   leases?: Prisma.LeaseListRelationFilter
+  repairs?: Prisma.RepairListRelationFilter
   agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   owner?: Prisma.XOR<Prisma.OwnerScalarRelationFilter, Prisma.OwnerWhereInput>
   type?: Prisma.XOR<Prisma.PropertyTypeScalarRelationFilter, Prisma.PropertyTypeWhereInput>
@@ -478,6 +479,7 @@ export type PropertyOrderByWithRelationInput = {
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   favorites?: Prisma.FavoriteOrderByRelationAggregateInput
   leases?: Prisma.LeaseOrderByRelationAggregateInput
+  repairs?: Prisma.RepairOrderByRelationAggregateInput
   agency?: Prisma.AgencyOrderByWithRelationInput
   owner?: Prisma.OwnerOrderByWithRelationInput
   type?: Prisma.PropertyTypeOrderByWithRelationInput
@@ -528,6 +530,7 @@ export type PropertyWhereUniqueInput = Prisma.AtLeast<{
   documents?: Prisma.DocumentListRelationFilter
   favorites?: Prisma.FavoriteListRelationFilter
   leases?: Prisma.LeaseListRelationFilter
+  repairs?: Prisma.RepairListRelationFilter
   agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   owner?: Prisma.XOR<Prisma.OwnerScalarRelationFilter, Prisma.OwnerWhereInput>
   type?: Prisma.XOR<Prisma.PropertyTypeScalarRelationFilter, Prisma.PropertyTypeWhereInput>
@@ -635,6 +638,7 @@ export type PropertyCreateInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -682,6 +686,7 @@ export type PropertyUncheckedCreateInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -709,6 +714,7 @@ export type PropertyUpdateInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -756,6 +762,7 @@ export type PropertyUncheckedUpdateInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -1077,6 +1084,20 @@ export type FloatFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type PropertyCreateNestedOneWithoutRepairsInput = {
+  create?: Prisma.XOR<Prisma.PropertyCreateWithoutRepairsInput, Prisma.PropertyUncheckedCreateWithoutRepairsInput>
+  connectOrCreate?: Prisma.PropertyCreateOrConnectWithoutRepairsInput
+  connect?: Prisma.PropertyWhereUniqueInput
+}
+
+export type PropertyUpdateOneRequiredWithoutRepairsNestedInput = {
+  create?: Prisma.XOR<Prisma.PropertyCreateWithoutRepairsInput, Prisma.PropertyUncheckedCreateWithoutRepairsInput>
+  connectOrCreate?: Prisma.PropertyCreateOrConnectWithoutRepairsInput
+  upsert?: Prisma.PropertyUpsertWithoutRepairsInput
+  connect?: Prisma.PropertyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.PropertyUpdateToOneWithWhereWithoutRepairsInput, Prisma.PropertyUpdateWithoutRepairsInput>, Prisma.PropertyUncheckedUpdateWithoutRepairsInput>
 }
 
 export type PropertyCreateNestedOneWithoutIptusInput = {
@@ -1523,6 +1544,7 @@ export type PropertyCreateWithoutCompanyInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -1568,6 +1590,7 @@ export type PropertyUncheckedCreateWithoutCompanyInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -1655,6 +1678,7 @@ export type PropertyCreateWithoutAgencyInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
   center?: Prisma.CenterCreateNestedOneWithoutPropertiesInput
@@ -1700,6 +1724,7 @@ export type PropertyUncheckedCreateWithoutAgencyInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -1731,6 +1756,170 @@ export type PropertyUpdateManyWithWhereWithoutAgencyInput = {
   data: Prisma.XOR<Prisma.PropertyUpdateManyMutationInput, Prisma.PropertyUncheckedUpdateManyWithoutAgencyInput>
 }
 
+export type PropertyCreateWithoutRepairsInput = {
+  id?: string
+  title: string
+  registration_number?: string | null
+  bedrooms: number
+  bathrooms: number
+  half_bathrooms: number
+  garage_spaces: number
+  area_total: number
+  area_built: number
+  frontage: number
+  furnished: boolean
+  floor_number?: number | null
+  tax_registration: string
+  income_tax_withholding?: boolean
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
+  favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
+  leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
+  owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
+  type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
+  center?: Prisma.CenterCreateNestedOneWithoutPropertiesInput
+  debit_center?: Prisma.CenterCreateNestedOneWithoutDebit_propertiesInput
+  category?: Prisma.CategoryCreateNestedOneWithoutPropertiesInput
+  subcategory?: Prisma.SubcategoryCreateNestedOneWithoutPropertiesInput
+  iptu_refund_category?: Prisma.CategoryCreateNestedOneWithoutIptu_refund_propertiesInput
+  iptu_refund_subcategory?: Prisma.SubcategoryCreateNestedOneWithoutIptu_refund_propertiesInput
+  addresses?: Prisma.PropertyAddressCreateNestedManyWithoutPropertyInput
+  iptus?: Prisma.PropertyIptuCreateNestedManyWithoutPropertyInput
+  values?: Prisma.PropertyValueCreateNestedManyWithoutPropertyInput
+  company: Prisma.CompanyCreateNestedOneWithoutPropertiesInput
+}
+
+export type PropertyUncheckedCreateWithoutRepairsInput = {
+  id?: string
+  company_id: string
+  owner_id: string
+  agency_id?: string | null
+  type_id: string
+  center_id?: string | null
+  debit_center_id?: string | null
+  category_id?: string | null
+  subcategory_id?: string | null
+  iptu_refund_category_id?: string | null
+  iptu_refund_subcategory_id?: string | null
+  title: string
+  registration_number?: string | null
+  bedrooms: number
+  bathrooms: number
+  half_bathrooms: number
+  garage_spaces: number
+  area_total: number
+  area_built: number
+  frontage: number
+  furnished: boolean
+  floor_number?: number | null
+  tax_registration: string
+  income_tax_withholding?: boolean
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
+  favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
+  leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
+  iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
+  values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
+}
+
+export type PropertyCreateOrConnectWithoutRepairsInput = {
+  where: Prisma.PropertyWhereUniqueInput
+  create: Prisma.XOR<Prisma.PropertyCreateWithoutRepairsInput, Prisma.PropertyUncheckedCreateWithoutRepairsInput>
+}
+
+export type PropertyUpsertWithoutRepairsInput = {
+  update: Prisma.XOR<Prisma.PropertyUpdateWithoutRepairsInput, Prisma.PropertyUncheckedUpdateWithoutRepairsInput>
+  create: Prisma.XOR<Prisma.PropertyCreateWithoutRepairsInput, Prisma.PropertyUncheckedCreateWithoutRepairsInput>
+  where?: Prisma.PropertyWhereInput
+}
+
+export type PropertyUpdateToOneWithWhereWithoutRepairsInput = {
+  where?: Prisma.PropertyWhereInput
+  data: Prisma.XOR<Prisma.PropertyUpdateWithoutRepairsInput, Prisma.PropertyUncheckedUpdateWithoutRepairsInput>
+}
+
+export type PropertyUpdateWithoutRepairsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  registration_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bedrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  bathrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  half_bathrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  garage_spaces?: Prisma.IntFieldUpdateOperationsInput | number
+  area_total?: Prisma.FloatFieldUpdateOperationsInput | number
+  area_built?: Prisma.FloatFieldUpdateOperationsInput | number
+  frontage?: Prisma.FloatFieldUpdateOperationsInput | number
+  furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
+  favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
+  leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
+  owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
+  type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
+  center?: Prisma.CenterUpdateOneWithoutPropertiesNestedInput
+  debit_center?: Prisma.CenterUpdateOneWithoutDebit_propertiesNestedInput
+  category?: Prisma.CategoryUpdateOneWithoutPropertiesNestedInput
+  subcategory?: Prisma.SubcategoryUpdateOneWithoutPropertiesNestedInput
+  iptu_refund_category?: Prisma.CategoryUpdateOneWithoutIptu_refund_propertiesNestedInput
+  iptu_refund_subcategory?: Prisma.SubcategoryUpdateOneWithoutIptu_refund_propertiesNestedInput
+  addresses?: Prisma.PropertyAddressUpdateManyWithoutPropertyNestedInput
+  iptus?: Prisma.PropertyIptuUpdateManyWithoutPropertyNestedInput
+  values?: Prisma.PropertyValueUpdateManyWithoutPropertyNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutPropertiesNestedInput
+}
+
+export type PropertyUncheckedUpdateWithoutRepairsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  owner_id?: Prisma.StringFieldUpdateOperationsInput | string
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type_id?: Prisma.StringFieldUpdateOperationsInput | string
+  center_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  debit_center_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subcategory_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iptu_refund_category_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iptu_refund_subcategory_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  registration_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bedrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  bathrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  half_bathrooms?: Prisma.IntFieldUpdateOperationsInput | number
+  garage_spaces?: Prisma.IntFieldUpdateOperationsInput | number
+  area_total?: Prisma.FloatFieldUpdateOperationsInput | number
+  area_built?: Prisma.FloatFieldUpdateOperationsInput | number
+  frontage?: Prisma.FloatFieldUpdateOperationsInput | number
+  furnished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  floor_number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tax_registration?: Prisma.StringFieldUpdateOperationsInput | string
+  income_tax_withholding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
+  favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
+  leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
+  iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
+  values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
+}
+
 export type PropertyCreateWithoutIptusInput = {
   id?: string
   title: string
@@ -1753,6 +1942,7 @@ export type PropertyCreateWithoutIptusInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -1799,6 +1989,7 @@ export type PropertyUncheckedCreateWithoutIptusInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
 }
@@ -1841,6 +2032,7 @@ export type PropertyUpdateWithoutIptusInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -1887,6 +2079,7 @@ export type PropertyUncheckedUpdateWithoutIptusInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
 }
@@ -1912,6 +2105,7 @@ export type PropertyCreateWithoutDocumentsInput = {
   deleted_at?: Date | string | null
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -1958,6 +2152,7 @@ export type PropertyUncheckedCreateWithoutDocumentsInput = {
   deleted_at?: Date | string | null
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2000,6 +2195,7 @@ export type PropertyUpdateWithoutDocumentsInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -2046,6 +2242,7 @@ export type PropertyUncheckedUpdateWithoutDocumentsInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -2073,6 +2270,7 @@ export type PropertyCreateWithoutOwnerInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
   center?: Prisma.CenterCreateNestedOneWithoutPropertiesInput
@@ -2118,6 +2316,7 @@ export type PropertyUncheckedCreateWithoutOwnerInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2170,6 +2369,7 @@ export type PropertyCreateWithoutLeasesInput = {
   deleted_at?: Date | string | null
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -2216,6 +2416,7 @@ export type PropertyUncheckedCreateWithoutLeasesInput = {
   deleted_at?: Date | string | null
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2258,6 +2459,7 @@ export type PropertyUpdateWithoutLeasesInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -2304,6 +2506,7 @@ export type PropertyUncheckedUpdateWithoutLeasesInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -2331,6 +2534,7 @@ export type PropertyCreateWithoutValuesInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -2377,6 +2581,7 @@ export type PropertyUncheckedCreateWithoutValuesInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
 }
@@ -2419,6 +2624,7 @@ export type PropertyUpdateWithoutValuesInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -2465,6 +2671,7 @@ export type PropertyUncheckedUpdateWithoutValuesInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
 }
@@ -2491,6 +2698,7 @@ export type PropertyCreateWithoutTypeInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   center?: Prisma.CenterCreateNestedOneWithoutPropertiesInput
@@ -2536,6 +2744,7 @@ export type PropertyUncheckedCreateWithoutTypeInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2588,6 +2797,7 @@ export type PropertyCreateWithoutFavoritesInput = {
   deleted_at?: Date | string | null
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -2634,6 +2844,7 @@ export type PropertyUncheckedCreateWithoutFavoritesInput = {
   deleted_at?: Date | string | null
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2676,6 +2887,7 @@ export type PropertyUpdateWithoutFavoritesInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -2722,6 +2934,7 @@ export type PropertyUncheckedUpdateWithoutFavoritesInput = {
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -2749,6 +2962,7 @@ export type PropertyCreateWithoutAddressesInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -2795,6 +3009,7 @@ export type PropertyUncheckedCreateWithoutAddressesInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
 }
@@ -2837,6 +3052,7 @@ export type PropertyUpdateWithoutAddressesInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -2883,6 +3099,7 @@ export type PropertyUncheckedUpdateWithoutAddressesInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
 }
@@ -2909,6 +3126,7 @@ export type PropertyCreateWithoutCategoryInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -2954,6 +3172,7 @@ export type PropertyUncheckedCreateWithoutCategoryInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -2991,6 +3210,7 @@ export type PropertyCreateWithoutIptu_refund_categoryInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -3036,6 +3256,7 @@ export type PropertyUncheckedCreateWithoutIptu_refund_categoryInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -3105,6 +3326,7 @@ export type PropertyCreateWithoutSubcategoryInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -3150,6 +3372,7 @@ export type PropertyUncheckedCreateWithoutSubcategoryInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -3187,6 +3410,7 @@ export type PropertyCreateWithoutIptu_refund_subcategoryInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -3232,6 +3456,7 @@ export type PropertyUncheckedCreateWithoutIptu_refund_subcategoryInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -3301,6 +3526,7 @@ export type PropertyCreateWithoutCenterInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -3346,6 +3572,7 @@ export type PropertyUncheckedCreateWithoutCenterInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -3383,6 +3610,7 @@ export type PropertyCreateWithoutDebit_centerInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutPropertyInput
   agency?: Prisma.AgencyCreateNestedOneWithoutPropertiesInput
   owner: Prisma.OwnerCreateNestedOneWithoutPropertiesInput
   type: Prisma.PropertyTypeCreateNestedOneWithoutPropertiesInput
@@ -3428,6 +3656,7 @@ export type PropertyUncheckedCreateWithoutDebit_centerInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutPropertyInput
   favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutPropertyInput
   leases?: Prisma.LeaseUncheckedCreateNestedManyWithoutPropertyInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutPropertyInput
   addresses?: Prisma.PropertyAddressUncheckedCreateNestedManyWithoutPropertyInput
   iptus?: Prisma.PropertyIptuUncheckedCreateNestedManyWithoutPropertyInput
   values?: Prisma.PropertyValueUncheckedCreateNestedManyWithoutPropertyInput
@@ -3527,6 +3756,7 @@ export type PropertyUpdateWithoutCompanyInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -3572,6 +3802,7 @@ export type PropertyUncheckedUpdateWithoutCompanyInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -3659,6 +3890,7 @@ export type PropertyUpdateWithoutAgencyInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
   center?: Prisma.CenterUpdateOneWithoutPropertiesNestedInput
@@ -3704,6 +3936,7 @@ export type PropertyUncheckedUpdateWithoutAgencyInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -3791,6 +4024,7 @@ export type PropertyUpdateWithoutOwnerInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
   center?: Prisma.CenterUpdateOneWithoutPropertiesNestedInput
@@ -3836,6 +4070,7 @@ export type PropertyUncheckedUpdateWithoutOwnerInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -3923,6 +4158,7 @@ export type PropertyUpdateWithoutTypeInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   center?: Prisma.CenterUpdateOneWithoutPropertiesNestedInput
@@ -3968,6 +4204,7 @@ export type PropertyUncheckedUpdateWithoutTypeInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4085,6 +4322,7 @@ export type PropertyUpdateWithoutCategoryInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4130,6 +4368,7 @@ export type PropertyUncheckedUpdateWithoutCategoryInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4187,6 +4426,7 @@ export type PropertyUpdateWithoutIptu_refund_categoryInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4232,6 +4472,7 @@ export type PropertyUncheckedUpdateWithoutIptu_refund_categoryInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4349,6 +4590,7 @@ export type PropertyUpdateWithoutSubcategoryInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4394,6 +4636,7 @@ export type PropertyUncheckedUpdateWithoutSubcategoryInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4451,6 +4694,7 @@ export type PropertyUpdateWithoutIptu_refund_subcategoryInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4496,6 +4740,7 @@ export type PropertyUncheckedUpdateWithoutIptu_refund_subcategoryInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4613,6 +4858,7 @@ export type PropertyUpdateWithoutCenterInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4658,6 +4904,7 @@ export type PropertyUncheckedUpdateWithoutCenterInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4715,6 +4962,7 @@ export type PropertyUpdateWithoutDebit_centerInput = {
   documents?: Prisma.DocumentUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutPropertyNestedInput
   agency?: Prisma.AgencyUpdateOneWithoutPropertiesNestedInput
   owner?: Prisma.OwnerUpdateOneRequiredWithoutPropertiesNestedInput
   type?: Prisma.PropertyTypeUpdateOneRequiredWithoutPropertiesNestedInput
@@ -4760,6 +5008,7 @@ export type PropertyUncheckedUpdateWithoutDebit_centerInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutPropertyNestedInput
   favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutPropertyNestedInput
   leases?: Prisma.LeaseUncheckedUpdateManyWithoutPropertyNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutPropertyNestedInput
   addresses?: Prisma.PropertyAddressUncheckedUpdateManyWithoutPropertyNestedInput
   iptus?: Prisma.PropertyIptuUncheckedUpdateManyWithoutPropertyNestedInput
   values?: Prisma.PropertyValueUncheckedUpdateManyWithoutPropertyNestedInput
@@ -4804,6 +5053,7 @@ export type PropertyCountOutputType = {
   documents: number
   favorites: number
   leases: number
+  repairs: number
   addresses: number
   iptus: number
   values: number
@@ -4813,6 +5063,7 @@ export type PropertyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensio
   documents?: boolean | PropertyCountOutputTypeCountDocumentsArgs
   favorites?: boolean | PropertyCountOutputTypeCountFavoritesArgs
   leases?: boolean | PropertyCountOutputTypeCountLeasesArgs
+  repairs?: boolean | PropertyCountOutputTypeCountRepairsArgs
   addresses?: boolean | PropertyCountOutputTypeCountAddressesArgs
   iptus?: boolean | PropertyCountOutputTypeCountIptusArgs
   values?: boolean | PropertyCountOutputTypeCountValuesArgs
@@ -4847,6 +5098,13 @@ export type PropertyCountOutputTypeCountFavoritesArgs<ExtArgs extends runtime.Ty
  */
 export type PropertyCountOutputTypeCountLeasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.LeaseWhereInput
+}
+
+/**
+ * PropertyCountOutputType without action
+ */
+export type PropertyCountOutputTypeCountRepairsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairWhereInput
 }
 
 /**
@@ -4903,6 +5161,7 @@ export type PropertySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   documents?: boolean | Prisma.Property$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Property$favoritesArgs<ExtArgs>
   leases?: boolean | Prisma.Property$leasesArgs<ExtArgs>
+  repairs?: boolean | Prisma.Property$repairsArgs<ExtArgs>
   agency?: boolean | Prisma.Property$agencyArgs<ExtArgs>
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
@@ -5037,6 +5296,7 @@ export type PropertyInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   documents?: boolean | Prisma.Property$documentsArgs<ExtArgs>
   favorites?: boolean | Prisma.Property$favoritesArgs<ExtArgs>
   leases?: boolean | Prisma.Property$leasesArgs<ExtArgs>
+  repairs?: boolean | Prisma.Property$repairsArgs<ExtArgs>
   agency?: boolean | Prisma.Property$agencyArgs<ExtArgs>
   owner?: boolean | Prisma.OwnerDefaultArgs<ExtArgs>
   type?: boolean | Prisma.PropertyTypeDefaultArgs<ExtArgs>
@@ -5083,6 +5343,7 @@ export type $PropertyPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     favorites: Prisma.$FavoritePayload<ExtArgs>[]
     leases: Prisma.$LeasePayload<ExtArgs>[]
+    repairs: Prisma.$RepairPayload<ExtArgs>[]
     agency: Prisma.$AgencyPayload<ExtArgs> | null
     owner: Prisma.$OwnerPayload<ExtArgs>
     type: Prisma.$PropertyTypePayload<ExtArgs>
@@ -5528,6 +5789,7 @@ export interface Prisma__PropertyClient<T, Null = never, ExtArgs extends runtime
   documents<T extends Prisma.Property$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Property$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   favorites<T extends Prisma.Property$favoritesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Property$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   leases<T extends Prisma.Property$leasesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Property$leasesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  repairs<T extends Prisma.Property$repairsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Property$repairsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agency<T extends Prisma.Property$agencyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Property$agencyArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   owner<T extends Prisma.OwnerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OwnerDefaultArgs<ExtArgs>>): Prisma.Prisma__OwnerClient<runtime.Types.Result.GetResult<Prisma.$OwnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   type<T extends Prisma.PropertyTypeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PropertyTypeDefaultArgs<ExtArgs>>): Prisma.Prisma__PropertyTypeClient<runtime.Types.Result.GetResult<Prisma.$PropertyTypePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
@@ -6068,6 +6330,30 @@ export type Property$leasesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.LeaseScalarFieldEnum | Prisma.LeaseScalarFieldEnum[]
+}
+
+/**
+ * Property.repairs
+ */
+export type Property$repairsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Repair
+   */
+  select?: Prisma.RepairSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Repair
+   */
+  omit?: Prisma.RepairOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairInclude<ExtArgs> | null
+  where?: Prisma.RepairWhereInput
+  orderBy?: Prisma.RepairOrderByWithRelationInput | Prisma.RepairOrderByWithRelationInput[]
+  cursor?: Prisma.RepairWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairScalarFieldEnum | Prisma.RepairScalarFieldEnum[]
 }
 
 /**

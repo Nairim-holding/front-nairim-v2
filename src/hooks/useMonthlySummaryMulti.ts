@@ -18,12 +18,13 @@ function emptyMonths(): MonthSummary[] {
 export function useMonthlySummaryMulti(years: number[], filters?: Record<string, unknown>) {
   const key = [...years].sort((a, b) => a - b).join(',');
   const filterKey = JSON.stringify(filters ?? {});
-  const [byYear, setByYear] = useState<Record<number, MonthSummary[]>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const requestKey = `${key}:${filterKey}`;
+  const [summary, setSummary] = useState<{ key: string; byYear: Record<number, MonthSummary[]> } | null>(null);
+  const isLoading = summary?.key !== requestKey;
+  const byYear = isLoading ? {} : summary.byYear;
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     (async () => {
       try {
@@ -33,10 +34,13 @@ export function useMonthlySummaryMulti(years: number[], filters?: Record<string,
           for (const entry of result.data) {
             map[entry.year] = Array.isArray(entry.months) ? entry.months : emptyMonths();
           }
-          setByYear(map);
+          setSummary({ key: requestKey, byYear: map });
+        } else if (!cancelled) {
+          setSummary({ key: requestKey, byYear: {} });
         }
-      } finally {
-        if (!cancelled) setIsLoading(false);
+      } catch (error) {
+        console.error('[useMonthlySummaryMulti] Erro ao carregar resumo mensal:', error);
+        if (!cancelled) setSummary({ key: requestKey, byYear: {} });
       }
     })();
 
@@ -44,7 +48,7 @@ export function useMonthlySummaryMulti(years: number[], filters?: Record<string,
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, filterKey]);
+  }, [requestKey]);
 
   return { byYear, isLoading };
 }

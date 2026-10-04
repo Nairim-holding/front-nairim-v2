@@ -222,6 +222,7 @@ export const MENU_RESOURCES: MenuResource[] = [
   },
 
   // ─── Configurações ─────────────────────────────────────────────────────────
+  { key: 'repairs', label: 'Reparos', group: 'Reparos', actions: ['view', 'create', 'edit', 'delete'], routes: ['/repairs'] },
   {
     key: 'settings',
     label: 'Configurações',
