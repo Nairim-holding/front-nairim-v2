@@ -1,13 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const db = vi.hoisted(() => ({ repair: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), findMany: vi.fn(), count: vi.fn() },
-  property: { findFirst: vi.fn() }, repairMedia: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), delete: vi.fn() }, $executeRaw: vi.fn() }));
+  property: { findFirst: vi.fn() }, supplier: { findFirst: vi.fn() }, repairMedia: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), delete: vi.fn() }, $executeRaw: vi.fn() }));
 const storage = vi.hoisted(() => ({ uploadMedia: vi.fn(), delete: vi.fn() }));
 vi.mock('@/infra/database/prisma', () => ({ default: { ...db, $transaction: async (fn: (tx: typeof db) => unknown) => fn(db) } }));
 vi.mock('@/infra/storage/minio-storage', () => ({ minioStorage: storage }));
 import { PrismaRepairsRepository } from './prisma-repairs-repository';
+import { repairSchema } from '@/shared/validators/repair';
 const repo = new PrismaRepairsRepository();
+const input = repairSchema.parse({ property_id: '00000000-0000-4000-8000-000000000001', supplier_id: '00000000-0000-4000-8000-000000000002', event_date: '2026-10-02', event_type: 'REPAIR', problem_type: 'STRUCTURAL', description: 'Trincas', service_amount: 1200.50, materials_amount: 300.25, payment_method: 'Pix', payment_conditions: 'À vista', status: 'PLANNED' });
 describe('Repositório de reparos', () => {
   beforeEach(() => { vi.resetAllMocks(); storage.uploadMedia.mockResolvedValue({ url: 'https://storage/file', contentType: 'image/avif' }); });
+  it('recusa contatos de outra empresa, inativos ou excluídos antes de gravar', async () => {
+    db.property.findFirst.mockResolvedValue({ id: input.property_id });
+    db.supplier.findFirst.mockResolvedValue(null);
+    await expect(repo.save('company', null, input)).rejects.toThrow('contato ativo');
+    expect(db.supplier.findFirst).toHaveBeenCalledWith({ where: { id: input.supplier_id, company_id: 'company', deleted_at: null, is_active: true }, select: { id: true, legal_name: true } });
+    expect(db.repair.create).not.toHaveBeenCalled();
+  });
+  it('grava o ID e o nome do contato validado, mantendo os centavos', async () => {
+    db.property.findFirst.mockResolvedValue({ id: input.property_id });
+    db.supplier.findFirst.mockResolvedValue({ id: input.supplier_id, legal_name: 'José Gonçalves' });
+    db.repair.create.mockImplementation(async ({ data }) => ({ ...data, id: 'r', supplier: { id: input.supplier_id, legal_name: 'José Gonçalves', trade_name: null }, media: [] }));
+    const saved = await repo.save('company', null, input);
+    expect(db.repair.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ supplier_id: input.supplier_id, professional: 'José Gonçalves', service_amount: 1200.50, materials_amount: 300.25, company_id: 'company' }) }));
+    expect(saved).toMatchObject({ supplier_id: input.supplier_id, professional: 'José Gonçalves', supplier: { id: input.supplier_id } });
+  });
+  it('consulta o nome atual do contato e preserva o nome histórico sem vínculo', async () => {
+    const row = { id: 'r', professional: 'Nome antigo', supplier_id: input.supplier_id, event_date: new Date('2026-10-02'), service_amount: 10, materials_amount: 5, media: [] };
+    db.repair.findMany.mockResolvedValue([{ ...row, supplier: { id: input.supplier_id, legal_name: 'Nome atualizado', trade_name: null } }, { ...row, id: 'old', supplier_id: null, supplier: null }]);
+    db.repair.count.mockResolvedValue(2);
+    const result = await repo.list({ page: 1 });
+    expect(result.data.map(r => r.professional)).toEqual(['Nome atualizado', 'Nome antigo']);
+  });
   it('não altera ou exclui reparo ausente do contexto da empresa', async () => {
     db.repair.findFirst.mockResolvedValue(null);
     await expect(repo.remove('foreign')).rejects.toThrow('Reparo não encontrado');

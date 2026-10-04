@@ -224,6 +224,7 @@ model Repair {
   problem_type       String    @db.VarChar(40)
   description        String
   professional       String
+  supplier_id        String?
   service_amount     Decimal   @db.Decimal(20, 2)
   materials_amount   Decimal   @db.Decimal(20, 2)
   payment_method     String
@@ -237,10 +238,12 @@ model Repair {
   deleted_at         DateTime?
   company            Company   @relation(fields: [company_id], references: [id])
   property           Property  @relation(fields: [property_id], references: [id])
+  supplier           Supplier? @relation(fields: [supplier_id], references: [id])
   media              RepairMedia[]
 
   @@index([company_id, event_date])
   @@index([property_id])
+  @@index([supplier_id])
 }
 
 model RepairMedia {
@@ -957,6 +960,7 @@ model Supplier {
   recurring_configs      RecurringConfig[]
   addresses              SupplierAddress[]
   transactions           Transaction[]
+  repairs                Repair[]
   agency                 Agency?           @relation(fields: [agency_id], references: [id])
   company                Company          @relation(fields: [company_id], references: [id])
 

@@ -36,6 +36,19 @@ describe('Reparos no backup da empresa', () => {
     await expect(repo.restoreCompany('a',payload({repairMedia:[{id:'m',repair_id:'foreign'}]}))).rejects.toThrow('reparos de outra empresa');
     expect(prisma.repairMedia.createMany).not.toHaveBeenCalled();
   });
+  it('recusa reparos vinculados a contatos de outra empresa ou ausentes do backup', async () => {
+    vi.mocked(prisma.property.count).mockResolvedValue(1);
+    vi.mocked(prisma.supplier.count).mockResolvedValue(0);
+    await expect(repo.restoreCompany('a', payload({ repairs: [{ id: 'r', property_id: 'p', supplier_id: 'foreign' }] }))).rejects.toThrow('contatos de outra empresa');
+    expect(prisma.repair.createMany).not.toHaveBeenCalled();
+  });
+  it('restaura o vínculo com contatos já restaurados da própria empresa', async () => {
+    vi.mocked(prisma.property.count).mockResolvedValue(1);
+    vi.mocked(prisma.supplier.count).mockResolvedValue(1);
+    await repo.restoreCompany('a', payload({ suppliers: [{ id: 's', company_id: 'a' }], repairs: [{ id: 'r', company_id: 'a', property_id: 'p', supplier_id: 's' }] }));
+    expect(prisma.supplier.count).toHaveBeenCalledWith({ where: { company_id: 'a', id: { in: ['s'] } } });
+    expect(vi.mocked(prisma.supplier.createMany).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(prisma.repair.createMany).mock.invocationCallOrder[0]);
+  });
   it('restaura pais antes das mídias e impõe a empresa atual nos registros', async () => {
     vi.mocked(prisma.property.count).mockResolvedValue(1); vi.mocked(prisma.repair.count).mockResolvedValue(1);
     await repo.restoreCompany('a',payload({repairs:[{id:'r',company_id:'b',property_id:'p'}],repairMedia:[{id:'m',company_id:'b',repair_id:'r'}]}));

@@ -249,6 +249,7 @@ export const RepairScalarFieldEnum = {
   problem_type: 'problem_type',
   description: 'description',
   professional: 'professional',
+  supplier_id: 'supplier_id',
   service_amount: 'service_amount',
   materials_amount: 'materials_amount',
   payment_method: 'payment_method',

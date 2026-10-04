@@ -390,6 +390,11 @@ export class PrismaBackupRepository implements BackupRepository {
         const propertyIds = [...new Set(records.map(row => String(row.property_id ?? '')))];
         const ownedProperties = await tx.property.count({ where: { company_id: companyId, id: { in: propertyIds } } });
         if (ownedProperties !== propertyIds.length) throw new ValidationError('O backup contém reparos vinculados a imóveis de outra empresa ou inexistentes.');
+        const supplierIds = [...new Set(records.filter(row => row.supplier_id).map(row => String(row.supplier_id)))];
+        if (supplierIds.length) {
+          const ownedSuppliers = await tx.supplier.count({ where: { company_id: companyId, id: { in: supplierIds } } });
+          if (ownedSuppliers !== supplierIds.length) throw new ValidationError('O backup contém reparos vinculados a contatos de outra empresa ou inexistentes.');
+        }
         await tx.repair.createMany({ data: records.map(row => ({ ...row, company_id: companyId })) as never });
       }
       if (Array.isArray(data.repairMedia) && data.repairMedia.length > 0) {

@@ -5,9 +5,10 @@ import type { Repair } from '@/core/entities/repair';
 import { repairListSchema, REPAIR_MEDIA_TYPES, REPAIR_MEDIA_MAX_BYTES, type RepairInput } from '@/shared/validators/repair';
 import type { z } from 'zod';
 
-const include = { property: { select: { id: true, title: true } }, media: { orderBy: { created_at: 'asc' as const } } };
+const include = { property: { select: { id: true, title: true } }, supplier: { select: { id: true, legal_name: true, trade_name: true } }, media: { orderBy: { created_at: 'asc' as const } } };
 function serialize(row: Awaited<ReturnType<typeof getRow>>): Repair {
-  return { ...row, service_amount: Number(row.service_amount), materials_amount: Number(row.materials_amount),
+  return { ...row, supplier_id: row.supplier_id ?? null, supplier: row.supplier ?? null, professional: row.supplier?.legal_name ?? row.professional,
+    service_amount: Number(row.service_amount), materials_amount: Number(row.materials_amount),
     event_date: row.event_date.toISOString().slice(0, 10), start_date: row.start_date?.toISOString().slice(0, 10) ?? null,
     completion_date: row.completion_date?.toISOString().slice(0, 10) ?? null } as Repair;
 }
@@ -22,6 +23,8 @@ export class PrismaRepairsRepository {
       ...(query.from || query.to ? { event_date: { gte: query.from ? new Date(query.from) : undefined, lte: query.to ? new Date(query.to) : undefined } } : {}),
       ...(query.search ? { OR: [ { description: { contains: query.search, mode: 'insensitive' as const } },
         { professional: { contains: query.search, mode: 'insensitive' as const } },
+        { supplier: { legal_name: { contains: query.search, mode: 'insensitive' as const } } },
+        { supplier: { trade_name: { contains: query.search, mode: 'insensitive' as const } } },
         { property: { title: { contains: query.search, mode: 'insensitive' as const } } } ] } : {}) };
     const [rows, count] = await Promise.all([
       prisma.repair.findMany({ where, include, orderBy: [{ event_date: 'desc' }, { id: 'asc' }], take: 25, skip: (query.page - 1) * 25 }),
@@ -34,9 +37,13 @@ export class PrismaRepairsRepository {
   }
   async save(companyId: string, id: string | null, input: RepairInput) {
     if (id) await getRow(id);
-    const property = await prisma.property.findFirst({ where: { id: input.property_id, company_id: companyId, deleted_at: null }, select: { id: true } });
+    const [property, supplier] = await Promise.all([
+      prisma.property.findFirst({ where: { id: input.property_id, company_id: companyId, deleted_at: null }, select: { id: true } }),
+      prisma.supplier.findFirst({ where: { id: input.supplier_id, company_id: companyId, deleted_at: null, is_active: true }, select: { id: true, legal_name: true } }),
+    ]);
     if (!property) throw new ValidationError('Escolha um imóvel ativo da empresa');
-    const data = { ...input, event_date: new Date(input.event_date), start_date: input.start_date ? new Date(input.start_date) : null,
+    if (!supplier) throw new ValidationError('Escolha um contato ativo do Financeiro da própria empresa');
+    const data = { ...input, professional: supplier.legal_name, event_date: new Date(input.event_date), start_date: input.start_date ? new Date(input.start_date) : null,
       completion_date: input.completion_date ? new Date(input.completion_date) : null };
     const row = id ? await prisma.repair.update({ where: { id }, data, include })
       : await prisma.repair.create({ data: { ...data, company_id: companyId }, include });
