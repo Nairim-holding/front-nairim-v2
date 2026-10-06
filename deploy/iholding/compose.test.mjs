@@ -11,7 +11,7 @@ const temp = mkdtempSync(join(tmpdir(), 'iholding-compose-'));
 const envFile = join(temp, 'validation.env');
 const composeFile = join(root, 'docker-compose.iholding.yml');
 const dummyEnv = readFileSync(join(root, '.env.iholding.example'), 'utf8')
-  .replace(/^MINIO_IMAGE=$/m, 'MINIO_IMAGE=minio/minio:validation-only')
+  .replace(/^MINIO_IMAGE=.*$/m, 'MINIO_IMAGE=minio/minio:validation-only')
   .replace(/^MINIO_MC_IMAGE=$/m, 'MINIO_MC_IMAGE=minio/mc:validation-only')
   .replace(/^(POSTGRES_PASSWORD|MONGODB_LOGS_PASSWORD|JWT_SECRET|CRON_SECRET|MINIO_ROOT_PASSWORD|MINIO_SECRET_KEY)=$/gm, '$1=validation_only_0123456789');
 writeFileSync(join(temp, 'config.json'), '{}');

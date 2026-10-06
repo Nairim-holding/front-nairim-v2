@@ -67,7 +67,8 @@ Esse cadastro recebe `SUPER_ADMIN` somente no ambiente da iholding.
 
 | Campos | Como configurar |
 | --- | --- |
-| `MINIO_IMAGE`, `MINIO_MC_IMAGE` | Imagens homologadas com tag fixa ou digest; detalhes abaixo |
+| `MINIO_IMAGE` | Padrao `iholding-minio:2025-10-15`, construido pelo up.sh |
+| `MINIO_MC_IMAGE` | Imagem do cliente mc com tag fixa ou digest; detalhes abaixo |
 | `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` | Nome e e-mail do responsavel pelo primeiro acesso |
 | `BOOTSTRAP_ADMIN_BIRTH_DATE`, `BOOTSTRAP_ADMIN_GENDER` | Data `AAAA-MM-DD`; genero `MALE`, `FEMALE` ou `OTHER` |
 | Sete senhas/segredos | Gerados automaticamente; mantenha-os diferentes dos da Nairim |
@@ -82,9 +83,19 @@ Guarde uma copia protegida do arquivo de configuracao para recuperacao futura.
 
 ### Imagens MinIO
 
-`MINIO_IMAGE` e `MINIO_MC_IMAGE` sao obrigatorios. Informe imagens homologadas
-com versao fixa ou digest. Confira a versao/digest da instancia atual da VPS
-para avaliar compatibilidade, sem reutilizar seu volume:
+O padrao `MINIO_IMAGE=iholding-minio:2025-10-15` e construido automaticamente
+pelo `up.sh` a partir da release oficial `RELEASE.2025-10-15T17-29-55Z`.
+Essa release corrige CVE-2025-62506, que nao esta corrigida na imagem
+`RELEASE.2025-09-07T16-13-09Z` identificada na VPS. O container novo roda com
+UID 1001. A compilacao usa ate dois processos Go e pode levar varios minutos.
+Esse build precisa de internet para baixar Go e as dependencias do MinIO.
+Ver [aviso oficial de seguranca](https://github.com/minio/minio/security/advisories/GHSA-jjjj-jwhf-8rgr).
+
+`MINIO_MC_IMAGE` deve apontar para uma imagem do cliente oficial `minio/mc`
+com versao fixa ou digest. Se optar por outra imagem de servidor homologada,
+configure `MINIO_IMAGE`; o up.sh so compila a imagem padrao acima.
+Confira a versao/digest da instancia atual da VPS para avaliar compatibilidade,
+sem reutilizar seu volume:
 
 ```bash
 docker inspect --format '{{.Config.Image}} / {{.Image}}' nairim-minio
