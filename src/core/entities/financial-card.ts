@@ -71,6 +71,7 @@ export interface CardUsageItem {
 
 /** Filtros opcionais do resumo de uso — chave repetida = seleção múltipla. */
 export interface CardUsageFilters {
+  company_ids?: string[];
   category_id?: string[];
   subcategory_id?: string[];
   financial_institution_id?: string[];

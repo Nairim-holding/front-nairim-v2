@@ -1,3 +1,5 @@
+import { ReportingCompanyFilter } from '@/components/reports/ReportingCompanies';
+
 type FilterType = "map" | "financial" | "portfolio" | "clients";
 
 /**
@@ -16,8 +18,8 @@ export default function DashboardFilter({
   setFilter: (filter: "financial" | "portfolio" | "clients" | "map") => void;
 }) {
   return (
-    <div className="flex flex-col justify-center mb-2 w-full">
-      <div className="flex justify-start items-center gap-5 mb-5 pl-10 sm:pl-[var(--page-header-offset,2.75rem)] transition-[padding] duration-300">
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-3 w-full" data-dashboard-header>
+      <div className="min-w-0 flex-1 basis-full pl-[var(--page-header-offset,4rem)] sm:basis-auto transition-[padding] duration-300">
         <span className="text-2xl sm:text-3xl font-normal font-poppins">
           {filter === 'financial' && 'Painel Financeiro'}
           {filter === 'portfolio' && 'Imóveis'}
@@ -25,7 +27,8 @@ export default function DashboardFilter({
           {filter === 'map' && 'Localização dos Imóveis'}
         </span>
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-3 px-2 w-full">
+      <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-3">
+        <ReportingCompanyFilter />
         <div className="flex gap-2 shrink-0">
           <button
             onClick={() => setFilter("financial")}

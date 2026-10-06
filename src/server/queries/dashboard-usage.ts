@@ -4,7 +4,9 @@ import path from 'path';
 import prisma from '@/infra/database/prisma';
 import { minioStorage } from '@/infra/storage/minio-storage';
 import { withPermission } from '@/infra/auth/session';
-import { getCurrentCompanyId } from '@/infra/database/tenant-context';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { getReportingCompanyIds } from '@/infra/database/reporting-context';
+import { getCurrentCompanyId, runWithTenant } from '@/infra/database/tenant-context';
 import {
   classifyTenureBucket,
   emptyTenureBuckets,
@@ -40,8 +42,9 @@ const toMegabytes = (bytes: number) => round2(bytes / BYTES_PER_MB);
 export async function getTenantTenureDistributionData(
   startDate: Date,
   endDate: Date,
+  raw: Record<string, unknown> = {},
 ): Promise<TenantTenureDistribution> {
-  return withPermission('dashboard', 'view', async () => {
+  return withPermission('dashboard', 'view', session => withReportingScope(session, raw, async () => {
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
@@ -110,7 +113,7 @@ export async function getTenantTenureDistributionData(
     }));
 
     return { buckets, leases: rows, total: rows.length };
-  });
+  }));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -223,15 +226,15 @@ async function getUsageRows(): Promise<UsageRow[]> {
   return inFlight;
 }
 
-export async function getDatabaseUsageData(): Promise<DatabaseUsageResult> {
-  return withPermission('dashboard', 'view', async (session) => {
+export async function getDatabaseUsageData(raw: Record<string, unknown> = {}): Promise<DatabaseUsageResult> {
+  return withPermission('dashboard', 'view', session => withReportingScope(session, raw, async () => {
     const companyId = getCurrentCompanyId();
     if (!companyId) throw new Error('Contexto de empresa não identificado.');
 
     const [rows, companies] = await Promise.all([
       getUsageRows(),
       prisma.company.findMany({
-        where: { deleted_at: null, ...(session.role === 'SUPER_ADMIN' ? {} : { id: companyId }) },
+        where: { deleted_at: null, id: { in: [...(getReportingCompanyIds() ?? [companyId])] } },
         select: { id: true, name: true, db_quota_mb: true },
         orderBy: { name: 'asc' },
       }),
@@ -264,11 +267,16 @@ export async function getDatabaseUsageData(): Promise<DatabaseUsageResult> {
       };
     });
 
+    const selected = getReportingCompanyIds();
+    const totalBytes = usage.reduce((sum, item) => sum + item.usedBytes, 0);
+    const quotaMb = usage.some(item => item.quotaMb == null) ? null : usage.reduce((sum, item) => sum + (item.quotaMb ?? 0), 0);
     return {
-      current: usage.find((item) => item.isCurrent) ?? null,
+      current: selected ? { companyId: selected.join(','), companyName: usage.length > 1 ? 'Empresas selecionadas' : usage[0]?.companyName ?? '',
+        usedBytes: totalBytes, usedMb: toMegabytes(totalBytes), quotaMb,
+        percent: quotaMb != null && quotaMb > 0 ? round2(totalBytes / BYTES_PER_MB / quotaMb * 100) : null, isCurrent: false } : usage.find((item) => item.isCurrent) ?? null,
       companies: usage,
     };
-  });
+  }));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -367,11 +375,7 @@ function localPathFromUrl(url: string): string | null {
   return path.join(process.cwd(), 'uploads', relative);
 }
 
-export async function getStorageUsageData(): Promise<StorageUsageResult> {
-  return withPermission('dashboard', 'view', async () => {
-    const companyId = getCurrentCompanyId();
-    if (!companyId) throw new Error('Contexto de empresa não identificado.');
-
+async function getStorageUsageForCompany(companyId: string, sharedObjects?: { key: string; size: number }[]): Promise<StorageUsageResult> {
     const [documents, branding, objects] = await Promise.all([
       prisma.document.findMany({
         where: { deleted_at: null },
@@ -387,7 +391,7 @@ export async function getStorageUsageData(): Promise<StorageUsageResult> {
           og_image_url: true,
         },
       }),
-      getBucketObjects(companyId),
+      sharedObjects ?? getBucketObjects(companyId),
     ]);
 
     const bucketIndex = indexBucket(objects);
@@ -476,5 +480,27 @@ export async function getStorageUsageData(): Promise<StorageUsageResult> {
       totalMegabytes: toMegabytes(totalBytes),
       totalFiles,
     };
-  });
+}
+
+export async function getStorageUsageData(raw: Record<string, unknown> = {}): Promise<StorageUsageResult> {
+  return withPermission('dashboard', 'view', session => withReportingScope(session, raw, async () => {
+    const companyId = getCurrentCompanyId();
+    if (!companyId) throw new Error('Contexto de empresa não identificado.');
+    const ids = getReportingCompanyIds();
+    if (!ids) return getStorageUsageForCompany(companyId);
+    // Scan the shared bucket once, and bound metadata reads instead of starting 100 scans.
+    const objects = await getBucketObjects(companyId);
+    const groups = new Map<string, StorageUsageGroup>();
+    for (let offset = 0; offset < ids.length; offset += 4) {
+      const batch = await Promise.all(ids.slice(offset, offset + 4).map(id => runWithTenant(id, () => getStorageUsageForCompany(id, objects))));
+      for (const result of batch) for (const group of result.groups) {
+        const entry = groups.get(group.key) ?? { ...group, bytes: 0, files: 0, megabytes: 0 };
+        entry.bytes += group.bytes; entry.files += group.files; entry.megabytes = toMegabytes(entry.bytes);
+        groups.set(group.key, entry);
+      }
+    }
+    const result = [...groups.values()];
+    const totalBytes = result.reduce((sum, group) => sum + group.bytes, 0);
+    return { groups: result, totalBytes, totalMegabytes: toMegabytes(totalBytes), totalFiles: result.reduce((sum, group) => sum + group.files, 0) };
+  }));
 }

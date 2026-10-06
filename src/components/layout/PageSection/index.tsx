@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import TableTransferActions from '@/components/table/TableTransferActions';
 
 export interface SectionProps {
   children: ReactNode;
@@ -26,9 +27,10 @@ export default function Section({ children, title, href, hrefText, action, fill 
       {/* O recuo do título acompanha o que está sobreposto no canto superior
           esquerdo: só o botão do menu (aberto) ou botão + logo (encolhido).
           A variável é definida pelo DashboardShell. */}
-      <div className="flex justify-between items-center mb-4 pl-10 sm:pl-[var(--page-header-offset,2.75rem)] transition-[padding] duration-300">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pl-10 sm:pl-[var(--page-header-offset,2.75rem)] transition-[padding] duration-300">
         <h1 className="text-xl sm:text-2xl font-semibold text-content">{title}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TableTransferActions />
           {action}
           {href && hrefText && (
             <Link

@@ -90,6 +90,34 @@ export interface SummaryInput {
   applied: Map<string, number>;
 }
 
+/** O cadastro fornece o capital inicial mesmo sem o aporte automático antigo.
+ * Substituímos uma transação correspondente para contar esse capital uma vez,
+ * preservando os demais aportes, resgates e saldos informados. */
+export function resolveInvestmentHistory(
+  applicationDate: string,
+  initialAmount: number,
+  transactions: { date: string; type: 'CONTRIBUTION' | 'REDEMPTION'; amount: number }[],
+  manual: Map<string, number>,
+  endMonth: string,
+): SummaryInput {
+  const applied = new Map<string, number>();
+  const initialEntry = transactions.findIndex(tx =>
+    tx.type === 'CONTRIBUTION' && tx.date === applicationDate && round2(tx.amount) === round2(initialAmount),
+  );
+  let firstMonth = applicationDate.slice(0, 7);
+  for (const key of manual.keys()) if (key < firstMonth) firstMonth = key;
+  for (const [index, tx] of transactions.entries()) {
+    if (index === initialEntry) continue;
+    const key = tx.date.slice(0, 7);
+    if (key < firstMonth) firstMonth = key;
+    const signed = tx.type === 'REDEMPTION' ? -tx.amount : tx.amount;
+    applied.set(key, round2((applied.get(key) ?? 0) + signed));
+  }
+  applied.set(firstMonth, round2((applied.get(firstMonth) ?? 0) + initialAmount));
+  const balances = resolveBalanceSeries(expandMonths(firstMonth, endMonth), applied, manual);
+  return { balances, applied };
+}
+
 export interface SummaryRow {
   year: number;
   month: number;

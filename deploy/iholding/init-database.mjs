@@ -21,7 +21,9 @@ export async function loadInitialSchema(schemaSql) {
   const restore = migrations.find(item => item.name === '20260908000000_restore_audit_trail')?.sql;
   const move = migrations.find(item => item.name === '20260911000000_move_logs_to_mongodb')?.sql;
   const repairs = migrations.find(item => item.name === '20261004000000_property_repairs')?.sql;
-  if (!restore || !move || !repairs) throw new Error('Migrations de auditoria/reparos nao encontradas.');
+  const repairItems = migrations.find(item => item.name === '20261006000000_repair_items_and_professionals')?.sql;
+  const reportingIndexes = migrations.find(item => item.name === '20261006010000_reporting_indexes')?.sql;
+  if (!restore || !move || !repairs || !repairItems || !reportingIndexes) throw new Error('Migrations de auditoria/reparos/relatorios nao encontradas.');
 
   // Reutiliza as funcoes SQL originais, sem criar AuditLog antigo ou renomear
   // a fila que o schema atual ja cria. Falha se os delimitadores forem alterados.
@@ -31,10 +33,13 @@ export async function loadInitialSchema(schemaSql) {
   const repairTriggers = repairs.match(/CREATE TRIGGER nairim_audit[\s\S]*?\('Repair(?:Media)?'\);/g);
   const checks = [...repairs.matchAll(/CONSTRAINT "(Repair(?:Media)?_[^"]+_check)" (CHECK \([^\n]+\))/g)]
     .map(match => `ALTER TABLE "${match[1].startsWith('RepairMedia_') ? 'RepairMedia' : 'Repair'}" ADD CONSTRAINT "${match[1]}" ${match[2]};`);
-  if (!snapshot || !writer || !triggers || repairTriggers?.length !== 2 || checks.length !== 5) {
+  const itemTriggers = repairItems.match(/CREATE TRIGGER nairim_audit[\s\S]*?\('Repair(?:Item|Professional)'\);/g);
+  const itemChecks = [...repairItems.matchAll(/CONSTRAINT "(Repair(?:Item)?_[^"]+_check)"\s+(CHECK \([^\n]+\))/g)]
+    .map(match => `ALTER TABLE "${match[1].startsWith('RepairItem_') ? 'RepairItem' : 'Repair'}" ADD CONSTRAINT "${match[1]}" ${match[2]};`);
+  if (!snapshot || !writer || !triggers || repairTriggers?.length !== 2 || checks.length !== 5 || itemTriggers?.length !== 2 || itemChecks.length !== 3) {
     throw new Error('Definicoes SQL de auditoria/reparos mudaram. Revise a inicializacao antes de publicar.');
   }
-  return { schemaSql, auditSql: [snapshot, writer, triggers, ...repairTriggers, ...checks].join('\n'), migrations };
+  return { schemaSql, auditSql: [snapshot, writer, triggers, ...repairTriggers, ...checks, ...itemTriggers, ...itemChecks, reportingIndexes].join('\n'), migrations };
 }
 
 export async function initializeDatabase(client, artifacts) {

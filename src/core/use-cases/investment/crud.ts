@@ -29,6 +29,9 @@ function assertPositive(value: number, field: string): void {
     throw new ValidationError(`${field} deve ser um valor maior que zero`);
   }
 }
+function assertInvestedAmount(value: number): void {
+  if (!Number.isFinite(value) || value < 0) throw new ValidationError('O valor investido não pode ser negativo');
+}
 
 function assertLiquidity(
   data: { liquidity_at_maturity?: boolean; liquidity_days?: number | null; maturity_date?: string | null },
@@ -89,7 +92,7 @@ export class CreateInvestmentUseCase {
     if (!data.issuer?.trim()) throw new ValidationError('O emissor é obrigatório');
     if (!data.product?.trim()) throw new ValidationError('O produto é obrigatório');
     if (!data.application_date) throw new ValidationError('A data da aplicação é obrigatória');
-    assertPositive(data.invested_amount, 'O valor investido');
+    assertInvestedAmount(data.invested_amount);
     assertDates(data.application_date, data.maturity_date);
     assertLiquidity(data);
     return this.investments.create(data);
@@ -105,7 +108,7 @@ export class UpdateInvestmentUseCase {
 
     if (data.issuer !== undefined && !data.issuer?.trim()) throw new ValidationError('O emissor não pode ser vazio');
     if (data.product !== undefined && !data.product?.trim()) throw new ValidationError('O produto não pode ser vazio');
-    if (data.invested_amount !== undefined) assertPositive(data.invested_amount, 'O valor investido');
+    if (data.invested_amount !== undefined) assertInvestedAmount(data.invested_amount);
 
     // `null` enviado de propósito limpa o campo — por isso a checagem é pela
     // presença da chave, não por `??` (que trataria a limpeza como "não mudou").

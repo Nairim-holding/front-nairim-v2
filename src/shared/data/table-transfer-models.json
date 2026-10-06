@@ -1,0 +1,6273 @@
+{
+  "Company": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "slug",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "db_quota_mb",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": []
+  },
+  "PublicSiteSettings": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "CompanyBranding": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "logo_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "favicon_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "primary_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "secondary_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "company_name",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "company_info",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "trade_name",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "app_title",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "app_description",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "logo_sidebar_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "logo_dark_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "og_image_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "legal_name",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cnpj",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "email",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "zip_code",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "street",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "complement",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "district",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "state",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "accent_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "success_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "warning_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "error_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "info_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "bg_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "card_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "border_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "text_color",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "primary_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "secondary_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "accent_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "success_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "warning_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "error_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "info_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "bg_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "card_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "border_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "text_color_dark",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Agency": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "trade_name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "legal_name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "cnpj",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "state_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "municipal_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "license_number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "commission_category_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "commission_subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "commission_percentage",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Category",
+        "fields": [
+          "commission_category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "commission_subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Property": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "owner_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "agency_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "type_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "center_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "debit_center_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "category_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_refund_category_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_refund_subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "registration_number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "bedrooms",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "bathrooms",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "half_bathrooms",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "garage_spaces",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "area_total",
+        "type": "Float",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "area_built",
+        "type": "Float",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "frontage",
+        "type": "Float",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "furnished",
+        "type": "Boolean",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "floor_number",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "tax_registration",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "income_tax_withholding",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Agency",
+        "fields": [
+          "agency_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Owner",
+        "fields": [
+          "owner_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "PropertyType",
+        "fields": [
+          "type_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Center",
+        "fields": [
+          "center_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Center",
+        "fields": [
+          "debit_center_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "iptu_refund_category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "iptu_refund_subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Repair": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "event_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "event_type",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "problem_type",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "problem_types",
+        "type": "String",
+        "list": true,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "professional",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "service_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "materials_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "payment_method",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "payment_conditions",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "start_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "completion_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "RepairProfessional": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "repair_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Repair",
+        "fields": [
+          "repair_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "RepairItem": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "repair_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "kind",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "professional",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "position",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Repair",
+        "fields": [
+          "repair_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "RepairMedia": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "repair_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "stage",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "filename",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "url",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "content_type",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Repair",
+        "fields": [
+          "repair_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "PropertyIptu": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "year",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_tax",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_cash",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_cash_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_first_installment",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_first_installment_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_second_installment",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_second_installment_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_installments_count",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_installments",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "payment_condition",
+        "type": "PaymentCondition",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "IN_FULL_15_DISCOUNT",
+          "SECOND_INSTALLMENT_10_DISCOUNT",
+          "INSTALLMENTS"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "User": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "email",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "password",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "birth_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "gender",
+        "type": "Gender",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "MALE",
+          "FEMALE",
+          "OTHER"
+        ]
+      },
+      {
+        "name": "role",
+        "type": "Role",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "DEFAULT",
+          "MANAGER",
+          "ADMIN",
+          "SUPER_ADMIN"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "all_companies_access",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "allowed_company_ids",
+        "type": "String",
+        "list": true,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "user_group_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "photo_url",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone_country_code",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone_area_code",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone_extension",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "has_time_restriction",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_by",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "updated_by",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "UserGroup",
+        "fields": [
+          "user_group_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "created_by"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "updated_by"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "UserAccessSchedule": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "day_of_week",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "start_time",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "end_time",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "User",
+        "fields": [
+          "user_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "UserGroup": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_by",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_by",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "created_by"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "updated_by"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "UserGroupPermission": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_group_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "resource",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "can_view",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "can_create",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "can_edit",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "can_delete",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "can_export",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "can_custom_field",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "UserGroup",
+        "fields": [
+          "user_group_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "AuditLogOutbox": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "user_name",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "user_email",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "action",
+        "type": "AuditAction",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "LOGIN",
+          "LOGIN_FAILED",
+          "CREATE",
+          "UPDATE",
+          "DELETE"
+        ]
+      },
+      {
+        "name": "table_name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "record_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "old_values",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "new_values",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "ip",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": []
+  },
+  "UserColumnPreference": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "resource",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "column_order",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "column_widths",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": []
+  },
+  "UserDashboardLayout": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "resource",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "layout",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "User",
+        "fields": [
+          "user_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Document": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "lease_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "transaction_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_by",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "file_path",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "file_type",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "type",
+        "type": "DocumentType",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "TITLE_DEED",
+          "REGISTRATION",
+          "OTHER",
+          "PROPERTY_RECORD",
+          "IMAGE",
+          "LEASE_CONTRACT",
+          "PROPERTY_SALE"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_featured",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "User",
+        "fields": [
+          "created_by"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Lease",
+        "fields": [
+          "lease_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Transaction",
+        "fields": [
+          "transaction_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Owner": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "internal_code",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "occupation",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "marital_status",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cpf",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cnpj",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "municipal_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "state_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Tenant": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "internal_code",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "nationality",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "occupation",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "marital_status",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cpf",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "rg",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "rg_issuing_body",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "rg_issuing_state",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cnpj",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "municipal_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "state_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Lease": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "type_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "owner_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "tenant_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "agency_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "financial_institution_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "contract_number",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "start_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "end_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "rent_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "condo_fee",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "extra_charges",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "discount_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "commission_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "agency_commission",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "rent_due_day",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "tax_due_day",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "condo_due_day",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "canceled_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cancellation_justification",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cancellation_penalty",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "other_cancellation_amounts",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "status",
+        "type": "LeaseStatus",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "EXPIRED",
+          "EXPIRING",
+          "ACTIVE",
+          "CANCELED"
+        ]
+      },
+      {
+        "name": "payment_condition",
+        "type": "PaymentCondition",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "IN_FULL_15_DISCOUNT",
+          "SECOND_INSTALLMENT_10_DISCOUNT",
+          "INSTALLMENTS"
+        ]
+      },
+      {
+        "name": "property_tax_cash",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_cash_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_first_installment",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_first_installment_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_second_installment",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "property_tax_second_installment_due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_year",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_installments",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_installments_due_dates",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "iptu_installments_count",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "insurance_company",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "insurance_type",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "insurance_policy",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "guarantors",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "adjustment_index_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "overdue_status",
+        "type": "LeaseOverdueStatus",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "NOTIFIED",
+          "NEGOTIATING"
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "model": "Owner",
+        "fields": [
+          "owner_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Tenant",
+        "fields": [
+          "tenant_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "PropertyType",
+        "fields": [
+          "type_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Agency",
+        "fields": [
+          "agency_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "FinancialInstitution",
+        "fields": [
+          "financial_institution_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "AdjustmentIndex",
+        "fields": [
+          "adjustment_index_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "PropertyValue": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "purchase_value",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "market_value",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "rental_value",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "condo_fee",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_tax",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "status",
+        "type": "PropertyStatus",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "OCCUPIED",
+          "AVAILABLE",
+          "SOLD"
+        ]
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "extra_charges",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sale_value",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sale_buyer",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sale_notes",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sale_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "purchase_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "PropertyType": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Address": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "zip_code",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "street",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "number",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "district",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "city",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "state",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "country",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "block",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "complement",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "lot",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "latitude",
+        "type": "Float",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "longitude",
+        "type": "Float",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "location_confirmation",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": []
+  },
+  "Contact": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "contact",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "phone",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "email",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cellphone",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "whatsapp_notification_phone",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "agency_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "owner_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "tenant_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Agency",
+        "fields": [
+          "agency_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Owner",
+        "fields": [
+          "owner_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Tenant",
+        "fields": [
+          "tenant_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Favorite": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "user_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "AgencyAddress": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "agency_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Address",
+        "fields": [
+          "address_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Agency",
+        "fields": [
+          "agency_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "PropertyAddress": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "property_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Address",
+        "fields": [
+          "address_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Property",
+        "fields": [
+          "property_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "OwnerAddress": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "owner_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Address",
+        "fields": [
+          "address_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Owner",
+        "fields": [
+          "owner_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "TenantAddress": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "tenant_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Address",
+        "fields": [
+          "address_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Tenant",
+        "fields": [
+          "tenant_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "FinancialInstitution": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "account_number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "agency_number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "bank_number",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Category": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "type",
+        "type": "TransactionType",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "INCOME",
+          "EXPENSE"
+        ]
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_system",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "dfc_group",
+        "type": "DfcGroup",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "TAXES",
+          "VARIABLE_EXPENSE",
+          "FIXED_EXPENSE",
+          "PAYROLL"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Subcategory": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "category_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Category",
+        "fields": [
+          "category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "IptuAuditSettings": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "income_category_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "income_subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "expense_category_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "expense_subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "income_category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "income_subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "expense_category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "expense_subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Card": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "limit",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "closing_day",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "due_day",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "brand",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "current_balance",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Center": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "type",
+        "type": "TransactionType",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "INCOME",
+          "EXPENSE"
+        ]
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Supplier": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "sequential_id",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "legal_name",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "trade_name",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cnpj",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "state_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "municipal_registration",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cpf",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "internal_code",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_via",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "marital_status",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "occupation",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "agency_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Agency",
+        "fields": [
+          "agency_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "SupplierAddress": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Address",
+        "fields": [
+          "address_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Transaction": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "event_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "effective_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "purchase_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "status",
+        "type": "TransactionStatus",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "PENDING",
+          "COMPLETED"
+        ]
+      },
+      {
+        "name": "category_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "financial_institution_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "card_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "center_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "installment_number",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_recurring",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "occurrence_number",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "parent_transaction_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "payment_mode",
+        "type": "PaymentMode",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "PARCELADO",
+          "RECORRENTE"
+        ]
+      },
+      {
+        "name": "recurring_frequency",
+        "type": "RecurringFrequency",
+        "list": false,
+        "required": false,
+        "nullable": true,
+        "values": [
+          "WEEKLY",
+          "BIWEEKLY",
+          "MONTHLY",
+          "BIMONTHLY",
+          "QUARTERLY",
+          "SEMIANNUAL",
+          "YEARLY"
+        ]
+      },
+      {
+        "name": "recurring_group_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "installment_group_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "total_installments",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "invoice_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "lease_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "transfer_group_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_transfer",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_cancellation_charge",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Card",
+        "fields": [
+          "card_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Center",
+        "fields": [
+          "center_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "FinancialInstitution",
+        "fields": [
+          "financial_institution_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Invoice",
+        "fields": [
+          "invoice_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Lease",
+        "fields": [
+          "lease_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Transaction",
+        "fields": [
+          "parent_transaction_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "RecurringConfig",
+        "fields": [
+          "recurring_group_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Invoice": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "card_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "month",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "year",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "total_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "status",
+        "type": "TransactionStatus",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "PENDING",
+          "COMPLETED"
+        ]
+      },
+      {
+        "name": "closing_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "due_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "paid_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "paid_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "institution_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Card",
+        "fields": [
+          "card_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "RecurringConfig": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "frequency",
+        "type": "RecurringFrequency",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "WEEKLY",
+          "BIWEEKLY",
+          "MONTHLY",
+          "BIMONTHLY",
+          "QUARTERLY",
+          "SEMIANNUAL",
+          "YEARLY"
+        ]
+      },
+      {
+        "name": "category_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "financial_institution_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "card_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "center_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "supplier_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "start_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "end_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "next_generation_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "total_occurrences",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "generated_occurrences",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Card",
+        "fields": [
+          "card_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Category",
+        "fields": [
+          "category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Center",
+        "fields": [
+          "center_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "FinancialInstitution",
+        "fields": [
+          "financial_institution_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Supplier",
+        "fields": [
+          "supplier_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Planning": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "category_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "subcategory_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "type",
+        "type": "PlanningType",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "FIXED",
+          "VARIABLE"
+        ]
+      },
+      {
+        "name": "default_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "min_recommended",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "max_recommended",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Category",
+        "fields": [
+          "category_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Subcategory",
+        "fields": [
+          "subcategory_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "PlanningMonth": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "planning_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "month",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Planning",
+        "fields": [
+          "planning_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Investment": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "financial_institution_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "partition",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "issuer",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_type",
+        "type": "InvestmentProductType",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "CDB",
+          "RDB",
+          "LCI",
+          "LCA",
+          "LC",
+          "LF",
+          "TESOURO_DIRETO",
+          "POUPANCA",
+          "DEBENTURE",
+          "CRI",
+          "CRA",
+          "COE",
+          "FUNDO",
+          "PREVIDENCIA",
+          "ACAO",
+          "FII",
+          "ETF",
+          "BDR",
+          "CRIPTO",
+          "OUTRO"
+        ]
+      },
+      {
+        "name": "product",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "application_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "maturity_date",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "liquidity_days",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "liquidity_at_maturity",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "invested_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "display_order",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "liquidated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "FinancialInstitution",
+        "fields": [
+          "financial_institution_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "InvestmentTransaction": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "investment_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "type",
+        "type": "InvestmentTransactionType",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "CONTRIBUTION",
+          "REDEMPTION"
+        ]
+      },
+      {
+        "name": "date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "amount",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Investment",
+        "fields": [
+          "investment_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "InvestmentMonthBalance": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "investment_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "year",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "month",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "balance",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Investment",
+        "fields": [
+          "investment_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "InvestmentSettings": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "independence_reference_amount",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "ContactChannel": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "contact_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "kind",
+        "type": "ContactChannelKind",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "CELLPHONE",
+          "PHONE",
+          "EMAIL"
+        ]
+      },
+      {
+        "name": "value",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "label",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "display_order",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Contact",
+        "fields": [
+          "contact_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "AdjustmentIndex": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "code",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "sgs_code",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sgs_code_12m",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "AdjustmentIndexValue": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "adjustment_index_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "reference_month",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "reference_year",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "monthly_rate",
+        "type": "Decimal",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "accumulated_12m",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "synced_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "from_api",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "AdjustmentIndex",
+        "fields": [
+          "adjustment_index_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "Holiday": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "scope",
+        "type": "HolidayScope",
+        "list": false,
+        "required": false,
+        "nullable": false,
+        "values": [
+          "NATIONAL",
+          "STATE",
+          "MUNICIPAL"
+        ]
+      },
+      {
+        "name": "state",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "LeaseNotification": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "lease_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "channel",
+        "type": "LeaseNotificationChannel",
+        "list": false,
+        "required": true,
+        "nullable": false,
+        "values": [
+          "EMAIL",
+          "WHATSAPP"
+        ]
+      },
+      {
+        "name": "recipient",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "message",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "reference_month",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "reference_year",
+        "type": "Int",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "days_overdue",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sent_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sent_by_id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Lease",
+        "fields": [
+          "lease_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "sent_by_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "LeaseExpiryReminder": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "lease_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "end_date",
+        "type": "DateTime",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "shown_days",
+        "type": "String",
+        "list": true,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "acknowledged_on",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "dismissed",
+        "type": "Boolean",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "User",
+        "fields": [
+          "user_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Lease",
+        "fields": [
+          "lease_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
+  }
+}

@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { getAvailableYearsAction } from '@/server/actions/financial-transaction';
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 /** Anos com lançamentos financeiros cadastrados, do mais recente para o mais antigo. */
 export function useAvailableYears() {
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
   const [years, setYears] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -14,7 +17,7 @@ export function useAvailableYears() {
 
     (async () => {
       try {
-        const result = await getAvailableYearsAction();
+        const result = await getAvailableYearsAction({ company_ids: JSON.parse(scopeKey) });
         if (!cancelled && result.ok && Array.isArray(result.data.years)) {
           setYears(result.data.years);
         }
@@ -28,7 +31,7 @@ export function useAvailableYears() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scopeKey]);
 
   return { years, isLoading };
 }

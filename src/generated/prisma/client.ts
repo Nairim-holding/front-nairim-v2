@@ -72,6 +72,16 @@ export type Property = Prisma.PropertyModel
  */
 export type Repair = Prisma.RepairModel
 /**
+ * Model RepairProfessional
+ * 
+ */
+export type RepairProfessional = Prisma.RepairProfessionalModel
+/**
+ * Model RepairItem
+ * 
+ */
+export type RepairItem = Prisma.RepairItemModel
+/**
  * Model RepairMedia
  * 
  */

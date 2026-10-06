@@ -403,6 +403,8 @@ export const ModelName = {
   Agency: 'Agency',
   Property: 'Property',
   Repair: 'Repair',
+  RepairProfessional: 'RepairProfessional',
+  RepairItem: 'RepairItem',
   RepairMedia: 'RepairMedia',
   PropertyIptu: 'PropertyIptu',
   User: 'User',
@@ -463,7 +465,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "publicSiteSettings" | "companyBranding" | "agency" | "property" | "repair" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
+    modelProps: "company" | "publicSiteSettings" | "companyBranding" | "agency" | "property" | "repair" | "repairProfessional" | "repairItem" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -908,6 +910,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.RepairCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.RepairCountAggregateOutputType> | number
+        }
+      }
+    }
+    RepairProfessional: {
+      payload: Prisma.$RepairProfessionalPayload<ExtArgs>
+      fields: Prisma.RepairProfessionalFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RepairProfessionalFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RepairProfessionalFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        findFirst: {
+          args: Prisma.RepairProfessionalFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RepairProfessionalFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        findMany: {
+          args: Prisma.RepairProfessionalFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>[]
+        }
+        create: {
+          args: Prisma.RepairProfessionalCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        createMany: {
+          args: Prisma.RepairProfessionalCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RepairProfessionalCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>[]
+        }
+        delete: {
+          args: Prisma.RepairProfessionalDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        update: {
+          args: Prisma.RepairProfessionalUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        deleteMany: {
+          args: Prisma.RepairProfessionalDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RepairProfessionalUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RepairProfessionalUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>[]
+        }
+        upsert: {
+          args: Prisma.RepairProfessionalUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairProfessionalPayload>
+        }
+        aggregate: {
+          args: Prisma.RepairProfessionalAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRepairProfessional>
+        }
+        groupBy: {
+          args: Prisma.RepairProfessionalGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RepairProfessionalGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RepairProfessionalCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RepairProfessionalCountAggregateOutputType> | number
+        }
+      }
+    }
+    RepairItem: {
+      payload: Prisma.$RepairItemPayload<ExtArgs>
+      fields: Prisma.RepairItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RepairItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RepairItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        findFirst: {
+          args: Prisma.RepairItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RepairItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        findMany: {
+          args: Prisma.RepairItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>[]
+        }
+        create: {
+          args: Prisma.RepairItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        createMany: {
+          args: Prisma.RepairItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RepairItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>[]
+        }
+        delete: {
+          args: Prisma.RepairItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        update: {
+          args: Prisma.RepairItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.RepairItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RepairItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RepairItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.RepairItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RepairItemPayload>
+        }
+        aggregate: {
+          args: Prisma.RepairItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRepairItem>
+        }
+        groupBy: {
+          args: Prisma.RepairItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RepairItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RepairItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RepairItemCountAggregateOutputType> | number
         }
       }
     }
@@ -4417,6 +4567,7 @@ export const RepairScalarFieldEnum = {
   event_date: 'event_date',
   event_type: 'event_type',
   problem_type: 'problem_type',
+  problem_types: 'problem_types',
   description: 'description',
   professional: 'professional',
   supplier_id: 'supplier_id',
@@ -4434,6 +4585,31 @@ export const RepairScalarFieldEnum = {
 } as const
 
 export type RepairScalarFieldEnum = (typeof RepairScalarFieldEnum)[keyof typeof RepairScalarFieldEnum]
+
+
+export const RepairProfessionalScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  repair_id: 'repair_id',
+  supplier_id: 'supplier_id'
+} as const
+
+export type RepairProfessionalScalarFieldEnum = (typeof RepairProfessionalScalarFieldEnum)[keyof typeof RepairProfessionalScalarFieldEnum]
+
+
+export const RepairItemScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  repair_id: 'repair_id',
+  description: 'description',
+  kind: 'kind',
+  supplier_id: 'supplier_id',
+  professional: 'professional',
+  amount: 'amount',
+  position: 'position'
+} as const
+
+export type RepairItemScalarFieldEnum = (typeof RepairItemScalarFieldEnum)[keyof typeof RepairItemScalarFieldEnum]
 
 
 export const RepairMediaScalarFieldEnum = {
@@ -5811,6 +5987,8 @@ export type GlobalOmitConfig = {
   agency?: Prisma.AgencyOmit
   property?: Prisma.PropertyOmit
   repair?: Prisma.RepairOmit
+  repairProfessional?: Prisma.RepairProfessionalOmit
+  repairItem?: Prisma.RepairItemOmit
   repairMedia?: Prisma.RepairMediaOmit
   propertyIptu?: Prisma.PropertyIptuOmit
   user?: Prisma.UserOmit

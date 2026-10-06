@@ -1,6 +1,8 @@
 'use server';
 import prisma from '@/infra/database/prisma';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import { runAction } from '@/shared/actions/action-result';
 import { reportParamsSchema } from '@/shared/validators/financial-report';
 import { parseLocalDate } from '@/shared/utils/date-utils';
@@ -8,7 +10,8 @@ import { buildCenterSummary } from '@/core/entities/center-summary';
 import { financialDateField } from '@/core/entities/financial-report';
 
 export async function getCenterSummaryAction(raw: Record<string, unknown>) {
-  return runAction(() => withPermission('financial-transactions', 'view', async () => {
+  return runAction(() => withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () => {
+    raw = await expandReportingFilters(raw);
     const query = reportParamsSchema.parse(raw);
     const fields = ['center_id','category_id','subcategory_id','financial_institution_id','card_id','supplier_id'];
     const filters: Record<string, unknown> = {};
@@ -29,5 +32,5 @@ export async function getCenterSummaryAction(raw: Record<string, unknown>) {
       prisma.category.findMany({ where: { id: { in: totals.map(t => t.category_id) } }, select: { id: true, type: true } }),
     ]);
     return buildCenterSummary(totals.map(t => ({ ...t, amount: Number(t._sum.amount ?? 0) })), centers, categories);
-  }));
+  })));
 }

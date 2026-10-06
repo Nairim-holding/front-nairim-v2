@@ -1,5 +1,7 @@
 import { financialDateField } from '@/core/entities/financial-report';
 import prisma from '@/infra/database/prisma';
+import { isConsolidatedReporting } from '@/infra/database/reporting-context';
+import { consolidatePlanning } from '@/core/utils/consolidated-planning';
 import type { PlanningsRepository } from '@/core/repositories/plannings-repository';
 import type {
   MonthlyData,
@@ -441,8 +443,8 @@ export class PrismaPlanningsRepository implements PlanningsRepository {
       start_date: startDate,
       end_date: endDate,
       balances: { monthly: monthlyBalances, accumulated: accumulatedBalances },
-      incomes: [incomeGlobal, ...incomes],
-      expenses: [expenseGlobal, ...expenses],
+      incomes: [incomeGlobal, ...(isConsolidatedReporting() ? consolidatePlanning(incomes) : incomes)],
+      expenses: [expenseGlobal, ...(isConsolidatedReporting() ? consolidatePlanning(expenses) : expenses)],
     };
   }
 

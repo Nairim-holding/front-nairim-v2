@@ -3,6 +3,7 @@ import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getCurrentCompanyId } from './tenant-context';
 import { withAuditContext } from './audit-context';
+import { injectReportingRead } from './reporting-context';
 
 /**
  * Client Prisma com extensão MULTI-TENANT.
@@ -36,7 +37,7 @@ const TENANT_MODELS = new Set([
   // AdjustmentIndexValue fica de fora de propósito — é escopado pelo
   // indexador pai, que já vem filtrado por empresa (mesmo caso de
   // InvestmentTransaction).
-  'AdjustmentIndex', 'Holiday', 'LeaseNotification', 'LeaseExpiryReminder', 'Repair', 'RepairMedia',
+  'AdjustmentIndex', 'Holiday', 'LeaseNotification', 'LeaseExpiryReminder', 'Repair', 'RepairMedia', 'RepairProfessional', 'RepairItem',
 ]);
 
 /** Injeta company_id no `where` das queries de leitura. */
@@ -87,28 +88,28 @@ function buildPrismaClient() {
       $allModels: {
         // ─── Leitura ───────────────────────────────────────────────────────
         async findMany({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findFirst({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findUnique({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findUniqueOrThrow({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findFirstOrThrow({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async count({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async aggregate({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async groupBy({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         // ─── Escrita ───────────────────────────────────────────────────────
         async create({ model, args, query }) {

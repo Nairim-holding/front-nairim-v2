@@ -67,6 +67,8 @@ export class PrismaBackupRepository implements BackupRepository {
       userDashboardLayouts,
       repairs,
       repairMedia,
+      repairProfessionals,
+      repairItems,
     ] = await Promise.all([
       prisma.companyBranding.findMany(byCompany),
       prisma.propertyType.findMany(byCompany),
@@ -92,6 +94,8 @@ export class PrismaBackupRepository implements BackupRepository {
       prisma.userDashboardLayout.findMany(byCompany),
       prisma.repair.findMany(byCompany),
       prisma.repairMedia.findMany(byCompany),
+      prisma.repairProfessional.findMany(byCompany),
+      prisma.repairItem.findMany(byCompany),
     ]);
 
     const agencyIds = idsOf(agencies);
@@ -182,6 +186,8 @@ export class PrismaBackupRepository implements BackupRepository {
       propertyIptus,
       repairs,
       repairMedia,
+      repairProfessionals,
+      repairItems,
     };
 
     const checksum = buildChecksum(data);
@@ -207,6 +213,8 @@ export class PrismaBackupRepository implements BackupRepository {
 
     await prisma.$transaction(async (tx) => {
       await tx.repairMedia.deleteMany({ where: { company_id: companyId } });
+      await tx.repairProfessional.deleteMany({ where: { company_id: companyId } });
+      await tx.repairItem.deleteMany({ where: { company_id: companyId } });
       await tx.repair.deleteMany({ where: { company_id: companyId } });
       // ─── Deleta os dados da empresa em ordem FK-safe (filhos antes de pais) ───
       await tx.agencyAddress.deleteMany({ where: { agency: { company_id: companyId } } });
@@ -403,6 +411,18 @@ export class PrismaBackupRepository implements BackupRepository {
         const ownedRepairs = await tx.repair.count({ where: { company_id: companyId, id: { in: repairIds } } });
         if (ownedRepairs !== repairIds.length) throw new ValidationError('O backup contém mídias vinculadas a reparos de outra empresa ou inexistentes.');
         await tx.repairMedia.createMany({ data: records.map(row => ({ ...row, company_id: companyId })) as never });
+      }
+      for (const key of ['repairProfessionals', 'repairItems'] as const) {
+        const records = (data[key] ?? []) as Record<string, unknown>[];
+        if (!records.length) continue;
+        const repairIds = [...new Set(records.map(row => String(row.repair_id ?? '')))];
+        const supplierIds = [...new Set(records.map(row => String(row.supplier_id ?? '')))];
+        if (await tx.repair.count({ where: { company_id: companyId, id: { in: repairIds } } }) !== repairIds.length ||
+            await tx.supplier.count({ where: { company_id: companyId, id: { in: supplierIds } } }) !== supplierIds.length)
+          throw new ValidationError('O backup contém itens ou profissionais vinculados a reparos ou contatos de outra empresa ou inexistentes.');
+        const rows = records.map(row => ({ ...row, company_id: companyId }));
+        if (key === 'repairProfessionals') await tx.repairProfessional.createMany({ data: rows as never });
+        else await tx.repairItem.createMany({ data: rows as never });
       }
       if (Array.isArray(data.documents) && data.documents.length > 0) {
         await tx.document.createMany({ data: data.documents as any });

@@ -10,6 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
 import { buildCustomTooltipHTML, getCustomEchartsTooltipConfig } from '@/utils/echartsTooltip';
 import { getFinancialInstitutionBalanceSummaryAction } from '@/server/actions/financial-institution';
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 interface AccountBalance {
   institutionId: string;
@@ -18,6 +19,8 @@ interface AccountBalance {
 }
 
 export default function AccountBalanceChart() {
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
   useTheme();
   const tokens = getThemeTokens();
   const [accounts, setAccounts] = useState<AccountBalance[]>([]);
@@ -29,7 +32,7 @@ export default function AccountBalanceChart() {
 
     (async () => {
       try {
-        const result = await getFinancialInstitutionBalanceSummaryAction();
+        const result = await getFinancialInstitutionBalanceSummaryAction({ company_ids: JSON.parse(scopeKey) });
         if (!cancelled && result.ok && Array.isArray(result.data)) {
           setAccounts(result.data);
         }
@@ -43,7 +46,7 @@ export default function AccountBalanceChart() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scopeKey]);
 
   const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
 
@@ -128,7 +131,7 @@ export default function AccountBalanceChart() {
         const account = accounts[point.dataIndex];
         return account ? loadFinancialChartDetails({
           source: 'balance', institutionId: account.institutionId,
-        }) : Promise.resolve([]);
+        }, { company_ids: companyIds }) : Promise.resolve([]);
       }}
     >
       {({ isFullscreen }) => (

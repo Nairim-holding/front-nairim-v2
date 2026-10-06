@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { fetchSection, getDefaultDateRange, FilterType, DashboardData } from "@/lib/dashboard";
 import ForbiddenNotice from "@/components/layout/PermissionGate/ForbiddenNotice";
+import { ReportingCompaniesProvider, useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 interface DashboardContentProps {
   /** Pre-fetched data from the Server Component (financial is populated, rest are null) */
@@ -20,6 +21,16 @@ interface DashboardContentProps {
  * - Syncing date range from URL search params
  */
 export default function DashboardContent({ initialMetrics, initialFilter }: DashboardContentProps) {
+  return <ReportingCompaniesProvider>
+    <DashboardContentBody initialMetrics={initialMetrics} initialFilter={initialFilter} /></ReportingCompaniesProvider>;
+}
+
+function DashboardContentBody({ initialMetrics, initialFilter }: DashboardContentProps) {
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
+  const requestVersion = useRef(0);
+  const sectionRanges = useRef<Partial<Record<FilterType, { startDate: string; endDate: string }>>>({});
+  const sectionVersions = useRef<Partial<Record<FilterType, number>>>({});
   const searchParams = useSearchParams();
 
   const [filter, setFilter]   = useState<FilterType>(initialFilter);
@@ -60,34 +71,40 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
       }
 
       setLoading(prev => ({ ...prev, [section]: true }));
+      setFilter(section);
       setError(null);
       setErrorStatus(null);
-
+      const version = requestVersion.current;
+      const sectionVersion = sectionVersions.current[section] = (sectionVersions.current[section] ?? 0) + 1;
+      const isCurrent = () => version === requestVersion.current && sectionVersion === sectionVersions.current[section];
       try {
-        const { startDate, endDate } = getDateRange();
-        const data = await fetchSection(section, { startDate, endDate });
+        const { startDate, endDate } = sectionRanges.current[section] ?? getDateRange();
+        const data = await fetchSection(section, { startDate, endDate, companyIds });
+        if (!isCurrent()) return;
 
         setMetrics(prev => ({ ...prev, [section]: data as any }));
         fetchedRef.current.add(section);
       } catch (err: any) {
+        if (!isCurrent()) return;
         console.error(`[Client] Erro ao carregar ${section}:`, err);
         setError(err.message ?? "Erro desconhecido");
         setErrorStatus(err.status ?? null);
       } finally {
-        setLoading(prev => ({ ...prev, [section]: false }));
-        setFilter(section);
+        if (isCurrent()) setLoading(prev => ({ ...prev, [section]: false }));
       }
     },
-    [getDateRange]
+    [getDateRange, companyIds]
   );
 
   // ─── Re-fetch everything when the date range changes ─────────────────────
   useEffect(() => {
     // Invalidate cache so all sections refetch with the new dates
     fetchedRef.current.clear();
+    requestVersion.current += 1;
+    setLoading({ financial: false, portfolio: false, clients: false, map: false });
     loadSection(filter, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, scopeKey]);
 
   // ─── Filter change handler ────────────────────────────────────────────────
   const handleFilterChange = useCallback(
@@ -106,18 +123,28 @@ export default function DashboardContent({ initialMetrics, initialFilter }: Dash
   // local year/month state right after the user picks it.
   const handleSectionRangeChange = useCallback(
     async (section: FilterType, startDate: string, endDate: string) => {
+      sectionRanges.current[section] = { startDate, endDate };
+      const sectionVersion = sectionVersions.current[section] = (sectionVersions.current[section] ?? 0) + 1;
+      const version = requestVersion.current;
       try {
-        const data = await fetchSection(section, { startDate, endDate });
+        const data = await fetchSection(section, { startDate, endDate, companyIds });
+        if (version !== requestVersion.current || sectionVersion !== sectionVersions.current[section]) return;
         setMetrics(prev => ({ ...prev, [section]: data as any }));
+        setLoading(prev => ({ ...prev, [section]: false }));
       } catch (err: any) {
+        if (version !== requestVersion.current || sectionVersion !== sectionVersions.current[section]) return;
         console.error(`[Client] Erro ao atualizar período de ${section}:`, err);
+        setError(err.message ?? 'Erro ao atualizar o período.');
+        setErrorStatus(err.status ?? null);
+      } finally {
+        if (version === requestVersion.current && sectionVersion === sectionVersions.current[section]) setLoading(prev => ({ ...prev, [section]: false }));
       }
     },
-    []
+    [companyIds]
   );
 
   // ─── Error / empty state ──────────────────────────────────────────────────
-  if (error && !metrics[filter]) {
+  if (error) {
     // 403 = sem permissão no grupo — mensagem amigável, sem botão de retry
     // (tentar de novo não muda o resultado; quem resolve é um admin ajustando
     // as diretivas de acesso do grupo).

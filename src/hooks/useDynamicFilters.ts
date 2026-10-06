@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface DynamicFilter {
   field: string;
@@ -44,8 +44,10 @@ export const useDynamicFilters = (
   const [searchFields, setSearchFields] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestVersion = useRef(0);
 
   const fetchFilters = useCallback(async () => {
+    const version = ++requestVersion.current;
     setIsLoading(true);
     setError(null);
 
@@ -54,6 +56,7 @@ export const useDynamicFilters = (
         throw new Error('useDynamicFilters: fetcher ausente — filtros requerem Server Action');
       }
       const result = await fetcher(appliedFilters);
+      if (version !== requestVersion.current) return;
       const isUsersEndpoint = endpoint.includes('users');
       const filteredFilters = (result.filters || []).filter((filter: DynamicFilter) =>
         isUsersEndpoint ? filter.field !== 'id' && filter.field !== 'role' : true,
@@ -64,15 +67,17 @@ export const useDynamicFilters = (
       setSearchFields(result.searchFields || []);
       return;
     } catch (err) {
+      if (version !== requestVersion.current) return;
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       console.error('❌ Erro ao carregar filtros:', err);
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) setIsLoading(false);
     }
   }, [endpoint, appliedFilters, fetcher]);
 
   useEffect(() => {
     fetchFilters();
+    return () => { requestVersion.current += 1; };
   }, [fetchFilters]);
 
   return {

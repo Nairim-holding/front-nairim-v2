@@ -1,6 +1,8 @@
 import 'server-only';
 import { financialReportUseCases } from '@/infra/factories/financial-report-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import { reportParamsSchema, groupBySchema, dfcGroupBySchema } from '@/shared/validators/financial-report';
 import type {
   DemonstrativoResult,
@@ -59,23 +61,19 @@ function parseReportParams(raw: Record<string, unknown>): ReportParams {
 }
 
 export async function getGroupedReportData(raw: Record<string, unknown>): Promise<GroupedReportResult> {
-  const params = parseReportParams(raw);
   const groupBy = groupBySchema.parse(raw.groupBy);
-  return withPermission('financial-reports', 'view', () => financialReportUseCases.getGrouped.execute(params, groupBy));
+  return withPermission('financial-reports', 'view', session => withReportingScope(session, raw, async () => financialReportUseCases.getGrouped.execute(parseReportParams(await expandReportingFilters(raw)), groupBy)));
 }
 
 export async function getExtratoReportData(raw: Record<string, unknown>): Promise<ExtratoResult> {
-  const params = parseReportParams(raw);
-  return withPermission('financial-reports', 'view', () => financialReportUseCases.getExtrato.execute(params));
+  return withPermission('financial-reports', 'view', session => withReportingScope(session, raw, async () => financialReportUseCases.getExtrato.execute(parseReportParams(await expandReportingFilters(raw)))));
 }
 
 export async function getIncomeExpenseReportData(raw: Record<string, unknown>): Promise<IncomeExpenseResult> {
-  const params = parseReportParams(raw);
-  return withPermission('financial-reports', 'view', () => financialReportUseCases.getIncomeExpense.execute(params));
+  return withPermission('financial-reports', 'view', session => withReportingScope(session, raw, async () => financialReportUseCases.getIncomeExpense.execute(parseReportParams(await expandReportingFilters(raw)))));
 }
 
 export async function getDemonstrativoReportData(raw: Record<string, unknown>): Promise<DemonstrativoResult> {
-  const params = parseReportParams(raw);
   const groupBy = dfcGroupBySchema.parse(raw.groupBy);
-  return withPermission('financial-reports', 'view', () => financialReportUseCases.getDemonstrativo.execute(params, groupBy));
+  return withPermission('financial-reports', 'view', session => withReportingScope(session, raw, async () => financialReportUseCases.getDemonstrativo.execute(parseReportParams(await expandReportingFilters(raw)), groupBy)));
 }

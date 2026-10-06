@@ -1,4 +1,5 @@
 import prisma from '@/infra/database/prisma';
+import { getReportingCompanyIds } from '@/infra/database/reporting-context';
 import type { LeaseReportsRepository } from '@/core/repositories/lease-reports-repository';
 import {
   computeNetAmount,
@@ -126,7 +127,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
     const leases = await prisma.lease.findMany({
       where: { deleted_at: null },
       select: {
-        id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+        id: true, company_id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
         discount_amount: true,
         agency: { select: { trade_name: true } },
         property: { select: { title: true, income_tax_withholding: true, agency: { select: { trade_name: true } } } },
@@ -134,30 +135,32 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       },
     });
     const leasesById = new Map(leases.map((lease) => [lease.id, lease]));
+    const leasesByCompany = new Map<string, typeof leases>();
+    for (const lease of leases) {
+      const list = leasesByCompany.get(lease.company_id) ?? [];
+      list.push(lease); leasesByCompany.set(lease.company_id, list);
+    }
 
-    // Uma query por mês de referência: os totais mensais dos DARF precisam da
-    // separação por mês, e um OR de janelas voltaria tudo achatado.
+    const selectedTransactions = getReportingCompanyIds() ? await prisma.transaction.findMany({
+      where: { deleted_at: null, status: 'COMPLETED', is_transfer: false,
+        OR: months.map(reference => ({ effective_date: monthWindow(reference) })) },
+      select: { id: true, company_id: true, effective_date: true, category: { select: { type: true } },
+        subcategory: { select: { name: true } }, amount: true, description: true, is_cancellation_charge: true, lease_id: true },
+    }) : [];
+    const transactionsByMonth = new Map<string, typeof selectedTransactions>();
+    for (const tx of selectedTransactions) {
+      const key = `${tx.effective_date.getUTCFullYear()}-${String(tx.effective_date.getUTCMonth() + 1).padStart(2, '0')}`;
+      const list = transactionsByMonth.get(key) ?? [];
+      list.push(tx); transactionsByMonth.set(key, list);
+    }
+
+    // Uma consulta para todos os meses/empresas; separação linear em memória.
     for (const reference of months) {
       const key = `${reference.year}-${String(reference.month).padStart(2, '0')}`;
-      const window = monthWindow(reference);
-
-      const transactions = await prisma.transaction.findMany({
-        where: {
-          deleted_at: null,
-          status: 'COMPLETED',
-          is_transfer: false,
-          effective_date: window,
-        },
-        select: {
-          id: true,
-          effective_date: true,
-          category: { select: { type: true } },
-          subcategory: { select: { name: true } },
-          amount: true,
-          description: true,
-          is_cancellation_charge: true,
-          lease_id: true,
-        },
+      const transactions = getReportingCompanyIds() ? transactionsByMonth.get(key) ?? [] : await prisma.transaction.findMany({
+        where: { deleted_at: null, status: 'COMPLETED', is_transfer: false, effective_date: monthWindow(reference) },
+        select: { id: true, company_id: true, effective_date: true, category: { select: { type: true } },
+          subcategory: { select: { name: true } }, amount: true, description: true, is_cancellation_charge: true, lease_id: true },
       });
 
       // Desconto/despesa é valor da locação, não do lançamento: soma uma vez
@@ -171,8 +174,8 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         const kind = classifyLeaseReportTransaction(tx);
         if (kind === 'other') continue;
         const lease = tx.lease_id ? leasesById.get(tx.lease_id)
-          : matchReportLease(tx.description, tx.effective_date, leases);
-        if (!lease) {
+          : matchReportLease(tx.description, tx.effective_date, leasesByCompany.get(tx.company_id) ?? []);
+        if (!lease || lease.company_id !== tx.company_id) {
           unmatched.push({ id: tx.id, description: tx.description, amount: Number(tx.amount), date: tx.effective_date });
           continue;
         }

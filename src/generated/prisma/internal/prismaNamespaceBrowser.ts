@@ -57,6 +57,8 @@ export const ModelName = {
   Agency: 'Agency',
   Property: 'Property',
   Repair: 'Repair',
+  RepairProfessional: 'RepairProfessional',
+  RepairItem: 'RepairItem',
   RepairMedia: 'RepairMedia',
   PropertyIptu: 'PropertyIptu',
   User: 'User',
@@ -257,6 +259,7 @@ export const RepairScalarFieldEnum = {
   event_date: 'event_date',
   event_type: 'event_type',
   problem_type: 'problem_type',
+  problem_types: 'problem_types',
   description: 'description',
   professional: 'professional',
   supplier_id: 'supplier_id',
@@ -274,6 +277,31 @@ export const RepairScalarFieldEnum = {
 } as const
 
 export type RepairScalarFieldEnum = (typeof RepairScalarFieldEnum)[keyof typeof RepairScalarFieldEnum]
+
+
+export const RepairProfessionalScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  repair_id: 'repair_id',
+  supplier_id: 'supplier_id'
+} as const
+
+export type RepairProfessionalScalarFieldEnum = (typeof RepairProfessionalScalarFieldEnum)[keyof typeof RepairProfessionalScalarFieldEnum]
+
+
+export const RepairItemScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  repair_id: 'repair_id',
+  description: 'description',
+  kind: 'kind',
+  supplier_id: 'supplier_id',
+  professional: 'professional',
+  amount: 'amount',
+  position: 'position'
+} as const
+
+export type RepairItemScalarFieldEnum = (typeof RepairItemScalarFieldEnum)[keyof typeof RepairItemScalarFieldEnum]
 
 
 export const RepairMediaScalarFieldEnum = {

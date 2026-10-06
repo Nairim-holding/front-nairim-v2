@@ -1,6 +1,9 @@
 import { financialDateField } from '@/core/entities/financial-report';
 import { randomUUID } from 'node:crypto';
 import prisma from '@/infra/database/prisma';
+import { getReportingCompanyIds } from '@/infra/database/reporting-context';
+import { expandReportingFilters } from './reporting-catalog';
+import { consolidatedMonthlySummary, consolidatedAvailableYears, consolidatedExpenseCategories, consolidatedSubcategories } from './consolidated-financial-aggregates';
 import { getCurrentCompanyId } from '@/infra/database/tenant-context';
 import type { TransactionsRepository } from '@/core/repositories/financial-transactions-repository';
 import type {
@@ -1308,8 +1311,14 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       conditions.push({ description: { in: filters.description } });
     }
     conditions.push(entityFilters);
-    if (query.categoryId) conditions.push({ category_id: query.categoryId });
-    if (query.subcategoryId !== undefined) conditions.push({ subcategory_id: query.subcategoryId });
+    if (query.categoryId) {
+      const expanded = await expandReportingFilters({ category_id: [query.categoryId] });
+      conditions.push({ category_id: getReportingCompanyIds() ? { in: expanded.category_id } : query.categoryId });
+    }
+    if (query.subcategoryId !== undefined) {
+      const expanded = query.subcategoryId ? await expandReportingFilters({ subcategory_id: [query.subcategoryId] }) : null;
+      conditions.push(expanded ? { subcategory_id: getReportingCompanyIds() ? { in: expanded.subcategory_id } : query.subcategoryId } : { subcategory_id: null });
+    }
     if (query.cardId) conditions.push({ card_id: query.cardId });
     if (query.institutionId) conditions.push({ financial_institution_id: query.institutionId });
 
@@ -1380,6 +1389,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     const dateField = financialDateField(filters.regime);
     const uniqueYears = Array.from(new Set(years.map((y) => Number(y)).filter((y) => !Number.isNaN(y)))).sort((a, b) => a - b);
     if (uniqueYears.length === 0) return [];
+    if (getReportingCompanyIds()) return consolidatedMonthlySummary(uniqueYears, filters);
 
     const startDate = new Date(Date.UTC(uniqueYears[0], 0, 1));
     const endDate = new Date(Date.UTC(uniqueYears[uniqueYears.length - 1], 11, 31, 23, 59, 59, 999));
@@ -1416,6 +1426,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async getAvailableYears(): Promise<AvailableYearsResult> {
+    if (getReportingCompanyIds()) return consolidatedAvailableYears();
     const transactions = (await prisma.transaction.findMany({
       where: { deleted_at: null, NOT: { is_transfer: true } },
       select: { event_date: true, effective_date: true },
@@ -1428,6 +1439,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async getExpenseByCategory(startDate: Date, endDate: Date, filters: TransactionEntityFilters = {}): Promise<ExpenseByCategoryResult> {
+    if (getReportingCompanyIds()) return consolidatedExpenseCategories(startDate, endDate, filters);
     const dateField = financialDateField(filters.regime);
     const baseWhere = {
       deleted_at: null,
@@ -1490,6 +1502,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async getSubcategoryBreakdown(categoryId: string, startDate: Date, endDate: Date, filters: TransactionEntityFilters = {}): Promise<SubcategoryBreakdownResult> {
+    if (getReportingCompanyIds()) return consolidatedSubcategories(categoryId, startDate, endDate, filters);
     const category = (await prisma.category.findFirst({
       where: { id: categoryId, deleted_at: null },
       select: { id: true, name: true },

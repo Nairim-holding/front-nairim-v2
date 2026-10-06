@@ -6,6 +6,7 @@ import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getTenantTenureDistributionAction } from '@/server/actions/dashboard-usage';
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 import { formatPeriodLabel, getPeriodRange } from '@/utils/periodRange';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
@@ -58,6 +59,7 @@ function formatBucketDisplayLabel(label: string): string {
  * com a quantidade de inquilinos/locações por faixa de anos (referência de design).
  */
 export default function TenantTenureChart({ startDate: startDateProp, endDate: endDateProp }: TenantTenureChartProps) {
+  const { companyIds } = useReportingCompanies();
   useTheme();
   const tokens = getThemeTokens();
   const fallback = useMemo(() => getPeriodRange(new Date().getFullYear(), [new Date().getMonth() + 1]), []);
@@ -74,7 +76,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
 
     (async () => {
       try {
-        const result = await getTenantTenureDistributionAction(startDate, endDate);
+        const result = await getTenantTenureDistributionAction(startDate, endDate, companyIds);
         if (result.ok) {
           if (!cancelled) {
             setBuckets(Array.isArray(result.data.buckets) ? result.data.buckets : []);
@@ -91,7 +93,7 @@ export default function TenantTenureChart({ startDate: startDateProp, endDate: e
     return () => {
       cancelled = true;
     };
-  }, [startDate, endDate]);
+  }, [startDate, endDate, companyIds]);
 
   const total = useMemo(() => buckets.reduce((sum, b) => sum + b.count, 0), [buckets]);
   const maxCount = useMemo(() => Math.max(...buckets.map((b) => b.count), 1), [buckets]);

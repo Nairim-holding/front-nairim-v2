@@ -23,19 +23,21 @@ import type {
 export async function getTenantTenureDistributionAction(
   startDate?: string | null,
   endDate?: string | null,
+  companyIds?: string[],
 ): Promise<ActionResult<TenantTenureDistribution>> {
   return runAction(() =>
     getTenantTenureDistributionData(
       new Date(startDate ?? ''),
       new Date(endDate ?? ''),
+      { company_ids: companyIds },
     ),
   );
 }
 
-export async function getDatabaseUsageAction(): Promise<ActionResult<DatabaseUsageResult>> {
-  return runAction(() => getDatabaseUsageData());
+export async function getDatabaseUsageAction(raw: Record<string, unknown> = {}): Promise<ActionResult<DatabaseUsageResult>> {
+  return runAction(() => getDatabaseUsageData(raw));
 }
 
-export async function getStorageUsageAction(): Promise<ActionResult<StorageUsageResult>> {
-  return runAction(() => getStorageUsageData());
+export async function getStorageUsageAction(raw: Record<string, unknown> = {}): Promise<ActionResult<StorageUsageResult>> {
+  return runAction(() => getStorageUsageData(raw));
 }

@@ -27,6 +27,8 @@ model Company {
   properties              Property[]
   repairs                 Repair[]
   repair_media            RepairMedia[]
+  repair_professionals    RepairProfessional[]
+  repair_items            RepairItem[]
   property_types          PropertyType[]
   owners                  Owner[]
   agencies                Agency[]
@@ -231,6 +233,7 @@ model Repair {
   event_date         DateTime  @db.Date
   event_type         String    @db.VarChar(20)
   problem_type       String    @db.VarChar(40)
+  problem_types      String[]  @default([])
   description        String
   professional       String
   supplier_id        String?
@@ -249,9 +252,42 @@ model Repair {
   property           Property  @relation(fields: [property_id], references: [id])
   supplier           Supplier? @relation(fields: [supplier_id], references: [id])
   media              RepairMedia[]
+  professionals      RepairProfessional[]
+  items              RepairItem[]
 
   @@index([company_id, event_date])
   @@index([property_id])
+  @@index([supplier_id])
+}
+
+model RepairProfessional {
+  id          String @id @default(uuid())
+  company_id  String
+  repair_id   String
+  supplier_id String
+  company     Company @relation(fields: [company_id], references: [id])
+  repair      Repair @relation(fields: [repair_id], references: [id], onDelete: Cascade)
+  supplier    Supplier @relation(fields: [supplier_id], references: [id])
+
+  @@unique([repair_id, supplier_id])
+  @@index([company_id, repair_id])
+}
+
+model RepairItem {
+  id           String @id @default(uuid())
+  company_id   String
+  repair_id    String
+  description  String
+  kind         String @db.VarChar(20)
+  supplier_id  String
+  professional String
+  amount       Decimal @db.Decimal(20, 2)
+  position     Int @default(0)
+  company      Company @relation(fields: [company_id], references: [id])
+  repair       Repair @relation(fields: [repair_id], references: [id], onDelete: Cascade)
+  supplier     Supplier @relation(fields: [supplier_id], references: [id])
+
+  @@index([company_id, repair_id])
   @@index([supplier_id])
 }
 
@@ -947,6 +983,8 @@ model Center {
 }
 
 model Supplier {
+  repair_professionals   RepairProfessional[]
+  repair_items           RepairItem[]
   id                     String            @id @default(uuid())
   company_id             String
   sequential_id          Int               @default(autoincrement())

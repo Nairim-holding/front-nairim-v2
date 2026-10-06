@@ -2,12 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import { bootstrap, readBootstrapConfig } from './bootstrap.mjs';
 import { assertDatabaseTarget, loadInitialSchema, initializeDatabase } from './init-database.mjs';
+const prismaCli = join(dirname(createRequire(import.meta.url).resolve('prisma/package.json')), 'build/index.js');
 
 // PostgreSQL embarcado ja presente no lockfile via Prisma. Nao conecta em
 // bancos externos. Valida SQL, constraints, triggers e cadastro inicial juntos.
@@ -17,7 +20,7 @@ test('banco vazio recebe schema atual, auditoria e administrador autenticavel', 
   let client;
   try {
     const schemaSql = execFileSync(process.execPath, [
-      'node_modules/prisma/build/index.js', 'migrate', 'diff', '--from-empty',
+      prismaCli, 'migrate', 'diff', '--from-empty',
       '--to-schema', 'prisma/schema.prisma', '--script',
     ], { encoding: 'utf8', env: { ...process.env, DATABASE_URL: 'postgresql://build:build@127.0.0.1:5432/build' }, timeout: 120000 });
     const artifacts = await loadInitialSchema(schemaSql);
@@ -26,6 +29,13 @@ test('banco vazio recebe schema atual, auditoria e administrador autenticavel', 
     client = new pg.Client({ connectionString });
     await client.connect();
     assert.equal(await initializeDatabase(client, artifacts), true);
+    for (const constraint of ['Repair_problem_types_check', 'RepairItem_kind_check', 'RepairItem_amount_check']) {
+      assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM pg_constraint WHERE conname=$1', [constraint])).rows[0].n, 1);
+    }
+    for (const table of ['RepairItem', 'RepairProfessional']) {
+      assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM pg_trigger WHERE tgname=\'nairim_audit\' AND tgrelid=$1::regclass', [`"${table}"`])).rows[0].n, 1);
+    }
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_indexes WHERE indexname IN ('Transaction_reporting_effective_idx', 'Transaction_reporting_event_idx', 'Property_reporting_created_idx', 'Lease_reporting_start_idx')")).rows[0].n, 4);
     assert.equal((await db.query('SELECT COUNT(*)::int AS count FROM "_prisma_migrations"')).rows[0].count, artifacts.migrations.length);
     const config = readBootstrapConfig({
       DATABASE_URL: 'postgresql://iholding:test@iholding-postgres:5432/iholding_db',
@@ -55,7 +65,7 @@ test('banco vazio recebe schema atual, auditoria e administrador autenticavel', 
     await client.end();
     client = null;
     const migrate = await promisify(execFile)(process.execPath, [
-      'node_modules/prisma/build/index.js', 'migrate', 'deploy',
+      prismaCli, 'migrate', 'deploy',
     ], { encoding: 'utf8', env: { ...process.env, DATABASE_URL: connectionString }, timeout: 60000 });
     assert.match(migrate.stdout, /No pending migrations/);
   } finally {

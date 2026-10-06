@@ -47,13 +47,14 @@ export async function fetchSection<T = MetricResponse | MapCoordinate[]>(
     endDate?: string | null;
     fetchOptions?: RequestInit;
     token?: string;
+    companyIds?: string[];
   } = {}
 ): Promise<T> {
   const defaults = getDefaultDateRange();
   const start = options.startDate ?? defaults.start;
   const end   = options.endDate   ?? defaults.end;
 
-  const result = await getDashboardSectionAction(section, start, end);
+  const result = await getDashboardSectionAction(section, start, end, options.companyIds);
 
   if (!result.ok) {
     // `status` permite o chamador distinguir "sem permissão" (403) de falhas

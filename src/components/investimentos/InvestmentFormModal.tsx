@@ -74,7 +74,7 @@ const EMPTY_FORM: FormState = {
   maturity_date: '',
   liquidity_days: '',
   liquidity_at_maturity: false,
-  invested_amount: '',
+  invested_amount: maskMoney(0),
   notes: '',
   liquidated_at: '',
 };
@@ -203,7 +203,7 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
     if (!form.product_type) return showMessage('Selecione o tipo do produto', 'error');
     if (!form.product.trim()) return showMessage('Informe o produto', 'error');
     if (!form.application_date) return showMessage('Informe a data da aplicação', 'error');
-    if (amount <= 0) return showMessage('Informe o valor investido', 'error');
+    if (!Number.isFinite(amount) || amount < 0) return showMessage('O valor investido não pode ser negativo', 'error');
     if (form.liquidity_at_maturity && !form.maturity_date) {
       return showMessage('Informe o vencimento para liquidez apenas no vencimento', 'error');
     }
