@@ -17,6 +17,9 @@ coverage
 *.tmp.ts
 *.tsbuildinfo
 *.pem
+*.key
+*.p12
+*.pfx
 e2e-results.json
 public/sw.js*
 public/workbox-*.js*

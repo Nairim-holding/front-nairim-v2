@@ -6,8 +6,11 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:3000';
-const EMAIL = 'teste2@gmail.com';
-const PASSWORD = '123456';
+const EMAIL = process.env.STICKY_TEST_EMAIL;
+const PASSWORD = process.env.STICKY_TEST_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  throw new Error('Defina STICKY_TEST_EMAIL e STICKY_TEST_PASSWORD fora do codigo para executar esta verificacao.');
+}
 
 function rect(page, selector) {
   return page.evaluate((sel) => {

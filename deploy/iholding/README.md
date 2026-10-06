@@ -271,6 +271,36 @@ Uma reversao de codigo deve usar a revisao/imagem anterior compativel com o
 schema. Mudancas incompativeis de banco exigem recuperar o conjunto de backup.
 `dc down` preserva volumes; `dc down -v` apaga os dados deste ambiente.
 
+## Segredos depois da instalacao
+
+As senhas reais ficam em `.env.iholding` na VPS, com permissao privada, fora do
+Git e do contexto de build. Os arquivos `.env.*` sao ignorados pelo Git,
+exceto os dois modelos sem credenciais. O valor JWT usado durante o build e
+apenas um placeholder; a aplicacao recebe o segredo real no runtime.
+
+Depois de confirmar o primeiro login e guardar a senha em um local protegido,
+remova apenas sua copia de inicializacao:
+
+```bash
+sed -i 's/^BOOTSTRAP_ADMIN_PASSWORD=.*/BOOTSTRAP_ADMIN_PASSWORD=/' .env.iholding
+```
+
+Isso nao altera a senha de login ja cadastrada. As outras senhas do arquivo
+continuam necessarias para operar o ambiente.
+
+Arquivos legados da Nairim continham senha fixa de PostgreSQL e um script de
+verificacao continha credenciais de login. Nesta branch, os valores foram
+substituidos por variaveis obrigatorias. O Compose legado agora exige
+`POSTGRES_PASSWORD`, `POSTGRES_TEST2_PASSWORD` e `POSTGRES_HOMOLOG_PASSWORD`.
+O script `scripts/test-sticky-planning.mjs` exige `STICKY_TEST_EMAIL` e
+`STICKY_TEST_PASSWORD`.
+
+A remocao dos arquivos atuais nao elimina os valores de commits antigos nem
+de outras branches. Se essas credenciais ainda forem usadas, troque-as nos
+servicos e em todos os consumidores. Em bancos ja existentes, alterar
+`POSTGRES_PASSWORD` no .env nao muda a senha da role PostgreSQL. A rotacao e
+separada do deploy da iholding e requer atualizacao coordenada dos acessos.
+
 ## Validacoes locais
 
 ```bash

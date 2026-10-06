@@ -53,7 +53,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: nairim
-      POSTGRES_PASSWORD: nairim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD no arquivo .env}
       POSTGRES_DB: nairim_db
     ports:
       - "5432:5432"
@@ -154,7 +154,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: nairim
-      POSTGRES_PASSWORD: nairim
+      POSTGRES_PASSWORD: ${POSTGRES_TEST2_PASSWORD:?Configure POSTGRES_TEST2_PASSWORD no arquivo .env}
       POSTGRES_DB: nairim_test2_db
     ports:
       - "5434:5432"
@@ -217,7 +217,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: nairim
-      POSTGRES_PASSWORD: nairim
+      POSTGRES_PASSWORD: ${POSTGRES_HOMOLOG_PASSWORD:?Configure POSTGRES_HOMOLOG_PASSWORD no arquivo .env}
       POSTGRES_DB: nairim_homolog_db
     ports:
       - "5436:5432"
