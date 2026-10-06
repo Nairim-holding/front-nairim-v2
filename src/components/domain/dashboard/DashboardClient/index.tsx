@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { fetchSection, getDefaultDateRange, FilterType, DashboardData } from "@/lib/dashboard";
 import ForbiddenNotice from "@/components/layout/PermissionGate/ForbiddenNotice";
-import { ReportingCompaniesProvider, ReportingCompanyFilter, useReportingCompanies } from '@/components/reports/ReportingCompanies';
+import { ReportingCompaniesProvider, useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 interface DashboardContentProps {
   /** Pre-fetched data from the Server Component (financial is populated, rest are null) */
@@ -21,7 +21,7 @@ interface DashboardContentProps {
  * - Syncing date range from URL search params
  */
 export default function DashboardContent({ initialMetrics, initialFilter }: DashboardContentProps) {
-  return <ReportingCompaniesProvider><div className="px-3 pt-3"><ReportingCompanyFilter /></div>
+  return <ReportingCompaniesProvider>
     <DashboardContentBody initialMetrics={initialMetrics} initialFilter={initialFilter} /></ReportingCompaniesProvider>;
 }
 

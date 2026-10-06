@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { listAccessibleCompaniesAction } from '@/server/actions/company';
@@ -45,17 +45,31 @@ export function ReportingCompanyFilter() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [panelLeft, setPanelLeft] = useState(0);
+  const positionPanel = useCallback(() => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(320, window.innerWidth - 32);
+    const left = Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16));
+    setPanelLeft(left - rect.left);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener('resize', positionPanel);
+    return () => window.removeEventListener('resize', positionPanel);
+  }, [open, positionPanel]);
   if (user?.role !== 'SUPER_ADMIN') return null;
   const selected = draft;
   const options = [{ value: user.company_id, label: 'Atual' }, ...companies.filter(c => c.id !== user.company_id).map(c => ({ value: c.id, label: c.name }))];
   const filtered = options.filter(c => c.label.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
   const change = (ids: string[]) => { setDraft(ids); };
-  return <div className="relative mb-3" data-reporting-companies>
-    <button type="button" aria-label="Empresas" aria-expanded={open} onClick={() => { setDraft(companyIds.length ? companyIds : [user.company_id]); setSearch(''); setOpen(!open); }}
-      className="flex items-center gap-2 rounded-lg border border-ui-border bg-surface px-3 py-2 text-sm text-content">
+  return <div ref={containerRef} className="relative shrink-0" data-reporting-companies>
+    <button type="button" aria-label="Empresas" aria-expanded={open} onClick={() => { positionPanel(); setDraft(companyIds.length ? companyIds : [user.company_id]); setSearch(''); setOpen(!open); }}
+      className="flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-ui-border bg-surface px-3 py-2 text-sm text-content">
       <Building2 size={16} />Empresas: {companyIds.length ? `${companyIds.length} selecionada(s)` : 'Atual'}
     </button>
-    {open && <div className="absolute top-full left-0 z-[100] mt-1 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-ui-border bg-surface p-3 shadow-lg">
+    {open && <div style={{ left: panelLeft }} className="absolute top-full z-[200] mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border border-ui-border bg-surface p-3 shadow-lg" data-reporting-company-panel>
       <input aria-label="Buscar empresa" placeholder="Buscar empresa" value={search} onChange={e => setSearch(e.target.value)} className="mb-2 w-full rounded-lg border border-ui-border bg-surface px-3 py-2 text-sm text-content" />
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {loading ? <p className="text-sm text-content-muted">Carregando empresas…</p> : <CheckboxGroup icon={<Building2 size={16} />} title="Empresas"
