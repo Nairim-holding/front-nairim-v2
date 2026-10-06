@@ -179,8 +179,8 @@ export async function getMonthlySummaryMultiAction(
   return runAction(() => getMonthlySummaryMultiData(raw));
 }
 
-export async function getAvailableYearsAction(): Promise<ActionResult<AvailableYearsResult>> {
-  return runAction(() => getAvailableYearsData());
+export async function getAvailableYearsAction(raw: Record<string, unknown> = {}): Promise<ActionResult<AvailableYearsResult>> {
+  return runAction(() => getAvailableYearsData(raw));
 }
 
 export async function getExpenseByCategoryAction(

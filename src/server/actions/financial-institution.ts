@@ -68,6 +68,6 @@ export async function getFinancialInstitutionFiltersAction(): Promise<ActionResu
   return runAction(() => getFinancialInstitutionFiltersData());
 }
 
-export async function getFinancialInstitutionBalanceSummaryAction(): Promise<ActionResult<BalanceSummaryItem[]>> {
-  return runAction(() => getFinancialInstitutionBalanceSummaryData());
+export async function getFinancialInstitutionBalanceSummaryAction(raw: Record<string, unknown> = {}): Promise<ActionResult<BalanceSummaryItem[]>> {
+  return runAction(() => getFinancialInstitutionBalanceSummaryData(raw));
 }

@@ -1,6 +1,8 @@
 import 'server-only';
 import { financialTransactionUseCases } from '@/infra/factories/financial-transaction-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import {
   expenseByCategoryQuerySchema,
   financialChartDetailQuerySchema,
@@ -24,9 +26,9 @@ export async function getFinancialChartDetailsData(
   filters?: Record<string, unknown>,
 ): Promise<FinancialChartDetailRow[]> {
   const query = financialChartDetailQuerySchema.parse(raw);
-  return withPermission('financial-transactions', 'view', () =>
-    financialTransactionUseCases.getChartDetails.execute(query, filters),
-  );
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, { ...raw, ...filters }, async () =>
+    financialTransactionUseCases.getChartDetails.execute(query, await expandReportingFilters(filters ?? {})),
+  ));
 }
 
 /**
@@ -39,7 +41,7 @@ export async function getMonthlySummaryData(
   raw: Record<string, unknown>,
 ): Promise<MonthlySummary> {
   const { year } = monthlySummaryQuerySchema.parse(raw);
-  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getMonthlySummary.execute(year, raw));
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () => financialTransactionUseCases.getMonthlySummary.execute(year, await expandReportingFilters(raw))));
 }
 
 export async function getMonthlySummaryMultiData(
@@ -47,29 +49,29 @@ export async function getMonthlySummaryMultiData(
 ): Promise<MonthlySummaryMultiResult> {
   monthlySummaryMultiQuerySchema.parse(raw);
   const years = parseMultiYears(raw);
-  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getMonthlySummaryMulti.execute(years, raw));
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () => financialTransactionUseCases.getMonthlySummaryMulti.execute(years, await expandReportingFilters(raw))));
 }
 
-export async function getAvailableYearsData(): Promise<AvailableYearsResult> {
-  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getAvailableYears.execute());
+export async function getAvailableYearsData(raw: Record<string, unknown> = {}): Promise<AvailableYearsResult> {
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, () => financialTransactionUseCases.getAvailableYears.execute()));
 }
 
 export async function getExpenseByCategoryData(
   raw: Record<string, unknown>,
 ): Promise<ExpenseByCategoryResult> {
   const { startDate, endDate } = expenseByCategoryQuerySchema.parse(raw);
-  return withPermission('financial-transactions', 'view', () =>
-    financialTransactionUseCases.getExpenseByCategory.execute(new Date(startDate), new Date(endDate), raw),
-  );
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () =>
+    financialTransactionUseCases.getExpenseByCategory.execute(new Date(startDate), new Date(endDate), await expandReportingFilters(raw)),
+  ));
 }
 
 export async function getSubcategoryBreakdownData(
   raw: Record<string, unknown>,
 ): Promise<SubcategoryBreakdownResult> {
   const { categoryId, startDate, endDate } = subcategoryBreakdownQuerySchema.parse(raw);
-  return withPermission('financial-transactions', 'view', () =>
-    financialTransactionUseCases.getSubcategoryBreakdown.execute(categoryId, new Date(startDate), new Date(endDate), raw),
-  );
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () =>
+    financialTransactionUseCases.getSubcategoryBreakdown.execute(categoryId, new Date(startDate), new Date(endDate), await expandReportingFilters(raw)),
+  ));
 }
 
 export async function getTransactionDocumentsData(transactionId: string): Promise<TransactionDocument[]> {

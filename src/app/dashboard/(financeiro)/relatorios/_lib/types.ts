@@ -64,6 +64,7 @@ export interface IncomeExpenseResponse {
 }
 
 export interface ReportFiltersState {
+  company_ids?: string[];
   type: ReportTypeFilter;
   financial_institution_id: string[];
   includeInactiveInstitutions: boolean;

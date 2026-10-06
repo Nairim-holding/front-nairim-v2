@@ -1,6 +1,7 @@
 import 'server-only';
 import { financialInstitutionUseCases } from '@/infra/factories/financial-institution-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
 import { listFinancialInstitutionsQuerySchema } from '@/shared/validators/financial-institution';
 import type {
   BalanceSummaryItem,
@@ -60,6 +61,6 @@ export async function getFinancialInstitutionFiltersData(): Promise<Record<strin
   return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.getFilters.execute());
 }
 
-export async function getFinancialInstitutionBalanceSummaryData(): Promise<BalanceSummaryItem[]> {
-  return withPermission('financial-institutions', 'view', () => financialInstitutionUseCases.getBalanceSummary.execute());
+export async function getFinancialInstitutionBalanceSummaryData(raw: Record<string, unknown> = {}): Promise<BalanceSummaryItem[]> {
+  return withPermission('financial-institutions', 'view', session => withReportingScope(session, raw, () => financialInstitutionUseCases.getBalanceSummary.execute()));
 }

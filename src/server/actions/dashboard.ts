@@ -21,6 +21,7 @@ export async function getDashboardSectionAction(
   section: DashboardSection,
   startDate?: string | null,
   endDate?: string | null,
+  companyIds?: string[],
 ): Promise<
   ActionResult<FinancialMetrics | PortfolioMetrics | ClientsMetrics | GeolocationResponse>
 > {
@@ -28,6 +29,7 @@ export async function getDashboardSectionAction(
     getDashboardSectionData(section, {
       startDate: startDate ?? '',
       endDate: endDate ?? '',
+      company_ids: companyIds,
     }),
   );
 }

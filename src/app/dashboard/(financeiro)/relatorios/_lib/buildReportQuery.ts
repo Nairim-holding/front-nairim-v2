@@ -49,6 +49,7 @@ export function buildReportActionParams(params: {
     startDate: params.from,
     endDate: params.to,
     regime: params.regime,
+    company_ids: params.filters.company_ids,
   };
 
   const effectiveType = params.typeOverride ?? (params.filters.type !== 'all' ? params.filters.type : undefined);

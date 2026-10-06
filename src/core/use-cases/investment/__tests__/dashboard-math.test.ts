@@ -24,6 +24,7 @@ describe('capital inicial do cadastro', () => {
     expect(buildSummary(months, [pgbl], 0)[0].yield_amount).toBe(11713.18);
     expect(buildSummary(months, [vgbl], 0)[0].yield_amount).toBe(7285.14);
     expect(buildSummary(months, [pgbl, vgbl], 0)[0].yield_amount).toBe(18998.32);
+    expect(buildSummary(months, [pgbl, vgbl], 20000)[0].independence_degree).toBe(94.99);
   });
 
   it('conta o aporte automático uma vez e preserva aportes extras e resgates', () => {

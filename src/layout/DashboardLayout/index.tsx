@@ -66,11 +66,10 @@ function DashboardLayout({ filter, metrics, isLoading, onFilterChange, onSection
       <DashboardFilter filter={filter} setFilter={onFilterChange} />
 
       <div className="flex flex-wrap gap-4 transition-all duration-300">
-        {isLoading ? (
-          <LoadingSkeleton filter={filter} />
-        ) : (
+        {isLoading && <LoadingSkeleton filter={filter} />}
+        <div className={isLoading ? 'hidden' : 'contents'}>
           <ActiveSection filter={filter} metrics={metrics} onSectionRangeChange={onSectionRangeChange} />
-        )}
+        </div>
       </div>
     </section>
   );

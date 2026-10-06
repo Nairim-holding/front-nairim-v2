@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileSpreadsheet, FileText, Printer, RefreshCw, RotateCcw } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
+import { ReportingCompaniesProvider, ReportingCompanyFilter, useReportingCompanies } from '@/components/reports/ReportingCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { getLeaseReportAction } from '@/server/actions/lease-report';
@@ -50,14 +51,23 @@ function applyRowOrder(rows: LeaseReportRow[], order: string[]): LeaseReportRow[
  */
 
 export default function LeaseReportsPageContent() {
+  return <ReportingCompaniesProvider><LeaseReportsContent /></ReportingCompaniesProvider>;
+}
+
+function LeaseReportsContent() {
+  const { companyIds, companies } = useReportingCompanies();
   const { user } = useAuth();
   const { showMessage } = useMessageContext();
 
   const [months, setMonths] = useState<ReferenceMonth[]>(() => [currentReferenceMonth()]);
   const [redemptions, setRedemptions] = useState<InvestmentRedemptionInput[]>([]);
-  const [data, setData] = useState<LeaseReportResult | null>(null);
+  const reportKey = JSON.stringify([companyIds, months]);
+  const [generated, setGenerated] = useState<{ key: string; data: LeaseReportResult } | null>(null);
+  const data = generated?.key === reportKey ? generated.data : null;
+  const generationVersion = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [rowOrder, setRowOrder] = useState<string[]>([]);
+  useEffect(() => { generationVersion.current += 1; }, [reportKey]);
 
   const tableRef = useRef<HTMLTableElement>(null);
   const panelsRef = useRef<HTMLDivElement>(null);
@@ -102,10 +112,10 @@ export default function LeaseReportsPageContent() {
       dateRange: selectionDateRange(months),
       periodLabel,
       summaryTitle: 'Apuração de Impostos',
-      filterLabels: data?.warnings?.length || data?.unmatched?.length ? ['Há valores que precisam de conferência na tela'] : [],
+      filterLabels: [...(companyIds.length ? [`Empresas: ${companies.filter(c => companyIds.includes(c.id)).map(c => c.name).join(', ')}`] : []), ...(data?.warnings?.length || data?.unmatched?.length ? ['Há valores que precisam de conferência na tela'] : [])],
       userName: user?.name ?? '—',
     }),
-    [months, periodLabel, user, data],
+    [months, periodLabel, user, data, companyIds, companies],
   );
 
   const generate = useCallback(async () => {
@@ -114,17 +124,20 @@ export default function LeaseReportsPageContent() {
       return;
     }
     setIsLoading(true);
+    const version = ++generationVersion.current;
     try {
-      const result = await getLeaseReportAction({ months });
+      const result = await getLeaseReportAction({ months, company_ids: companyIds });
+      if (version !== generationVersion.current) return;
       if (!result.ok) throw new Error(result.error);
-      setData(result.data);
+      setGenerated({ key: reportKey, data: result.data });
     } catch (error) {
-      setData(null);
+      if (version !== generationVersion.current) return;
+      setGenerated(null);
       showMessage(error instanceof Error ? error.message : 'Erro ao gerar o relatório.', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [months, showMessage]);
+  }, [months, showMessage, companyIds, reportKey]);
 
   // O quadro de Resgate é calculado aqui: rendimento e IR retido são digitados
   // na tela, então recalcular no servidor a cada tecla só custaria round-trip.
@@ -161,7 +174,7 @@ export default function LeaseReportsPageContent() {
   const canExport = !!data && !isLoading;
 
   return (
-    <Section title="Relatório de Locações">
+    <Section title="Relatório de Locações" action={<ReportingCompanyFilter />}>
       <div className="flex min-w-0 flex-col gap-4 mt-2">
         {/* ── Seleção do período ─────────────────────────────────────────── */}
         <aside className="grid w-full min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
@@ -170,7 +183,7 @@ export default function LeaseReportsPageContent() {
             <h2 className="text-sm font-semibold text-content mb-1">Mês de referência</h2>
           </div>
 
-          <MonthSelector selected={months} onChange={(selected) => { setMonths(selected); setData(null); }} />
+          <MonthSelector selected={months} onChange={(selected) => { setMonths(selected); setGenerated(null); }} />
           </fieldset>
 
           <div className="space-y-3">

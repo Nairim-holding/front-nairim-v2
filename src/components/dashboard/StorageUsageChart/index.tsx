@@ -7,6 +7,7 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getStorageUsageAction } from '@/server/actions/dashboard-usage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 interface StorageGroup {
   key: string;
@@ -49,6 +50,8 @@ interface StorageUsageChartProps {
 }
 
 export default function StorageUsageChart({ isDraggable = false }: StorageUsageChartProps) {
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
   useTheme();
   const tokens = getThemeTokens();
 
@@ -63,7 +66,7 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
 
     (async () => {
       try {
-        const result = await getStorageUsageAction();
+        const result = await getStorageUsageAction({ company_ids: JSON.parse(scopeKey) });
         if (result.ok) {
           if (!cancelled) {
             setGroups(Array.isArray(result.data.groups) ? result.data.groups : []);
@@ -81,7 +84,7 @@ export default function StorageUsageChart({ isDraggable = false }: StorageUsageC
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scopeKey]);
 
   // Maior em cima: no eixo Y do echarts o índice 0 fica embaixo, então a ordem
   // enviada é crescente para o gráfico sair decrescente de cima para baixo.

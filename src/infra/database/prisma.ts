@@ -3,6 +3,7 @@ import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getCurrentCompanyId } from './tenant-context';
 import { withAuditContext } from './audit-context';
+import { injectReportingRead } from './reporting-context';
 
 /**
  * Client Prisma com extensão MULTI-TENANT.
@@ -87,28 +88,28 @@ function buildPrismaClient() {
       $allModels: {
         // ─── Leitura ───────────────────────────────────────────────────────
         async findMany({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findFirst({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findUnique({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findUniqueOrThrow({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async findFirstOrThrow({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async count({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async aggregate({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         async groupBy({ model, args, query }) {
-          return query(injectRead(model, args));
+          return query(injectReportingRead(model, injectRead(model, args)));
         },
         // ─── Escrita ───────────────────────────────────────────────────────
         async create({ model, args, query }) {

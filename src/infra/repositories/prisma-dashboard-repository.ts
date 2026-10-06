@@ -4,6 +4,8 @@ import { isLocationConfirmed, coordinate } from '@/shared/utils/property-locatio
 import { matchReportLease } from '@/core/entities/lease-report-matching';
 import { getPropertyMapStatus } from '@/core/entities/property-map';
 import prisma from '@/infra/database/prisma';
+import { getReportingCompanyIds } from '@/infra/database/reporting-context';
+import { reportingIdentity } from '@/shared/utils/reporting-identity';
 import type { DashboardRepository } from '@/core/repositories/dashboard-repository';
 import type { ChartData, ClientsMetrics, FinancialMetrics, GeolocationResponse, PortfolioMetrics } from '@/core/entities/dashboard';
 import {
@@ -48,7 +50,7 @@ export { calcVariation, calculateVacancyMonths, decimalToNumber, getPeriodDatesI
 
 export class PrismaDashboardRepository implements DashboardRepository {
   async getFinancial(startDate: Date, endDate: Date): Promise<FinancialMetrics> {
-    await releaseExpiredProperties(prisma);
+    if (!getReportingCompanyIds()) await releaseExpiredProperties(prisma);
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
@@ -88,7 +90,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       prisma.lease.findMany({
         where: { deleted_at: null },
         select: {
-          id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+          id: true, company_id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
           property_id: true,
           property: {
             select: {
@@ -105,7 +107,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
           effective_date: { gte: period.current.start, lte: period.current.end },
         },
         select: {
-          amount: true, description: true, effective_date: true, lease_id: true,
+          amount: true, company_id: true, description: true, effective_date: true, lease_id: true,
           is_cancellation_charge: true,
           category: { select: { type: true } },
           subcategory: { select: { name: true } },
@@ -117,7 +119,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
           effective_date: { gte: period.previous.start, lte: period.previous.end },
         },
         select: {
-          amount: true, description: true, effective_date: true, lease_id: true,
+          amount: true, company_id: true, description: true, effective_date: true, lease_id: true,
           is_cancellation_charge: true,
           category: { select: { type: true } },
           subcategory: { select: { name: true } },
@@ -129,14 +131,19 @@ export class PrismaDashboardRepository implements DashboardRepository {
     // lançamentos de aluguel concluídos, sem comissão, IPTU ou multa.
     // Cada imóvel entra uma vez no divisor, ainda que tenha mais de um contrato.
     const leasesById = new Map(leases.map((lease) => [lease.id, lease]));
+    const leasesByCompany = new Map<string, typeof leases>();
+    for (const lease of leases) {
+      const list = leasesByCompany.get(lease.company_id) ?? [];
+      list.push(lease); leasesByCompany.set(lease.company_id, list);
+    }
     const grossByProperty = (transactions: typeof currentRentTransactions) => {
       const totals = new Map<string, number>();
       for (const transaction of transactions) {
         if (classifyLeaseReportTransaction(transaction) !== 'rent') continue;
         const lease = transaction.lease_id
           ? leasesById.get(transaction.lease_id)
-          : matchReportLease(transaction.description, transaction.effective_date, leases);
-        if (!lease) continue;
+          : matchReportLease(transaction.description, transaction.effective_date, leasesByCompany.get(transaction.company_id) ?? []);
+        if (!lease || lease.company_id !== transaction.company_id) continue;
         totals.set(lease.property_id, (totals.get(lease.property_id) ?? 0) + toNum(transaction.amount));
       }
       return totals;
@@ -280,7 +287,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getPortfolio(startDate: Date, endDate: Date): Promise<PortfolioMetrics> {
-    await releaseExpiredProperties(prisma);
+    if (!getReportingCompanyIds()) await releaseExpiredProperties(prisma);
     const period = getPeriodDatesIn(startDate, endDate);
     const toNum = decimalToNumber;
 
@@ -377,7 +384,16 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
     const rentableCount = properties.filter(p => p.values[0]?.status !== 'SOLD').length;
     const prevRentableCount = prevProperties.filter(p => p.values[0]?.status !== 'SOLD').length;
-    const propertiesByType: ChartData[] = [...new Set(allDetails.map(p => p.type))].map(name => ({ name, value: allDetails.filter(p => p.type === name).length, data: allDetails.filter(p => p.type === name) }));
+    const groupTypes = <T extends { type: string }>(items: T[]): ChartData[] => {
+      const groups = new Map<string, ChartData>();
+      for (const item of items) {
+        const key = reportingIdentity(item.type);
+        const group = groups.get(key) ?? { name: item.type, value: 0, data: [] };
+        group.value += 1; group.data.push(item); groups.set(key, group);
+      }
+      return [...groups.values()];
+    };
+    const propertiesByType = groupTypes(allDetails);
     const propertiesByStatus: ChartData[] = [
       { name: 'Disponíveis', status: 'AVAILABLE' }, { name: 'Ocupados', status: 'OCCUPIED' }, { name: 'Vendidos', status: 'SOLD' },
     ].map(({ name, status }) => ({ name, value: allDetails.filter(p => p.status === status).length, data: allDetails.filter(p => p.status === status) }));
@@ -407,20 +423,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       0,
     );
 
-    const availablePropertiesByType: ChartData[] = Object.entries(
-      properties.reduce(
-        (acc: Record<string, number>, p) => {
-          const type = p.type?.description || 'Outros';
-          if ((p.values[0]?.status ?? 'AVAILABLE') === 'AVAILABLE') acc[type] = (acc[type] || 0) + 1;
-          return acc;
-        },
-        {},
-      ),
-    ).map(([name, value]) => ({
-      name,
-      value,
-      data: available.filter((p) => p.type === name),
-    }));
+    const availablePropertiesByType = groupTypes(available);
 
     return {
       totalPropertys: calcVariation(properties.length, prevProperties.length, allDetails),
@@ -637,7 +640,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getGeolocation(startDate: Date, endDate: Date): Promise<GeolocationResponse> {
-    await releaseExpiredProperties(prisma);
+    if (!getReportingCompanyIds()) await releaseExpiredProperties(prisma);
     const properties = await prisma.property.findMany({
       where: { deleted_at: null },
       include: {

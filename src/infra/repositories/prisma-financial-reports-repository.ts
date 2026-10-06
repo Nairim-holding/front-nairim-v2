@@ -14,6 +14,8 @@ import type {
   ReportParams,
 } from '@/core/entities/financial-report';
 import { parseLocalDate, formatLocalDate, displayDate } from '@/shared/utils/date-utils';
+import { isConsolidatedReporting } from '@/infra/database/reporting-context';
+import { reportingIdentity } from '@/shared/utils/reporting-identity';
 
 /**
  * Implementação Prisma de {@link FinancialReportsRepository}.
@@ -136,9 +138,9 @@ function groupKeyOf(t: RawTransaction, groupBy: ReportGroupBy | DfcGroupBy, date
     case 'description':
       return { key: t.description, label: t.description };
     case 'category':
-      return t.category ? { key: t.category.id, label: t.category.name } : { key: 'none', label: 'Sem categoria' };
+      return t.category ? { key: isConsolidatedReporting() ? reportingIdentity(t.category.type, t.category.name) : t.category.id, label: t.category.name } : { key: 'none', label: 'Sem categoria' };
     case 'subcategory':
-      return t.subcategory ? { key: t.subcategory.id, label: t.subcategory.name } : { key: 'none', label: 'Sem subcategoria' };
+      return t.subcategory ? { key: isConsolidatedReporting() ? reportingIdentity(t.category?.type, t.category?.name, t.subcategory.name) : t.subcategory.id, label: t.subcategory.name } : { key: 'none', label: 'Sem subcategoria' };
     case 'contact':
       return t.supplier ? { key: t.supplier.id, label: t.supplier.trade_name ?? t.supplier.legal_name } : { key: 'none', label: 'Sem contato' };
     case 'center':
@@ -427,10 +429,11 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
     for (const txn of unclassifiedTxns) {
       const category = txn.category;
       if (!category) continue;
-      const entry = unclassifiedByCategory.get(category.id)
+      const key = isConsolidatedReporting() ? reportingIdentity(category.type, category.name) : category.id;
+      const entry = unclassifiedByCategory.get(key)
         ?? { id: category.id, name: category.name, total: 0 };
       entry.total += Number(txn.amount);
-      unclassifiedByCategory.set(category.id, entry);
+      unclassifiedByCategory.set(key, entry);
     }
 
     return {

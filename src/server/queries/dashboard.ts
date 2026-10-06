@@ -1,6 +1,7 @@
 import 'server-only';
 import { dashboardUseCases } from '@/infra/factories/dashboard-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
 import { dashboardParamsSchema } from '@/shared/validators/dashboard';
 import { ValidationError } from '@/core/errors/domain-errors';
 import type {
@@ -27,7 +28,7 @@ export async function getDashboardSectionData(
   raw: Record<string, unknown>,
 ): Promise<FinancialMetrics | PortfolioMetrics | ClientsMetrics | GeolocationResponse> {
   const { startDate, endDate } = parseAndValidate(raw);
-  return withPermission('dashboard', 'view', async () => {
+  return withPermission('dashboard', 'view', session => withReportingScope(session, raw, async () => {
     switch (section) {
       case 'financial':
         return await dashboardUseCases.getFinancial.execute(startDate, endDate);
@@ -40,5 +41,5 @@ export async function getDashboardSectionData(
       default:
         throw new ValidationError('Seção de dashboard inválida');
     }
-  });
+  }));
 }

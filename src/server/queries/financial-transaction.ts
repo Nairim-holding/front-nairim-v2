@@ -1,6 +1,8 @@
 import 'server-only';
 import { financialTransactionUseCases } from '@/infra/factories/financial-transaction-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import { listFinancialTransactionsQuerySchema } from '@/shared/validators/financial-transaction';
 import type {
   PaginatedTransactions,
@@ -62,7 +64,11 @@ export async function getTransactionByIdData(id: string): Promise<Transaction> {
 }
 
 export async function getTransactionFiltersData(raw: Record<string, unknown>): Promise<TransactionFiltersResult> {
-  return withPermission('financial-transactions', 'view', () => financialTransactionUseCases.getFilters.execute(raw));
+  return withPermission('financial-transactions', 'view', session => withReportingScope(session, raw, async () => {
+    const filters = { ...await expandReportingFilters(raw) };
+    delete filters.company_ids;
+    return financialTransactionUseCases.getFilters.execute(filters);
+  }));
 }
 
 export async function getRelatedTransactionsData(id: string) {

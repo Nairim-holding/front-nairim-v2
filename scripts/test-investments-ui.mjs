@@ -33,8 +33,8 @@ try {
       const months = expandMonths('2025-01', '2025-01');
       const histories = products.map(p => resolveInvestmentHistory(p.application_date, p.invested_amount, [], new Map([['2025-01', p.final]]), '2025-01'));
       return { ok: true, data: { start_month: '2025-01', end_month: '2025-01', months,
-        summary: buildSummary(months, histories, 0), investments: products.map(p => ({ ...p, months: [{ year: 2025, month: 1, applied: 0, balance: p.final, balance_is_manual: true }] })),
-        planned_expenses_current_month: 0, independence_reference_amount: null, independence_base: 0 } };
+        summary: buildSummary(months, histories, 20000), investments: products.map(p => ({ ...p, months: [{ year: 2025, month: 1, applied: 0, balance: p.final, balance_is_manual: true }] })),
+        planned_expenses_current_month: 0, independence_reference_amount: 20000, independence_base: 20000 } };
     }
     export const getInvestmentFiltersAction = async () => ({ ok: true, data: { filters: [], operators: {}, searchFields: [] } });
     export const listFinancialInstitutionsAction = async () => ({ ok: true, data: { data: [{ id: 'bank', name: 'Banco de teste' }] } });
@@ -66,6 +66,7 @@ try {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:' + server.httpServer.address().port);
   await page.getByText('18.998,32', { exact: true }).waitFor();
+  await page.getByText('94,99%', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Exibir e ordenar colunas' }).click();
   await page.getByRole('checkbox', { name: 'Exibir Observações' }).uncheck();
   const row = label => page.locator('[draggable="true"]').filter({ has: page.getByText(label, { exact: true }) });

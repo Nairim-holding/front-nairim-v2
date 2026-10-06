@@ -7,6 +7,7 @@ import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getDatabaseUsageAction } from '@/server/actions/dashboard-usage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeTokens } from '@/utils';
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 
 const SAFE_PERCENT = 60;
 const WARNING_PERCENT = 80;
@@ -57,6 +58,8 @@ interface DatabaseUsageChartProps {
 }
 
 export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsageChartProps) {
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
   useTheme();
   const tokens = getThemeTokens();
 
@@ -70,7 +73,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
 
     (async () => {
       try {
-        const result = await getDatabaseUsageAction();
+        const result = await getDatabaseUsageAction({ company_ids: JSON.parse(scopeKey) });
         if (result.ok) {
           if (!cancelled) {
             setCurrent(result.data.current ?? null);
@@ -87,7 +90,7 @@ export default function DatabaseUsageChart({ isDraggable = false }: DatabaseUsag
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scopeKey]);
 
   const usedMb = current?.usedMb ?? 0;
   const quotaMb = current?.quotaMb ?? null;

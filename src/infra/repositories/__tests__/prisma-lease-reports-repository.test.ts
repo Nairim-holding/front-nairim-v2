@@ -7,8 +7,20 @@ vi.mock('@/infra/database/prisma', () => ({
 }));
 
 import { PrismaLeaseReportsRepository } from '@/infra/repositories/prisma-lease-reports-repository';
+import { runWithReportingCompanies } from '@/infra/database/reporting-context';
 
 describe('PrismaLeaseReportsRepository', () => {
+  it('batches 100 companies and keeps matching contract numbers within each company', async () => {
+    const lease = (company_id: string) => ({ company_id, id: `lease-${company_id}`, contract_number: '123', start_date: new Date('2020-01-01'), end_date: new Date('2030-12-31'), canceled_at: null, discount_amount: null, agency: { trade_name: company_id }, property: { title: company_id, income_tax_withholding: false, agency: null }, tenant: { name: company_id, cpf: null, cnpj: null } });
+    findLeases.mockResolvedValue([lease('a'), lease('b')]);
+    findMany.mockResolvedValue([
+      { id: 'tx-a', company_id: 'a', description: 'Aluguel Contrato 123', amount: 1000, effective_date: new Date('2025-01-10'), category: { type: 'INCOME' } },
+      { id: 'tx-b', company_id: 'b', description: 'Aluguel Contrato 123', amount: 2000, effective_date: new Date('2025-01-10'), category: { type: 'INCOME' } },
+    ]);
+    const report = await runWithReportingCompanies(Array.from({ length: 100 }, (_, i) => `${i}`), () => new PrismaLeaseReportsRepository().getLeaseReport({ months: [{ year: 2025, month: 1 }, { year: 2025, month: 2 }] }));
+    expect(report.rows.map(row => [row.lease_id, row.gross_revenue])).toEqual([['lease-a', 1000], ['lease-b', 2000]]);
+    expect(findMany).toHaveBeenCalledTimes(2); expect(findLeases).toHaveBeenCalledTimes(2);
+  });
   beforeEach(() => {
     findMany.mockReset();
     findLeases.mockReset();

@@ -92,7 +92,7 @@ function CheckboxOption({ opt, isChecked, onToggle }: { opt: { label: string; va
   );
 }
 
-function CheckboxGroup({
+export function CheckboxGroup({
   icon,
   title,
   options,

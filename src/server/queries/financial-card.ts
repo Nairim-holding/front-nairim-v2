@@ -1,6 +1,8 @@
 import 'server-only';
 import { financialCardUseCases } from '@/infra/factories/financial-card-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import { listFinancialCardsQuerySchema } from '@/shared/validators/financial-card';
 import type { Card, CardUsageFilters, CardUsageItem, PaginatedCards } from '@/core/entities/financial-card';
 
@@ -59,5 +61,5 @@ export async function getCardUsageSummaryData(
   endDate: Date,
   filters: CardUsageFilters,
 ): Promise<CardUsageItem[]> {
-  return withPermission('financial-cards', 'view', () => financialCardUseCases.getUsageSummary.execute(startDate, endDate, filters));
+  return withPermission('financial-cards', 'view', session => withReportingScope(session, { ...filters }, async () => financialCardUseCases.getUsageSummary.execute(startDate, endDate, await expandReportingFilters({ ...filters }))));
 }

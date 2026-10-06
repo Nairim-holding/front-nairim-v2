@@ -7,7 +7,7 @@ import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/component
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import Select, { type Option } from '@/components/ui/Select';
 import { getSubcategoryBreakdownAction } from '@/server/actions/financial-transaction';
-import { listCategoriesAction } from '@/server/actions/financial-category';
+import { getReportingCategoriesAction } from '@/server/actions/reporting-options';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
 import { getPeriodRange } from '@/utils/periodRange';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -60,13 +60,9 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
 
     (async () => {
       try {
-        const result = await listCategoriesAction({
-          limit: 100,
-          'filter[is_active]': true,
-          'filter[type]': 'EXPENSE',
-        });
+        const result = await getReportingCategoriesAction(JSON.parse(filterKey));
         if (!cancelled && result.ok) {
-          const list = Array.isArray(result.data.data) ? result.data.data : [];
+          const list = result.data.filter(c => c.type === 'EXPENSE');
           // Ordem alfabética (Tarefa 1.2, Passo 4) — faz "Despesas Fixas" ser a
           // seleção padrão quando existir, sem depender da ordem vinda da API.
           const sorted = [...list].sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
@@ -86,7 +82,7 @@ export default function SubcategoryBreakdownChart({ startDate: startDateProp, en
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [filterKey]);
 
   useEffect(() => {
     if (!selectedCategoryId) return;

@@ -16,8 +16,34 @@ vi.mock('@/generated/prisma/client', () => ({ PrismaClient: class {
 
 import { injectCreate, injectRead, injectUpdate } from './prisma';
 import { runWithTenant } from './tenant-context';
+import { getReportingCompanyIds, runWithReportingCompanies } from './reporting-context';
 
 describe('Prisma tenant isolation', () => {
+  it('broadens only authorized reporting reads, never private records or writes', async () => {
+    await runWithTenant('a', () => runWithReportingCompanies(['a', 'b'], async () => {
+      const query = async (args: TestArgs) => args;
+      for (const operation of ['findMany', 'findFirst', 'count', 'aggregate', 'groupBy']) {
+        const result = await state.handlers[operation]({ model: 'Transaction', args: { where: { company_id: 'c' } }, query });
+        expect(result.where).toEqual({ company_id: { in: ['a', 'b'] } });
+      }
+      for (const operation of ['update', 'updateMany', 'delete', 'deleteMany', 'upsert']) {
+        const result = await state.handlers[operation]({ model: 'Transaction', args: { where: { id: 'foreign' }, data: {}, create: {}, update: {} }, query });
+        expect(result.where?.company_id).toBe('a');
+      }
+      expect(injectCreate('Transaction', { data: { company_id: 'b' } }).data).toEqual({ company_id: 'a' });
+      for (const model of ['User', 'UserDashboardLayout', 'UserColumnPreference', 'Document']) {
+        const result = await state.handlers.findMany({ model, args: {}, query });
+        expect(result.where?.company_id).toBe('a');
+      }
+    }));
+    expect(getReportingCompanyIds()).toBeUndefined();
+  });
+  it('keeps parallel report contexts isolated', async () => {
+    const results = await Promise.all([['a', 'b'], ['c']].map(ids => runWithReportingCompanies(ids, async () => {
+      await Promise.resolve(); return getReportingCompanyIds();
+    })));
+    expect(results).toEqual([['a', 'b'], ['c']]);
+  });
   it.each(['Repair', 'RepairMedia'])('scopes %s reads and prevents ownership changes', model => {
     expect(runWithTenant('a', () => injectRead(model, { where: { id: 'foreign', company_id: 'b' } })).where).toEqual({ id: 'foreign', company_id: 'a' });
     expect(runWithTenant('a', () => injectCreate(model, { data: { company_id: 'b' } })).data).toEqual({ company_id: 'a' });

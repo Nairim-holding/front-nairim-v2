@@ -25,6 +25,7 @@ beforeEach(() => {
 describe('investimentos no repositório', () => {
   it.each([false, true])('retorna R$ 18.998,32 em janeiro com aportes iniciais presentes=%s', async initialTransactions => {
     const vgbl = { ...record, id: 'vgbl', product: 'VGBL', invested_amount: 707318.13 };
+    db.investmentSettings.findUnique.mockResolvedValue({ independence_reference_amount: 20000 });
     db.investment.findMany.mockResolvedValue([record, vgbl]);
     if (initialTransactions) db.investmentTransaction.findMany.mockResolvedValue([record, vgbl].map(row => ({ investment_id: row.id, type: 'CONTRIBUTION', date: row.application_date, amount: row.invested_amount })));
     db.investmentMonthBalance.findMany.mockResolvedValue([
@@ -33,6 +34,8 @@ describe('investimentos no repositório', () => {
     ]);
     const result = await repo.getDashboard({ startMonth: '2025-01', endMonth: '2025-01' });
     expect(result.summary[0]).toMatchObject({ yield_amount: 18998.32, total_balance: 1863555.21, total_applied: 0 });
+    expect(result.summary[0].independence_degree).toBe(94.99);
+    expect(result.independence_base).toBe(20000);
     expect(result.investments.map(row => row.months[0].balance)).toEqual([1148951.94, 714603.27]);
   });
 

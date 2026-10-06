@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import Section from '@/components/layout/PageSection';
+import { ReportingCompaniesProvider, ReportingCompanyFilter, useReportingCompanies } from '@/components/reports/ReportingCompanies';
 import ReportsSidebar from './_components/ReportsSidebar';
 import ReportsTopBar from './_components/ReportsTopBar';
 import GroupedReportView from './_components/GroupedReportView';
@@ -41,14 +42,23 @@ const FLUXO_FILENAMES: Record<string, string> = {
 };
 
 export default function RelatoriosPageContent() {
-  const { options, isLoading: isLoadingOptions } = useReportOptions();
+  return <ReportingCompaniesProvider><RelatoriosContent /></ReportingCompaniesProvider>;
+}
+
+function RelatoriosContent() {
+  const { companyIds, companies } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
+  const { options, isLoading: isLoadingOptions } = useReportOptions(companyIds);
   const { user } = useAuth();
 
   const [selected, setSelected] = useState<SelectedReport>({ section: 'despesas', item: 'description' });
   const [dateRange, setDateRange] = useState(() => getDefaultReportDateRange());
   const [regime, setRegime] = useState<ReportRegime>('caixa');
   const [reportKind, setReportKind] = useState<ReportKind>('sintetico');
-  const [filters, setFilters] = useState<ReportFiltersState>(EMPTY_FILTERS);
+  const [filterSelection, setFilterSelection] = useState({ scopeKey, filters: EMPTY_FILTERS });
+  const filters = filterSelection.scopeKey === scopeKey ? filterSelection.filters : EMPTY_FILTERS;
+  const setFilters = useCallback((filters: ReportFiltersState) => setFilterSelection({ scopeKey, filters }), [scopeKey]);
+  const scopedFilters = useMemo(() => ({ ...filters, company_ids: companyIds }), [filters, companyIds]);
 
   const activeViewRef = useRef<ReportViewHandle>(null);
 
@@ -72,10 +82,10 @@ export default function RelatoriosPageContent() {
     () => ({
       reportTitle,
       dateRange,
-      filterLabels: describeActiveFilters(filters, options),
+      filterLabels: [...(companyIds.length ? [`Empresas: ${companies.filter(c => companyIds.includes(c.id)).map(c => c.name).join(', ')}`] : []), ...describeActiveFilters(filters, options)],
       userName: user?.name ?? '—',
     }),
-    [reportTitle, dateRange, filters, options, user]
+    [reportTitle, dateRange, filters, options, user, companyIds, companies]
   );
 
   const handlePrint = useCallback(() => {
@@ -97,7 +107,7 @@ export default function RelatoriosPageContent() {
   const hideTypeFilter = selected.section === 'despesas' || selected.section === 'receitas';
 
   return (
-    <Section title="Relatórios" fill>
+    <Section title="Relatórios" fill action={<ReportingCompanyFilter />}>
       <div className="flex flex-1 min-h-0 -mx-3 sm:-mx-4 border-t border-ui-border-soft">
         <ReportsSidebar selected={selected} onSelect={setSelected} />
 
@@ -109,7 +119,7 @@ export default function RelatoriosPageContent() {
             onReportKindChange={setReportKind}
             regime={regime}
             onRegimeChange={setRegime}
-            filters={filters}
+            filters={scopedFilters}
             onFiltersChange={setFilters}
             options={options}
             hideTypeFilter={hideTypeFilter}
@@ -132,7 +142,7 @@ export default function RelatoriosPageContent() {
                 dateRange={dateRange}
                 regime={regime}
                 reportKind={reportKind}
-                filters={filters}
+                filters={scopedFilters}
               />
             )}
 
@@ -148,12 +158,12 @@ export default function RelatoriosPageContent() {
                 dateRange={dateRange}
                 regime={regime}
                 reportKind={reportKind}
-                filters={filters}
+                filters={scopedFilters}
               />
             )}
 
             {selected.section === 'fluxo' && selected.item === 'extrato' && (
-              <ExtratoView key="extrato" ref={activeViewRef} dateRange={dateRange} regime={regime} filters={filters} />
+              <ExtratoView key="extrato" ref={activeViewRef} dateRange={dateRange} regime={regime} filters={scopedFilters} />
             )}
 
             {selected.section === 'fluxo' && selected.item === 'income-expense' && (
@@ -163,12 +173,12 @@ export default function RelatoriosPageContent() {
                 dateRange={dateRange}
                 regime={regime}
                 reportKind={reportKind}
-                filters={filters}
+                filters={scopedFilters}
               />
             )}
 
             {selected.section === 'fluxo' && selected.item === 'demonstrativo' && (
-              <DemonstrativoView reportKind={reportKind} key={`demonstrativo-${reportKind}`} ref={activeViewRef} dateRange={dateRange} regime={regime} filters={filters} />
+              <DemonstrativoView reportKind={reportKind} key={`demonstrativo-${reportKind}`} ref={activeViewRef} dateRange={dateRange} regime={regime} filters={scopedFilters} />
             )}
           </div>
         </div>

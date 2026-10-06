@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useReportingCompanies } from '@/components/reports/ReportingCompanies';
 import dynamic from "next/dynamic";
 import { Filter } from "lucide-react";
 import { MetricResponse } from "@/types/types";
@@ -111,29 +112,33 @@ export function FinancialSection({
   // Tarefa 5.1 (29/07/26): botão Filtro, mesmo componente/endpoint de Lançamentos
   // — reflete nos gráficos de transações (Receitas e Despesas, Realizado VS
   // Planejado, % por Categoria, Detalhamento por Subcategoria).
-  const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
+  const { companyIds } = useReportingCompanies();
+  const scopeKey = JSON.stringify(companyIds);
+  const [filterSelection, setFilterSelection] = useState({ scopeKey, filters: {} as Record<string, unknown> });
+  const appliedFilters = useMemo(() => filterSelection.scopeKey === scopeKey ? filterSelection.filters : {}, [filterSelection, scopeKey]);
+  const setAppliedFilters = useCallback((filters: Record<string, unknown>) => setFilterSelection({ scopeKey, filters }), [scopeKey]);
   const [regime, setRegime] = useState<ReportRegime>('caixa');
-  const chartFilters = useMemo(() => ({ ...appliedFilters, regime }), [appliedFilters, regime]);
+  const chartFilters = useMemo(() => ({ ...appliedFilters, regime, company_ids: companyIds }), [appliedFilters, regime, companyIds]);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const filtersFetcher = useCallback(async (applied?: Record<string, unknown>) => {
-    const result = await getTransactionFiltersAction(applied ?? {});
+    const result = await getTransactionFiltersAction({ ...applied, company_ids: JSON.parse(scopeKey) });
     if (!result.ok) throw new Error(result.error ?? 'Erro ao carregar filtros.');
     return {
       ...result.data,
       filters: (result.data.filters ?? []).map((f) => ({ ...f, description: f.description ?? '' })),
     };
-  }, []);
+  }, [scopeKey]);
   const { filters: dynamicFilters } = useDynamicFilters('/financial-transaction/filters', appliedFilters, filtersFetcher);
   const activeFilterCount = Object.keys(appliedFilters).length;
 
   const handleApplyFilters = useCallback((f: Record<string, unknown>) => {
     setAppliedFilters(f);
     setIsFilterVisible(false);
-  }, []);
+  }, [setAppliedFilters]);
   const handleClearFilters = useCallback(() => {
     setAppliedFilters({});
     setIsFilterVisible(false);
-  }, []);
+  }, [setAppliedFilters]);
 
   // Tarefa 10 (29/07/26): botão "Personalizar Gráficos" ao lado do Filtro.
   const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('financeiro-v5', FINANCIAL_WIDGET_IDS);

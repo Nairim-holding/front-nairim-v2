@@ -61,6 +61,7 @@ export async function getCardUsageSummaryAction(
   return runAction(async () => {
     const parsed = cardUsageSummarySchema.parse(input);
     const filters = {
+      company_ids: input.company_ids as string[] | undefined,
       category_id: parsed.category_id,
       subcategory_id: parsed.subcategory_id,
       financial_institution_id: parsed.financial_institution_id,

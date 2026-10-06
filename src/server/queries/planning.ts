@@ -1,6 +1,8 @@
 import 'server-only';
 import { planningUseCases } from '@/infra/factories/planning-factory';
 import { withPermission } from '@/infra/auth/session';
+import { withReportingScope } from '@/infra/auth/reporting-scope';
+import { expandReportingFilters } from '@/infra/repositories/reporting-catalog';
 import { planningDashboardQuerySchema } from '@/shared/validators/planning';
 import type {
   PlanningDashboardFilters,
@@ -42,7 +44,7 @@ export async function getPlanningDashboardData(
   // Ausente = comportamento original, preservado para a tela de Planejamento.
   const sumPlannedOverPeriod = raw.sumPlannedOverPeriod === true || raw.sumPlannedOverPeriod === 'true';
 
-  return withPermission('planning', 'view', () =>
-    planningUseCases.getDashboard.execute(startDate, endDate, filters, sumPlannedOverPeriod),
-  );
+  return withPermission('planning', 'view', session => withReportingScope(session, raw, async () =>
+    planningUseCases.getDashboard.execute(startDate, endDate, await expandReportingFilters({ ...filters }), sumPlannedOverPeriod),
+  ));
 }
