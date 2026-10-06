@@ -9,9 +9,10 @@ export type LogoVariant = 'default' | 'sidebar' | 'dark';
 interface LogoProps {
   className?: string;
   variant?: LogoVariant;
+  priority?: boolean;
 }
 
-export default function Logo({ className = '', variant = 'default' }: LogoProps) {
+export default function Logo({ className = '', variant = 'default', priority = false }: LogoProps) {
   const { logoUrl, logoSidebarUrl, logoDarkUrl, companyName } = useBranding();
   const { isDark } = useTheme();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export default function Logo({ className = '', variant = 'default' }: LogoProps)
         height={46}
         className={imageClassName}
         unoptimized
+        priority={priority}
         onError={() => setFailedUrl(resolvedUrl)}
       />
     );

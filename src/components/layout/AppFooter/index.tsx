@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
 import { useBranding } from "@/contexts/BrandingContext";
 
 export default function Footer() {
@@ -40,35 +38,6 @@ export default function Footer() {
         {/* Grid Principal */}
         <div className="flex flex-col items-center text-center gap-10 md:gap-16 mb-16 md:mb-32">
 
-          {/* Logo e Descrição */}
-          {/* <div className="space-y-6 flex flex-col items-center md:space-y-10">
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1.5 }}
-              viewport={{ once: true }}
-              className="flex justify-center"
-            >
-              <div className="relative">
-                <div className="text-3xl md:text-4xl font-bold tracking-tight">
-                  <Image
-                    src="/logo.svg"
-                    alt={`Logo ${companyName}`}
-                    width={1166}
-                    height={421}
-                    className="object-contain h-14 w-auto md:h-20"
-                  />
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="flex flex-col items-center gap-4 md:gap-6">
-              <p className="text-[12px] md:text-[15px] font-light leading-relaxed max-w-md text-center text-content-muted">
-                Grupo familiar com tradição, investindo no futuro através de
-                inovação, desenvolvimento e crescimento sustentável.
-              </p>
-            </div>
-          </div> */}
 
           {/* Navegação */}
           <div className="space-y-6 md:space-y-10">
@@ -95,40 +64,6 @@ export default function Footer() {
 
         </div>
 
-      
-
-        {/* Redes Sociais */}
-        {/* <div className="flex flex-col items-center gap-8 md:gap-12 mb-12 md:mb-16">
-          <div className="text-center space-y-2">
-            <h5 className={`text-[11px] md:text-[13px] tracking-[0.3em] uppercase ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-              Conecte-se Conosco
-            </h5>
-            <p className={`text-[12px] md:text-[14px] max-w-lg ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Siga nossos projetos e iniciativas de desenvolvimento regional
-            </p>
-          </div>
-          
-          <div className="flex gap-6 md:gap-8">
-            <a
-              href="https://instagram.com/nairimholding" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-all duration-300 flex items-center justify-center text-white transform hover:scale-110"
-              aria-label="Instagram da Nairim Holding"
-            >
-              <Icon icon="mingcute:instagram-line" className="w-5 h-5 md:w-6 md:h-6" />
-            </a>
-            <a
-              href="https://facebook.com/nairimholding" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] transition-all duration-300 flex items-center justify-center text-white transform hover:scale-110"
-              aria-label="Facebook da Nairim Holding"
-            >
-              <Icon icon="mingcute:facebook-line" className="w-5 h-5 md:w-6 md:h-6" />
-            </a>
-          </div>
-        </div> */}
 
         {/* Base Legal */}
         <div className="pt-8 md:pt-12 border-t border-ui-border-soft flex flex-col items-center justify-center gap-6 md:gap-8 relative">

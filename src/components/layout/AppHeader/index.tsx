@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import Logo from "@/components/layout/Logo";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useState, useEffect, useRef } from "react";
@@ -71,12 +71,8 @@ export default function Header() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12 md:h-16">
             {/* Logo */}
-            <Link href="/" className="z-50">
-              <Image
-                src="/logo.svg"
-                alt={`logo ${companyName}`}
-                width={1166}
-                height={421}
+            <Link href="/" className="z-50" aria-label={`Página inicial — ${companyName}`}>
+              <Logo
                 className="object-contain h-10 w-auto md:h-13"
                 priority
               />

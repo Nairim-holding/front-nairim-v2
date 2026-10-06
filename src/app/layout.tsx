@@ -51,11 +51,8 @@ export async function generateMetadata(): Promise<Metadata> {
           apple: customIcon,
         }
       : {
-          icon: [
-            { url: '/favicon-dark.svg', media: '(prefers-color-scheme: light)' },
-            { url: '/favicon.svg', media: '(prefers-color-scheme: dark)' },
-          ],
-          apple: '/favicon-dark.svg',
+          icon: '/app-icon.svg',
+          apple: '/app-icon.svg',
         },
     manifest: '/manifest.json',
     openGraph: {

@@ -207,6 +207,19 @@ publicas; uma exigencia de arquivos privados precisaria de mudanca no app.
 
 ## 4. Validacao funcional na VPS
 
+O cabecalho publico usa a logo cadastrada no White Label da empresa. Sem logo,
+o espaco permanece vazio; nenhuma marca Nairim e exibida como fallback. Em
+Empresas > Editar > Branding, configure a logo principal, a versao para modo
+escuro e o favicon. O nome e o icone do aplicativo instalado tambem seguem
+a identidade da empresa; sem favicon, usa-se um icone neutro.
+
+Para aplicar apenas uma alteracao de interface, sem migrations:
+
+```bash
+git pull --ff-only origin iholding
+docker compose --env-file .env.iholding -f docker-compose.iholding.yml up -d --no-deps --build iholding-front
+```
+
 ```bash
 curl -I https://iholding.com.br/login
 curl -I http://iholding.com.br/login
