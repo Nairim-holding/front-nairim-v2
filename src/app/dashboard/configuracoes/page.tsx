@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle, History } from 'lucide-react';
 import LogsSettings from './LogsSettings';
+import PublicSiteSettings from './PublicSiteSettings';
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -165,6 +166,7 @@ export default function ConfiguracoesPage() {
   return (
     <Section title="Configurações">
       <div className="w-full min-w-0 space-y-6">
+        {user?.role === 'SUPER_ADMIN' && <PublicSiteSettings />}
         <div className="mb-2"><p className="text-sm text-content-secondary">Gerencie os dados da empresa, as cópias de segurança e o histórico de atividades.</p></div>
         <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         {/* Backup */}

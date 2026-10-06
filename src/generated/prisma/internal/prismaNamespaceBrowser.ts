@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Company: 'Company',
+  PublicSiteSettings: 'PublicSiteSettings',
   CompanyBranding: 'CompanyBranding',
   Agency: 'Agency',
   Property: 'Property',
@@ -131,6 +132,15 @@ export const CompanyScalarFieldEnum = {
 } as const
 
 export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
+
+
+export const PublicSiteSettingsScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  updated_at: 'updated_at'
+} as const
+
+export type PublicSiteSettingsScalarFieldEnum = (typeof PublicSiteSettingsScalarFieldEnum)[keyof typeof PublicSiteSettingsScalarFieldEnum]
 
 
 export const CompanyBrandingScalarFieldEnum = {

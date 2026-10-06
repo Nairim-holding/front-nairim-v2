@@ -316,6 +316,26 @@ separada do deploy da iholding e requer atualizacao coordenada dos acessos.
 
 ## Validacoes locais
 
+### Empresa da pagina principal
+
+Como SUPER_ADMIN, abra Configuracoes > Pagina principal, selecione uma empresa
+ativa e salve. A selecao e global nesta instalacao, armazenada por ID no banco,
+e controla os imoveis, detalhes e identidade visual da vitrine publica.
+Trocar o slug da empresa nao perde a selecao. Empresas desativadas ou excluidas
+nao sao publicadas. Enquanto nao houver selecao, permanece o fallback do .env.
+
+Ao atualizar uma instalacao existente, aplique a migration antes do novo front:
+
+```bash
+git pull --ff-only origin iholding
+docker compose --env-file .env.iholding -f docker-compose.iholding.yml build iholding-front iholding-migrate
+docker compose --env-file .env.iholding -f docker-compose.iholding.yml run --rm iholding-migrate
+docker compose --env-file .env.iholding -f docker-compose.iholding.yml up -d --no-deps iholding-front
+```
+
+Esses comandos preservam os dados existentes. O script up.sh tambem aplica a
+migration durante a atualizacao completa do ambiente.
+
 ```bash
 node --test deploy/iholding/operations.test.mjs deploy/iholding/compose.test.mjs deploy/iholding/schema.test.mjs deploy/iholding/startup.test.mjs
 npx tsc --noEmit

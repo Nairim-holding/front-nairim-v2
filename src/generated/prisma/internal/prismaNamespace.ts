@@ -398,6 +398,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Company: 'Company',
+  PublicSiteSettings: 'PublicSiteSettings',
   CompanyBranding: 'CompanyBranding',
   Agency: 'Agency',
   Property: 'Property',
@@ -462,7 +463,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "companyBranding" | "agency" | "property" | "repair" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
+    modelProps: "company" | "publicSiteSettings" | "companyBranding" | "agency" | "property" | "repair" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -537,6 +538,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.CompanyCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.CompanyCountAggregateOutputType> | number
+        }
+      }
+    }
+    PublicSiteSettings: {
+      payload: Prisma.$PublicSiteSettingsPayload<ExtArgs>
+      fields: Prisma.PublicSiteSettingsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PublicSiteSettingsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PublicSiteSettingsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        findFirst: {
+          args: Prisma.PublicSiteSettingsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PublicSiteSettingsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        findMany: {
+          args: Prisma.PublicSiteSettingsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>[]
+        }
+        create: {
+          args: Prisma.PublicSiteSettingsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        createMany: {
+          args: Prisma.PublicSiteSettingsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PublicSiteSettingsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>[]
+        }
+        delete: {
+          args: Prisma.PublicSiteSettingsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        update: {
+          args: Prisma.PublicSiteSettingsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        deleteMany: {
+          args: Prisma.PublicSiteSettingsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PublicSiteSettingsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PublicSiteSettingsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>[]
+        }
+        upsert: {
+          args: Prisma.PublicSiteSettingsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicSiteSettingsPayload>
+        }
+        aggregate: {
+          args: Prisma.PublicSiteSettingsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublicSiteSettings>
+        }
+        groupBy: {
+          args: Prisma.PublicSiteSettingsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicSiteSettingsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PublicSiteSettingsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicSiteSettingsCountAggregateOutputType> | number
         }
       }
     }
@@ -4219,6 +4294,15 @@ export const CompanyScalarFieldEnum = {
 export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
 
 
+export const PublicSiteSettingsScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  updated_at: 'updated_at'
+} as const
+
+export type PublicSiteSettingsScalarFieldEnum = (typeof PublicSiteSettingsScalarFieldEnum)[keyof typeof PublicSiteSettingsScalarFieldEnum]
+
+
 export const CompanyBrandingScalarFieldEnum = {
   id: 'id',
   company_id: 'company_id',
@@ -5722,6 +5806,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   company?: Prisma.CompanyOmit
+  publicSiteSettings?: Prisma.PublicSiteSettingsOmit
   companyBranding?: Prisma.CompanyBrandingOmit
   agency?: Prisma.AgencyOmit
   property?: Prisma.PropertyOmit

@@ -22,6 +22,7 @@ model Company {
   db_quota_mb Int?
 
   branding                CompanyBranding?
+  public_site_settings    PublicSiteSettings?
   users                   User[]
   properties              Property[]
   repairs                 Repair[]
@@ -55,6 +56,14 @@ model Company {
   user_group_permissions  UserGroupPermission[]
   user_access_schedules   UserAccessSchedule[]
   iptu_audit_settings     IptuAuditSettings?
+}
+
+/// Configuracao global da vitrine desta instalacao, independente da sessao.
+model PublicSiteSettings {
+  id         String @id @default("main")
+  company_id String @unique
+  company    Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  updated_at DateTime @updatedAt
 }
 
 model CompanyBranding {

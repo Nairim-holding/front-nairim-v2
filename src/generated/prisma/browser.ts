@@ -23,6 +23,11 @@ export * from './enums';
  */
 export type Company = Prisma.CompanyModel
 /**
+ * Model PublicSiteSettings
+ * Configuracao global da vitrine desta instalacao, independente da sessao.
+ */
+export type PublicSiteSettings = Prisma.PublicSiteSettingsModel
+/**
  * Model CompanyBranding
  * 
  */

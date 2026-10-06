@@ -3,8 +3,7 @@ import './globals.css';
 import localFont from 'next/font/local';
 import { AppProviders } from './providers';
 import GlobalNotifications from '@/components/feedback/Notifications';
-import { cookies } from 'next/headers';
-import { fetchBranding } from '@/lib/fetchBranding';
+import { getActiveBranding } from '@/lib/fetchBranding';
 import { buildBrandingCss } from '@/lib/brandingCss';
 
 const poppins = localFont({
@@ -20,9 +19,6 @@ const poppins = localFont({
   display: 'swap',
 });
 
-const COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
-const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
-
 // Sem isso, o RSC payload deste layout (branding da empresa ativa, lido do
 // cookie `company_slug`) pode ficar cacheado/reutilizado entre tenants
 // diferentes em produção — mesmo risco já documentado e mitigado em
@@ -33,10 +29,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const slugFromCookie = cookieStore.get('company_slug')?.value;
-  const branding = await fetchBranding(slugFromCookie ?? COMPANY_SLUG);
-  const name = branding?.company_name ?? FALLBACK_NAME;
+  const { branding, name } = await getActiveBranding();
   const title = branding?.app_title ?? branding?.trade_name ?? name;
   const description = branding?.app_description ?? `Plataforma de gestão imobiliária — ${name}`;
   const customIcon = branding?.favicon_url;
@@ -72,9 +65,7 @@ const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
 }catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const slugFromCookie = cookieStore.get('company_slug')?.value;
-  const branding = await fetchBranding(slugFromCookie ?? COMPANY_SLUG);
+  const { branding } = await getActiveBranding();
   const brandingCss = buildBrandingCss(branding);
 
   return (

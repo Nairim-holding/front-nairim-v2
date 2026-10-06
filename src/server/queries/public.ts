@@ -3,6 +3,7 @@ import { publicUseCases } from '@/infra/factories/public-factory';
 import { runWithTenant } from '@/infra/database/tenant-context';
 import { parsePublicListParams } from '@/shared/validators/public';
 import { NotFoundError } from '@/core/errors/domain-errors';
+import { getPublicSiteCompanySlug } from './public-site';
 import type {
   PublicAgency,
   PublicOwner,
@@ -25,7 +26,8 @@ import type {
 
 /** Resolve a empresa pelo slug; 404 com a mesma mensagem do backend. */
 async function withCompanySlug<T>(slug: string, fn: () => Promise<T>): Promise<T> {
-  const company = await publicUseCases.getCompanyBySlug.execute(slug);
+  // A vitrine usa a configuracao do servidor, nunca a empresa enviada pelo navegador.
+  const company = await publicUseCases.getCompanyBySlug.execute(await getPublicSiteCompanySlug());
   if (!company) throw new NotFoundError('Empresa não encontrada');
   return runWithTenant(company.id, fn);
 }
