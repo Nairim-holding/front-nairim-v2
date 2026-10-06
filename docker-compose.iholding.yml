@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-operations: &operations
-  image: iholding-operations:local
+  image: ${IHOLDING_OPERATIONS_IMAGE:-iholding-operations:local}
   build:
     context: .
     dockerfile: deploy/iholding/Dockerfile
@@ -24,7 +24,7 @@ x-mongo: &mongo
 
 services:
   iholding-front:
-    image: iholding-front:local
+    image: ${IHOLDING_FRONT_IMAGE:-iholding-front:local}
     build:
       context: .
       dockerfile: deploy/iholding/Dockerfile

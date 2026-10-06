@@ -316,6 +316,45 @@ separada do deploy da iholding e requer atualizacao coordenada dos acessos.
 
 ## Validacoes locais
 
+### Deploy pelo GitHub Actions
+
+O workflow `.github/workflows/deploy-iholding.yml` roda a cada push na branch
+`iholding` e tambem pode ser iniciado manualmente na aba Actions dessa branch.
+Ele constroi as imagens `runner` (front) e `operations` (migrations, worker e
+agendador) no GitHub e publica no GHCR com o SHA do commit. A VPS nao faz build.
+PostgreSQL, MongoDB e MinIO continuam na VPS com seus volumes existentes.
+
+Em Settings > Secrets and variables > Actions, confira os secrets ja utilizados
+pelo workflow da Nairim: `HOST_IP` deve ser a VPS `187.77.236.241`,
+`HOST_USERNAME` deve ser o usuario SSH com acesso a Docker e `/var/www/iholding`
+(atualmente `root`), e `HOST_SSH_KEY_2` deve ser sua chave privada de acesso SSH.
+Nao adicione o arquivo `.env.iholding` ao GitHub: ele permanece somente na VPS.
+O `GITHUB_TOKEN` e fornecido automaticamente e usado para publicar/baixar as
+imagens; o login na VPS usa um diretorio Docker temporario e nao altera o login
+Docker utilizado pelos outros ambientes.
+
+A conexao SSH na porta 22 e o `git fetch origin iholding` devem funcionar para
+esse usuario na VPS. O checkout existente deve estar na branch `iholding`, sem
+alteracoes locais em arquivos rastreados. O workflow atualiza por fast-forward,
+sem apagar alteracoes ou executar reset. So aplica o commit que gerou as imagens.
+
+O deploy baixa ambas as imagens, aplica migrations pendentes e atualiza somente
+front, worker de logs e agendador da iholding. Confere a saude dos servicos e
+salva as referencias das imagens em `.env.iholding` depois do sucesso. Nao
+executa bootstrap, nao recria bancos e nao apaga volumes. Se a migration falhar,
+o front anterior permanece em execucao. Se a atualizacao da aplicacao falhar,
+o Actions reporta a falha; nao ha reversao automatica das migrations.
+
+Para acompanhar, abra Actions > Deploy iholding no repositorio. Os dois jobs
+de imagem precisam terminar antes do job de deploy. A empresa da vitrine deve
+ser selecionada em Configuracoes > Pagina principal depois do primeiro deploy.
+
+Teste local do workflow e do deploy com Docker simulado:
+
+```bash
+node --test deploy/iholding/actions.test.mjs deploy/iholding/compose.test.mjs
+```
+
 ### Empresa da pagina principal
 
 Como SUPER_ADMIN, abra Configuracoes > Pagina principal, selecione uma empresa
