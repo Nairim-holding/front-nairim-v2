@@ -25,5 +25,5 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 done < .env.iholding.example > .env.iholding
 
 printf '.env.iholding criado com permissoes privadas e 7 segredos distintos.\n'
-printf 'Preencha MINIO_IMAGE, MINIO_MC_IMAGE e os dados BOOTSTRAP_ADMIN antes de subir.\n'
+printf 'Preencha os dados BOOTSTRAP_ADMIN antes de subir; MinIO e mc serao construidos automaticamente.\n'
 printf 'A senha inicial do administrador esta em BOOTSTRAP_ADMIN_PASSWORD.\n'

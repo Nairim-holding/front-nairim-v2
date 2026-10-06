@@ -68,7 +68,7 @@ Esse cadastro recebe `SUPER_ADMIN` somente no ambiente da iholding.
 | Campos | Como configurar |
 | --- | --- |
 | `MINIO_IMAGE` | Padrao `iholding-minio:2025-10-15`, construido pelo up.sh |
-| `MINIO_MC_IMAGE` | Imagem do cliente mc com tag fixa ou digest; detalhes abaixo |
+| `MINIO_MC_IMAGE` | Padrao `iholding-mc:2025-08-13`, construido pelo up.sh |
 | `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` | Nome e e-mail do responsavel pelo primeiro acesso |
 | `BOOTSTRAP_ADMIN_BIRTH_DATE`, `BOOTSTRAP_ADMIN_GENDER` | Data `AAAA-MM-DD`; genero `MALE`, `FEMALE` ou `OTHER` |
 | Sete senhas/segredos | Gerados automaticamente; mantenha-os diferentes dos da Nairim |
@@ -91,9 +91,23 @@ UID 1001. A compilacao usa ate dois processos Go e pode levar varios minutos.
 Esse build precisa de internet para baixar Go e as dependencias do MinIO.
 Ver [aviso oficial de seguranca](https://github.com/minio/minio/security/advisories/GHSA-jjjj-jwhf-8rgr).
 
-`MINIO_MC_IMAGE` deve apontar para uma imagem do cliente oficial `minio/mc`
-com versao fixa ou digest. Se optar por outra imagem de servidor homologada,
-configure `MINIO_IMAGE`; o up.sh so compila a imagem padrao acima.
+O padrao `MINIO_MC_IMAGE=iholding-mc:2025-08-13` tambem e construido pelo
+`up.sh`, usando o codigo oficial `github.com/minio/mc` na release
+`RELEASE.2025-08-13T08-35-41Z`. Nao e necessario baixar imagens `minio/mc`
+do Docker Hub ou Quay, nem autenticar nesses repositorios. O cliente inclui
+shell e certificados para inicializacao e backups. Os builds usam contexto
+vazio, sem enviar o `.env.iholding` ao Docker.
+Ver [release oficial do cliente](https://github.com/minio/mc/releases/tag/RELEASE.2025-08-13T08-35-41Z).
+
+Se o arquivo `.env.iholding` foi criado antes desta alteracao, ajuste apenas:
+
+```dotenv
+MINIO_IMAGE=iholding-minio:2025-10-15
+MINIO_MC_IMAGE=iholding-mc:2025-08-13
+```
+
+Se optar por outras imagens homologadas, configure `MINIO_IMAGE` e/ou
+`MINIO_MC_IMAGE` com tag fixa ou digest; o up.sh so compila os padroes acima.
 Confira a versao/digest da instancia atual da VPS para avaliar compatibilidade,
 sem reutilizar seu volume:
 
@@ -160,6 +174,9 @@ a interpolacao; as credenciais dos servicos sao passadas pelo proprio Compose.
 cd /var/www/iholding
 dc() { docker compose --env-file .env.iholding -f docker-compose.iholding.yml "$@"; }
 dc config --quiet
+# Para as imagens locais padrao, construir antes de iniciar os servicos.
+docker build --tag iholding-minio:2025-10-15 - < deploy/iholding/Minio.Dockerfile
+docker build --tag iholding-mc:2025-08-13 - < deploy/iholding/Mc.Dockerfile
 dc build iholding-front iholding-migrate
 dc up -d iholding-postgres iholding-mongodb iholding-minio
 dc run --rm iholding-migrate

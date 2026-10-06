@@ -16,10 +16,16 @@ printf 'Validando acesso ao Docker e configuracao da iholding...\n'
 docker info >/dev/null
 "${dc[@]}" config --quiet
 
-if "${dc[@]}" config --images | grep -Fxq 'iholding-minio:2025-10-15'; then
+images="$("${dc[@]}" config --images)"
+if grep -Fxq 'iholding-minio:2025-10-15' <<< "$images"; then
   printf 'Construindo MinIO com a correcao CVE-2025-62506...\n'
   # Contexto vazio: nenhum arquivo .env ou dado local e enviado ao build.
   docker build --tag iholding-minio:2025-10-15 - < deploy/iholding/Minio.Dockerfile
+fi
+
+if grep -Fxq 'iholding-mc:2025-08-13' <<< "$images"; then
+  printf 'Construindo o cliente MinIO a partir da release oficial...\n'
+  docker build --tag iholding-mc:2025-08-13 - < deploy/iholding/Mc.Dockerfile
 fi
 
 printf 'Construindo a aplicacao e as ferramentas de inicializacao...\n'

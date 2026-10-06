@@ -12,7 +12,7 @@ const envFile = join(temp, 'validation.env');
 const composeFile = join(root, 'docker-compose.iholding.yml');
 const dummyEnv = readFileSync(join(root, '.env.iholding.example'), 'utf8')
   .replace(/^MINIO_IMAGE=.*$/m, 'MINIO_IMAGE=minio/minio:validation-only')
-  .replace(/^MINIO_MC_IMAGE=$/m, 'MINIO_MC_IMAGE=minio/mc:validation-only')
+  .replace(/^MINIO_MC_IMAGE=.*$/m, 'MINIO_MC_IMAGE=iholding-mc:2025-08-13')
   .replace(/^(POSTGRES_PASSWORD|MONGODB_LOGS_PASSWORD|JWT_SECRET|CRON_SECRET|MINIO_ROOT_PASSWORD|MINIO_SECRET_KEY)=$/gm, '$1=validation_only_0123456789');
 writeFileSync(join(temp, 'config.json'), '{}');
 writeFileSync(envFile, dummyEnv);
@@ -50,6 +50,7 @@ test('Compose resolve isolamento, conexoes internas, rotas e volumes sem motor D
     assert.equal(config.services['iholding-minio'].labels['traefik.http.routers.iholding-cdn.rule'], 'Host(`cdn.iholding.com.br`)');
     assert.equal(config.services['iholding-postgres'].networks['traefik-public'], undefined);
     assert.equal(config.services['iholding-mongodb'].networks['traefik-public'], undefined);
+    assert.equal(config.services['iholding-storage-init'].image, 'iholding-mc:2025-08-13');
 
     writeFileSync(envFile, dummyEnv.replace(/^JWT_SECRET=.*$/m, 'JWT_SECRET='));
     assert.throws(() => execFileSync('docker', [...args, '--quiet'], { encoding: 'utf8', stdio: 'pipe' }), /Configure JWT_SECRET/);

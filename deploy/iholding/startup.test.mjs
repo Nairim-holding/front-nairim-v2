@@ -17,7 +17,7 @@ function fixture() {
   const folder = mkdtempSync(join(tmpdir(), 'iholding-startup-'));
   const scriptsFolder = join(folder, 'deploy', 'iholding');
   mkdirSync(scriptsFolder, { recursive: true });
-  for (const script of ['up.sh', 'create-env.sh', 'Minio.Dockerfile']) copyFileSync(join(scripts, script), join(scriptsFolder, script));
+  for (const script of ['up.sh', 'create-env.sh', 'Minio.Dockerfile', 'Mc.Dockerfile']) copyFileSync(join(scripts, script), join(scriptsFolder, script));
   copyFileSync(example, join(folder, '.env.iholding.example'));
   const bin = join(folder, 'bin');
   mkdirSync(bin);
@@ -25,7 +25,8 @@ function fixture() {
 set -eu
 printf '%s\\n' "$*" >> "$IHOLDING_TEST_COMMAND_LOG"
 case "$*" in
-  *'config --images'*) printf '%s\\n' 'iholding-minio:2025-10-15' ;;
+  *'config --images'*) printf '%s\\n' 'iholding-minio:2025-10-15' 'iholding-mc:2025-08-13' ;;
+  *'build --tag iholding-mc:2025-08-13 -'*) if [[ "\${IHOLDING_TEST_FAIL_MC_BUILD:-0}" = 1 ]]; then exit 10; fi ;;
   *'build iholding-front iholding-migrate'*) if [[ "\${IHOLDING_TEST_FAIL_BUILD:-0}" = 1 ]]; then exit 9; fi ;;
   *'SELECT COUNT(*) FROM "User"'*) printf '%s\\n' "\${IHOLDING_TEST_USER_COUNT:-0}" ;;
 esac
@@ -69,11 +70,24 @@ test('comando unico inicializa o administrador somente em instalacoes vazias', (
       const commands = fixtureData.commands();
       assert.ok(commands.indexOf('config --quiet') < commands.indexOf('build iholding-front'));
       assert.ok(commands.includes('build --tag iholding-minio:2025-10-15 -'));
+      assert.ok(commands.includes('build --tag iholding-mc:2025-08-13 -'));
+      assert.ok(commands.indexOf('build --tag iholding-mc:2025-08-13 -') < commands.indexOf('build iholding-front'));
       assert.ok(commands.indexOf('run --rm iholding-migrate') < commands.indexOf('run --rm iholding-storage-init'));
       assert.equal(commands.includes('run --rm iholding-bootstrap'), count === '0');
       assert.ok(commands.includes('up -d --no-build --wait --wait-timeout 300'));
     } finally { fixtureData.cleanup(); }
   }
+});
+
+test('falha na compilacao do cliente MinIO interrompe antes de construir o app ou iniciar bancos', () => {
+  const fixtureData = fixture();
+  try {
+    copyFileSync(example, join(fixtureData.folder, '.env.iholding'));
+    assert.throws(() => fixtureData.run('up.sh', { IHOLDING_TEST_FAIL_MC_BUILD: '1' }));
+    const commands = fixtureData.commands();
+    assert.ok(!commands.includes('build iholding-front'));
+    assert.ok(!commands.includes('up -d'));
+  } finally { fixtureData.cleanup(); }
 });
 
 test('falha no build interrompe a instalacao antes de iniciar bancos ou servicos', () => {
