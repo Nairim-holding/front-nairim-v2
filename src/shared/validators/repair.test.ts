@@ -30,4 +30,14 @@ describe('Cadastro de reparos', () => {
     expect(repairListSchema.safeParse({ from: '2026-10-04', to: '2026-10-02' }).success).toBe(false);
     expect(repairListSchema.safeParse({ page: 0 }).success).toBe(false);
   });
+  it('aceita múltiplos problemas, profissionais e itens de mão de obra ou materiais', () => {
+    const multiple = { ...valid, problem_types: ['HYDRAULIC', 'FINISHING', 'HYDRAULIC'], supplier_ids: [valid.supplier_id, '00000000-0000-4000-8000-000000000003'],
+      items: [{ description: 'Trocar 2 janelas', kind: 'LABOR', supplier_id: valid.supplier_id, amount: 1500 }] };
+    expect(repairSchema.parse(multiple)).toMatchObject({ problem_types: ['HYDRAULIC', 'FINISHING'], supplier_ids: multiple.supplier_ids, items: multiple.items });
+  });
+  it.each([{ problem_types: [] }, { supplier_ids: [] }, { items: [{ description: '', kind: 'LABOR', supplier_id: valid.supplier_id, amount: 1500 }] },
+    { items: [{ description: 'Janela', kind: 'OTHER', supplier_id: valid.supplier_id, amount: 5000 }] },
+    { items: [{ description: 'Janela', kind: 'MATERIAL', supplier_id: valid.supplier_id, amount: -1 }] }])('recusa seleção ou item inválido %j', change => {
+    expect(repairSchema.safeParse({ ...valid, ...change }).success).toBe(false);
+  });
 });

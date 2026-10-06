@@ -43,7 +43,7 @@ export const createInvestmentSchema = z.object({
   maturity_date: z.string().regex(ISO_DATE, 'O vencimento deve estar no formato AAAA-MM-DD').nullish(),
   liquidity_days: z.number().int().nonnegative().nullish(),
   liquidity_at_maturity: z.boolean().optional(),
-  invested_amount: z.number().positive('O valor investido deve ser maior que zero'),
+  invested_amount: z.number().finite().nonnegative('O valor investido não pode ser negativo'),
   notes: z.string().nullish(),
 });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { X, RotateCcw } from 'lucide-react';
 import type { ColumnDef } from '@/types/types';
 
@@ -24,7 +24,7 @@ export default function ColumnCustomizer({
   columns,
   onReorder,
   onReset,
-  visibleColumns = [],
+  visibleColumns,
   onVisibilityChange,
   title = 'Personalizar Colunas',
   allowReorder = true,
@@ -32,7 +32,7 @@ export default function ColumnCustomizer({
   const [localColumns, setLocalColumns] = useState<ColumnDef[]>(columns);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [localVisibleColumns, setLocalVisibleColumns] = useState<Set<string>>(
-    visibleColumns.length > 0 ? new Set(visibleColumns) : new Set(columns.map(c => c.field))
+    visibleColumns !== undefined ? new Set(visibleColumns) : new Set(columns.map(c => c.field))
   );
 
   // Update local columns when props change
@@ -40,12 +40,7 @@ export default function ColumnCustomizer({
     setLocalColumns(columns);
   }
 
-  // Sincronizar estado com prop visibleColumns quando mudar
-  useEffect(() => {
-    if (visibleColumns.length > 0) {
-      setLocalVisibleColumns(new Set(visibleColumns));
-    }
-  }, [visibleColumns]);
+  const effectiveVisibleColumns = visibleColumns !== undefined ? new Set(visibleColumns) : localVisibleColumns;
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -95,19 +90,12 @@ export default function ColumnCustomizer({
   }, [onReset, onClose]);
 
   const handleToggleVisibility = useCallback((field: string) => {
-    setLocalVisibleColumns((prev) => {
-      const newVisible = new Set(prev);
-      if (newVisible.has(field)) {
-        newVisible.delete(field);
-      } else {
-        newVisible.add(field);
-      }
-      // Chamar callback após state update
-      const newArray = Array.from(newVisible);
-      Promise.resolve().then(() => onVisibilityChange?.(newArray));
-      return newVisible;
-    });
-  }, [onVisibilityChange]);
+    const newVisible = new Set(visibleColumns ?? localVisibleColumns);
+    if (newVisible.has(field)) newVisible.delete(field);
+    else newVisible.add(field);
+    setLocalVisibleColumns(newVisible);
+    onVisibilityChange?.(Array.from(newVisible));
+  }, [visibleColumns, localVisibleColumns, onVisibilityChange]);
 
   if (!isOpen) return null;
 
@@ -143,10 +131,11 @@ export default function ColumnCustomizer({
             >
               <input
                 type="checkbox"
-                checked={localVisibleColumns.has(column.field)}
+                aria-label={`Exibir ${column.label}`}
+                checked={effectiveVisibleColumns.has(column.field)}
                 onChange={() => handleToggleVisibility(column.field)}
                 className="w-4 h-4 cursor-pointer"
-                title={localVisibleColumns.has(column.field) ? 'Ocultar' : 'Exibir'}
+                title={effectiveVisibleColumns.has(column.field) ? 'Ocultar' : 'Exibir'}
               />
               {allowReorder && (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-content-secondary flex-shrink-0">

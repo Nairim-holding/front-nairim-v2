@@ -6,6 +6,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import HoverTooltip from './HoverTooltip';
 import type { InvestmentDashboardResponse, InvestmentRow, MonthCellTarget } from './types';
 import { formatCell, formatDateBR, formatMonthHeader, formatPercent } from './format';
+import { INVESTMENT_COLUMNS } from './columns';
 
 /**
  * Grid de "Meus Investimentos".
@@ -16,31 +17,13 @@ import { formatCell, formatDateBR, formatMonthHeader, formatPercent } from './fo
  * O cabeçalho fixo (Rendimento Mensal / Grau de Indep. Financeira / Saldo Dos
  * Investimentos / Valor Total Aplicado) vive dentro do `<thead>` de propósito:
  * é a única forma de os valores continuarem alinhados às colunas de mês
- * enquanto a tabela rola na horizontal. O painel da esquerda (pill de gastos,
- * período e barra de ícones) é sobreposto pelo `content.tsx` por cima das
- * células vazias reservadas aqui — mesmo arranjo da tela de Planejamento.
+ * enquanto a tabela rola na horizontal. As colunas de identificação podem
+ * ser exibidas e reordenadas, mantendo os indicadores alinhados aos meses.
  */
-
-/** Larguras das colunas fixas, na ordem em que aparecem. */
-const COL_WIDTHS = [36, 170, 130, 180, 110, 44, 110] as const;
-export const FIXED_COL_COUNT = COL_WIDTHS.length;
-
-/** Deslocamento acumulado de cada coluna fixa (para o `left` do sticky). */
-const COL_LEFTS = COL_WIDTHS.reduce<number[]>((acc, width, index) => {
-  acc.push(index === 0 ? 0 : acc[index - 1] + COL_WIDTHS[index - 1]);
-  return acc;
-}, []);
-
-/** Largura total da área congelada — o painel da esquerda usa a mesma medida. */
-export const FIXED_AREA_WIDTH = COL_WIDTHS.reduce((sum, w) => sum + w, 0);
-/** Largura das 4 primeiras colunas: é sob elas que o painel da esquerda fica. */
-export const LEFT_PANEL_WIDTH = COL_WIDTHS.slice(0, 4).reduce((sum, w) => sum + w, 0);
 
 /** Alturas fixas para que os `top` do sticky sejam determinísticos. */
 const STAT_ROW_H = 32;
 const SPACER_H = 14;
-/** Altura total ocupada pelas 4 linhas de indicadores — usada pelo painel. */
-export const STATS_BLOCK_HEIGHT = STAT_ROW_H * 4;
 /** `top` da linha de cabeçalho das colunas. */
 const HEADER_TOP = STAT_ROW_H * 4 + SPACER_H - 5;
 
@@ -51,6 +34,7 @@ export interface InvestmentsTableHandle {
 }
 
 interface Props {
+  columns?: typeof INVESTMENT_COLUMNS;
   data: InvestmentDashboardResponse;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -70,6 +54,7 @@ const statLabelStyle = { backgroundColor: TEAL };
 
 const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function InvestmentsTable(
   {
+    columns = INVESTMENT_COLUMNS,
     data,
     selectedId,
     onSelect,
@@ -88,13 +73,18 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
   useImperativeHandle(ref, () => ({ getTableElement: () => tableRef.current }), []);
 
   const { months, summary, investments } = data;
+  const dataWidth = columns.reduce((sum, c) => sum + c.pixelWidth, 0);
+  const widths = [36, ...columns.map(c => c.pixelWidth), Math.max(110, 220 - 36 - dataWidth)];
+  const lefts = widths.map((_, index) => widths.slice(0, index).reduce((sum, width) => sum + width, 0));
+  const fixedAreaWidth = widths.reduce((sum, width) => sum + width, 0);
+  const metricIndex = widths.length - 1;
 
   /** Célula fixa (congelada à esquerda) com o offset já calculado. */
   const fixedCellStyle = (index: number, extra?: React.CSSProperties): React.CSSProperties => ({
-    width: COL_WIDTHS[index],
-    minWidth: COL_WIDTHS[index],
-    maxWidth: COL_WIDTHS[index],
-    left: COL_LEFTS[index],
+    width: widths[index],
+    minWidth: widths[index],
+    maxWidth: widths[index],
+    left: lefts[index],
     ...extra,
   });
 
@@ -107,22 +97,15 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
     labelExtra?: React.ReactNode,
   ) => (
     <tr key={key} style={{ height: STAT_ROW_H }}>
-      {[0, 1, 2, 3].map((index) => (
-        <th
-          key={`${key}-spacer-${index}`}
-          className="bg-page sticky"
-          style={{ ...fixedCellStyle(index, { top }), zIndex: 40 - index }}
-        />
-      ))}
       <th
-        colSpan={3}
+        colSpan={widths.length}
         className="sticky px-3 text-[11px] font-semibold text-white text-right whitespace-nowrap"
         style={{
           ...statLabelStyle,
-          left: COL_LEFTS[4],
+          left: 0,
           top,
-          width: COL_WIDTHS[4] + COL_WIDTHS[5] + COL_WIDTHS[6],
-          minWidth: COL_WIDTHS[4] + COL_WIDTHS[5] + COL_WIDTHS[6],
+          width: fixedAreaWidth,
+          minWidth: fixedAreaWidth,
           zIndex: 36,
         }}
       >
@@ -184,57 +167,28 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
               className="w-3.5 h-3.5 accent-[color:var(--color-brand-primary)] cursor-pointer"
             />
           </td>
-          <td
-            rowSpan={2}
-            className={`sticky z-[9] px-3 text-[11px] text-content align-middle truncate ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
-            style={fixedCellStyle(1)}
-            title={investment.institution_label}
-          >
-            {investment.institution_label}
-          </td>
-          <td
-            rowSpan={2}
-            className={`sticky z-[8] px-3 text-[11px] text-content align-middle truncate ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
-            style={fixedCellStyle(2)}
-            title={investment.issuer}
-          >
-            {investment.issuer}
-          </td>
-          <td
-            rowSpan={2}
-            className={`sticky z-[7] px-3 text-[11px] text-content align-middle truncate ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
-            style={fixedCellStyle(3)}
-            title={investment.product}
-          >
-            {investment.product}
-          </td>
-          <td
-            rowSpan={2}
-            className={`sticky z-[6] px-3 text-[11px] text-content-secondary align-middle text-center whitespace-nowrap ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
-            style={fixedCellStyle(4)}
-          >
-            {formatDateBR(investment.maturity_date) || '---'}
-          </td>
-          <td
-            rowSpan={2}
-            className={`sticky z-[5] px-0 align-middle text-center ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
-            style={fixedCellStyle(5)}
-          >
-            <div className="flex items-center justify-center">
-              {investment.notes ? (
-                // O balão vai por portal: dentro do `overflow-auto` da grid ele
-                // seria recortado nas bordas do container.
-                <HoverTooltip content={investment.notes} width={240}>
-                  {notesButton(investment)}
-                </HoverTooltip>
-              ) : (
-                notesButton(investment)
-              )}
-            </div>
-          </td>
+          {columns.map((column, index) => {
+            const value = column.field === 'maturity_date'
+              ? formatDateBR(investment.maturity_date) || '---'
+              : String(investment[column.field as keyof InvestmentRow] ?? '');
+            return (
+              <td key={column.field} rowSpan={2}
+                className={`sticky px-3 text-[11px] text-content align-middle truncate ${isSelected ? 'bg-brand/5' : 'bg-surface'}`}
+                style={fixedCellStyle(index + 1, { zIndex: 10 - index })}
+                title={column.field === 'notes' ? undefined : value}>
+                {column.field === 'notes' ? (
+                  <div className="flex items-center justify-center">
+                    {investment.notes ? (
+                      <HoverTooltip content={investment.notes} width={240}>{notesButton(investment)}</HoverTooltip>
+                    ) : notesButton(investment)}
+                  </div>
+                ) : value}
+              </td>
+            );
+          })}
           <td
             className="sticky z-[4] px-3 text-[10px] font-medium text-content-secondary text-right whitespace-nowrap bg-surface-subtle"
-            style={fixedCellStyle(6)}
+            style={fixedCellStyle(metricIndex)}
           >
             Aplicado
           </td>
@@ -292,7 +246,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
         <tr className={`border-b border-ui-border-soft ${rowTone}`}>
           <td
             className="sticky z-[4] px-3 text-[10px] font-medium text-content-secondary text-right whitespace-nowrap bg-surface-subtle"
-            style={fixedCellStyle(6)}
+            style={fixedCellStyle(metricIndex)}
           >
             Saldo Total
           </td>
@@ -365,14 +319,14 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
 
         <tr style={{ height: SPACER_H }}>
           <th
-            colSpan={FIXED_COL_COUNT + months.length}
+            colSpan={widths.length + months.length}
             className="bg-page sticky"
             style={{ top: STAT_ROW_H * 4 - 4, zIndex: 20 }}
           />
         </tr>
 
         <tr style={{ backgroundColor: TEAL }}>
-          {['', 'Inst. Fin. - Partição', 'Emissor', 'Produto', 'Vencimento', '', ''].map((label, index) => (
+          {['', ...columns.map(c => c.label), ''].map((label, index) => (
             <th
               key={`head-${index}`}
               className={`sticky px-3 py-2 text-[11px] font-semibold text-white whitespace-nowrap ${
@@ -403,7 +357,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
         {investments.length === 0 ? (
           <tr>
             <td
-              colSpan={FIXED_COL_COUNT + months.length}
+              colSpan={widths.length + months.length}
               className="px-6 py-16 text-center text-sm text-content-muted"
             >
               Nenhum investimento cadastrado para o período selecionado.

@@ -118,8 +118,15 @@ export default function Select({
   const updateDropdownRect = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-  }, []);
+    // Long forms can place the trigger at the bottom of the viewport. Open
+    // above it when the options would otherwise fall outside the screen.
+    const hasSearch = searchable ?? options.length > SEARCHABLE_THRESHOLD;
+    const menuHeight = Math.min(240, Math.max(1, options.length) * 36 + 8 + (hasSearch ? 44 : 0));
+    const spaceBelow = window.innerHeight - rect.bottom - 4;
+    const openAbove = spaceBelow < menuHeight && rect.top > spaceBelow;
+    const top = openAbove ? Math.max(4, rect.top - menuHeight - 4) : rect.bottom + 4;
+    setDropdownRect({ top, left: rect.left, width: rect.width });
+  }, [options.length, searchable]);
 
   useLayoutEffect(() => {
     if (!isOpen) return;

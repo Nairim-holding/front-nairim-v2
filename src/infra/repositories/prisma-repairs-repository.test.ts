@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const db = vi.hoisted(() => ({ repair: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), findMany: vi.fn(), count: vi.fn() },
-  property: { findFirst: vi.fn() }, supplier: { findFirst: vi.fn() }, repairMedia: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), delete: vi.fn() }, $executeRaw: vi.fn() }));
+  property: { findFirst: vi.fn() }, supplier: { findMany: vi.fn() }, repairProfessional: { deleteMany: vi.fn() }, repairItem: { deleteMany: vi.fn() }, repairMedia: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), delete: vi.fn() }, $executeRaw: vi.fn() }));
 const storage = vi.hoisted(() => ({ uploadMedia: vi.fn(), delete: vi.fn() }));
 vi.mock('@/infra/database/prisma', () => ({ default: { ...db, $transaction: async (fn: (tx: typeof db) => unknown) => fn(db) } }));
 vi.mock('@/infra/storage/minio-storage', () => ({ minioStorage: storage }));
@@ -12,15 +12,15 @@ describe('Repositório de reparos', () => {
   beforeEach(() => { vi.resetAllMocks(); storage.uploadMedia.mockResolvedValue({ url: 'https://storage/file', contentType: 'image/avif' }); });
   it('recusa contatos de outra empresa, inativos ou excluídos antes de gravar', async () => {
     db.property.findFirst.mockResolvedValue({ id: input.property_id });
-    db.supplier.findFirst.mockResolvedValue(null);
+    db.supplier.findMany.mockResolvedValue([]);
     await expect(repo.save('company', null, input)).rejects.toThrow('contato ativo');
-    expect(db.supplier.findFirst).toHaveBeenCalledWith({ where: { id: input.supplier_id, company_id: 'company', deleted_at: null, is_active: true }, select: { id: true, legal_name: true } });
+    expect(db.supplier.findMany).toHaveBeenCalledWith({ where: { id: { in: input.supplier_ids }, company_id: 'company', deleted_at: null, is_active: true }, select: { id: true, legal_name: true } });
     expect(db.repair.create).not.toHaveBeenCalled();
   });
   it('grava o ID e o nome do contato validado, mantendo os centavos', async () => {
     db.property.findFirst.mockResolvedValue({ id: input.property_id });
-    db.supplier.findFirst.mockResolvedValue({ id: input.supplier_id, legal_name: 'José Gonçalves' });
-    db.repair.create.mockImplementation(async ({ data }) => ({ ...data, id: 'r', supplier: { id: input.supplier_id, legal_name: 'José Gonçalves', trade_name: null }, media: [] }));
+    db.supplier.findMany.mockResolvedValue([{ id: input.supplier_id, legal_name: 'José Gonçalves' }]);
+    db.repair.create.mockImplementation(async ({ data }) => ({ ...data, id: 'r', items: [], professionals: [], supplier: { id: input.supplier_id, legal_name: 'José Gonçalves', trade_name: null }, media: [] }));
     const saved = await repo.save('company', null, input);
     expect(db.repair.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ supplier_id: input.supplier_id, professional: 'José Gonçalves', service_amount: 1200.50, materials_amount: 300.25, company_id: 'company' }) }));
     expect(saved).toMatchObject({ supplier_id: input.supplier_id, professional: 'José Gonçalves', supplier: { id: input.supplier_id } });
@@ -31,6 +31,30 @@ describe('Repositório de reparos', () => {
     db.repair.count.mockResolvedValue(2);
     const result = await repo.list({ page: 1 });
     expect(result.data.map(r => r.professional)).toEqual(['Nome atualizado', 'Nome antigo']);
+  });
+  it('salva vários problemas e responsáveis e calcula subtotais pelos itens, ignorando totais adulterados', async () => {
+    const secondId = '00000000-0000-4000-8000-000000000003';
+    const multiple = repairSchema.parse({ ...input, problem_types: ['HYDRAULIC', 'FINISHING'], supplier_ids: [input.supplier_id, secondId],
+      service_amount: 999, materials_amount: 999, items: [
+        { description: 'Trocar duas janelas', kind: 'LABOR', supplier_id: input.supplier_id, amount: 1500 },
+        { description: 'Duas janelas de alumínio', kind: 'MATERIAL', supplier_id: secondId, amount: 5000 },
+        { description: 'Acabamento', kind: 'LABOR', supplier_id: input.supplier_id, amount: 0.10 },
+        { description: 'Ajustes', kind: 'LABOR', supplier_id: input.supplier_id, amount: 0.20 },
+      ] });
+    db.property.findFirst.mockResolvedValue({ id: input.property_id });
+    db.supplier.findMany.mockResolvedValue([{ id: input.supplier_id, legal_name: 'Agnaldo da Silva' }, { id: secondId, legal_name: 'MultLeve' }]);
+    db.repair.create.mockImplementation(async ({ data }) => ({ ...data, id: 'r', professionals: data.professionals.create.map((p: {supplier_id: string}) => ({ ...p, supplier: { id: p.supplier_id, legal_name: p.supplier_id === secondId ? 'MultLeve' : 'Agnaldo da Silva' } })), items: data.items.create, media: [] }));
+    const saved = await repo.save('company', null, multiple);
+    expect(saved).toMatchObject({ problem_types: ['HYDRAULIC', 'FINISHING'], professional: 'Agnaldo da Silva, MultLeve', service_amount: 1500.30, materials_amount: 5000 });
+    expect(saved.items).toHaveLength(4);
+    expect(saved.professionals).toHaveLength(2);
+  });
+  it('recusa um contato de item que não pertence à empresa, mesmo com responsáveis válidos', async () => {
+    db.property.findFirst.mockResolvedValue({ id: input.property_id });
+    db.supplier.findMany.mockResolvedValue([{ id: input.supplier_id, legal_name: 'José' }]);
+    const multiple = repairSchema.parse({ ...input, items: [{ description: 'Janelas', kind: 'MATERIAL', amount: 5000, supplier_id: '00000000-0000-4000-8000-000000000003' }] });
+    await expect(repo.save('company', null, multiple)).rejects.toThrow('contato ativo');
+    expect(db.repair.create).not.toHaveBeenCalled();
   });
   it('não altera ou exclui reparo ausente do contexto da empresa', async () => {
     db.repair.findFirst.mockResolvedValue(null);

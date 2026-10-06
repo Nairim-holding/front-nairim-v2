@@ -4,6 +4,7 @@ import {
   expandMonths,
   monthKey,
   resolveBalanceSeries,
+  resolveInvestmentHistory,
 } from '@/core/use-cases/investment/dashboard-math';
 
 /**
@@ -14,6 +15,51 @@ import {
  */
 
 const MONTHS = expandMonths('2024-08', '2025-01');
+
+describe('capital inicial do cadastro', () => {
+  it.each(['2024-08-01', '2025-01-01'])('soma R$ 18.998,32 em janeiro, aplicação em %s e sem aporte inicial', application => {
+    const pgbl = resolveInvestmentHistory(application, 1137238.76, [], new Map([['2025-01', 1148951.94]]), '2025-01');
+    const vgbl = resolveInvestmentHistory(application, 707318.13, [], new Map([['2025-01', 714603.27]]), '2025-01');
+    const months = expandMonths('2025-01', '2025-01');
+    expect(buildSummary(months, [pgbl], 0)[0].yield_amount).toBe(11713.18);
+    expect(buildSummary(months, [vgbl], 0)[0].yield_amount).toBe(7285.14);
+    expect(buildSummary(months, [pgbl, vgbl], 0)[0].yield_amount).toBe(18998.32);
+  });
+
+  it('conta o aporte automático uma vez e preserva aportes extras e resgates', () => {
+    const history = resolveInvestmentHistory('2025-01-01', 1000, [
+      { date: '2025-01-01', type: 'CONTRIBUTION', amount: 1000 },
+      { date: '2025-01-01', type: 'CONTRIBUTION', amount: 1000 },
+      { date: '2025-01-10', type: 'REDEMPTION', amount: 100 },
+    ], new Map([['2025-01', 1920]]), '2025-01');
+    expect(history.applied.get('2025-01')).toBe(1900);
+    expect(buildSummary(expandMonths('2025-01', '2025-01'), [history], 0)[0].yield_amount).toBe(20);
+  });
+
+  it('usa o último saldo informado, mesmo fora do período exibido', () => {
+    const history = resolveInvestmentHistory('2024-01-01', 1000, [
+      { date: '2025-01-05', type: 'CONTRIBUTION', amount: 50 },
+      { date: '2025-01-06', type: 'REDEMPTION', amount: 100 },
+    ], new Map([['2024-12', 1200], ['2025-01', 1175]]), '2025-01');
+    const summary = buildSummary(expandMonths('2025-01', '2025-01'), [history], 0)[0];
+    expect(summary).toMatchObject({ yield_amount: 25, total_balance: 1175, total_applied: -50 });
+  });
+
+  it('permite começar com zero e calcula o rendimento após o primeiro aporte', () => {
+    const history = resolveInvestmentHistory('2024-01-01', 0, [
+      { date: '2024-01-01', type: 'CONTRIBUTION', amount: 0 },
+      { date: '2025-01-01', type: 'CONTRIBUTION', amount: 500 },
+    ], new Map([['2025-01', 510]]), '2025-02');
+    const summary = buildSummary(expandMonths('2025-01', '2025-02'), [history], 0);
+    expect(summary.map(row => row.yield_amount)).toEqual([10, 0]);
+    expect(history.balances.get('2025-02')).toBe(510);
+  });
+
+  it('não transforma cadastro de aplicação futura em rendimento no período anterior', () => {
+    const history = resolveInvestmentHistory('2026-01-01', 1000, [], new Map(), '2025-01');
+    expect(buildSummary(expandMonths('2025-01', '2025-01'), [history], 0)[0]).toMatchObject({ yield_amount: 0, total_balance: 0, total_applied: 0 });
+  });
+});
 
 function map(entries: Record<string, number>): Map<string, number> {
   return new Map(Object.entries(entries));

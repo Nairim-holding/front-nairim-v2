@@ -15,7 +15,7 @@ import { formatCurrency, parseCurrencyFromPTBR } from '@/utils/formatters';
 import { describeActionError } from '@/shared/actions/action-result';
 import { repairDetailsSchema } from '@/shared/validators/repair';
 import { quickCreateFinancialSupplierAction } from '@/server/actions/financial-supplier';
-import { REPAIR_EVENT_LABELS, REPAIR_PROBLEM_LABELS, REPAIR_STATUS_LABELS, type Repair } from '@/core/entities/repair';
+import { REPAIR_EVENT_LABELS, REPAIR_PROBLEM_LABELS, REPAIR_STATUS_LABELS, REPAIR_ITEM_LABELS, type Repair } from '@/core/entities/repair';
 import { saveRepairAction, uploadRepairMediaAction, deleteRepairMediaAction } from '@/server/actions/repair';
 
 export type PropertyOption = { id: string; title: string };
@@ -55,6 +55,13 @@ export default function RepairForm({ repair, properties, suppliers, suppliersLoa
     payment_method: repair?.payment_method ?? '', payment_conditions: repair?.payment_conditions ?? '',
     status: repair?.status ?? 'PLANNED', start_date: repair?.start_date ?? '', completion_date: repair?.completion_date ?? '', notes: repair?.notes ?? '',
   }));
+  const [problemTypes, setProblemTypes] = useState<Repair['problem_types']>(repair?.problem_types ?? [repair?.problem_type ?? 'STRUCTURAL']);
+  const [responsibles, setResponsibles] = useState<string[]>(repair?.professionals?.length ? repair.professionals.map(p => p.supplier_id) : [repair?.supplier_id ?? '']);
+  const [items, setItems] = useState(() => (repair?.items ?? []).map(item => ({ description: item.description, kind: item.kind, supplier_id: item.supplier_id, amount: formatCurrency(item.amount) })));
+  const itemTotal = (kind: string) => items.filter(item => item.kind === kind).reduce((sum, item) => sum + Math.round(parseCurrencyFromPTBR(item.amount) * 100), 0) / 100;
+  const serviceAmount = items.length ? itemTotal('LABOR') : parseCurrencyFromPTBR(form.service_amount);
+  const materialsAmount = items.length ? itemTotal('MATERIAL') : parseCurrencyFromPTBR(form.materials_amount);
+  const itemChange = (index: number, field: keyof typeof items[number], value: string) => setItems(current => current.map((item, i) => i === index ? { ...item, [field]: value } : item));
   useEffect(() => { onBusyChange(busy || mediaBusy); }, [busy, mediaBusy, onBusyChange]);
   const propertyOptions = useMemo(() => {
     const options = properties.map(p => ({ value: p.id, label: p.title }));
@@ -66,24 +73,30 @@ export default function RepairForm({ repair, properties, suppliers, suppliersLoa
     event.preventDefault();
     if (disabled) return;
     if (!form.property_id) { showMessage('Selecione o imóvel.', 'error'); return; }
-    if (!form.supplier_id) { showMessage('Selecione um contato ou escolha Adicionar novo para cadastrar o responsável.', 'error'); return; }
-    const newName = isQuickCreateSentinel(form.supplier_id) ? extractQuickCreateName(form.supplier_id).trim() : null;
-    if (newName !== null && (newName.length < 2 || newName.length > 150)) { showMessage('O nome do novo contato deve ter entre 2 e 150 caracteres.', 'error'); return; }
-    const parsed = repairDetailsSchema.safeParse({ ...form, service_amount: parseCurrencyFromPTBR(form.service_amount), materials_amount: parseCurrencyFromPTBR(form.materials_amount) });
+    if (!responsibles.length || responsibles.some(id => !id)) { showMessage('Selecione os profissionais responsáveis.', 'error'); return; }
+    const selectedIds = [...new Set([...responsibles, ...items.map(item => item.supplier_id)])];
+    if (selectedIds.some(id => isQuickCreateSentinel(id) && (extractQuickCreateName(id).trim().length < 2 || extractQuickCreateName(id).trim().length > 150))) { showMessage('O nome do novo contato deve ter entre 2 e 150 caracteres.', 'error'); return; }
+    const parsed = repairDetailsSchema.safeParse({ ...form, problem_types: problemTypes, service_amount: serviceAmount, materials_amount: materialsAmount,
+      items: items.map(item => ({ ...item, amount: parseCurrencyFromPTBR(item.amount) })) });
     if (!parsed.success) { showMessage(parsed.error.issues[0].message, 'error'); return; }
     setBusy(true);
     try {
-      let supplierId = form.supplier_id;
-      if (newName !== null) {
-        const created = await quickCreateFinancialSupplierAction({ legal_name: newName });
+      const resolved = new Map<string, string>();
+      for (const id of selectedIds) {
+        if (!isQuickCreateSentinel(id)) { resolved.set(id, id); continue; }
+        const created = await quickCreateFinancialSupplierAction({ legal_name: extractQuickCreateName(id).trim() });
         if (!created.ok) throw new Error(describeActionError(created));
         if (created.data.deleted_at || created.data.is_active === false) throw new Error('Já existe um contato inativo com esse nome. Escolha um contato ativo do Financeiro.');
-        supplierId = created.data.id;
-        onSupplierCreated({ id: supplierId, legal_name: created.data.legal_name });
-        change('supplier_id', supplierId);
+        resolved.set(id, created.data.id);
+        onSupplierCreated({ id: created.data.id, legal_name: created.data.legal_name });
       }
-      const result = await saveRepairAction(saved?.id ?? null, { ...parsed.data, supplier_id: supplierId });
+      const supplierIds = [...new Set(responsibles.map(id => resolved.get(id)!))];
+      setResponsibles(supplierIds);
+      setItems(current => current.map(item => ({ ...item, supplier_id: resolved.get(item.supplier_id)! })));
+      const result = await saveRepairAction(saved?.id ?? null, { ...parsed.data, supplier_ids: supplierIds,
+        items: parsed.data.items.map(item => ({ ...item, supplier_id: resolved.get(item.supplier_id)! })) });
       if (!result.ok) throw new Error(describeActionError(result));
+      setResponsibles(result.data.professionals.map(p => p.supplier_id));
       setSaved(result.data); onSaved(result.data); showMessage('Reparo salvo. Você pode adicionar as mídias antes e depois.', 'success');
     } catch (error) { showMessage(error instanceof Error ? error.message : 'Erro ao salvar reparo', 'error'); }
     finally { setBusy(false); }
@@ -128,19 +141,38 @@ export default function RepairForm({ repair, properties, suppliers, suppliersLoa
           <div className="md:col-span-2" data-testid="repair-property"><Select id="repair-property" label="Imóvel" required options={propertyOptions} value={form.property_id} onChange={v => change('property_id', String(v))} placeholder="Selecione o imóvel" searchable disabled={disabled} svg={<Building2 size={18} />} full /></div>
           <Input id="repair-event-date" label="Data do evento" type="date" required value={form.event_date} onChange={e => change('event_date', e.target.value)} disabled={disabled} svg={<CalendarDays size={18} />} full />
           <Select id="repair-event-type" label="Tipo do evento" required options={repairOptions(REPAIR_EVENT_LABELS)} value={form.event_type} onChange={v => change('event_type', String(v))} disabled={disabled} svg={<Hammer size={18} />} full />
-          <div><Select id="repair-problem-type" label="Tipo de problema" required options={repairOptions(REPAIR_PROBLEM_LABELS)} value={form.problem_type} onChange={v => change('problem_type', String(v))} disabled={disabled} svg={<Wrench size={18} />} full /><p className="mt-2 text-xs text-content-muted">{problemHints[form.problem_type]}</p></div>
+          <fieldset className="space-y-2"><legend className="mb-2 text-sm font-medium text-content">Tipos de problema *</legend>{repairOptions(REPAIR_PROBLEM_LABELS).map(option => <label key={option.value} className="flex items-start gap-2 text-sm text-content-secondary"><input type="checkbox" checked={problemTypes.includes(option.value as Repair['problem_type'])} disabled={disabled} onChange={e => setProblemTypes(current => e.target.checked ? [...current, option.value as Repair['problem_type']] : current.filter(value => value !== option.value))} className="mt-1 accent-brand" /><span>{option.label}<span className="block text-xs text-content-muted">{problemHints[option.value as Repair['problem_type']]}</span></span></label>)}</fieldset>
           <Select id="repair-status" label="Situação" options={repairOptions(REPAIR_STATUS_LABELS)} value={form.status} onChange={v => change('status', String(v))} disabled={disabled} svg={<CheckCircle2 size={18} />} full />
           <div className="md:col-span-2">
-            <Label label="Profissional ou empresa responsável" required svg={<UserRound size={18} />} />
-            <QuickCreateAutocomplete ariaLabel="Profissional ou empresa responsável" size="md" className="h-[40px] text-content-secondary disabled:!bg-surface-muted disabled:!text-content-muted" value={form.supplier_id} onChange={v => change('supplier_id', v)} options={suppliers.map(s => ({ value: s.id, label: s.legal_name }))} currentLabel={saved?.supplier?.legal_name ?? saved?.professional} placeholder={suppliersLoading ? 'Carregando contatos…' : readOnly && !saved?.supplier_id ? saved?.professional : 'Buscar contato ou digitar um novo nome...'} allowCreate={editable && can('financial-suppliers', 'create')} disabled={disabled || suppliersLoading} />
-            <p className="mt-2 text-xs text-content-muted">{isQuickCreateSentinel(form.supplier_id) ? 'O novo contato será cadastrado no Financeiro ao salvar o reparo.' : saved && !saved.supplier_id ? 'Responsável do histórico: ' + saved.professional + '. Selecione o contato correspondente para atualizar o reparo.' : 'Selecione um Contato do Financeiro.' + (editable && can('financial-suppliers', 'create') ? ' Para cadastrar sem sair da tela, digite o nome e escolha Adicionar novo.' : '')}</p>
+            <Label label="Profissionais ou empresas responsáveis" required svg={<UserRound size={18} />} />
+            <div className="space-y-2">{responsibles.map((id, index) => <div key={index} className="flex items-center gap-2"><div className="min-w-0 flex-1"><QuickCreateAutocomplete ariaLabel={`Responsável ${index + 1}`} size="md" value={id} onChange={v => setResponsibles(current => current.map((value, i) => i === index ? v : value))} options={suppliers.filter(s => s.id === id || !responsibles.includes(s.id)).map(s => ({ value: s.id, label: s.legal_name }))} currentLabel={saved?.professionals?.find(p => p.supplier_id === id)?.supplier.legal_name ?? (index === 0 ? saved?.professional : undefined)} placeholder={suppliersLoading ? 'Carregando contatos…' : 'Buscar contato ou digitar novo nome...'} allowCreate={editable && can('financial-suppliers', 'create')} disabled={disabled || suppliersLoading} /></div>{editable && responsibles.length > 1 && <button type="button" disabled={disabled} aria-label={`Remover responsável ${index + 1}`} onClick={() => setResponsibles(current => current.filter((_, i) => i !== index))} className="p-2 text-state-error"><Trash2 size={16} /></button>}</div>)}</div>
+            {editable && <button type="button" disabled={disabled} onClick={() => setResponsibles(current => [...current, ''])} className={`${secondaryButton} mt-2`}>Adicionar profissional</button>}
+            <p className="mt-2 text-xs text-content-muted">Selecione os Contatos do Financeiro. Novos contatos serão cadastrados ao salvar.{saved && !saved.supplier_id ? ` Responsável do histórico: ${saved.professional}.` : ''}</p>
           </div>
           <div className="md:col-span-2"><TextArea id="repair-description" label="Detalhamento do problema" required maxLength={10000} rows={3} value={form.description} onChange={e => change('description', e.target.value)} placeholder="Descreva o problema identificado e o serviço necessário" disabled={disabled} svg={<FileText size={18} />} /></div>
         </FormGroup>
         <FormGroup title="Custos e pagamento" icon={<CreditCard size={18} className="text-brand" />}>
-          <Input id="repair-service-amount" label="Valor do serviço (R$)" required mask="money" value={form.service_amount} onChange={e => change('service_amount', e.target.value)} disabled={disabled} full />
-          <Input id="repair-materials-amount" label="Valor dos materiais (R$)" required mask="money" value={form.materials_amount} onChange={e => change('materials_amount', e.target.value)} disabled={disabled} full />
-          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand/20 bg-brand/5 px-4 py-3" aria-live="polite"><span className="text-sm text-content-secondary">Custo total</span><strong className="text-lg text-brand">{formatCurrency(parseCurrencyFromPTBR(form.service_amount) + parseCurrencyFromPTBR(form.materials_amount))}</strong></div>
+          <div className="md:col-span-2 space-y-3">
+            <h4 className="text-sm font-medium text-content">Itens do reparo ou reforma</h4>
+            {items.map((item, index) => <div key={index} data-testid={`repair-item-${index}`} className="space-y-3 rounded-lg border border-ui-border p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-content">Item {index + 1}</span>
+                {editable && <button type="button" disabled={disabled} aria-label={`Excluir item ${index + 1}`} onClick={() => setItems(current => current.filter((_, i) => i !== index))} className="p-1 text-state-error"><Trash2 size={16} /></button>}
+              </div>
+              <Input id={`repair-item-description-${index}`} label="Descrição" required maxLength={1000} value={item.description} onChange={e => itemChange(index, 'description', e.target.value)} disabled={disabled} full />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select id={`repair-item-kind-${index}`} label="Tipo de custo" options={repairOptions(REPAIR_ITEM_LABELS)} value={item.kind} onChange={v => itemChange(index, 'kind', String(v))} disabled={disabled} full />
+                <Input id={`repair-item-amount-${index}`} label="Valor (R$)" required mask="money" value={item.amount} onChange={e => itemChange(index, 'amount', e.target.value)} disabled={disabled} full />
+              </div>
+              <Label label="Profissional ou fornecedor do item" required />
+              <QuickCreateAutocomplete ariaLabel={`Responsável do item ${index + 1}`} size="md" value={item.supplier_id} onChange={v => itemChange(index, 'supplier_id', v)} options={suppliers.map(s => ({ value: s.id, label: s.legal_name }))} currentLabel={saved?.items?.[index]?.professional} allowCreate={editable && can('financial-suppliers', 'create')} disabled={disabled || suppliersLoading} placeholder="Selecione o contato do serviço ou da compra" />
+            </div>)}
+            {editable && <button type="button" disabled={disabled || items.length >= 200} className={secondaryButton} onClick={() => setItems(current => [...current, { description: '', kind: 'LABOR', supplier_id: responsibles[0] ?? '', amount: formatCurrency(0) }])}>Adicionar item</button>}
+            <p className="text-xs text-content-muted">Ao lançar itens, os subtotais são calculados pelos seus valores.</p>
+          </div>
+          <Input id="repair-service-amount" label="Sub-total mão de obra (R$)" required mask="money" value={items.length ? formatCurrency(serviceAmount) : form.service_amount} onChange={e => change('service_amount', e.target.value)} disabled={disabled || items.length > 0} full />
+          <Input id="repair-materials-amount" label="Sub-total materiais (R$)" required mask="money" value={items.length ? formatCurrency(materialsAmount) : form.materials_amount} onChange={e => change('materials_amount', e.target.value)} disabled={disabled || items.length > 0} full />
+          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand/20 bg-brand/5 px-4 py-3" aria-live="polite"><span className="text-sm text-content-secondary">Total geral</span><strong className="text-lg text-brand">{formatCurrency(serviceAmount + materialsAmount)}</strong></div>
           <Input id="repair-payment-method" label="Forma de pagamento" required maxLength={100} value={form.payment_method} onChange={e => change('payment_method', e.target.value)} placeholder="Ex.: Pix, boleto ou transferência" disabled={disabled} svg={<CreditCard size={18} />} full />
           <Input id="repair-payment-conditions" label="Condições de pagamento" required maxLength={1000} value={form.payment_conditions} onChange={e => change('payment_conditions', e.target.value)} placeholder="Ex.: entrada de 30% + 2 parcelas" disabled={disabled} full />
         </FormGroup>

@@ -5,6 +5,7 @@ import {
   ArrowDownToLine,
   ArrowUpDown,
   Calendar,
+  Columns3,
   FileSpreadsheet,
   FileText,
   Filter,
@@ -23,15 +24,16 @@ import Section from '@/components/layout/PageSection';
 import CalendarPicker from '@/components/ui/CalendarPicker';
 import DynamicFilterModal from '@/components/filters/DynamicFilterModal';
 import { useDynamicFilters, type DynamicFiltersResponse } from '@/hooks/useDynamicFilters';
-import { useMessageContext, usePopupContext } from '@/contexts';
+import { useAuth, useMessageContext, usePopupContext } from '@/contexts';
+import ColumnCustomizer from '@/components/table/ColumnCustomizer';
+import { INVESTMENT_COLUMNS, resolveInvestmentColumns } from '@/components/investimentos/columns';
+import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/server/actions/user-preferences';
 import {
   deleteInvestmentAction,
   getInvestmentDashboardAction,
   getInvestmentFiltersAction,
 } from '@/server/actions/investment';
 import InvestmentsTable, {
-  LEFT_PANEL_WIDTH,
-  STATS_BLOCK_HEIGHT,
   type InvestmentsTableHandle,
 } from '@/components/investimentos/InvestmentsTable';
 import InvestmentFormModal from '@/components/investimentos/InvestmentFormModal';
@@ -53,10 +55,8 @@ import type {
 /**
  * Tela "Meus Investimentos".
  *
- * O painel da esquerda (gastos planejados, período e barra de ícones) é
- * posicionado por cima das colunas congeladas do cabeçalho da grid — mesmo
- * arranjo da tela de Planejamento e Controle, que mantém o bloco de
- * indicadores fixo enquanto a tabela rola.
+ * Os controles ficam acima da grid para continuar acessíveis mesmo quando
+ * todas as colunas de identificação forem ocultadas.
  */
 
 type ModalState =
@@ -76,6 +76,7 @@ const iconButtonClass =
   'p-2 rounded-lg border border-ui-border text-content-muted hover:text-content hover:bg-surface-subtle disabled:opacity-50 transition-colors';
 
 export default function InvestmentsPageContent() {
+  const { user } = useAuth();
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   const defaults = useMemo(() => getDefaultDateRange(), []);
@@ -86,6 +87,47 @@ export default function InvestmentsPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
+  const [columnOrder, setColumnOrder] = useState(INVESTMENT_COLUMNS.map(c => c.field));
+  const [visibleColumns, setVisibleColumns] = useState(INVESTMENT_COLUMNS.map(c => c.field));
+  const [isColumnsOpen, setIsColumnsOpen] = useState(false);
+  const [columnsReady, setColumnsReady] = useState(false);
+  const [isSavingColumns, setIsSavingColumns] = useState(false);
+  const orderedColumns = useMemo(() => resolveInvestmentColumns(columnOrder), [columnOrder]);
+  const displayedColumns = useMemo(() => resolveInvestmentColumns(columnOrder, visibleColumns), [columnOrder, visibleColumns]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setColumnsReady(false);
+    setIsColumnsOpen(false);
+    getColumnPreferencesAction('investments').then(result => {
+      if (cancelled) return;
+      if (!result.ok) {
+        showMessage(result.error, 'error');
+      }
+      const saved = result.ok && result.data.columnOrder.length > 0 ? result.data : null;
+      setColumnOrder(resolveInvestmentColumns(saved?.columnOrder ?? []).map(c => c.field));
+      setVisibleColumns(saved?.visibleColumns ?? INVESTMENT_COLUMNS.map(c => c.field));
+      setColumnsReady(true);
+    }).catch(() => {
+      if (cancelled) return;
+      setColumnsReady(true);
+      showMessage('Erro ao carregar as preferências de colunas', 'error');
+    });
+    return () => { cancelled = true; };
+  }, [user?.id, user?.company_id, showMessage]);
+
+  const closeColumns = async () => {
+    setIsColumnsOpen(false);
+    setIsSavingColumns(true);
+    try {
+      const result = await saveColumnPreferencesAction({ resource: 'investments', columnOrder, visibleColumns, columnWidths: {} });
+      if (!result.ok) throw new Error(result.error);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao salvar as preferências de colunas', 'error');
+    } finally {
+      setIsSavingColumns(false);
+    }
+  };
 
   // Seleção de meses para "Gerenciar selecionados" (item 4): sempre de UM
   // investimento por vez — marcar um mês de outro investimento reinicia a
@@ -298,6 +340,11 @@ export default function InvestmentsPageContent() {
       >
         <ArrowUpDown size={16} />
       </button>
+      <button type="button" onClick={() => setIsColumnsOpen(true)}
+        disabled={!columnsReady || isSavingColumns} className={iconButtonClass}
+        title="Exibir e ordenar colunas">
+        <Columns3 size={16} />
+      </button>
       <button
         type="button"
         onClick={() => setIsFilterVisible(true)}
@@ -421,21 +468,10 @@ export default function InvestmentsPageContent() {
   return (
     <Section title="Meus Investimentos">
       <div className="relative flex flex-col gap-4">
-        {/* Mobile: os controles não cabem sobre a grid — ficam acima dela. */}
-        <div className="flex flex-col gap-2 md:hidden">
+        <div className="flex flex-col gap-2">
           <div>{plannedPill}</div>
           <div className="flex items-center gap-2 flex-wrap">{periodControls}</div>
           <div className="flex items-center gap-2 flex-wrap">{toolbar}</div>
-        </div>
-
-        {/* Desktop: sobreposto às colunas congeladas do cabeçalho da grid. */}
-        <div
-          className="hidden md:flex absolute top-0 left-0 z-[100] flex-col justify-between py-1"
-          style={{ width: LEFT_PANEL_WIDTH, height: STATS_BLOCK_HEIGHT }}
-        >
-          <div>{plannedPill}</div>
-          <div className="flex items-center gap-1.5">{periodControls}</div>
-          <div className="flex items-center gap-1.5">{toolbar}</div>
         </div>
 
         {isLoading && (
@@ -451,11 +487,12 @@ export default function InvestmentsPageContent() {
         )}
 
         {!isLoading && data && (
-          <div className="overflow-auto max-h-[calc(100vh-150px)] md:max-h-[calc(100vh-90px)] rounded-xl">
+          <div className="overflow-auto max-h-[calc(100vh-290px)] rounded-xl">
             <div className="inline-block align-top min-w-full">
               <InvestmentsTable
                 ref={tableRef}
                 data={data}
+                columns={displayedColumns}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 onEditInvestment={(investment) => setModal({ kind: 'edit', investment })}
@@ -471,6 +508,16 @@ export default function InvestmentsPageContent() {
           </div>
         )}
       </div>
+
+      {isColumnsOpen && (
+        <ColumnCustomizer isOpen onClose={closeColumns} columns={orderedColumns}
+          visibleColumns={visibleColumns} onVisibilityChange={setVisibleColumns}
+          onReorder={columns => setColumnOrder(columns.map(c => c.field))}
+          onReset={() => {
+            setColumnOrder(INVESTMENT_COLUMNS.map(c => c.field));
+            setVisibleColumns(INVESTMENT_COLUMNS.map(c => c.field));
+          }} />
+      )}
 
       {(modal.kind === 'create' || modal.kind === 'edit') && (
         <InvestmentFormModal

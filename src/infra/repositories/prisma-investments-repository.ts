@@ -20,7 +20,7 @@ import {
   buildSummary,
   expandMonths,
   monthKey,
-  resolveBalanceSeries,
+  resolveInvestmentHistory,
   round2,
 } from '@/core/use-cases/investment/dashboard-math';
 import { formatLocalDate, parseLocalDate } from '@/shared/utils/date-utils';
@@ -148,10 +148,10 @@ function parseDateRange(raw: string): { gte?: Date; lte?: Date } | null {
 }
 
 /** Investimento da empresa da sessão, ou erro — porta de entrada das filhas. */
-async function requireInvestment(id: string): Promise<{ id: string; application_date: Date }> {
+async function requireInvestment(id: string) {
   const found = await prisma.investment.findFirst({
     where: { id, deleted_at: null },
-    select: { id: true, application_date: true },
+    select: { id: true, application_date: true, invested_amount: true },
   });
   if (!found) throw new NotFoundError('Investimento não encontrado');
   return found;
@@ -221,15 +221,11 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       this.getSettings(),
     ]);
 
-    // aplicado[investimento][YYYY-MM] — aporte soma, resgate subtrai.
-    const appliedBy = new Map<string, Map<string, number>>();
+    const transactionsBy = new Map<string, { date: string; type: 'CONTRIBUTION' | 'REDEMPTION'; amount: number }[]>();
     for (const tx of transactions) {
-      const date = tx.date;
-      const key = monthKey(date.getUTCFullYear(), date.getUTCMonth() + 1);
-      const perInvestment = appliedBy.get(tx.investment_id) ?? new Map<string, number>();
-      const signed = tx.type === 'REDEMPTION' ? -Number(tx.amount) : Number(tx.amount);
-      perInvestment.set(key, (perInvestment.get(key) ?? 0) + signed);
-      appliedBy.set(tx.investment_id, perInvestment);
+      const perInvestment = transactionsBy.get(tx.investment_id) ?? [];
+      perInvestment.push({ date: formatLocalDate(tx.date), type: tx.type, amount: Number(tx.amount) });
+      transactionsBy.set(tx.investment_id, perInvestment);
     }
 
     const manualBalanceBy = new Map<string, Map<string, number>>();
@@ -240,37 +236,23 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       manualBalanceBy.set(balance.investment_id, perInvestment);
     }
 
-    // O primeiro mês da grid precisa do saldo do mês ANTERIOR para o
-    // Rendimento. Por isso a série é calculada de (aplicação − 1 mês) até o
-    // fim da janela e só depois recortada nos meses exibidos.
+    // O primeiro mês exibido precisa do histórico anterior para o rendimento.
+    // Resolvemos o cadastro, os aportes/resgates e os saldos informados desde
+    // o início do investimento, recortando a série apenas na saída.
     const investments: InvestmentRow[] = [];
     const balanceSeries = new Map<string, Map<string, number | null>>();
     const appliedSeries = new Map<string, Map<string, number>>();
 
     for (const record of records) {
       const entity = toEntity(record as InvestmentRecord);
-      const applied = appliedBy.get(entity.id) ?? new Map<string, number>();
       const manual = manualBalanceBy.get(entity.id) ?? new Map<string, number>();
-
-      const appDate = record.application_date;
-      const seriesStart = { year: appDate.getUTCFullYear(), month: appDate.getUTCMonth() + 1 };
-      // Cobre o caso de saldo informado em mês anterior à aplicação (importação).
-      const earliestManual = [...manual.keys()].sort()[0];
-      if (earliestManual) {
-        const [my, mm] = earliestManual.split('-').map(Number);
-        if (my < seriesStart.year || (my === seriesStart.year && mm < seriesStart.month)) {
-          seriesStart.year = my;
-          seriesStart.month = mm;
-        }
-      }
-
-      const seriesStartKey = monthKey(seriesStart.year, seriesStart.month);
-      const seriesMonths =
-        seriesStartKey <= monthKey(last.year, last.month)
-          ? expandMonths(seriesStartKey, monthKey(last.year, last.month))
-          : [];
-
-      const resolved = resolveBalanceSeries(seriesMonths, applied, manual);
+      const { balances: resolved, applied } = resolveInvestmentHistory(
+        entity.application_date,
+        entity.invested_amount,
+        transactionsBy.get(entity.id) ?? [],
+        manual,
+        monthKey(last.year, last.month),
+      );
       balanceSeries.set(entity.id, resolved);
       appliedSeries.set(entity.id, applied);
 
@@ -378,7 +360,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
   }
 
   async update(id: string, data: UpdateInvestmentData): Promise<Investment> {
-    await requireInvestment(id);
+    const previous = await requireInvestment(id);
 
     const payload: Record<string, unknown> = {};
     if (data.financial_institution_id !== undefined) payload.financial_institution_id = data.financial_institution_id;
@@ -399,32 +381,39 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       payload.liquidated_at = data.liquidated_at ? parseLocalDate(data.liquidated_at) : null;
     }
 
-    const updated = await prisma.investment.update({
-      where: { id },
-      data: payload,
-      include: { financial_institution: { select: { name: true } } },
-    });
-
-    // A transação da aplicação inicial acompanha data/valor do investimento —
-    // senão a linha "Aplicado" contradiria o cadastro logo após uma edição.
-    if (data.application_date !== undefined || data.invested_amount !== undefined) {
-      const first = await prisma.investmentTransaction.findFirst({
-        where: { investment_id: id },
-        orderBy: [{ date: 'asc' }, { created_at: 'asc' }],
-        select: { id: true },
+    return prisma.$transaction(async tx => {
+      const updated = await tx.investment.update({
+        where: { id },
+        data: payload,
+        include: { financial_institution: { select: { name: true } } },
       });
-      if (first) {
-        await prisma.investmentTransaction.update({
-          where: { id: first.id },
-          data: {
-            ...(data.application_date !== undefined ? { date: parseLocalDate(data.application_date) } : {}),
-            ...(data.invested_amount !== undefined ? { amount: data.invested_amount } : {}),
-          },
-        });
-      }
-    }
 
-    return toEntity(updated as InvestmentRecord);
+      // A transação da aplicação inicial acompanha data/valor do investimento —
+      // senão a linha "Aplicado" contradiria o cadastro logo após uma edição.
+      if (data.application_date !== undefined || data.invested_amount !== undefined) {
+        const first = await tx.investmentTransaction.findFirst({
+          where: { investment_id: id, type: 'CONTRIBUTION', date: previous.application_date, amount: previous.invested_amount },
+          orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
+          select: { id: true },
+        });
+        if (first) {
+          await tx.investmentTransaction.update({
+            where: { id: first.id },
+            data: {
+              ...(data.application_date !== undefined ? { date: parseLocalDate(data.application_date) } : {}),
+              ...(data.invested_amount !== undefined ? { amount: data.invested_amount } : {}),
+            },
+          });
+        } else {
+          await tx.investmentTransaction.create({ data: {
+            investment_id: id, type: 'CONTRIBUTION', date: data.application_date ? parseLocalDate(data.application_date) : previous.application_date,
+            amount: data.invested_amount ?? previous.invested_amount,
+          } });
+        }
+      }
+
+      return toEntity(updated as InvestmentRecord);
+    });
   }
 
   async softDelete(id: string): Promise<void> {

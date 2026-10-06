@@ -320,6 +320,8 @@ export type SupplierWhereInput = {
   marital_status?: Prisma.StringNullableFilter<"Supplier"> | string | null
   occupation?: Prisma.StringNullableFilter<"Supplier"> | string | null
   agency_id?: Prisma.StringNullableFilter<"Supplier"> | string | null
+  repair_professionals?: Prisma.RepairProfessionalListRelationFilter
+  repair_items?: Prisma.RepairItemListRelationFilter
   contacts?: Prisma.ContactListRelationFilter
   recurring_configs?: Prisma.RecurringConfigListRelationFilter
   addresses?: Prisma.SupplierAddressListRelationFilter
@@ -348,6 +350,8 @@ export type SupplierOrderByWithRelationInput = {
   marital_status?: Prisma.SortOrderInput | Prisma.SortOrder
   occupation?: Prisma.SortOrderInput | Prisma.SortOrder
   agency_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  repair_professionals?: Prisma.RepairProfessionalOrderByRelationAggregateInput
+  repair_items?: Prisma.RepairItemOrderByRelationAggregateInput
   contacts?: Prisma.ContactOrderByRelationAggregateInput
   recurring_configs?: Prisma.RecurringConfigOrderByRelationAggregateInput
   addresses?: Prisma.SupplierAddressOrderByRelationAggregateInput
@@ -380,6 +384,8 @@ export type SupplierWhereUniqueInput = Prisma.AtLeast<{
   marital_status?: Prisma.StringNullableFilter<"Supplier"> | string | null
   occupation?: Prisma.StringNullableFilter<"Supplier"> | string | null
   agency_id?: Prisma.StringNullableFilter<"Supplier"> | string | null
+  repair_professionals?: Prisma.RepairProfessionalListRelationFilter
+  repair_items?: Prisma.RepairItemListRelationFilter
   contacts?: Prisma.ContactListRelationFilter
   recurring_configs?: Prisma.RecurringConfigListRelationFilter
   addresses?: Prisma.SupplierAddressListRelationFilter
@@ -456,6 +462,8 @@ export type SupplierCreateInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
@@ -484,6 +492,8 @@ export type SupplierUncheckedCreateInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
@@ -508,6 +518,8 @@ export type SupplierUpdateInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
@@ -536,6 +548,8 @@ export type SupplierUncheckedUpdateInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
@@ -619,6 +633,11 @@ export type SupplierNullableScalarRelationFilter = {
   isNot?: Prisma.SupplierWhereInput | null
 }
 
+export type SupplierScalarRelationFilter = {
+  is?: Prisma.SupplierWhereInput
+  isNot?: Prisma.SupplierWhereInput
+}
+
 export type SupplierCompany_idInternal_codeCompoundUniqueInput = {
   company_id: string
   internal_code: string
@@ -693,11 +712,6 @@ export type SupplierMinOrderByAggregateInput = {
 
 export type SupplierSumOrderByAggregateInput = {
   sequential_id?: Prisma.SortOrder
-}
-
-export type SupplierScalarRelationFilter = {
-  is?: Prisma.SupplierWhereInput
-  isNot?: Prisma.SupplierWhereInput
 }
 
 export type SupplierCreateNestedManyWithoutCompanyInput = {
@@ -800,6 +814,34 @@ export type SupplierUpdateOneWithoutRepairsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SupplierUpdateToOneWithWhereWithoutRepairsInput, Prisma.SupplierUpdateWithoutRepairsInput>, Prisma.SupplierUncheckedUpdateWithoutRepairsInput>
 }
 
+export type SupplierCreateNestedOneWithoutRepair_professionalsInput = {
+  create?: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedCreateWithoutRepair_professionalsInput>
+  connectOrCreate?: Prisma.SupplierCreateOrConnectWithoutRepair_professionalsInput
+  connect?: Prisma.SupplierWhereUniqueInput
+}
+
+export type SupplierUpdateOneRequiredWithoutRepair_professionalsNestedInput = {
+  create?: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedCreateWithoutRepair_professionalsInput>
+  connectOrCreate?: Prisma.SupplierCreateOrConnectWithoutRepair_professionalsInput
+  upsert?: Prisma.SupplierUpsertWithoutRepair_professionalsInput
+  connect?: Prisma.SupplierWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SupplierUpdateToOneWithWhereWithoutRepair_professionalsInput, Prisma.SupplierUpdateWithoutRepair_professionalsInput>, Prisma.SupplierUncheckedUpdateWithoutRepair_professionalsInput>
+}
+
+export type SupplierCreateNestedOneWithoutRepair_itemsInput = {
+  create?: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_itemsInput, Prisma.SupplierUncheckedCreateWithoutRepair_itemsInput>
+  connectOrCreate?: Prisma.SupplierCreateOrConnectWithoutRepair_itemsInput
+  connect?: Prisma.SupplierWhereUniqueInput
+}
+
+export type SupplierUpdateOneRequiredWithoutRepair_itemsNestedInput = {
+  create?: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_itemsInput, Prisma.SupplierUncheckedCreateWithoutRepair_itemsInput>
+  connectOrCreate?: Prisma.SupplierCreateOrConnectWithoutRepair_itemsInput
+  upsert?: Prisma.SupplierUpsertWithoutRepair_itemsInput
+  connect?: Prisma.SupplierWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SupplierUpdateToOneWithWhereWithoutRepair_itemsInput, Prisma.SupplierUpdateWithoutRepair_itemsInput>, Prisma.SupplierUncheckedUpdateWithoutRepair_itemsInput>
+}
+
 export type SupplierCreateNestedOneWithoutContactsInput = {
   create?: Prisma.XOR<Prisma.SupplierCreateWithoutContactsInput, Prisma.SupplierUncheckedCreateWithoutContactsInput>
   connectOrCreate?: Prisma.SupplierCreateOrConnectWithoutContactsInput
@@ -879,6 +921,8 @@ export type SupplierCreateWithoutCompanyInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
@@ -905,6 +949,8 @@ export type SupplierUncheckedCreateWithoutCompanyInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
@@ -979,6 +1025,8 @@ export type SupplierCreateWithoutAgencyInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
@@ -1005,6 +1053,8 @@ export type SupplierUncheckedCreateWithoutAgencyInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
@@ -1055,6 +1105,8 @@ export type SupplierCreateWithoutRepairsInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
@@ -1082,6 +1134,8 @@ export type SupplierUncheckedCreateWithoutRepairsInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
@@ -1121,6 +1175,8 @@ export type SupplierUpdateWithoutRepairsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
@@ -1148,10 +1204,260 @@ export type SupplierUncheckedUpdateWithoutRepairsInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
+}
+
+export type SupplierCreateWithoutRepair_professionalsInput = {
+  id?: string
+  sequential_id?: number
+  legal_name: string
+  trade_name?: string | null
+  cnpj?: string | null
+  state_registration?: string | null
+  municipal_registration?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cpf?: string | null
+  internal_code?: string | null
+  created_via?: string | null
+  is_active?: boolean
+  marital_status?: string | null
+  occupation?: string | null
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
+  contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
+  addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutSupplierInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutSupplierInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutSuppliersInput
+  company: Prisma.CompanyCreateNestedOneWithoutSuppliersInput
+}
+
+export type SupplierUncheckedCreateWithoutRepair_professionalsInput = {
+  id?: string
+  company_id: string
+  sequential_id?: number
+  legal_name: string
+  trade_name?: string | null
+  cnpj?: string | null
+  state_registration?: string | null
+  municipal_registration?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cpf?: string | null
+  internal_code?: string | null
+  created_via?: string | null
+  is_active?: boolean
+  marital_status?: string | null
+  occupation?: string | null
+  agency_id?: string | null
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
+  contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
+  addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutSupplierInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutSupplierInput
+}
+
+export type SupplierCreateOrConnectWithoutRepair_professionalsInput = {
+  where: Prisma.SupplierWhereUniqueInput
+  create: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedCreateWithoutRepair_professionalsInput>
+}
+
+export type SupplierUpsertWithoutRepair_professionalsInput = {
+  update: Prisma.XOR<Prisma.SupplierUpdateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedUpdateWithoutRepair_professionalsInput>
+  create: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedCreateWithoutRepair_professionalsInput>
+  where?: Prisma.SupplierWhereInput
+}
+
+export type SupplierUpdateToOneWithWhereWithoutRepair_professionalsInput = {
+  where?: Prisma.SupplierWhereInput
+  data: Prisma.XOR<Prisma.SupplierUpdateWithoutRepair_professionalsInput, Prisma.SupplierUncheckedUpdateWithoutRepair_professionalsInput>
+}
+
+export type SupplierUpdateWithoutRepair_professionalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sequential_id?: Prisma.IntFieldUpdateOperationsInput | number
+  legal_name?: Prisma.StringFieldUpdateOperationsInput | string
+  trade_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipal_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  internal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_via?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
+  contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
+  addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutSupplierNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutSupplierNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutSuppliersNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutSuppliersNestedInput
+}
+
+export type SupplierUncheckedUpdateWithoutRepair_professionalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  sequential_id?: Prisma.IntFieldUpdateOperationsInput | number
+  legal_name?: Prisma.StringFieldUpdateOperationsInput | string
+  trade_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipal_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  internal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_via?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
+  contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
+  addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutSupplierNestedInput
+}
+
+export type SupplierCreateWithoutRepair_itemsInput = {
+  id?: string
+  sequential_id?: number
+  legal_name: string
+  trade_name?: string | null
+  cnpj?: string | null
+  state_registration?: string | null
+  municipal_registration?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cpf?: string | null
+  internal_code?: string | null
+  created_via?: string | null
+  is_active?: boolean
+  marital_status?: string | null
+  occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
+  recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
+  addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutSupplierInput
+  repairs?: Prisma.RepairCreateNestedManyWithoutSupplierInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutSuppliersInput
+  company: Prisma.CompanyCreateNestedOneWithoutSuppliersInput
+}
+
+export type SupplierUncheckedCreateWithoutRepair_itemsInput = {
+  id?: string
+  company_id: string
+  sequential_id?: number
+  legal_name: string
+  trade_name?: string | null
+  cnpj?: string | null
+  state_registration?: string | null
+  municipal_registration?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  cpf?: string | null
+  internal_code?: string | null
+  created_via?: string | null
+  is_active?: boolean
+  marital_status?: string | null
+  occupation?: string | null
+  agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
+  addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutSupplierInput
+  repairs?: Prisma.RepairUncheckedCreateNestedManyWithoutSupplierInput
+}
+
+export type SupplierCreateOrConnectWithoutRepair_itemsInput = {
+  where: Prisma.SupplierWhereUniqueInput
+  create: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_itemsInput, Prisma.SupplierUncheckedCreateWithoutRepair_itemsInput>
+}
+
+export type SupplierUpsertWithoutRepair_itemsInput = {
+  update: Prisma.XOR<Prisma.SupplierUpdateWithoutRepair_itemsInput, Prisma.SupplierUncheckedUpdateWithoutRepair_itemsInput>
+  create: Prisma.XOR<Prisma.SupplierCreateWithoutRepair_itemsInput, Prisma.SupplierUncheckedCreateWithoutRepair_itemsInput>
+  where?: Prisma.SupplierWhereInput
+}
+
+export type SupplierUpdateToOneWithWhereWithoutRepair_itemsInput = {
+  where?: Prisma.SupplierWhereInput
+  data: Prisma.XOR<Prisma.SupplierUpdateWithoutRepair_itemsInput, Prisma.SupplierUncheckedUpdateWithoutRepair_itemsInput>
+}
+
+export type SupplierUpdateWithoutRepair_itemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sequential_id?: Prisma.IntFieldUpdateOperationsInput | number
+  legal_name?: Prisma.StringFieldUpdateOperationsInput | string
+  trade_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipal_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  internal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_via?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
+  recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
+  addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutSupplierNestedInput
+  repairs?: Prisma.RepairUpdateManyWithoutSupplierNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutSuppliersNestedInput
+  company?: Prisma.CompanyUpdateOneRequiredWithoutSuppliersNestedInput
+}
+
+export type SupplierUncheckedUpdateWithoutRepair_itemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  sequential_id?: Prisma.IntFieldUpdateOperationsInput | number
+  legal_name?: Prisma.StringFieldUpdateOperationsInput | string
+  trade_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cnpj?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipal_registration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  internal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_via?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
+  recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
+  addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
+  repairs?: Prisma.RepairUncheckedUpdateManyWithoutSupplierNestedInput
 }
 
 export type SupplierCreateWithoutContactsInput = {
@@ -1171,6 +1477,8 @@ export type SupplierCreateWithoutContactsInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutSupplierInput
@@ -1198,6 +1506,8 @@ export type SupplierUncheckedCreateWithoutContactsInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutSupplierInput
@@ -1237,6 +1547,8 @@ export type SupplierUpdateWithoutContactsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutSupplierNestedInput
@@ -1264,6 +1576,8 @@ export type SupplierUncheckedUpdateWithoutContactsInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1287,6 +1601,8 @@ export type SupplierCreateWithoutAddressesInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutSupplierInput
@@ -1314,6 +1630,8 @@ export type SupplierUncheckedCreateWithoutAddressesInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutSupplierInput
@@ -1353,6 +1671,8 @@ export type SupplierUpdateWithoutAddressesInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutSupplierNestedInput
@@ -1380,6 +1700,8 @@ export type SupplierUncheckedUpdateWithoutAddressesInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1403,6 +1725,8 @@ export type SupplierCreateWithoutTransactionsInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
@@ -1430,6 +1754,8 @@ export type SupplierUncheckedCreateWithoutTransactionsInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   recurring_configs?: Prisma.RecurringConfigUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
@@ -1469,6 +1795,8 @@ export type SupplierUpdateWithoutTransactionsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
@@ -1496,6 +1824,8 @@ export type SupplierUncheckedUpdateWithoutTransactionsInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1519,6 +1849,8 @@ export type SupplierCreateWithoutRecurring_configsInput = {
   is_active?: boolean
   marital_status?: string | null
   occupation?: string | null
+  repair_professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutSupplierInput
@@ -1546,6 +1878,8 @@ export type SupplierUncheckedCreateWithoutRecurring_configsInput = {
   marital_status?: string | null
   occupation?: string | null
   agency_id?: string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutSupplierInput
+  repair_items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutSupplierInput
   contacts?: Prisma.ContactUncheckedCreateNestedManyWithoutSupplierInput
   addresses?: Prisma.SupplierAddressUncheckedCreateNestedManyWithoutSupplierInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutSupplierInput
@@ -1585,6 +1919,8 @@ export type SupplierUpdateWithoutRecurring_configsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutSupplierNestedInput
@@ -1612,6 +1948,8 @@ export type SupplierUncheckedUpdateWithoutRecurring_configsInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1655,6 +1993,8 @@ export type SupplierUpdateWithoutCompanyInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
@@ -1681,6 +2021,8 @@ export type SupplierUncheckedUpdateWithoutCompanyInput = {
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   agency_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1745,6 +2087,8 @@ export type SupplierUpdateWithoutAgencyInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUpdateManyWithoutSupplierNestedInput
@@ -1771,6 +2115,8 @@ export type SupplierUncheckedUpdateWithoutAgencyInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  repair_professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutSupplierNestedInput
+  repair_items?: Prisma.RepairItemUncheckedUpdateManyWithoutSupplierNestedInput
   contacts?: Prisma.ContactUncheckedUpdateManyWithoutSupplierNestedInput
   recurring_configs?: Prisma.RecurringConfigUncheckedUpdateManyWithoutSupplierNestedInput
   addresses?: Prisma.SupplierAddressUncheckedUpdateManyWithoutSupplierNestedInput
@@ -1804,6 +2150,8 @@ export type SupplierUncheckedUpdateManyWithoutAgencyInput = {
  */
 
 export type SupplierCountOutputType = {
+  repair_professionals: number
+  repair_items: number
   contacts: number
   recurring_configs: number
   addresses: number
@@ -1812,6 +2160,8 @@ export type SupplierCountOutputType = {
 }
 
 export type SupplierCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  repair_professionals?: boolean | SupplierCountOutputTypeCountRepair_professionalsArgs
+  repair_items?: boolean | SupplierCountOutputTypeCountRepair_itemsArgs
   contacts?: boolean | SupplierCountOutputTypeCountContactsArgs
   recurring_configs?: boolean | SupplierCountOutputTypeCountRecurring_configsArgs
   addresses?: boolean | SupplierCountOutputTypeCountAddressesArgs
@@ -1827,6 +2177,20 @@ export type SupplierCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
    * Select specific fields to fetch from the SupplierCountOutputType
    */
   select?: Prisma.SupplierCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * SupplierCountOutputType without action
+ */
+export type SupplierCountOutputTypeCountRepair_professionalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairProfessionalWhereInput
+}
+
+/**
+ * SupplierCountOutputType without action
+ */
+export type SupplierCountOutputTypeCountRepair_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairItemWhereInput
 }
 
 /**
@@ -1884,6 +2248,8 @@ export type SupplierSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   marital_status?: boolean
   occupation?: boolean
   agency_id?: boolean
+  repair_professionals?: boolean | Prisma.Supplier$repair_professionalsArgs<ExtArgs>
+  repair_items?: boolean | Prisma.Supplier$repair_itemsArgs<ExtArgs>
   contacts?: boolean | Prisma.Supplier$contactsArgs<ExtArgs>
   recurring_configs?: boolean | Prisma.Supplier$recurring_configsArgs<ExtArgs>
   addresses?: boolean | Prisma.Supplier$addressesArgs<ExtArgs>
@@ -1963,6 +2329,8 @@ export type SupplierSelectScalar = {
 
 export type SupplierOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "sequential_id" | "legal_name" | "trade_name" | "cnpj" | "state_registration" | "municipal_registration" | "created_at" | "updated_at" | "deleted_at" | "cpf" | "internal_code" | "created_via" | "is_active" | "marital_status" | "occupation" | "agency_id", ExtArgs["result"]["supplier"]>
 export type SupplierInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  repair_professionals?: boolean | Prisma.Supplier$repair_professionalsArgs<ExtArgs>
+  repair_items?: boolean | Prisma.Supplier$repair_itemsArgs<ExtArgs>
   contacts?: boolean | Prisma.Supplier$contactsArgs<ExtArgs>
   recurring_configs?: boolean | Prisma.Supplier$recurring_configsArgs<ExtArgs>
   addresses?: boolean | Prisma.Supplier$addressesArgs<ExtArgs>
@@ -1984,6 +2352,8 @@ export type SupplierIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type $SupplierPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Supplier"
   objects: {
+    repair_professionals: Prisma.$RepairProfessionalPayload<ExtArgs>[]
+    repair_items: Prisma.$RepairItemPayload<ExtArgs>[]
     contacts: Prisma.$ContactPayload<ExtArgs>[]
     recurring_configs: Prisma.$RecurringConfigPayload<ExtArgs>[]
     addresses: Prisma.$SupplierAddressPayload<ExtArgs>[]
@@ -2405,6 +2775,8 @@ readonly fields: SupplierFieldRefs;
  */
 export interface Prisma__SupplierClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  repair_professionals<T extends Prisma.Supplier$repair_professionalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Supplier$repair_professionalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairProfessionalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  repair_items<T extends Prisma.Supplier$repair_itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Supplier$repair_itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   contacts<T extends Prisma.Supplier$contactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Supplier$contactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   recurring_configs<T extends Prisma.Supplier$recurring_configsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Supplier$recurring_configsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecurringConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   addresses<T extends Prisma.Supplier$addressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Supplier$addressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupplierAddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2857,6 +3229,54 @@ export type SupplierDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Suppliers to delete.
    */
   limit?: number
+}
+
+/**
+ * Supplier.repair_professionals
+ */
+export type Supplier$repair_professionalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RepairProfessional
+   */
+  select?: Prisma.RepairProfessionalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RepairProfessional
+   */
+  omit?: Prisma.RepairProfessionalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairProfessionalInclude<ExtArgs> | null
+  where?: Prisma.RepairProfessionalWhereInput
+  orderBy?: Prisma.RepairProfessionalOrderByWithRelationInput | Prisma.RepairProfessionalOrderByWithRelationInput[]
+  cursor?: Prisma.RepairProfessionalWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairProfessionalScalarFieldEnum | Prisma.RepairProfessionalScalarFieldEnum[]
+}
+
+/**
+ * Supplier.repair_items
+ */
+export type Supplier$repair_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RepairItem
+   */
+  select?: Prisma.RepairItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RepairItem
+   */
+  omit?: Prisma.RepairItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairItemInclude<ExtArgs> | null
+  where?: Prisma.RepairItemWhereInput
+  orderBy?: Prisma.RepairItemOrderByWithRelationInput | Prisma.RepairItemOrderByWithRelationInput[]
+  cursor?: Prisma.RepairItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairItemScalarFieldEnum | Prisma.RepairItemScalarFieldEnum[]
 }
 
 /**

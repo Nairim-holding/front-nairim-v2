@@ -89,6 +89,7 @@ export type RepairCountAggregateOutputType = {
   event_date: number
   event_type: number
   problem_type: number
+  problem_types: number
   description: number
   professional: number
   supplier_id: number
@@ -170,6 +171,7 @@ export type RepairCountAggregateInputType = {
   event_date?: true
   event_type?: true
   problem_type?: true
+  problem_types?: true
   description?: true
   professional?: true
   supplier_id?: true
@@ -280,6 +282,7 @@ export type RepairGroupByOutputType = {
   event_date: Date
   event_type: string
   problem_type: string
+  problem_types: string[]
   description: string
   professional: string
   supplier_id: string | null
@@ -326,6 +329,7 @@ export type RepairWhereInput = {
   event_date?: Prisma.DateTimeFilter<"Repair"> | Date | string
   event_type?: Prisma.StringFilter<"Repair"> | string
   problem_type?: Prisma.StringFilter<"Repair"> | string
+  problem_types?: Prisma.StringNullableListFilter<"Repair">
   description?: Prisma.StringFilter<"Repair"> | string
   professional?: Prisma.StringFilter<"Repair"> | string
   supplier_id?: Prisma.StringNullableFilter<"Repair"> | string | null
@@ -344,6 +348,8 @@ export type RepairWhereInput = {
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
   supplier?: Prisma.XOR<Prisma.SupplierNullableScalarRelationFilter, Prisma.SupplierWhereInput> | null
   media?: Prisma.RepairMediaListRelationFilter
+  professionals?: Prisma.RepairProfessionalListRelationFilter
+  items?: Prisma.RepairItemListRelationFilter
 }
 
 export type RepairOrderByWithRelationInput = {
@@ -353,6 +359,7 @@ export type RepairOrderByWithRelationInput = {
   event_date?: Prisma.SortOrder
   event_type?: Prisma.SortOrder
   problem_type?: Prisma.SortOrder
+  problem_types?: Prisma.SortOrder
   description?: Prisma.SortOrder
   professional?: Prisma.SortOrder
   supplier_id?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -371,6 +378,8 @@ export type RepairOrderByWithRelationInput = {
   property?: Prisma.PropertyOrderByWithRelationInput
   supplier?: Prisma.SupplierOrderByWithRelationInput
   media?: Prisma.RepairMediaOrderByRelationAggregateInput
+  professionals?: Prisma.RepairProfessionalOrderByRelationAggregateInput
+  items?: Prisma.RepairItemOrderByRelationAggregateInput
 }
 
 export type RepairWhereUniqueInput = Prisma.AtLeast<{
@@ -383,6 +392,7 @@ export type RepairWhereUniqueInput = Prisma.AtLeast<{
   event_date?: Prisma.DateTimeFilter<"Repair"> | Date | string
   event_type?: Prisma.StringFilter<"Repair"> | string
   problem_type?: Prisma.StringFilter<"Repair"> | string
+  problem_types?: Prisma.StringNullableListFilter<"Repair">
   description?: Prisma.StringFilter<"Repair"> | string
   professional?: Prisma.StringFilter<"Repair"> | string
   supplier_id?: Prisma.StringNullableFilter<"Repair"> | string | null
@@ -401,6 +411,8 @@ export type RepairWhereUniqueInput = Prisma.AtLeast<{
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
   supplier?: Prisma.XOR<Prisma.SupplierNullableScalarRelationFilter, Prisma.SupplierWhereInput> | null
   media?: Prisma.RepairMediaListRelationFilter
+  professionals?: Prisma.RepairProfessionalListRelationFilter
+  items?: Prisma.RepairItemListRelationFilter
 }, "id">
 
 export type RepairOrderByWithAggregationInput = {
@@ -410,6 +422,7 @@ export type RepairOrderByWithAggregationInput = {
   event_date?: Prisma.SortOrder
   event_type?: Prisma.SortOrder
   problem_type?: Prisma.SortOrder
+  problem_types?: Prisma.SortOrder
   description?: Prisma.SortOrder
   professional?: Prisma.SortOrder
   supplier_id?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -441,6 +454,7 @@ export type RepairScalarWhereWithAggregatesInput = {
   event_date?: Prisma.DateTimeWithAggregatesFilter<"Repair"> | Date | string
   event_type?: Prisma.StringWithAggregatesFilter<"Repair"> | string
   problem_type?: Prisma.StringWithAggregatesFilter<"Repair"> | string
+  problem_types?: Prisma.StringNullableListFilter<"Repair">
   description?: Prisma.StringWithAggregatesFilter<"Repair"> | string
   professional?: Prisma.StringWithAggregatesFilter<"Repair"> | string
   supplier_id?: Prisma.StringNullableWithAggregatesFilter<"Repair"> | string | null
@@ -462,6 +476,7 @@ export type RepairCreateInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -479,6 +494,8 @@ export type RepairCreateInput = {
   property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
   media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
 }
 
 export type RepairUncheckedCreateInput = {
@@ -488,6 +505,7 @@ export type RepairUncheckedCreateInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -503,6 +521,8 @@ export type RepairUncheckedCreateInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
 }
 
 export type RepairUpdateInput = {
@@ -510,6 +530,7 @@ export type RepairUpdateInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -527,6 +548,8 @@ export type RepairUpdateInput = {
   property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
   media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateInput = {
@@ -536,6 +559,7 @@ export type RepairUncheckedUpdateInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -551,6 +575,8 @@ export type RepairUncheckedUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairCreateManyInput = {
@@ -560,6 +586,7 @@ export type RepairCreateManyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -581,6 +608,7 @@ export type RepairUpdateManyMutationInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -603,6 +631,7 @@ export type RepairUncheckedUpdateManyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -629,6 +658,14 @@ export type RepairOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
+}
+
 export type RepairCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   company_id?: Prisma.SortOrder
@@ -636,6 +673,7 @@ export type RepairCountOrderByAggregateInput = {
   event_date?: Prisma.SortOrder
   event_type?: Prisma.SortOrder
   problem_type?: Prisma.SortOrder
+  problem_types?: Prisma.SortOrder
   description?: Prisma.SortOrder
   professional?: Prisma.SortOrder
   supplier_id?: Prisma.SortOrder
@@ -797,12 +835,49 @@ export type RepairUncheckedUpdateManyWithoutPropertyNestedInput = {
   deleteMany?: Prisma.RepairScalarWhereInput | Prisma.RepairScalarWhereInput[]
 }
 
+export type RepairCreateproblem_typesInput = {
+  set: string[]
+}
+
+export type RepairUpdateproblem_typesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
 export type DecimalFieldUpdateOperationsInput = {
   set?: runtime.Decimal | runtime.DecimalJsLike | number | string
   increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
   decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
   multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
   divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+}
+
+export type RepairCreateNestedOneWithoutProfessionalsInput = {
+  create?: Prisma.XOR<Prisma.RepairCreateWithoutProfessionalsInput, Prisma.RepairUncheckedCreateWithoutProfessionalsInput>
+  connectOrCreate?: Prisma.RepairCreateOrConnectWithoutProfessionalsInput
+  connect?: Prisma.RepairWhereUniqueInput
+}
+
+export type RepairUpdateOneRequiredWithoutProfessionalsNestedInput = {
+  create?: Prisma.XOR<Prisma.RepairCreateWithoutProfessionalsInput, Prisma.RepairUncheckedCreateWithoutProfessionalsInput>
+  connectOrCreate?: Prisma.RepairCreateOrConnectWithoutProfessionalsInput
+  upsert?: Prisma.RepairUpsertWithoutProfessionalsInput
+  connect?: Prisma.RepairWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.RepairUpdateToOneWithWhereWithoutProfessionalsInput, Prisma.RepairUpdateWithoutProfessionalsInput>, Prisma.RepairUncheckedUpdateWithoutProfessionalsInput>
+}
+
+export type RepairCreateNestedOneWithoutItemsInput = {
+  create?: Prisma.XOR<Prisma.RepairCreateWithoutItemsInput, Prisma.RepairUncheckedCreateWithoutItemsInput>
+  connectOrCreate?: Prisma.RepairCreateOrConnectWithoutItemsInput
+  connect?: Prisma.RepairWhereUniqueInput
+}
+
+export type RepairUpdateOneRequiredWithoutItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.RepairCreateWithoutItemsInput, Prisma.RepairUncheckedCreateWithoutItemsInput>
+  connectOrCreate?: Prisma.RepairCreateOrConnectWithoutItemsInput
+  upsert?: Prisma.RepairUpsertWithoutItemsInput
+  connect?: Prisma.RepairWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.RepairUpdateToOneWithWhereWithoutItemsInput, Prisma.RepairUpdateWithoutItemsInput>, Prisma.RepairUncheckedUpdateWithoutItemsInput>
 }
 
 export type RepairCreateNestedOneWithoutMediaInput = {
@@ -866,6 +941,7 @@ export type RepairCreateWithoutCompanyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -882,6 +958,8 @@ export type RepairCreateWithoutCompanyInput = {
   property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
   media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
 }
 
 export type RepairUncheckedCreateWithoutCompanyInput = {
@@ -890,6 +968,7 @@ export type RepairUncheckedCreateWithoutCompanyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -905,6 +984,8 @@ export type RepairUncheckedCreateWithoutCompanyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
 }
 
 export type RepairCreateOrConnectWithoutCompanyInput = {
@@ -943,6 +1024,7 @@ export type RepairScalarWhereInput = {
   event_date?: Prisma.DateTimeFilter<"Repair"> | Date | string
   event_type?: Prisma.StringFilter<"Repair"> | string
   problem_type?: Prisma.StringFilter<"Repair"> | string
+  problem_types?: Prisma.StringNullableListFilter<"Repair">
   description?: Prisma.StringFilter<"Repair"> | string
   professional?: Prisma.StringFilter<"Repair"> | string
   supplier_id?: Prisma.StringNullableFilter<"Repair"> | string | null
@@ -964,6 +1046,7 @@ export type RepairCreateWithoutPropertyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -980,6 +1063,8 @@ export type RepairCreateWithoutPropertyInput = {
   company: Prisma.CompanyCreateNestedOneWithoutRepairsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
   media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
 }
 
 export type RepairUncheckedCreateWithoutPropertyInput = {
@@ -988,6 +1073,7 @@ export type RepairUncheckedCreateWithoutPropertyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -1003,6 +1089,8 @@ export type RepairUncheckedCreateWithoutPropertyInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
 }
 
 export type RepairCreateOrConnectWithoutPropertyInput = {
@@ -1031,11 +1119,12 @@ export type RepairUpdateManyWithWhereWithoutPropertyInput = {
   data: Prisma.XOR<Prisma.RepairUpdateManyMutationInput, Prisma.RepairUncheckedUpdateManyWithoutPropertyInput>
 }
 
-export type RepairCreateWithoutMediaInput = {
+export type RepairCreateWithoutProfessionalsInput = {
   id?: string
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1052,15 +1141,18 @@ export type RepairCreateWithoutMediaInput = {
   company: Prisma.CompanyCreateNestedOneWithoutRepairsInput
   property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
   supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
+  media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
 }
 
-export type RepairUncheckedCreateWithoutMediaInput = {
+export type RepairUncheckedCreateWithoutProfessionalsInput = {
   id?: string
   company_id: string
   property_id: string
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -1075,6 +1167,248 @@ export type RepairUncheckedCreateWithoutMediaInput = {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+  media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
+}
+
+export type RepairCreateOrConnectWithoutProfessionalsInput = {
+  where: Prisma.RepairWhereUniqueInput
+  create: Prisma.XOR<Prisma.RepairCreateWithoutProfessionalsInput, Prisma.RepairUncheckedCreateWithoutProfessionalsInput>
+}
+
+export type RepairUpsertWithoutProfessionalsInput = {
+  update: Prisma.XOR<Prisma.RepairUpdateWithoutProfessionalsInput, Prisma.RepairUncheckedUpdateWithoutProfessionalsInput>
+  create: Prisma.XOR<Prisma.RepairCreateWithoutProfessionalsInput, Prisma.RepairUncheckedCreateWithoutProfessionalsInput>
+  where?: Prisma.RepairWhereInput
+}
+
+export type RepairUpdateToOneWithWhereWithoutProfessionalsInput = {
+  where?: Prisma.RepairWhereInput
+  data: Prisma.XOR<Prisma.RepairUpdateWithoutProfessionalsInput, Prisma.RepairUncheckedUpdateWithoutProfessionalsInput>
+}
+
+export type RepairUpdateWithoutProfessionalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  event_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  professional?: Prisma.StringFieldUpdateOperationsInput | string
+  service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  payment_conditions?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completion_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  company?: Prisma.CompanyUpdateOneRequiredWithoutRepairsNestedInput
+  property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
+  supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
+  media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
+}
+
+export type RepairUncheckedUpdateWithoutProfessionalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  property_id?: Prisma.StringFieldUpdateOperationsInput | string
+  event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  event_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  professional?: Prisma.StringFieldUpdateOperationsInput | string
+  supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  payment_conditions?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completion_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
+}
+
+export type RepairCreateWithoutItemsInput = {
+  id?: string
+  event_date: Date | string
+  event_type: string
+  problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
+  description: string
+  professional: string
+  service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method: string
+  payment_conditions: string
+  status?: string
+  start_date?: Date | string | null
+  completion_date?: Date | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  company: Prisma.CompanyCreateNestedOneWithoutRepairsInput
+  property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
+  supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
+  media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+}
+
+export type RepairUncheckedCreateWithoutItemsInput = {
+  id?: string
+  company_id: string
+  property_id: string
+  event_date: Date | string
+  event_type: string
+  problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
+  description: string
+  professional: string
+  supplier_id?: string | null
+  service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method: string
+  payment_conditions: string
+  status?: string
+  start_date?: Date | string | null
+  completion_date?: Date | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+}
+
+export type RepairCreateOrConnectWithoutItemsInput = {
+  where: Prisma.RepairWhereUniqueInput
+  create: Prisma.XOR<Prisma.RepairCreateWithoutItemsInput, Prisma.RepairUncheckedCreateWithoutItemsInput>
+}
+
+export type RepairUpsertWithoutItemsInput = {
+  update: Prisma.XOR<Prisma.RepairUpdateWithoutItemsInput, Prisma.RepairUncheckedUpdateWithoutItemsInput>
+  create: Prisma.XOR<Prisma.RepairCreateWithoutItemsInput, Prisma.RepairUncheckedCreateWithoutItemsInput>
+  where?: Prisma.RepairWhereInput
+}
+
+export type RepairUpdateToOneWithWhereWithoutItemsInput = {
+  where?: Prisma.RepairWhereInput
+  data: Prisma.XOR<Prisma.RepairUpdateWithoutItemsInput, Prisma.RepairUncheckedUpdateWithoutItemsInput>
+}
+
+export type RepairUpdateWithoutItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  event_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  professional?: Prisma.StringFieldUpdateOperationsInput | string
+  service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  payment_conditions?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completion_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  company?: Prisma.CompanyUpdateOneRequiredWithoutRepairsNestedInput
+  property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
+  supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
+  media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+}
+
+export type RepairUncheckedUpdateWithoutItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  company_id?: Prisma.StringFieldUpdateOperationsInput | string
+  property_id?: Prisma.StringFieldUpdateOperationsInput | string
+  event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  event_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  professional?: Prisma.StringFieldUpdateOperationsInput | string
+  supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  payment_conditions?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completion_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+}
+
+export type RepairCreateWithoutMediaInput = {
+  id?: string
+  event_date: Date | string
+  event_type: string
+  problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
+  description: string
+  professional: string
+  service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method: string
+  payment_conditions: string
+  status?: string
+  start_date?: Date | string | null
+  completion_date?: Date | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  company: Prisma.CompanyCreateNestedOneWithoutRepairsInput
+  property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
+  supplier?: Prisma.SupplierCreateNestedOneWithoutRepairsInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
+}
+
+export type RepairUncheckedCreateWithoutMediaInput = {
+  id?: string
+  company_id: string
+  property_id: string
+  event_date: Date | string
+  event_type: string
+  problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
+  description: string
+  professional: string
+  supplier_id?: string | null
+  service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  materials_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method: string
+  payment_conditions: string
+  status?: string
+  start_date?: Date | string | null
+  completion_date?: Date | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  deleted_at?: Date | string | null
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
 }
 
 export type RepairCreateOrConnectWithoutMediaInput = {
@@ -1098,6 +1432,7 @@ export type RepairUpdateWithoutMediaInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1114,6 +1449,8 @@ export type RepairUpdateWithoutMediaInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutRepairsNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateWithoutMediaInput = {
@@ -1123,6 +1460,7 @@ export type RepairUncheckedUpdateWithoutMediaInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1137,6 +1475,8 @@ export type RepairUncheckedUpdateWithoutMediaInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairCreateWithoutSupplierInput = {
@@ -1144,6 +1484,7 @@ export type RepairCreateWithoutSupplierInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1160,6 +1501,8 @@ export type RepairCreateWithoutSupplierInput = {
   company: Prisma.CompanyCreateNestedOneWithoutRepairsInput
   property: Prisma.PropertyCreateNestedOneWithoutRepairsInput
   media?: Prisma.RepairMediaCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemCreateNestedManyWithoutRepairInput
 }
 
 export type RepairUncheckedCreateWithoutSupplierInput = {
@@ -1169,6 +1512,7 @@ export type RepairUncheckedCreateWithoutSupplierInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1183,6 +1527,8 @@ export type RepairUncheckedCreateWithoutSupplierInput = {
   updated_at?: Date | string
   deleted_at?: Date | string | null
   media?: Prisma.RepairMediaUncheckedCreateNestedManyWithoutRepairInput
+  professionals?: Prisma.RepairProfessionalUncheckedCreateNestedManyWithoutRepairInput
+  items?: Prisma.RepairItemUncheckedCreateNestedManyWithoutRepairInput
 }
 
 export type RepairCreateOrConnectWithoutSupplierInput = {
@@ -1217,6 +1563,7 @@ export type RepairCreateManyCompanyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -1238,6 +1585,7 @@ export type RepairUpdateWithoutCompanyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1254,6 +1602,8 @@ export type RepairUpdateWithoutCompanyInput = {
   property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
   media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateWithoutCompanyInput = {
@@ -1262,6 +1612,7 @@ export type RepairUncheckedUpdateWithoutCompanyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1277,6 +1628,8 @@ export type RepairUncheckedUpdateWithoutCompanyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateManyWithoutCompanyInput = {
@@ -1285,6 +1638,7 @@ export type RepairUncheckedUpdateManyWithoutCompanyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1307,6 +1661,7 @@ export type RepairCreateManyPropertyInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   supplier_id?: string | null
@@ -1328,6 +1683,7 @@ export type RepairUpdateWithoutPropertyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1344,6 +1700,8 @@ export type RepairUpdateWithoutPropertyInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutRepairsNestedInput
   supplier?: Prisma.SupplierUpdateOneWithoutRepairsNestedInput
   media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateWithoutPropertyInput = {
@@ -1352,6 +1710,7 @@ export type RepairUncheckedUpdateWithoutPropertyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1367,6 +1726,8 @@ export type RepairUncheckedUpdateWithoutPropertyInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateManyWithoutPropertyInput = {
@@ -1375,6 +1736,7 @@ export type RepairUncheckedUpdateManyWithoutPropertyInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   supplier_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1398,6 +1760,7 @@ export type RepairCreateManySupplierInput = {
   event_date: Date | string
   event_type: string
   problem_type: string
+  problem_types?: Prisma.RepairCreateproblem_typesInput | string[]
   description: string
   professional: string
   service_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1418,6 +1781,7 @@ export type RepairUpdateWithoutSupplierInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1434,6 +1798,8 @@ export type RepairUpdateWithoutSupplierInput = {
   company?: Prisma.CompanyUpdateOneRequiredWithoutRepairsNestedInput
   property?: Prisma.PropertyUpdateOneRequiredWithoutRepairsNestedInput
   media?: Prisma.RepairMediaUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateWithoutSupplierInput = {
@@ -1443,6 +1809,7 @@ export type RepairUncheckedUpdateWithoutSupplierInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1457,6 +1824,8 @@ export type RepairUncheckedUpdateWithoutSupplierInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deleted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   media?: Prisma.RepairMediaUncheckedUpdateManyWithoutRepairNestedInput
+  professionals?: Prisma.RepairProfessionalUncheckedUpdateManyWithoutRepairNestedInput
+  items?: Prisma.RepairItemUncheckedUpdateManyWithoutRepairNestedInput
 }
 
 export type RepairUncheckedUpdateManyWithoutSupplierInput = {
@@ -1466,6 +1835,7 @@ export type RepairUncheckedUpdateManyWithoutSupplierInput = {
   event_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   event_type?: Prisma.StringFieldUpdateOperationsInput | string
   problem_type?: Prisma.StringFieldUpdateOperationsInput | string
+  problem_types?: Prisma.RepairUpdateproblem_typesInput | string[]
   description?: Prisma.StringFieldUpdateOperationsInput | string
   professional?: Prisma.StringFieldUpdateOperationsInput | string
   service_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1488,10 +1858,14 @@ export type RepairUncheckedUpdateManyWithoutSupplierInput = {
 
 export type RepairCountOutputType = {
   media: number
+  professionals: number
+  items: number
 }
 
 export type RepairCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   media?: boolean | RepairCountOutputTypeCountMediaArgs
+  professionals?: boolean | RepairCountOutputTypeCountProfessionalsArgs
+  items?: boolean | RepairCountOutputTypeCountItemsArgs
 }
 
 /**
@@ -1511,6 +1885,20 @@ export type RepairCountOutputTypeCountMediaArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.RepairMediaWhereInput
 }
 
+/**
+ * RepairCountOutputType without action
+ */
+export type RepairCountOutputTypeCountProfessionalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairProfessionalWhereInput
+}
+
+/**
+ * RepairCountOutputType without action
+ */
+export type RepairCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RepairItemWhereInput
+}
+
 
 export type RepairSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1519,6 +1907,7 @@ export type RepairSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   event_date?: boolean
   event_type?: boolean
   problem_type?: boolean
+  problem_types?: boolean
   description?: boolean
   professional?: boolean
   supplier_id?: boolean
@@ -1537,6 +1926,8 @@ export type RepairSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
   supplier?: boolean | Prisma.Repair$supplierArgs<ExtArgs>
   media?: boolean | Prisma.Repair$mediaArgs<ExtArgs>
+  professionals?: boolean | Prisma.Repair$professionalsArgs<ExtArgs>
+  items?: boolean | Prisma.Repair$itemsArgs<ExtArgs>
   _count?: boolean | Prisma.RepairCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["repair"]>
 
@@ -1547,6 +1938,7 @@ export type RepairSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   event_date?: boolean
   event_type?: boolean
   problem_type?: boolean
+  problem_types?: boolean
   description?: boolean
   professional?: boolean
   supplier_id?: boolean
@@ -1573,6 +1965,7 @@ export type RepairSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   event_date?: boolean
   event_type?: boolean
   problem_type?: boolean
+  problem_types?: boolean
   description?: boolean
   professional?: boolean
   supplier_id?: boolean
@@ -1599,6 +1992,7 @@ export type RepairSelectScalar = {
   event_date?: boolean
   event_type?: boolean
   problem_type?: boolean
+  problem_types?: boolean
   description?: boolean
   professional?: boolean
   supplier_id?: boolean
@@ -1615,12 +2009,14 @@ export type RepairSelectScalar = {
   deleted_at?: boolean
 }
 
-export type RepairOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "property_id" | "event_date" | "event_type" | "problem_type" | "description" | "professional" | "supplier_id" | "service_amount" | "materials_amount" | "payment_method" | "payment_conditions" | "status" | "start_date" | "completion_date" | "notes" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["repair"]>
+export type RepairOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "company_id" | "property_id" | "event_date" | "event_type" | "problem_type" | "problem_types" | "description" | "professional" | "supplier_id" | "service_amount" | "materials_amount" | "payment_method" | "payment_conditions" | "status" | "start_date" | "completion_date" | "notes" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["repair"]>
 export type RepairInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
   supplier?: boolean | Prisma.Repair$supplierArgs<ExtArgs>
   media?: boolean | Prisma.Repair$mediaArgs<ExtArgs>
+  professionals?: boolean | Prisma.Repair$professionalsArgs<ExtArgs>
+  items?: boolean | Prisma.Repair$itemsArgs<ExtArgs>
   _count?: boolean | Prisma.RepairCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type RepairIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1641,6 +2037,8 @@ export type $RepairPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     property: Prisma.$PropertyPayload<ExtArgs>
     supplier: Prisma.$SupplierPayload<ExtArgs> | null
     media: Prisma.$RepairMediaPayload<ExtArgs>[]
+    professionals: Prisma.$RepairProfessionalPayload<ExtArgs>[]
+    items: Prisma.$RepairItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1649,6 +2047,7 @@ export type $RepairPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     event_date: Date
     event_type: string
     problem_type: string
+    problem_types: string[]
     description: string
     professional: string
     supplier_id: string | null
@@ -2061,6 +2460,8 @@ export interface Prisma__RepairClient<T, Null = never, ExtArgs extends runtime.T
   property<T extends Prisma.PropertyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PropertyDefaultArgs<ExtArgs>>): Prisma.Prisma__PropertyClient<runtime.Types.Result.GetResult<Prisma.$PropertyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   supplier<T extends Prisma.Repair$supplierArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repair$supplierArgs<ExtArgs>>): Prisma.Prisma__SupplierClient<runtime.Types.Result.GetResult<Prisma.$SupplierPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   media<T extends Prisma.Repair$mediaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repair$mediaArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  professionals<T extends Prisma.Repair$professionalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repair$professionalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairProfessionalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  items<T extends Prisma.Repair$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repair$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepairItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2096,6 +2497,7 @@ export interface RepairFieldRefs {
   readonly event_date: Prisma.FieldRef<"Repair", 'DateTime'>
   readonly event_type: Prisma.FieldRef<"Repair", 'String'>
   readonly problem_type: Prisma.FieldRef<"Repair", 'String'>
+  readonly problem_types: Prisma.FieldRef<"Repair", 'String[]'>
   readonly description: Prisma.FieldRef<"Repair", 'String'>
   readonly professional: Prisma.FieldRef<"Repair", 'String'>
   readonly supplier_id: Prisma.FieldRef<"Repair", 'String'>
@@ -2551,6 +2953,54 @@ export type Repair$mediaArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.RepairMediaScalarFieldEnum | Prisma.RepairMediaScalarFieldEnum[]
+}
+
+/**
+ * Repair.professionals
+ */
+export type Repair$professionalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RepairProfessional
+   */
+  select?: Prisma.RepairProfessionalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RepairProfessional
+   */
+  omit?: Prisma.RepairProfessionalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairProfessionalInclude<ExtArgs> | null
+  where?: Prisma.RepairProfessionalWhereInput
+  orderBy?: Prisma.RepairProfessionalOrderByWithRelationInput | Prisma.RepairProfessionalOrderByWithRelationInput[]
+  cursor?: Prisma.RepairProfessionalWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairProfessionalScalarFieldEnum | Prisma.RepairProfessionalScalarFieldEnum[]
+}
+
+/**
+ * Repair.items
+ */
+export type Repair$itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RepairItem
+   */
+  select?: Prisma.RepairItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RepairItem
+   */
+  omit?: Prisma.RepairItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepairItemInclude<ExtArgs> | null
+  where?: Prisma.RepairItemWhereInput
+  orderBy?: Prisma.RepairItemOrderByWithRelationInput | Prisma.RepairItemOrderByWithRelationInput[]
+  cursor?: Prisma.RepairItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RepairItemScalarFieldEnum | Prisma.RepairItemScalarFieldEnum[]
 }
 
 /**
