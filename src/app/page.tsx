@@ -55,7 +55,7 @@ async function getImoveisDestaque() {
       .filter((i): i is NonNullable<typeof i> => i !== null);
 
   } catch (error) {
-    console.error("Erro ao processar os dados da API:", error);
+    console.error("Falha ao carregar os destaques da vitrine:", error);
     return [];
   }
 }
@@ -71,8 +71,8 @@ export default async function Home() {
         {imoveis.length > 0 ? (
           <CarrosselDinamico imoveis={imoveis} />
         ) : (
-          <div className="relative w-full h-[50vh] bg-slate-100 flex items-center justify-center font-medium text-slate-400 animate-pulse">
-            Buscando destaques...
+          <div className="relative w-full h-[50vh] bg-slate-100 flex items-center justify-center font-medium text-slate-400">
+            Nenhum destaque disponível
           </div>
         )}
       </div>

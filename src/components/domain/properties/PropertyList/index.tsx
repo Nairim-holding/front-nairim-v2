@@ -482,38 +482,12 @@ export default function ImoveisList() {
         setCurrentPage(Math.min(currentPageCount, newPages));
         setTotalResults(newTotal);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao conectar com a API");
-
-        // ── Fallback de exemplo ────────────────────────────────────────
-        const exampleData: ImovelProps[] = [
-          { id:"c1", nome:"Casa Moderna Alphaville", local:"Alphaville, Barueri", preco:8500, quartos:4, banheiros:5, vagas:3, area:350, areaTerreno:500, suites:2, mobilia:true, status:"AVAILABLE", cidade:"Barueri", tipo:"Casa", tipoId:"", jardim:true, piscina:true, churrasqueira:true, anoConstrucao:2020 },
-          { id:"c2", nome:"Sobrado Familiar Morumbi", local:"Morumbi, São Paulo", preco:12000, quartos:5, banheiros:6, vagas:4, area:450, areaTerreno:600, suites:3, mobilia:false, status:"AVAILABLE", cidade:"São Paulo", tipo:"Casa", tipoId:"", jardim:true, churrasqueira:true, anoConstrucao:2018 },
-          { id:"a1", nome:"Apartamento Moderno", local:"Alphaville, Barueri", preco:4500, quartos:3, banheiros:2, vagas:2, area:120, mobilia:true, andar:12, precoCondominio:800, status:"AVAILABLE", cidade:"Barueri", tipo:"Apartamento", tipoId:"" },
-          { id:"a2", nome:"Apartamento Alto Padrão", local:"Morumbi, São Paulo", preco:6800, quartos:4, banheiros:3, vagas:3, area:180, mobilia:false, andar:8, precoCondominio:1200, status:"AVAILABLE", cidade:"São Paulo", tipo:"Apartamento", tipoId:"" },
-          { id:"com1", nome:"Sala Comercial Centro", local:"Centro, Barueri", preco:3200, quartos:0, banheiros:1, vagas:2, area:85, mobilia:false, status:"AVAILABLE", cidade:"Barueri", tipo:"Sala Comercial", tipoId:"", precoCondominio:450 },
-        ];
-
-        let fd = [...exampleData];
-        if (filters.transactionType === "comprar") fd = fd.filter((i) => i.preco > 0);
-        if (filters.propertyType && filters.propertyType !== "all")
-          fd = fd.filter((i) => i.tipoId === filters.propertyType || i.tipo.toLowerCase().includes(filters.propertyType.toLowerCase()));
-        if (filters.quartos)   fd = fd.filter((i) => i.quartos   >= Number(filters.quartos));
-        if (filters.banheiros) fd = fd.filter((i) => i.banheiros >= Number(filters.banheiros));
-        if (filters.vagas)     fd = fd.filter((i) => i.vagas     >= Number(filters.vagas));
-        if (filters.valorMin)  fd = fd.filter((i) => i.preco >= (parseFloat(filters.valorMin.replace(/\./g, "").replace(",", ".")) || 0));
-        if (filters.valorMax)  fd = fd.filter((i) => i.preco <= (parseFloat(filters.valorMax.replace(/\./g, "").replace(",", ".")) || 0));
-        if (filters.areaMin)   fd = fd.filter((i) => i.area >= Number(filters.areaMin));
-        if (filters.areaMax)   fd = fd.filter((i) => i.area <= Number(filters.areaMax));
-        if (filters.location)  fd = fd.filter((i) =>
-          i.local.toLowerCase().includes(filters.location.toLowerCase()) ||
-          i.nome.toLowerCase().includes(filters.location.toLowerCase())
-        );
-
-        const start = (page - 1) * itemsPerPage;
-        setImoveis(fd.slice(start, start + itemsPerPage));
-        setTotalPages(Math.max(1, Math.ceil(fd.length / itemsPerPage)));
-        setCurrentPage(page);
-        setTotalResults(fd.length);
+        console.error('Falha ao carregar os imóveis da vitrine:', err);
+        setError('Não foi possível carregar os imóveis. Tente novamente.');
+        setImoveis([]);
+        setTotalPages(1);
+        setCurrentPage(1);
+        setTotalResults(0);
       } finally {
         setLoading(false);
       }
@@ -575,6 +549,8 @@ export default function ImoveisList() {
             <p className="text-sm text-content-secondary mt-1">
               {loading ? (
                 <span className="inline-block w-32 h-4 bg-surface-muted rounded animate-pulse" />
+              ) : error ? (
+                <span>Consulta indisponível</span>
               ) : (
                 <>
                   <span className="font-semibold text-content">{totalResults}</span>{" "}
@@ -596,12 +572,15 @@ export default function ImoveisList() {
           </button>
         </div>
 
-        {/* Aviso de API indisponível */}
+        {/* Falha na consulta: nao apresentar imoveis ficticios nem um resultado vazio. */}
         {error && (
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 text-sm">
+          <div role="alert" className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 text-sm">
             <Icon icon="mingcute:warning-line" className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold">API temporariamente indisponível.</span> Exibindo dados de exemplo.
+              <p>{error}</p>
+              <button onClick={() => fetchProperties(1)} className="mt-2 font-semibold underline">
+                Tentar novamente
+              </button>
             </div>
           </div>
         )}
@@ -628,7 +607,7 @@ export default function ImoveisList() {
             </p>
           </>
         ) : (
-          !loading && (
+          !loading && !error && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-20 h-20 rounded-full bg-surface-subtle flex items-center justify-center mb-5">
                 <Icon icon="mingcute:home-2-line" className="w-10 h-10 text-content-muted" />
