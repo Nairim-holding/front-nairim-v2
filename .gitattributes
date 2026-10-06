@@ -1,0 +1,2 @@
+deploy/iholding/*.sh text eol=lf
+deploy/iholding/Dockerfile* text eol=lf

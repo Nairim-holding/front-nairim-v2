@@ -12,7 +12,7 @@
 import { getPublicPropertiesAction, getPublicPropertyByIdAction } from "@/server/actions/public";
 import type { Property, PropertyFilters, PaginatedResponse } from "@/types";
 
-const SLUG = 'nairim';
+const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
 
 function toError(result: { ok: false; error: string }): Error {
   return new Error(result.error);

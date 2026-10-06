@@ -1,0 +1,219 @@
+name: iholding
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-operations: &operations
+  image: iholding-operations:local
+  build:
+    context: .
+    dockerfile: deploy/iholding/Dockerfile
+    target: operations
+  logging: *logging
+  networks: [default]
+
+x-database: &database
+  DATABASE_URL: postgresql://iholding:${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD em .env.iholding}@iholding-postgres:5432/iholding_db
+
+x-mongo: &mongo
+  MONGODB_LOGS_URI: mongodb://${MONGODB_LOGS_USER:?Configure MONGODB_LOGS_USER}:${MONGODB_LOGS_PASSWORD:?Configure MONGODB_LOGS_PASSWORD}@iholding-mongodb:27017/?authSource=admin
+  MONGODB_LOGS_DATABASE: iholding_logs
+
+services:
+  iholding-front:
+    image: iholding-front:local
+    build:
+      context: .
+      dockerfile: deploy/iholding/Dockerfile
+      target: runner
+      args:
+        NEXT_PUBLIC_URL_API: https://${APP_DOMAIN:-iholding.com.br}/api
+        NEXT_PUBLIC_COMPANY_SLUG: ${NEXT_PUBLIC_COMPANY_SLUG:-iholding}
+        NEXT_PUBLIC_COMPANY_NAME: ${NEXT_PUBLIC_COMPANY_NAME:-I Holding}
+        NEXT_PUBLIC_CARTO_API_KEY: ${NEXT_PUBLIC_CARTO_API_KEY:-}
+    environment:
+      <<: [*database, *mongo]
+      JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      BASE_URL: https://${APP_DOMAIN:-iholding.com.br}
+      MINIO_ENDPOINT: http://iholding-minio:9000
+      MINIO_PUBLIC_URL: https://${CDN_DOMAIN:-cdn.iholding.com.br}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?Configure MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?Configure MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-imagens}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}
+      CRON_SECRET: ${CRON_SECRET:?Configure CRON_SECRET}
+    volumes:
+      - app_backups:/app/backup
+    depends_on:
+      iholding-postgres: { condition: service_healthy }
+      iholding-mongodb: { condition: service_healthy }
+      iholding-migrate: { condition: service_completed_successfully }
+      iholding-storage-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:-traefik-public}
+      traefik.http.routers.iholding-front.rule: Host(`${APP_DOMAIN:-iholding.com.br}`)
+      traefik.http.routers.iholding-front.entrypoints: websecure
+      traefik.http.routers.iholding-front.tls.certresolver: ${TRAEFIK_CERTRESOLVER:-myresolver}
+      traefik.http.routers.iholding-front.service: iholding-front
+      traefik.http.services.iholding-front.loadbalancer.server.port: "3000"
+      traefik.http.routers.iholding-http.rule: Host(`${APP_DOMAIN:-iholding.com.br}`)
+      traefik.http.routers.iholding-http.entrypoints: web
+      traefik.http.routers.iholding-http.middlewares: iholding-https
+      traefik.http.routers.iholding-http.service: iholding-front
+      traefik.http.middlewares.iholding-https.redirectscheme.scheme: https
+      traefik.http.middlewares.iholding-https.redirectscheme.permanent: "true"
+    restart: unless-stopped
+    logging: *logging
+    networks: [default, traefik-public]
+
+  iholding-postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    environment:
+      POSTGRES_USER: iholding
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD}
+      POSTGRES_DB: iholding_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iholding -d iholding_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    logging: *logging
+
+  iholding-mongodb:
+    image: ${MONGODB_IMAGE:-mongo:8.0}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_LOGS_USER:?Configure MONGODB_LOGS_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_LOGS_PASSWORD:?Configure MONGODB_LOGS_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    logging: *logging
+
+  iholding-minio:
+    image: ${MINIO_IMAGE:?Informe uma imagem MinIO homologada e fixada}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Configure MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Configure MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:-traefik-public}
+      traefik.http.routers.iholding-cdn.rule: Host(`${CDN_DOMAIN:-cdn.iholding.com.br}`)
+      traefik.http.routers.iholding-cdn.entrypoints: websecure
+      traefik.http.routers.iholding-cdn.tls.certresolver: ${TRAEFIK_CERTRESOLVER:-myresolver}
+      traefik.http.routers.iholding-cdn.service: iholding-cdn
+      traefik.http.services.iholding-cdn.loadbalancer.server.port: "9000"
+      traefik.http.routers.iholding-cdn-http.rule: Host(`${CDN_DOMAIN:-cdn.iholding.com.br}`)
+      traefik.http.routers.iholding-cdn-http.entrypoints: web
+      traefik.http.routers.iholding-cdn-http.middlewares: iholding-cdn-https
+      traefik.http.routers.iholding-cdn-http.service: iholding-cdn
+      traefik.http.middlewares.iholding-cdn-https.redirectscheme.scheme: https
+      traefik.http.middlewares.iholding-cdn-https.redirectscheme.permanent: "true"
+    restart: unless-stopped
+    logging: *logging
+    networks: [default, traefik-public]
+
+  iholding-storage-init:
+    image: ${MINIO_MC_IMAGE:?Informe uma imagem mc homologada e fixada}
+    entrypoint: ["/bin/sh", "/config/init-storage.sh"]
+    environment: &storage-admin-env
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Configure MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Configure MINIO_ROOT_PASSWORD}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?Configure MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?Configure MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-imagens}
+    volumes:
+      - ./deploy/iholding/init-storage.sh:/config/init-storage.sh:ro
+    depends_on:
+      iholding-minio: { condition: service_started }
+    restart: "no"
+    logging: *logging
+
+  iholding-migrate:
+    <<: *operations
+    command: ["/bin/sh", "-ec", "node deploy/iholding/init-database.mjs && ./node_modules/.bin/prisma migrate deploy"]
+    environment: *database
+    depends_on:
+      iholding-postgres: { condition: service_healthy }
+    restart: "no"
+
+  iholding-bootstrap:
+    <<: *operations
+    profiles: [setup]
+    command: ["node", "deploy/iholding/bootstrap.mjs"]
+    environment:
+      <<: *database
+      NEXT_PUBLIC_COMPANY_SLUG: ${NEXT_PUBLIC_COMPANY_SLUG:-iholding}
+      NEXT_PUBLIC_COMPANY_NAME: ${NEXT_PUBLIC_COMPANY_NAME:-I Holding}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_BIRTH_DATE: ${BOOTSTRAP_ADMIN_BIRTH_DATE:-}
+      BOOTSTRAP_ADMIN_GENDER: ${BOOTSTRAP_ADMIN_GENDER:-}
+    depends_on:
+      iholding-migrate: { condition: service_completed_successfully }
+    restart: "no"
+
+  iholding-logs-worker:
+    <<: *operations
+    environment:
+      <<: [*database, *mongo]
+    depends_on:
+      iholding-mongodb: { condition: service_healthy }
+      iholding-migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  iholding-scheduler:
+    <<: *operations
+    command: ["node", "deploy/iholding/scheduler.mjs"]
+    environment:
+      CRON_SECRET: ${CRON_SECRET:?Configure CRON_SECRET}
+    volumes:
+      - scheduler_state:/state
+    depends_on:
+      iholding-front: { condition: service_healthy }
+    restart: unless-stopped
+
+  iholding-storage-admin:
+    image: ${MINIO_MC_IMAGE:?Informe uma imagem mc homologada e fixada}
+    profiles: [operations]
+    entrypoint: ["/bin/sh", "-ec"]
+    environment: *storage-admin-env
+    volumes:
+      - ./backups/iholding:/backup
+    logging: *logging
+
+networks:
+  default:
+  traefik-public:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik-public}
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  minio_data:
+  app_backups:
+  scheduler_state:

@@ -20,7 +20,7 @@ const poppins = localFont({
   display: 'swap',
 });
 
-const COMPANY_SLUG = 'nairim';
+const COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
 const FALLBACK_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME ?? 'Sistema';
 
 // Sem isso, o RSC payload deste layout (branding da empresa ativa, lido do

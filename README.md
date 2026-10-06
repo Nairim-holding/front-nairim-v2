@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Ambiente independente iholding.com.br
+
+O [guia de instalacao](deploy/iholding/README.md) descreve o novo ambiente vazio
+na mesma VPS, com front, PostgreSQL, MongoDB de auditoria, MinIO, agendador,
+backups e dominio/HTTPS. Use `docker-compose.iholding.yml` e `.env.iholding`,
+separados da configuracao da Nairim.
+
 ## Getting Started
 
 First, run the development server:

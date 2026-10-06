@@ -51,7 +51,7 @@ export default function PropertyFilter() {
 
   // Busca todos os tipos cadastrados no endpoint /property-types
   useEffect(() => {
-    const slug = 'nairim';
+    const slug = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
 
     const deriveFromProperties = async () => {
       try {

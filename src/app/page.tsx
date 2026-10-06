@@ -6,7 +6,7 @@ import CarrosselDinamico from "@/components/layout/HeroImage";
 import { getPublicPropertiesData } from "@/server/queries/public";
 import type { PublicProperty } from "@/core/entities/public-property";
 
-const SLUG = 'nairim';
+const SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG ?? 'nairim';
 
 // Equivalente ao `next: { revalidate: 300 }` que o fetch antigo usava (ISR).
 export const revalidate = 300;
