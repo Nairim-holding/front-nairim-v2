@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const state = vi.hoisted(() => ({ denied: '', role: 'ADMIN', permission: vi.fn(), export: vi.fn(), import: vi.fn(), revalidate: vi.fn() }));
+const state = vi.hoisted(() => ({ denied: '', role: 'ADMIN', permission: vi.fn(), export: vi.fn(), import: vi.fn(), revalidate: vi.fn(), exportAll: vi.fn(), previewAll: vi.fn(), importAll: vi.fn() }));
 vi.mock('@/infra/auth/session', () => ({
   withPermission: async (resource: string, action: string, callback: (session: object) => unknown) => {
     state.permission(resource, action);
@@ -10,6 +10,7 @@ vi.mock('@/infra/auth/session', () => ({
   assertSuperAdmin: (session: {role: string}) => { if (session.role !== 'SUPER_ADMIN') throw new Error('Super administrador necessário'); },
 }));
 vi.mock('@/infra/repositories/prisma-table-transfer-repository', () => ({ tableTransferRepository: { export: state.export, import: state.import } }));
+vi.mock('@/server/services/table-transfer-batch', () => ({ exportAllTableData: state.exportAll, previewAllTableImport: state.previewAll, importAllTableData: state.importAll }));
 vi.mock('next/cache', () => ({ revalidatePath: state.revalidate }));
 import { exportTableDataAction, previewTableImportAction, importTableDataAction } from './table-transfer';
 const data = { meta: { app: 'nairim', formatVersion: 1, table: 'property-types', company_id: 'source', exportedAt: '2026-10-05T00:00:00.000Z', counts: { PropertyType: 1 }, dependencies: [] }, data: { PropertyType: [{ id: 'type', company_id: 'source', description: 'Casa' }] } };
@@ -59,4 +60,23 @@ describe('Permissões e validação na transferência de tabelas', () => {
     expect((await exportTableDataAction('users')).ok).toBe(false);
     expect(state.export).not.toHaveBeenCalled();
   });
+});
+
+it('recusa todas as operações coletivas para administradores comuns antes de ler outras empresas', async () => {
+  state.role = 'ADMIN';
+  const form = file(); form.set('mode', 'copy-all');
+  expect((await exportTableDataAction('property-types', 'all')).ok).toBe(false);
+  expect((await previewTableImportAction('property-types', form)).ok).toBe(false);
+  expect((await importTableDataAction('property-types', form)).ok).toBe(false);
+  expect(state.exportAll).not.toHaveBeenCalled(); expect(state.previewAll).not.toHaveBeenCalled(); expect(state.importAll).not.toHaveBeenCalled();
+});
+it('root pode selecionar o fluxo coletivo e opções adulteradas são recusadas', async () => {
+  state.role = 'SUPER_ADMIN'; state.exportAll.mockResolvedValue('bundle'); state.previewAll.mockResolvedValue({ total: 1 }); state.importAll.mockResolvedValue({ results: [] });
+  expect(await exportTableDataAction('property-types', 'all')).toMatchObject({ ok: true, data: 'bundle' });
+  const form = file(); form.set('mode', 'restore-all');
+  expect((await previewTableImportAction('property-types', form)).ok).toBe(true);
+  expect((await importTableDataAction('property-types', form)).ok).toBe(true);
+  expect(state.importAll).toHaveBeenCalledWith(expect.objectContaining({ key: 'property-types' }), data, 'restore-all', expect.objectContaining({ role: 'SUPER_ADMIN' }));
+  form.set('mode', 'invalid'); expect((await importTableDataAction('property-types', form)).ok).toBe(false);
+  expect((await exportTableDataAction('property-types', 'invalid' as 'all')).ok).toBe(false);
 });

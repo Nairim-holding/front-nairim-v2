@@ -9,7 +9,7 @@ import { transferModels, type TableTransferPayload, type TransferRows } from '@/
 type Row = Record<string, unknown>;
 type Where = Record<string, unknown>;
 interface Delegate {
-  findMany(args: { where: Where; orderBy?: { id: 'asc' } }): Promise<Row[]>;
+  findMany(args: { where: Where; orderBy?: { id: 'asc' }; take?: number }): Promise<Row[]>;
   findFirst(args: { where: Where }): Promise<Row | null>;
   create(args: { data: Row }): Promise<unknown>;
   update(args: { where: Where; data: Row }): Promise<unknown>;
@@ -91,19 +91,24 @@ async function remapCompanyCopy(tx: object, data: TransferRows, companyId: strin
   }
 }
 export class PrismaTableTransferRepository {
-  async export(table: TransferTable, companyId: string): Promise<TableTransferPayload> {
+  async export(table: TransferTable, companyId: string, audit = true): Promise<TableTransferPayload> {
     return prisma.$transaction(async tx => {
       const data: TransferRows = {};
-      data[table.model] = await delegate(tx, table.model).findMany({ where: table.global ? {} : scope(table.model, companyId), orderBy: { id: 'asc' } });
+      const readLimit = audit ? {} : { take: 100001 };
+      const checkReadLimit = () => { if (!audit && Object.values(data).reduce((sum, rows) => sum + rows.length, 0) > 100000) throw new ValidationError('O arquivo conjunto excede 100.000 registros. Exporte as empresas individualmente.'); };
+      data[table.model] = await delegate(tx, table.model).findMany({ where: table.global ? {} : scope(table.model, companyId), orderBy: { id: 'asc' }, ...readLimit });
+      checkReadLimit();
       for (const model of table.children.filter(model => model !== 'Address')) {
-        data[model] = await delegate(tx, model).findMany({ where: { ...(table.global ? {} : scope(model, companyId)), ...childFilter(model, table, data) }, orderBy: { id: 'asc' } });
+        data[model] = await delegate(tx, model).findMany({ where: { ...(table.global ? {} : scope(model, companyId)), ...childFilter(model, table, data) }, orderBy: { id: 'asc' }, ...readLimit });
+        checkReadLimit();
       }
       if (table.children.includes('Address')) {
         const addressIds = [...new Set(Object.entries(data).filter(([model]) => model.endsWith('Address')).flatMap(([, rows]) => rows.map(row => String(row.address_id))))];
-        data.Address = await delegate(tx, 'Address').findMany({ where: { ...scope('Address', companyId), id: { in: addressIds } }, orderBy: { id: 'asc' } });
+        data.Address = await delegate(tx, 'Address').findMany({ where: { ...scope('Address', companyId), id: { in: addressIds } }, orderBy: { id: 'asc' }, ...readLimit });
       }
+      checkReadLimit();
       const counts = Object.fromEntries(Object.entries(data).map(([model, rows]) => [model, rows.length]));
-      await writeTransferAuditEvent(tx, {
+      if (audit) await writeTransferAuditEvent(tx, {
         action: 'EXPORT', tableName: table.model, companyId,
         description: `Exportação de ${table.label}`, format: 'JSON', counts,
         recordCount: Object.values(counts).reduce((sum, count) => sum + count, 0),

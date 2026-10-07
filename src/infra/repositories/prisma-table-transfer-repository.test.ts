@@ -33,6 +33,12 @@ describe('Transferência de cadastros entre ambientes', () => {
     expect(prisma.repairItem.findMany).toHaveBeenCalledWith({ where: { company_id: 'a', repair_id: { in: ['r'] } }, orderBy: { id: 'asc' } });
     expect(result.meta.counts).toMatchObject({ Repair: 1, RepairItem: 1 });
   });
+  it('interrompe exportação conjunta acima do limite antes de carregar filhos ou registrar conclusão', async () => {
+    vi.mocked(prisma.repair.findMany).mockResolvedValue(Array.from({length:100001}, (_,index)=>({id:String(index),company_id:'a'})) as never);
+    await expect(repo.export(getTransferTable('repairs')!, 'a', false)).rejects.toThrow('100.000 registros');
+    expect(prisma.repairItem.findMany).not.toHaveBeenCalled(); expect(prisma.auditLogOutbox.create).not.toHaveBeenCalled();
+    expect(prisma.repair.findMany).toHaveBeenCalledWith(expect.objectContaining({take:100001}));
+  });
   it('exporta endereços e canais somente dos contatos selecionados', async () => {
     vi.mocked(prisma.supplier.findMany).mockResolvedValue([{ id: 's' }] as never);
     vi.mocked(prisma.supplierAddress.findMany).mockResolvedValue([{ id: 'link', address_id: 'address', supplier_id: 's' }] as never);

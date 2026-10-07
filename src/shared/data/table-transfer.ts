@@ -40,3 +40,7 @@ export function transferTablesForPath(pathname: string) {
 export function getTransferTable(key: string) {
   return TRANSFER_TABLES.find(table => table.key === key);
 }
+
+export type TableTransferImportMode = 'current' | 'copy-all' | 'restore-all';
+export interface TableTransferImportOutcome { company: string; slug: string; ok: boolean; created: number; updated: number; error?: string }
+export interface TableTransferImportResult { created: number; updated: number; results?: TableTransferImportOutcome[] }
