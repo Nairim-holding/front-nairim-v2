@@ -14,17 +14,17 @@ import { z } from 'zod';
 
 export const createFinancialInstitutionSchema = z.object({
   name: z.string().trim().min(1, 'Nome da instituição é obrigatório'),
-  bank_number: z.string().nullish(),
-  agency_number: z.string().nullish(),
-  account_number: z.string().nullish(),
+  bank_number: z.string().max(20, 'Número do banco deve ter no máximo 20 caracteres. Informe o código, por exemplo 0748.').nullish(),
+  agency_number: z.string().max(20, 'Agência deve ter no máximo 20 caracteres.').nullish(),
+  account_number: z.string().max(50, 'Número da conta deve ter no máximo 50 caracteres.').nullish(),
   is_active: z.boolean().optional(),
 });
 
 export const updateFinancialInstitutionSchema = z.object({
   name: z.string().trim().min(1, 'Nome da instituição não pode ser vazio').optional(),
-  bank_number: z.string().nullish(),
-  agency_number: z.string().nullish(),
-  account_number: z.string().nullish(),
+  bank_number: z.string().max(20, 'Número do banco deve ter no máximo 20 caracteres. Informe o código, por exemplo 0748.').nullish(),
+  agency_number: z.string().max(20, 'Agência deve ter no máximo 20 caracteres.').nullish(),
+  account_number: z.string().max(50, 'Número da conta deve ter no máximo 50 caracteres.').nullish(),
   is_active: z.boolean().optional(),
 });
 

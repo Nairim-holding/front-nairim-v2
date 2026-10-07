@@ -8,6 +8,7 @@ import { usePopupContext } from '@/contexts/PopupContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import Toggle from '@/components/ui/Toggle';
 import type { FormStep } from '@/types/types';
+import { describeActionError } from '@/shared/actions/action-result';
 import {
   listFinancialInstitutionsAction,
   deleteFinancialInstitutionAction,
@@ -60,9 +61,9 @@ const FORM_STEPS: FormStep[] = [
     icon: <Landmark size={20} />,
     fields: [
       { field: 'name',           label: 'Nome da Instituição', type: 'text',   required: true, autoFocus: true, className: 'col-span-full' },
-      { field: 'bank_number',    label: 'Número do Banco',     type: 'text',   placeholder: 'Ex: 341' },
-      { field: 'agency_number',  label: 'Agência',             type: 'text',   placeholder: 'Ex: 1234-X' },
-      { field: 'account_number', label: 'Número da Conta',     type: 'text',   placeholder: 'Ex: 12345-6' },
+      { field: 'bank_number',    label: 'Número do Banco',     type: 'text',   placeholder: 'Código do banco. Ex: 0748', maxLength: 20, validation: { maxLength: 20 } },
+      { field: 'agency_number',  label: 'Agência',             type: 'text',   placeholder: 'Ex: 1234-X', maxLength: 20, validation: { maxLength: 20 } },
+      { field: 'account_number', label: 'Número da Conta',     type: 'text',   placeholder: 'Ex: 12345-6', maxLength: 50, validation: { maxLength: 50 } },
       {
         field: 'is_active',
         label: 'Status',
@@ -298,12 +299,12 @@ export default function InstituicoesFinanceirasPage() {
                     const payload = transformPayloadForSave(values);
                     if (formMode === 'CREATE') {
                       const result = await createFinancialInstitutionAction(payload);
-                      if (!result.ok) throw new Error(result.error || 'Erro ao criar Instituição.');
+                      if (!result.ok) throw new Error(describeActionError(result, 'Erro ao criar Instituição.'));
                       return result.data;
                     }
                     if (!selectedId) throw new Error('ID é obrigatório');
                     const result = await updateFinancialInstitutionAction(selectedId, payload);
-                    if (!result.ok) throw new Error(result.error || 'Erro ao atualizar Instituição.');
+                    if (!result.ok) throw new Error(describeActionError(result, 'Erro ao atualizar Instituição.'));
                     return result.data;
                   }}
                   onSubmitSuccess={() => {
