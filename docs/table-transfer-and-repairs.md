@@ -26,7 +26,7 @@ A exportação abrange todos os registros do cadastro, incluindo excluídos logi
 
 No destino, selecione a mesma tabela e o arquivo exportado. A prévia mostra a quantidade de registros antes da confirmação. A importação cria ou atualiza pelo ID, preserva registros ausentes do arquivo e ocorre em uma única transação: falhas não deixam gravações parciais.
 
-A empresa de origem é substituída pela empresa da sessão no destino. IDs de negócio são preservados. Importe primeiro os cadastros de referência, por exemplo:
+A empresa de origem é substituída pela empresa da sessão no destino. Entre empresas diferentes, os registros recebem IDs próprios e os vínculos são remapeados. Repetir o mesmo arquivo na mesma empresa atualiza a cópia existente. IDs já importados pela versão anterior são preservados quando pertencem ao destino. A empresa de origem permanece intacta. Importe primeiro os cadastros de referência, por exemplo:
 
 1. Tipos de imóvel, categorias, instituições, centros e índices de reajuste.
 2. Proprietários, imobiliárias, inquilinos e contatos; subcategorias vão junto com categorias.

@@ -49,7 +49,7 @@ export default function TableTransferActions() {
     try {
       const result = await previewTableImportAction(selectedTable.key, form);
       if (!result.ok) throw new Error(describeActionError(result));
-      const message = `${result.data.total} registro(s) no arquivo de ${result.data.label}. Os registros serão adicionados ou atualizados pelo ID na empresa de destino. Registros ausentes do arquivo serão preservados. Cadastros relacionados devem existir no destino com os mesmos IDs. Deseja importar?`;
+      const message = `${result.data.total} registro(s) no arquivo de ${result.data.label}. Os registros serão copiados para a empresa selecionada. Repetir o mesmo arquivo nessa empresa atualiza os registros já importados. Registros ausentes do arquivo serão preservados. Importe primeiro os cadastros relacionados. Deseja importar?`;
       showPopup('Importar JSON', message, async () => {
         setBusy(true);
         try {

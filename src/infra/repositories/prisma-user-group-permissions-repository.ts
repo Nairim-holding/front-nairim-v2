@@ -94,8 +94,9 @@ export class PrismaUserGroupPermissionsRepository implements UserGroupPermission
     // Resolve against the current company on every call. No cross-request
     // cache: assigning/revoking a group must apply to the next request.
 
-    // findFirst é escopado por empresa pela extensão do Prisma.
-    const user = await tenantStorage.exit(() => prisma.user.findFirst({
+    // A identidade do usuario pertence a sua empresa de origem.
+    // Prisma so executa a consulta ao aguardar: mantenha o await dentro do exit.
+    const user = await tenantStorage.exit(async () => await prisma.user.findFirst({
       where: { id: userId, deleted_at: null, is_active: true },
       select: {
         user_group_id: true, company_id: true, role: true, all_companies_access: true, allowed_company_ids: true,

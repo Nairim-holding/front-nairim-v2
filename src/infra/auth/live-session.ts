@@ -9,7 +9,8 @@ import { isWithinAccessSchedule } from './access-schedule';
 /** Recheck server-side authority on every request, including token refresh. */
 export async function validateLiveSession(claims: unknown): Promise<DecodedSessionToken> {
   assertSessionClaims(claims);
-  const user = await tenantStorage.exit(() => prisma.user.findFirst({
+  // Prisma so executa a consulta ao aguardar: mantenha o await dentro do exit.
+  const user = await tenantStorage.exit(async () => await prisma.user.findFirst({
     where: { id: claims.id, deleted_at: null, is_active: true },
     select: {
       id: true, name: true, email: true, role: true, company_id: true,

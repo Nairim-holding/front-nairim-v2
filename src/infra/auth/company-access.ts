@@ -4,7 +4,8 @@ import { ForbiddenError, UnauthorizedError, ValidationError } from '@/core/error
 import type { DecodedSessionToken } from '@/core/cryptography/token-signer';
 
 export async function getCompanyAccessUser(id: string) {
-  const user = await tenantStorage.exit(() => prisma.user.findFirst({
+  // Prisma so executa a consulta ao aguardar: mantenha o await dentro do exit.
+  const user = await tenantStorage.exit(async () => await prisma.user.findFirst({
     where: { id, deleted_at: null, is_active: true },
     select: { company_id: true, role: true, all_companies_access: true, allowed_company_ids: true },
   }));

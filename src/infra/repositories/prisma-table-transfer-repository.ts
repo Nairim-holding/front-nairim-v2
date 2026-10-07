@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import prisma from '@/infra/database/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { ForbiddenError, ValidationError } from '@/core/errors/domain-errors';
@@ -64,6 +65,30 @@ function orderModels(models: string[]) {
   return ordered;
 }
 
+// Stable IDs keep copies in different companies separate and make repeated imports update.
+export function tableTransferCopyId(companyId: string, model: string, id: string): string {
+  const hex = createHash('sha256').update(JSON.stringify(['table-copy-v1', companyId, model, id])).digest('hex').slice(0, 32).split('');
+  hex[12] = '8';
+  hex[16] = ((parseInt(hex[16], 16) & 3) | 8).toString(16);
+  const value = hex.join('');
+  return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
+}
+async function remapCompanyCopy(tx: object, data: TransferRows, companyId: string) {
+  const mappings = new Map<string, Map<string, string>>();
+  for (const [model, rows] of Object.entries(data)) {
+    // Reuse IDs already imported by the previous version, only within this company.
+    const owned = new Set(ids(await delegate(tx, model).findMany({ where: { ...scope(model, companyId, true), id: { in: ids(rows) } } })));
+    mappings.set(model, new Map(rows.map(row => [String(row.id), owned.has(String(row.id)) ? String(row.id) : tableTransferCopyId(companyId, model, String(row.id))])));
+  }
+  for (const [model, rows] of Object.entries(data)) for (const row of rows) {
+    row.id = mappings.get(model)!.get(String(row.id))!;
+    for (const relation of transferModels[model].relations) {
+      if (relation.model === 'Company' || ['created_by', 'updated_by'].includes(relation.fields[0])) continue;
+      const value = row[relation.fields[0]];
+      if (value != null && mappings.get(relation.model)?.has(String(value))) row[relation.fields[0]] = mappings.get(relation.model)!.get(String(value))!;
+    }
+  }
+}
 export class PrismaTableTransferRepository {
   async export(table: TransferTable, companyId: string): Promise<TableTransferPayload> {
     return prisma.$transaction(async tx => {
@@ -82,6 +107,7 @@ export class PrismaTableTransferRepository {
 
   async import(table: TransferTable, payload: TableTransferPayload, companyId: string, actorId: string, superAdmin: boolean) {
     const data: TransferRows = structuredClone(payload.data);
+    const copyingCompany = !table.global && !!payload.meta?.company_id && payload.meta.company_id !== companyId;
     const rootIds = new Set(ids(data[table.model]));
     // Child rows cannot be used to edit unrelated cadastros using the root's permission.
     for (const [model, rows] of Object.entries(data)) {
@@ -93,7 +119,7 @@ export class PrismaTableTransferRepository {
     }
     const linkedAddresses = new Set(Object.entries(data).filter(([model]) => model.endsWith('Address')).flatMap(([, rows]) => rows.map(row => String(row.address_id))));
     if ((data.Address ?? []).some(row => !linkedAddresses.has(String(row.id)))) throw new ValidationError('O arquivo contém endereços sem vínculo com o cadastro importado.');
-    // Replace source company and author references, but keep business IDs.
+    // Replace source company and author references. Copy IDs are resolved in the transaction.
     for (const [model, rows] of Object.entries(data)) for (const row of rows) {
       if (!table.global && transferModels[model].fields.some(field => field.name === 'company_id')) row.company_id = companyId;
       for (const rel of transferModels[model].relations) {
@@ -106,6 +132,7 @@ export class PrismaTableTransferRepository {
       }
     }
     return prisma.$transaction(async tx => {
+      if (copyingCompany) await remapCompanyCopy(tx, data, companyId);
       const existing: Record<string, Set<string>> = {};
       // Check ownership before writes. Explicit scopes also protect child tables.
       for (const [model, rows] of Object.entries(data)) {
@@ -121,16 +148,23 @@ export class PrismaTableTransferRepository {
         existing[model] = new Set(ids(found));
       }
       // Validate all foreign keys against this file or scoped records in the destination.
-      const checked = new Set<string>();
+      const checked = new Map<string, unknown>();
       for (const [model, rows] of Object.entries(data)) for (const row of rows) {
         for (const rel of transferModels[model].relations) {
           const value = row[rel.fields[0]];
           if (value == null) continue;
           const reference = `${rel.model}:${value}`;
-          if (checked.has(reference) || (data[rel.model] ?? []).some(parent => parent[rel.references[0]] === value)) continue;
-          const found = await delegate(tx, rel.model).findFirst({ where: { ...(table.global ? {} : scope(rel.model, companyId)), [rel.references[0]]: value } });
+          if (checked.has(reference)) { row[rel.fields[0]] = checked.get(reference); continue; }
+          if ((data[rel.model] ?? []).some(parent => parent[rel.references[0]] === value)) continue;
+          if (rel.model === 'User' && ['created_by', 'updated_by'].includes(rel.fields[0]) && value === actorId) continue;
+          let found = await delegate(tx, rel.model).findFirst({ where: { ...(table.global ? {} : scope(rel.model, companyId)), [rel.references[0]]: value } });
+          if (!found && copyingCompany && rel.model !== 'Company' && rel.references[0] === 'id') {
+            const copiedId = tableTransferCopyId(companyId, rel.model, String(value));
+            found = await delegate(tx, rel.model).findFirst({ where: { ...scope(rel.model, companyId), id: copiedId } });
+            if (found) row[rel.fields[0]] = copiedId;
+          }
           if (!found) throw new ValidationError(`${model}: importe primeiro o cadastro ${rel.model} (registro ${value}). O vínculo está ausente ou pertence a outra empresa.`);
-          checked.add(reference);
+          checked.set(reference, row[rel.fields[0]]);
         }
       }
       const deferred: { model: string; id: string; field: string; value: unknown }[] = [];
