@@ -1319,6 +1319,12 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       const expanded = query.subcategoryId ? await expandReportingFilters({ subcategory_id: [query.subcategoryId] }) : null;
       conditions.push(expanded ? { subcategory_id: getReportingCompanyIds() ? { in: expanded.subcategory_id } : query.subcategoryId } : { subcategory_id: null });
     }
+    if (query.centerIds) {
+      const ids = query.centerIds.filter((id): id is string => id !== null);
+      conditions.push(query.centerIds.includes(null)
+        ? { OR: [{ center_id: { in: ids } }, { center_id: null }] }
+        : { center_id: { in: ids } });
+    }
     if (query.cardId) conditions.push({ card_id: query.cardId });
     if (query.institutionId) conditions.push({ financial_institution_id: query.institutionId });
 
@@ -1334,7 +1340,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       where: {
         deleted_at: null,
         ...(source === 'transactions' || source === 'cards' ? { NOT: { is_transfer: true } } : {}),
-        ...(source === 'planning' || source === 'balance' ? { status: 'COMPLETED' as const } : {}),
+        ...(source === 'planning' || source === 'balance' ? { status: 'COMPLETED' as const } : query.status ? { status: query.status } : {}),
         category: { type: query.type ?? (source === 'cards' ? 'EXPENSE' : { in: ['INCOME', 'EXPENSE'] }) },
         AND: conditions,
       } as never,

@@ -8,9 +8,9 @@ describe('Receitas e despesas por centro', () => {
       {center_id:null,category_id:'out',amount:20}, {center_id:'a',category_id:'unknown',amount:10},
     ], [{id:'a',name:'Imóvel'}, {id:'b',name:'Imóvel'}], [{id:'in',type:'INCOME'},{id:'in2',type:'INCOME'},{id:'out',type:'EXPENSE'}]);
     expect(result).toEqual([
-      {id:'a',name:'Imóvel',income:1500,expense:250,balance:1250},
-      {id:'b',name:'Imóvel',income:0,expense:100,balance:-100},
-      {id:null,name:'Sem centro',income:0,expense:20,balance:-20},
+      {id:'a',centerIds:['a'],name:'Imóvel',income:1500,expense:250,balance:1250},
+      {id:'b',centerIds:['b'],name:'Imóvel',income:0,expense:100,balance:-100},
+      {id:null,centerIds:[null],name:'Sem centro',income:0,expense:20,balance:-20},
     ]);
   });
   const categories = [{id:'in',type:'INCOME'},{id:'out',type:'EXPENSE'}];
@@ -18,7 +18,7 @@ describe('Receitas e despesas por centro', () => {
     const result = buildCenterSummary([{center_id:'cr',category_id:'in',amount:1500},{center_id:'db',category_id:'out',amount:250}],
       [{id:'cr',name:'Aluguel',company_id:'a'},{id:'db',name:'Manutenção',company_id:'a'}], categories,
       [{id:'property',title:'Rua América, 389',company_id:'a',center_id:'cr',debit_center_id:'db'}]);
-    expect(result).toEqual([{id:'property:property',name:'Rua América, 389',income:1500,expense:250,balance:1250}]);
+    expect(result).toEqual([{id:'property:property',centerIds:['cr','db'],name:'Rua América, 389',income:1500,expense:250,balance:1250}]);
   });
   it('pairs legacy CR/DB names and orders the combined blocks by total movement', () => {
     const result = buildCenterSummary([
@@ -27,8 +27,8 @@ describe('Receitas e despesas por centro', () => {
     ],[{id:'a-cr',name:'Rua América, 389 (CR)',company_id:'a',type:'INCOME'},{id:'a-db',name:' rua  américa, 389 (db) ',company_id:'a',type:'EXPENSE'},
       {id:'b-cr',name:'Rua Alemanha, 280 (CR)',company_id:'a',type:'INCOME'},{id:'b-db',name:'Rua Alemanha, 280 (DB)',company_id:'a',type:'EXPENSE'}],categories);
     expect(result).toEqual([
-      {id:'b-cr',name:'Rua Alemanha, 280',income:100,expense:2000,balance:-1900},
-      {id:'a-cr',name:'Rua América, 389',income:1500,expense:250,balance:1250},
+      {id:'b-cr',centerIds:['b-cr','b-db'],name:'Rua Alemanha, 280',income:100,expense:2000,balance:-1900},
+      {id:'a-cr',centerIds:['a-cr','a-db'],name:'Rua América, 389',income:1500,expense:250,balance:1250},
     ]);
   });
   it('keeps equal addresses from different companies independent', () => {
@@ -50,7 +50,7 @@ describe('Receitas e despesas por centro', () => {
     const result = buildCenterSummary([{center_id:'db',category_id:'out',amount:250},{center_id:null,category_id:'in',amount:50}],
       [{id:'db',name:'Manutenção',company_id:'a'}],categories,
       [{id:'p',title:'Casa',company_id:'a',center_id:'cr',debit_center_id:'db'}]);
-    expect(result).toEqual([{id:'property:p',name:'Casa',income:0,expense:250,balance:-250},{id:null,name:'Sem centro',income:50,expense:0,balance:50}]);
+    expect(result).toEqual([{id:'property:p',centerIds:['db'],name:'Casa',income:0,expense:250,balance:-250},{id:null,centerIds:[null],name:'Sem centro',income:50,expense:0,balance:50}]);
   });
 
   it('does not join named CR/DB centers linked to different properties', () => {
