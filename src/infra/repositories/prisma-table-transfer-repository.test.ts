@@ -10,7 +10,7 @@ vi.mock('@/infra/database/prisma', () => {
   return { default: client };
 });
 import prisma from '@/infra/database/prisma';
-import { PrismaTableTransferRepository } from './prisma-table-transfer-repository';
+import { PrismaTableTransferRepository, tableTransferCopyId } from './prisma-table-transfer-repository';
 import { getTransferTable, TRANSFER_TABLES } from '@/shared/data/table-transfer';
 import type { TableTransferPayload, TransferRows } from '@/shared/validators/table-transfer';
 import { runWithAuditActor } from '@/infra/database/audit-context';
@@ -32,6 +32,12 @@ describe('Transferência de cadastros entre ambientes', () => {
     expect(prisma.repair.findMany).toHaveBeenCalledWith({ where: { company_id: 'a' }, orderBy: { id: 'asc' } });
     expect(prisma.repairItem.findMany).toHaveBeenCalledWith({ where: { company_id: 'a', repair_id: { in: ['r'] } }, orderBy: { id: 'asc' } });
     expect(result.meta.counts).toMatchObject({ Repair: 1, RepairItem: 1 });
+  });
+  it('interrompe exportação conjunta acima do limite antes de carregar filhos ou registrar conclusão', async () => {
+    vi.mocked(prisma.repair.findMany).mockResolvedValue(Array.from({length:100001}, (_,index)=>({id:String(index),company_id:'a'})) as never);
+    await expect(repo.export(getTransferTable('repairs')!, 'a', false)).rejects.toThrow('100.000 registros');
+    expect(prisma.repairItem.findMany).not.toHaveBeenCalled(); expect(prisma.auditLogOutbox.create).not.toHaveBeenCalled();
+    expect(prisma.repair.findMany).toHaveBeenCalledWith(expect.objectContaining({take:100001}));
   });
   it('exporta endereços e canais somente dos contatos selecionados', async () => {
     vi.mocked(prisma.supplier.findMany).mockResolvedValue([{ id: 's' }] as never);
@@ -108,4 +114,82 @@ describe('Transferência de cadastros entre ambientes', () => {
     await expect(repo.import(getTransferTable('categories')!, payload({ Category: [{ id: 'c', name: 'Reforma' }] }), 'a', 'actor', false)).rejects.toThrow('audit failed');
   });
 
+});
+
+describe('o mesmo JSON em empresas diferentes', () => {
+  let database: Map<string, Map<string, Record<string, unknown>>>;
+  beforeEach(() => {
+    state.delegates.clear();
+    state.transaction.mockClear();
+    database = new Map();
+    for (const model of ['Category', 'Subcategory', 'Transaction']) {
+      const rows = new Map<string, Record<string, unknown>>();
+      database.set(model, rows);
+      const key = model[0].toLowerCase() + model.slice(1);
+      const methods = (prisma as unknown as Record<string, Record<string, ReturnType<typeof vi.fn>>>)[key];
+      const matching = (where: Record<string, unknown>) => [...rows.values()].filter(row =>
+        (!where.company_id || row.company_id === where.company_id) &&
+        (!where.id || (typeof where.id === 'object' ? (where.id as { in: string[] }).in.includes(String(row.id)) : row.id === where.id)));
+      methods.findMany.mockImplementation(async ({ where }) => matching(where));
+      methods.findFirst.mockImplementation(async ({ where }) => matching(where)[0] ?? null);
+      methods.create.mockImplementation(async ({ data }) => {
+        if (rows.has(String(data.id))) throw new Error('ID global duplicado');
+        rows.set(String(data.id), structuredClone(data));
+        return data;
+      });
+      methods.update.mockImplementation(async ({ where, data }) => {
+        const owned = matching(where)[0];
+        if (!owned) throw new Error('Tentativa de alterar outra empresa');
+        Object.assign(owned, structuredClone(data));
+        return owned;
+      });
+    }
+  });
+  const copiedPayload = (data: TransferRows): TableTransferPayload => ({
+    data, meta: { app: 'nairim', formatVersion: 1, table: 'categories', company_id: 'source', exportedAt: '2026-10-07T00:00:00.000Z', counts: {}, dependencies: [] },
+  });
+  it('copia pais e filhos com IDs diferentes, preserva a origem e nao duplica na repeticao', async () => {
+    database.get('Category')!.set('c', { id: 'c', company_id: 'source', name: 'Original' });
+    const input = copiedPayload({ Category: [{ id: 'c', company_id: 'source', name: 'Reforma', type: 'EXPENSE' }], Subcategory: [{ id: 's', company_id: 'source', category_id: 'c', name: 'Materiais' }] });
+    expect(await repo.import(getTransferTable('categories')!, input, 'wagner', 'actor', false)).toEqual({ created: 2, updated: 0 });
+    expect(await repo.import(getTransferTable('categories')!, input, 'rosana', 'actor', false)).toEqual({ created: 2, updated: 0 });
+    expect(await repo.import(getTransferTable('categories')!, input, 'rosana', 'actor', false)).toEqual({ created: 0, updated: 2 });
+    const categories = database.get('Category')!;
+    expect(categories.size).toBe(3);
+    expect(categories.get('c')!.name).toBe('Original');
+    expect(tableTransferCopyId('wagner', 'Category', 'c')).not.toBe(tableTransferCopyId('rosana', 'Category', 'c'));
+    for (const company of ['wagner', 'rosana']) {
+      expect(database.get('Subcategory')!.get(tableTransferCopyId(company, 'Subcategory', 's'))).toMatchObject({ company_id: company, category_id: tableTransferCopyId(company, 'Category', 'c') });
+    }
+    expect(input.data.Category[0].id).toBe('c');
+  });
+  it('religa todas as subcategorias a categoria copiada em uma importacao anterior', async () => {
+    const categoryId = tableTransferCopyId('rosana', 'Category', 'c');
+    database.get('Category')!.set(categoryId, { id: categoryId, company_id: 'rosana', name: 'Reforma' });
+    const input = copiedPayload({ Subcategory: ['s1', 's2'].map(id => ({ id, company_id: 'source', category_id: 'c', name: id })) });
+    expect(await repo.import(getTransferTable('subcategories')!, input, 'rosana', 'actor', false)).toEqual({ created: 2, updated: 0 });
+    expect([...database.get('Subcategory')!.values()].every(row => row.category_id === categoryId)).toBe(true);
+  });
+  it('mantem IDs de registros ja importados pela versao anterior no destino', async () => {
+    database.get('Category')!.set('c', { id: 'c', company_id: 'wagner', name: 'Antes' });
+    const input = copiedPayload({ Category: [{ id: 'c', company_id: 'source', name: 'Depois', type: 'EXPENSE' }] });
+    expect(await repo.import(getTransferTable('categories')!, input, 'wagner', 'actor', false)).toEqual({ created: 0, updated: 1 });
+    expect(database.get('Category')!.size).toBe(1);
+    expect(database.get('Category')!.get('c')!.name).toBe('Depois');
+  });
+  it('nao usa uma categoria da outra empresa para atender uma dependencia', async () => {
+    database.get('Category')!.set('c', { id: 'c', company_id: 'wagner', name: 'Protegida' });
+    const input = copiedPayload({ Subcategory: [{ id: 's', company_id: 'source', category_id: 'c', name: 'Materiais' }] });
+    await expect(repo.import(getTransferTable('subcategories')!, input, 'rosana', 'actor', false)).rejects.toThrow('importe primeiro');
+    expect(database.get('Subcategory')!.size).toBe(0);
+    expect(database.get('Category')!.get('c')!.name).toBe('Protegida');
+  });
+  it('preserva o vinculo entre lancamentos pais e filhos ao copiar para outra empresa', async () => {
+    const input = copiedPayload({ Transaction: [{ id: 'child', company_id: 'source', parent_transaction_id: 'parent' }, { id: 'parent', company_id: 'source', parent_transaction_id: null }] });
+    expect(await repo.import(getTransferTable('transactions')!, input, 'rosana', 'actor', false)).toEqual({ created: 2, updated: 0 });
+    const childId = tableTransferCopyId('rosana', 'Transaction', 'child');
+    const parentId = tableTransferCopyId('rosana', 'Transaction', 'parent');
+    expect(database.get('Transaction')!.get(childId)).toMatchObject({ company_id: 'rosana', parent_transaction_id: parentId });
+    expect(database.get('Transaction')!.has(parentId)).toBe(true);
+  });
 });

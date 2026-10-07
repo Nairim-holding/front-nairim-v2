@@ -26,7 +26,7 @@ A exportação abrange todos os registros do cadastro, incluindo excluídos logi
 
 No destino, selecione a mesma tabela e o arquivo exportado. A prévia mostra a quantidade de registros antes da confirmação. A importação cria ou atualiza pelo ID, preserva registros ausentes do arquivo e ocorre em uma única transação: falhas não deixam gravações parciais.
 
-A empresa de origem é substituída pela empresa da sessão no destino. IDs de negócio são preservados. Importe primeiro os cadastros de referência, por exemplo:
+A empresa de origem é substituída pela empresa da sessão no destino. Ao copiar para uma empresa diferente, os IDs recebem um remapeamento estável por empresa e modelo. Repetir a importação atualiza a mesma cópia; os vínculos entre os registros acompanham o remapeamento. IDs já existentes na própria empresa são preservados. Importe primeiro os cadastros de referência, por exemplo:
 
 1. Tipos de imóvel, categorias, instituições, centros e índices de reajuste.
 2. Proprietários, imobiliárias, inquilinos e contatos; subcategorias vão junto com categorias.
@@ -45,3 +45,15 @@ Os metadados das colunas são gerados a partir de `prisma/schema.prisma` com `np
 ## Verificação
 
 `npx vitest run` executa os testes do projeto, incluindo validação, permissões, subtotais, dependências e isolamento por empresa. Depois de compilar, `npm run test:repair-ui` confere o formulário real em um navegador isolado, usando o exemplo das duas janelas. Este teste substitui a sessão e as ações do servidor por simulações e não grava dados no banco.
+
+## Operações para todas as empresas
+
+Somente root (`SUPER_ADMIN`) vê e pode executar as opções coletivas. Em **Exportar: todas as empresas**, o JSON da tabela contém uma seção por empresa (incluindo empresas inativas, sem empresas excluídas), identificada pelo slug. O cadastro global de Empresas já inclui todas e usa os botões padrão.
+
+A importação oferece **Copiar o cadastro para todas** para um JSON individual e **Restaurar dados de cada empresa** para um JSON conjunto. Na restauração, cada seção vai exclusivamente para a empresa do mesmo slug, mesmo que os IDs de empresa mudem entre ambientes. Cadastre antes as empresas ausentes; uma correspondência faltante impede o início de qualquer importação. Importe primeiro as tabelas referenciadas. Chaves únicas globais (por exemplo e-mails de usuários) continuam sendo respeitadas; não são renomeadas automaticamente.
+
+A prévia mostra as empresas afetadas e a quantidade total. A importação usa uma transação por empresa, com até três simultâneas. Uma falha reverte todos os registros daquela empresa e aparece no resultado; as demais empresas podem concluir. O resultado permanece na tela até ser fechado. Registros ausentes do arquivo não são apagados. Repetir o arquivo atualiza as cópias existentes.
+
+Os logs guardam a empresa de destino, o usuário root, IP e contagens de cada operação. A exportação coletiva registra conclusão somente depois que o arquivo completo está pronto. Arquivos conjuntos mantêm o limite de 40 MB e 100.000 registros no total, com até 1.000 empresas.
+
+`npm run test:table-transfer-ui` valida os seletores, a prévia, confirmação, resultado por empresa, acesso exclusivo de root e layout no celular.

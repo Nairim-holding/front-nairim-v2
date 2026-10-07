@@ -62,3 +62,34 @@ export function parseTableTransfer(raw: unknown, expectedKey: string): { table: 
   }
   return { table, payload };
 }
+
+
+export interface TableTransferBundle {
+  meta: { app: 'nairim'; formatVersion: 2; table: string; scope: 'all'; exportedAt: string; companyCount: number; recordCount: number };
+  companies: { company: { id: string; name: string; slug: string }; payload: TableTransferPayload }[];
+}
+const bundleSchema = z.object({
+  meta: z.object({ app: z.literal('nairim'), formatVersion: z.literal(2), table: z.string(), scope: z.literal('all'), exportedAt: z.string().datetime(), companyCount: z.number().int().min(1).max(1000), recordCount: z.number().int().min(0).max(100000) }).strict(),
+  companies: z.array(z.object({ company: z.object({ id: z.string().min(1), name: z.string().min(1), slug: z.string().min(1) }).strict(), payload: z.unknown() }).strict()).min(1).max(1000),
+}).strict();
+
+export function parseTableTransferBundle(raw: unknown, expectedKey: string): TableTransferBundle {
+  const parsed = bundleSchema.safeParse(raw);
+  if (!parsed.success) throw new ValidationError('Selecione um JSON exportado com Todas as empresas.');
+  const bundle = parsed.data;
+  if (bundle.meta.table !== expectedKey || getTransferTable(expectedKey)?.global) throw new ValidationError('Arquivo conjunto incompatível com o cadastro selecionado.');
+  const slugs = new Set<string>(); const ids = new Set<string>(); let total = 0;
+  const companies = bundle.companies.map(entry => {
+    if (slugs.has(entry.company.slug) || ids.has(entry.company.id)) throw new ValidationError('Empresa duplicada no arquivo conjunto.');
+    slugs.add(entry.company.slug); ids.add(entry.company.id);
+    const { payload } = parseTableTransfer(entry.payload, expectedKey);
+    if (payload.meta.company_id !== entry.company.id || Object.values(payload.data).some(rows => rows.some(row => row.company_id !== undefined && row.company_id !== entry.company.id))) {
+      throw new ValidationError('Os registros do arquivo não correspondem à empresa informada.');
+    }
+    total += Object.values(payload.data).reduce((sum, rows) => sum + rows.length, 0);
+    if (total > 100000) throw new ValidationError('Limite de 100.000 registros por arquivo conjunto.');
+    return { company: entry.company, payload };
+  });
+  if (bundle.meta.companyCount !== companies.length || bundle.meta.recordCount !== total) throw new ValidationError('Contagens divergentes no arquivo conjunto.');
+  return { meta: bundle.meta, companies };
+}
