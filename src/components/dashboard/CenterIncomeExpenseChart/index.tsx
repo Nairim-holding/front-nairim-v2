@@ -32,9 +32,11 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
     }), legend: { top: 0, left: 'center', data: ['Receitas','Despesas'], textStyle: { color: tokens.textMuted } },
     grid: { left: 12, right: 30, top: 38, bottom: rows.length > 12 ? 55 : 20, containLabel: true },
     xAxis: { type: 'value', axisLabel: { color: tokens.textMuted, formatter: (v: number) => formatCurrency(v) }, splitLine: { lineStyle: { color: tokens.borderSoft } } },
-    yAxis: { type: 'category', inverse: true, data: rows.map(row => row.name), axisLabel: { color: tokens.textMuted, width: 170, overflow: 'truncate' } },
+    yAxis: { type: 'category', inverse: true, data: rows.map(row => row.name), axisLabel: { color: tokens.textMuted, width: 200, overflow: 'truncate', margin: 12 },
+      axisTick: { show: false }, axisLine: { show: false },
+      splitLine: { show: true, interval: 0, lineStyle: { color: tokens.borderDefault, width: 1 } } },
     ...(rows.length > 12 ? { dataZoom: [{ type: 'slider' as const, yAxisIndex: 0, right: 0, start: 0, end: Math.min(100,1200/rows.length), filterMode: 'filter' as const }] } : {}),
-    series: [ { name: 'Receitas', type: 'bar', data: rows.map(row => row.income), itemStyle: { color: '#059669' }, barMaxWidth: 16 }, { name: 'Despesas', type: 'bar', data: rows.map(row => row.expense), itemStyle: { color: '#dc2626' }, barMaxWidth: 16 } ],
+    series: [ { name: 'Receitas', type: 'bar', data: rows.map(row => row.income), itemStyle: { color: '#059669' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' }, { name: 'Despesas', type: 'bar', data: rows.map(row => row.expense), itemStyle: { color: '#dc2626' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' } ],
   });
   return <ChartCard title="Receitas e despesas por centro" subtitle={`${filters?.regime === 'competencia' ? 'Por competência' : 'Por data efetiva'}, sem transferências`} detailData={rows} detailColumns={[
     { key: 'name', label: 'Centro' }, { key: 'income', label: 'Receitas', format: formatCurrency, summable: true },

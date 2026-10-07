@@ -6,6 +6,7 @@
     "generate:table-models": "node scripts/generate-table-transfer-models.mjs",
     "test:repair-ui": "node scripts/test-repair-form-ui.mjs",
     "test:investments-ui": "node scripts/test-investments-ui.mjs",
+    "test:centers-ui": "node scripts/test-center-income-expense-ui.mjs",
     "test:reporting-ui": "node scripts/test-reporting-companies-ui.mjs",
     "prebuild": "npm run generate:table-models",
     "dev": "next dev",
