@@ -98,6 +98,26 @@ describe('lançamentos que compõem os gráficos financeiros', () => {
     expect(rows.reduce((sum, row) => sum + row.value, 0)).toBe(500);
   });
 
+  it('restringe o detalhe aos dois centros do imóvel, sem substituir os filtros globais', async () => {
+    mocks.findMany.mockResolvedValue([transaction('income', 'INCOME', '1500'), transaction('expense', 'EXPENSE', '2000')]);
+    const rows = await repository.getChartDetails({ source: 'transactions', centerIds: ['credit', 'debit'], net: true, status: 'PENDING', regime: 'competencia', ...period }, { center_id: ['debit'], supplier_id: ['supplier'] });
+    const where = mocks.findMany.mock.calls[0][0].where;
+    expect(where.status).toBe('PENDING');
+    expect(where.AND).toContainEqual({ center_id: { in: ['credit', 'debit'] } });
+    expect(where.AND).toContainEqual({ center_id: { in: ['debit'] }, supplier_id: { in: ['supplier'] } });
+    expect(where.AND).toContainEqual({ event_date: dateRange });
+    expect(rows.map(row => row.value)).toEqual([1500, -2000]);
+    expect(rows.reduce((sum, row) => sum + row.value, 0)).toBe(-500);
+  });
+
+  it('consulta explicitamente lançamentos sem centro e não abre todos os centros', async () => {
+    await repository.getChartDetails({ source: 'transactions', centerIds: [null], type: 'EXPENSE', ...period });
+    expect(mocks.findMany.mock.calls[0][0].where.AND).toContainEqual({ OR: [{ center_id: { in: [] } }, { center_id: null }] });
+    expect(financialChartDetailQuerySchema.safeParse({ source: 'transactions', centerIds: [], ...period }).success).toBe(false);
+    expect(financialChartDetailQuerySchema.safeParse({ source: 'transactions', centerIds: [null], ...period }).success).toBe(true);
+    expect(financialChartDetailQuerySchema.safeParse({ source: 'transactions', status: 'INVALID', ...period }).success).toBe(false);
+  });
+
   it('normaliza seleções múltiplas e rejeita períodos inválidos antes da consulta', async () => {
     const getChartDetails = vi.fn().mockResolvedValue([]);
     await new GetFinancialChartDetailsUseCase({ getChartDetails }).execute(

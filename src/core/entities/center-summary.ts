@@ -1,4 +1,4 @@
-export interface CenterSummaryRow { id: string | null; name: string; income: number; expense: number; balance: number }
+export interface CenterSummaryRow { id: string | null; name: string; centerIds: (string | null)[]; income: number; expense: number; balance: number }
 interface SummaryCenter { id: string; name: string; company_id?: string; type?: string }
 interface SummaryProperty { id: string; title: string; company_id: string; center_id: string | null; debit_center_id: string | null }
 
@@ -60,7 +60,8 @@ export function buildCenterSummary(
     if (type !== 'INCOME' && type !== 'EXPENSE') continue;
     const group = total.center_id ? groups.get(total.center_id) : undefined;
     const id = group?.id ?? total.center_id;
-    const row = result.get(id) ?? { id, name: group?.name ?? (total.center_id ? names.get(total.center_id) ?? 'Centro excluído' : 'Sem centro'), income: 0, expense: 0, balance: 0 };
+    const row = result.get(id) ?? { id, name: group?.name ?? (total.center_id ? names.get(total.center_id) ?? 'Centro excluído' : 'Sem centro'), centerIds: [], income: 0, expense: 0, balance: 0 };
+    if (!row.centerIds.includes(total.center_id)) row.centerIds.push(total.center_id);
     row[type === 'INCOME' ? 'income' : 'expense'] += total.amount;
     row.balance = Math.round((row.income - row.expense) * 100) / 100;
     result.set(id, row);

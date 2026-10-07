@@ -8,6 +8,9 @@ export interface FinancialChartDetailQuery {
   startDate?: string;
   endDate?: string;
   type?: 'INCOME' | 'EXPENSE';
+  /** IDs exatos dos centros que compõem a barra; null representa Sem centro. */
+  centerIds?: (string | null)[];
+  status?: 'COMPLETED' | 'PENDING';
   categoryId?: string;
   subcategoryId?: string | null;
   cardId?: string;

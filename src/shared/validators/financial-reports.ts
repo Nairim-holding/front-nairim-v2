@@ -33,6 +33,8 @@ export const financialChartDetailQuerySchema = z.object({
   startDate: dateField.optional(),
   endDate: dateField.optional(),
   type: z.enum(['INCOME', 'EXPENSE']).optional(),
+  centerIds: z.array(z.string().min(1).nullable()).min(1).max(1000).optional(),
+  status: z.enum(['COMPLETED', 'PENDING']).optional(),
   categoryId: z.string().min(1).optional(),
   subcategoryId: z.string().min(1).nullable().optional(),
   cardId: z.string().min(1).optional(),

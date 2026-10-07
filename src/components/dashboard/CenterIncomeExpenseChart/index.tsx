@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import ChartCard from '@/components/dashboard/ChartCard';
+import { FINANCIAL_DETAIL_COLUMNS, loadFinancialChartDetails } from '@/components/dashboard/financialChartDetails';
 import EchartsSurface from '@/components/dashboard/EchartsSurface';
 import { getCenterSummaryAction } from '@/server/actions/center-summary';
 import type { CenterSummaryRow } from '@/core/entities/center-summary';
@@ -26,20 +27,30 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
     return () => { cancelled = true; };
   }, [startDate, endDate, filters, queryKey]);
   const buildOption = (): EChartsOption => ({
-    tooltip: getCustomEchartsTooltipConfig(params => {
+    tooltip: { confine: true, ...getCustomEchartsTooltipConfig(params => {
       const item = Array.isArray(params) ? params[0] : params; const row = rows[item.dataIndex];
-      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' } ]);
-    }), legend: { top: 0, left: 'center', data: ['Receitas','Despesas'], textStyle: { color: tokens.textMuted } },
+      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' }, { label: 'Saldo', value: formatCurrency(row?.balance ?? 0), color: '#86efac' } ]);
+    }) }, legend: { top: 0, left: 'center', data: ['Receitas','Despesas','Saldo'], textStyle: { color: tokens.textMuted } },
     grid: { left: 12, right: 30, top: 38, bottom: rows.length > 12 ? 55 : 20, containLabel: true },
     xAxis: { type: 'value', axisLabel: { color: tokens.textMuted, formatter: (v: number) => formatCurrency(v) }, splitLine: { lineStyle: { color: tokens.borderSoft } } },
     yAxis: { type: 'category', inverse: true, data: rows.map(row => row.name), axisLabel: { color: tokens.textMuted, width: 200, overflow: 'truncate', margin: 12 },
       axisTick: { show: false }, axisLine: { show: false },
       splitLine: { show: true, interval: 0, lineStyle: { color: tokens.borderDefault, width: 1 } } },
     ...(rows.length > 12 ? { dataZoom: [{ type: 'slider' as const, yAxisIndex: 0, right: 0, start: 0, end: Math.min(100,1200/rows.length), filterMode: 'filter' as const }] } : {}),
-    series: [ { name: 'Receitas', type: 'bar', data: rows.map(row => row.income), itemStyle: { color: '#059669' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' }, { name: 'Despesas', type: 'bar', data: rows.map(row => row.expense), itemStyle: { color: '#dc2626' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' } ],
+    series: [ { name: 'Receitas', type: 'bar', data: rows.map(row => row.income), itemStyle: { color: '#059669' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' }, { name: 'Despesas', type: 'bar', data: rows.map(row => row.expense), itemStyle: { color: '#dc2626' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' }, { name: 'Saldo', type: 'bar', data: rows.map(row => row.balance), itemStyle: { color: '#86efac' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' } ],
   });
   return <ChartCard title="Receitas e despesas por centro" subtitle={`${filters?.regime === 'competencia' ? 'Por competência' : 'Por data efetiva'}, sem transferências`} detailData={rows} detailColumns={[
     { key: 'name', label: 'Centro' }, { key: 'income', label: 'Receitas', format: formatCurrency, summable: true },
-    { key: 'expense', label: 'Despesas', format: formatCurrency, summable: true }, { key: 'balance', label: 'Resultado', format: formatCurrency, summable: true },
-  ]}>{({ isFullscreen }) => error ? <div role="alert" className="p-4 text-sm text-red-600">{error}</div> : !loading && !rows.length ? <div className="p-8 text-sm text-content-muted">Sem lançamentos no período.</div> : <EchartsSurface isFullscreen={isFullscreen} isLoading={loading} buildOption={buildOption} />}</ChartCard>;
+    { key: 'expense', label: 'Despesas', format: formatCurrency, summable: true }, { key: 'balance', label: 'Saldo', format: formatCurrency, summable: true },
+  ]} pointDetailColumns={FINANCIAL_DETAIL_COLUMNS} loadDetailForPoint={point => {
+    const row = rows[point.dataIndex];
+    if (!row) return Promise.resolve([]);
+    const net = point.seriesName === 'Saldo';
+    return loadFinancialChartDetails({
+      source: 'transactions', startDate, endDate, centerIds: row.centerIds, net,
+      type: net ? (filters?.type === 'INCOME' || filters?.type === 'EXPENSE' ? filters.type : undefined)
+        : point.seriesName === 'Receitas' ? 'INCOME' : 'EXPENSE',
+      status: filters?.status === 'COMPLETED' || filters?.status === 'PENDING' ? filters.status : undefined,
+    }, filters);
+  }}>{({ isFullscreen }) => error ? <div role="alert" className="p-4 text-sm text-red-600">{error}</div> : !loading && !rows.length ? <div className="p-8 text-sm text-content-muted">Sem lançamentos no período.</div> : <div className="relative h-full w-full overflow-hidden"><EchartsSurface isFullscreen={isFullscreen} isLoading={loading} buildOption={buildOption} /></div>}</ChartCard>;
 }
