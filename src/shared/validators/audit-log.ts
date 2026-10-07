@@ -15,7 +15,7 @@ import { z } from 'zod';
  * Origem: api-nairim-v2/src/lib/validators/audit-log.ts.
  */
 
-const VALID_ACTIONS = ['LOGIN', 'LOGIN_FAILED', 'CREATE', 'UPDATE', 'DELETE'] as const;
+const VALID_ACTIONS = ['LOGIN', 'LOGIN_FAILED', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'IMPORT'] as const;
 
 export const listAuditLogsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1, 'Limit deve ser um número entre 1 e 150').max(150, 'Limit deve ser um número entre 1 e 150').optional(),

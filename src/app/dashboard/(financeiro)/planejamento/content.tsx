@@ -1,5 +1,7 @@
 'use client';
 
+import { auditPreparedExport } from '@/lib/audit-export';
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { RefreshCw, Calendar, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -450,39 +452,49 @@ export default function PlanningPageContent() {
 
   // Exporta exatamente o que está renderizado na grid (mesmas linhas/colunas do
   // período selecionado) — lê o <table> já montado em vez de recalcular os dados.
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const tableEl = planningTableRef.current?.getTableElement();
     if (!tableEl) {
       showMessage('Não há dados para exportar', 'error');
       return;
     }
 
-    const worksheet = XLSX.utils.table_to_sheet(tableEl);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Planejamento');
-    XLSX.writeFile(workbook, `planejamento_${dateRange.from}_a_${dateRange.to}.xlsx`);
+    try {
+      const worksheet = XLSX.utils.table_to_sheet(tableEl);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Planejamento');
+      await auditPreparedExport('planning', 'XLSX', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
+      XLSX.writeFile(workbook, `planejamento_${dateRange.from}_a_${dateRange.to}.xlsx`);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
   }, [dateRange, showMessage]);
 
   // Mesma fonte que o Excel (o <table> renderizado) — usa o modo "html" do
   // autoTable, que lê a tabela do DOM em vez de recalcular linhas/colunas.
-  const handleExportPDF = useCallback(() => {
+  const handleExportPDF = useCallback(async () => {
     const tableEl = planningTableRef.current?.getTableElement();
     if (!tableEl) {
       showMessage('Não há dados para exportar', 'error');
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-    autoTable(doc, {
-      html: tableEl,
-      horizontalPageBreak: true,
-      showFoot: 'lastPage',
-      didParseCell: styleReportPDFCell,
-      styles: { fontSize: 6, cellPadding: 2 },
-      margin: { left: 20, right: 20, bottom: 32 },
-    });
-    numberReportPDFPages(doc);
-    doc.save(`planejamento_${dateRange.from}_a_${dateRange.to}.pdf`);
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      autoTable(doc, {
+        html: tableEl,
+        horizontalPageBreak: true,
+        showFoot: 'lastPage',
+        didParseCell: styleReportPDFCell,
+        styles: { fontSize: 6, cellPadding: 2 },
+        margin: { left: 20, right: 20, bottom: 32 },
+      });
+      numberReportPDFPages(doc);
+      await auditPreparedExport('planning', 'PDF', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
+      doc.save(`planejamento_${dateRange.from}_a_${dateRange.to}.pdf`);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
   }, [dateRange, showMessage]);
 
   const balanceMonths = useMemo(() => {

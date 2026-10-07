@@ -114,7 +114,8 @@ export async function withTenant<T>(
   if (!session.company_id) {
     throw new ForbiddenError('Contexto de empresa não identificado. Faça login novamente.');
   }
-  return runWithTenant(session.company_id, () => runWithAuditActor(session, () => fn(session)));
+  const actor = { ...session, ip: (await getRequestIp()).slice(0, 45) };
+  return runWithTenant(session.company_id, () => runWithAuditActor(actor, () => fn(session)));
 }
 
 /**

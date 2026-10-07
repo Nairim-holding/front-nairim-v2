@@ -26,3 +26,7 @@ describe('log selection safety', () => {
     });
   });
 });
+
+it.each(['EXPORT','IMPORT'])('allows selecting %s logs within the active company', action => {
+  expect(buildLogSelection('company-a', { mode:'all', action })).toMatchObject({ company_id:'company-a', action });
+});

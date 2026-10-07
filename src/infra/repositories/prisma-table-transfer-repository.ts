@@ -1,4 +1,5 @@
 import prisma from '@/infra/database/prisma';
+import { writeTransferAuditEvent } from '@/infra/database/audit-events';
 import { Prisma } from '@/generated/prisma/client';
 import { ForbiddenError, ValidationError } from '@/core/errors/domain-errors';
 import { TABLE_TRANSFER_FORMAT_VERSION, type TransferTable } from '@/shared/data/table-transfer';
@@ -76,7 +77,13 @@ export class PrismaTableTransferRepository {
         const addressIds = [...new Set(Object.entries(data).filter(([model]) => model.endsWith('Address')).flatMap(([, rows]) => rows.map(row => String(row.address_id))))];
         data.Address = await delegate(tx, 'Address').findMany({ where: { ...scope('Address', companyId), id: { in: addressIds } }, orderBy: { id: 'asc' } });
       }
-      return { meta: { app: 'nairim', formatVersion: TABLE_TRANSFER_FORMAT_VERSION, table: table.key, company_id: companyId, exportedAt: new Date().toISOString(), counts: Object.fromEntries(Object.entries(data).map(([model, rows]) => [model, rows.length])), dependencies: dependencies(table) }, data };
+      const counts = Object.fromEntries(Object.entries(data).map(([model, rows]) => [model, rows.length]));
+      await writeTransferAuditEvent(tx, {
+        action: 'EXPORT', tableName: table.model, companyId,
+        description: `Exportação de ${table.label}`, format: 'JSON', counts,
+        recordCount: Object.values(counts).reduce((sum, count) => sum + count, 0),
+      });
+      return { meta: { app: 'nairim', formatVersion: TABLE_TRANSFER_FORMAT_VERSION, table: table.key, company_id: companyId, exportedAt: new Date().toISOString(), counts, dependencies: dependencies(table) }, data };
     }, { isolationLevel: 'RepeatableRead', timeout: 60000 });
   }
 
@@ -163,6 +170,12 @@ export class PrismaTableTransferRepository {
         }
       }
       for (const ref of deferred) await delegate(tx, ref.model).update({ where: { id: ref.id, ...(table.global ? {} : scope(ref.model, companyId)) }, data: { [ref.field]: ref.value } });
+      await writeTransferAuditEvent(tx, {
+        action: 'IMPORT', tableName: table.model, companyId,
+        description: `Importação de ${table.label}`, format: 'JSON', created, updated,
+        counts: Object.fromEntries(Object.entries(data).map(([model, rows]) => [model, rows.length])),
+        recordCount: created + updated,
+      });
       return { created, updated };
     }, { timeout: 120000, isolationLevel: 'Serializable' }).catch(error => {
       if (error instanceof Prisma.PrismaClientKnownRequestError && ['P2002', 'P2003', 'P2025'].includes(error.code))

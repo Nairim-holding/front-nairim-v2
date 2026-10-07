@@ -1,4 +1,5 @@
 import prisma from '@/infra/database/prisma';
+import { writeTransferAuditEvent } from '@/infra/database/audit-events';
 import type { BackupRepository } from '@/core/repositories/backup-repository';
 import type { BackupMeta, BackupPayload } from '@/core/entities/backup';
 import { BACKUP_FORMAT_VERSION } from '@/core/entities/backup';
@@ -436,6 +437,12 @@ export class PrismaBackupRepository implements BackupRepository {
       if (Array.isArray(data.userDashboardLayouts) && data.userDashboardLayouts.length > 0) {
         await tx.userDashboardLayout.createMany({ data: data.userDashboardLayouts as any });
       }
+      const counts = Object.fromEntries(Object.entries(data).map(([model, rows]) => [model, Array.isArray(rows) ? rows.length : rows ? 1 : 0]));
+      await writeTransferAuditEvent(tx, {
+        action: 'IMPORT', tableName: 'Backup', companyId,
+        description: 'Restauração do backup da empresa', format: 'JSON', counts,
+        recordCount: Object.values(counts).reduce((sum, count) => sum + count, 0),
+      });
     });
   }
 }

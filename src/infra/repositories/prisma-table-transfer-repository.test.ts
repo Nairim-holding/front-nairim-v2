@@ -13,7 +13,13 @@ import prisma from '@/infra/database/prisma';
 import { PrismaTableTransferRepository } from './prisma-table-transfer-repository';
 import { getTransferTable, TRANSFER_TABLES } from '@/shared/data/table-transfer';
 import type { TableTransferPayload, TransferRows } from '@/shared/validators/table-transfer';
-const repo = new PrismaTableTransferRepository();
+import { runWithAuditActor } from '@/infra/database/audit-context';
+const repository = new PrismaTableTransferRepository();
+const actor = (company_id: string) => ({ id: 'actor', name: 'Usuário', email: 'actor@example.test', company_id, ip: '127.0.0.1' });
+const repo = {
+  export: (...args: Parameters<typeof repository.export>) => runWithAuditActor(actor(args[1]), () => repository.export(...args)),
+  import: (...args: Parameters<typeof repository.import>) => runWithAuditActor(actor(args[2]), () => repository.import(...args)),
+};
 const payload = (data: TransferRows) => ({ data } as TableTransferPayload);
 
 describe('Transferência de cadastros entre ambientes', () => {
@@ -80,4 +86,26 @@ describe('Transferência de cadastros entre ambientes', () => {
     expect(prisma.transaction.update).toHaveBeenLastCalledWith({ where: { id: 'child', company_id: 'a' }, data: { parent_transaction_id: 'parent' } });
     expect(vi.mocked(prisma.transaction.create).mock.invocationCallOrder[1]).toBeLessThan(vi.mocked(prisma.transaction.update).mock.invocationCallOrder[0]);
   });
+  it('logs export and import totals inside their database transactions', async () => {
+    await repo.export(getTransferTable('repairs')!, 'a');
+    expect(prisma.auditLogOutbox.create).toHaveBeenLastCalledWith({ data: expect.objectContaining({
+      action: 'EXPORT', table_name: 'Repair', company_id: 'a', user_id: 'actor',
+      new_values: expect.objectContaining({ format: 'JSON', record_count: 0, record_counts: { Repair: 0, RepairProfessional: 0, RepairItem: 0, RepairMedia: 0 } }),
+    }) });
+    await repo.import(getTransferTable('categories')!, payload({ Category: [{ id: 'c', name: 'Reforma', type: 'EXPENSE' }], Subcategory: [] }), 'a', 'actor', false);
+    expect(prisma.auditLogOutbox.create).toHaveBeenLastCalledWith({ data: expect.objectContaining({ action: 'IMPORT',
+      new_values: expect.objectContaining({ created_count: 1, updated_count: 0, record_count: 1 }),
+    }) });
+    expect(vi.mocked(prisma.category.create).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(prisma.auditLogOutbox.create).mock.invocationCallOrder.at(-1)!);
+  });
+  it('rejects failed imports without recording a completed import', async () => {
+    vi.mocked(prisma.category.create).mockRejectedValueOnce(new Error('write failed'));
+    await expect(repo.import(getTransferTable('categories')!, payload({ Category: [{ id: 'c', name: 'Reforma' }] }), 'a', 'actor', false)).rejects.toThrow('write failed');
+    expect(prisma.auditLogOutbox.create).not.toHaveBeenCalled();
+  });
+  it('does not return a successful import if its audit event cannot be persisted', async () => {
+    vi.mocked(prisma.auditLogOutbox.create).mockRejectedValueOnce(new Error('audit failed'));
+    await expect(repo.import(getTransferTable('categories')!, payload({ Category: [{ id: 'c', name: 'Reforma' }] }), 'a', 'actor', false)).rejects.toThrow('audit failed');
+  });
+
 });

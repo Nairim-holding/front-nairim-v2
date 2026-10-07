@@ -1911,6 +1911,8 @@
         "required": true,
         "nullable": false,
         "values": [
+          "EXPORT",
+          "IMPORT",
           "LOGIN",
           "LOGIN_FAILED",
           "CREATE",

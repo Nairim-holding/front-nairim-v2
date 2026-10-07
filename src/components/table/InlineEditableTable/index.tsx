@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { auditPreparedExport } from "@/lib/audit-export";
+
 import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, type ReactNode } from "react";
 import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -1459,6 +1461,7 @@ export default function InlineEditableTable({
         ? `lancamentos_${fromStr}_${toStr}.xlsx`
         : `lancamentos_${new Date().toISOString().split('T')[0]}.xlsx`;
 
+      await auditPreparedExport(resource, 'XLSX', rows.length);
       XLSX.writeFile(workbook, fileName);
       showMessage('Exportação concluída com sucesso', 'success');
     } catch (error) {

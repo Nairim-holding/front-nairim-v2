@@ -19,6 +19,8 @@ export type Gender = (typeof Gender)[keyof typeof Gender]
 
 
 export const AuditAction = {
+  EXPORT: 'EXPORT',
+  IMPORT: 'IMPORT',
   LOGIN: 'LOGIN',
   LOGIN_FAILED: 'LOGIN_FAILED',
   CREATE: 'CREATE',

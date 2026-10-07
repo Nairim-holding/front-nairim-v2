@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { auditPreparedExport } from "@/lib/audit-export";
+
 import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { Filter, Trash2, Plus, Edit, Eye, X, Settings2, Paperclip, FileSpreadsheet, RefreshCw } from "lucide-react";
@@ -505,6 +507,7 @@ export default function DynamicTableManager({
       const worksheet = XLSX.utils.json_to_sheet(rows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
+      await auditPreparedExport(resource, 'XLSX', rows.length);
       XLSX.writeFile(workbook, `${resource}_${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (error) {
       console.error('[DataTable] Erro ao exportar Excel:', error);
