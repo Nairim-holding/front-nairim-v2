@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   user: vi.fn(), company: vi.fn(), group: vi.fn(), permissions: vi.fn(), verify: vi.fn(),
-  cookie: vi.fn(), setCookie: vi.fn(),
+  cookie: vi.fn(), setCookie: vi.fn(), requestHeaders: vi.fn(),
   createUser: vi.fn(), updateUser: vi.fn(), backup: vi.fn(), companyWrite: vi.fn(),
 }));
 vi.mock('server-only', () => ({}));
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: mocks.cookie, set: mocks.setCookie }),
-  headers: async () => new Headers(),
+  headers: async () => mocks.requestHeaders(),
 }));
 vi.mock('@/infra/database/prisma', () => ({ default: {
   user: { findFirst: mocks.user }, company: { findFirst: mocks.company },
@@ -49,6 +49,7 @@ const liveUser = { id: 'user-a', company_id: 'company-a', role: 'DEFAULT', name:
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.requestHeaders.mockReturnValue(new Headers());
   mocks.user.mockResolvedValue(liveUser);
   mocks.company.mockResolvedValue({ id: 'company-a' });
   mocks.verify.mockReturnValue(claims);
@@ -196,4 +197,14 @@ describe('direct calls to sensitive Server Actions', () => {
     expect(await updateCompanyAction('other-company', { name: 'changed' })).toMatchObject({ ok: false, status: 403 });
     expect(mocks.companyWrite).not.toHaveBeenCalled();
   });
+});
+
+it('propagates the request IP and authenticated author into audit context', async () => {
+  mocks.user.mockResolvedValue({ ...liveUser, role: 'ADMIN' });
+  mocks.permissions.mockResolvedValue(null);
+  mocks.requestHeaders.mockReturnValue(new Headers({ 'x-forwarded-for': '203.0.113.10, 127.0.0.1' }));
+  const { getAuditActor } = await import('@/infra/database/audit-context');
+  const actor = await withPermission('repairs', 'edit', async () => getAuditActor());
+  expect(actor).toMatchObject({ id: liveUser.id, company_id: liveUser.company_id, ip: '203.0.113.10' });
+  expect(getAuditActor()).toBeUndefined();
 });

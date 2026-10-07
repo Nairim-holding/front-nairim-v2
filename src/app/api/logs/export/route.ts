@@ -2,6 +2,9 @@ import { assertAdmin, withPermission } from '@/infra/auth/session';
 import { logsCollection } from '@/infra/database/mongodb';
 import { buildLogSelection } from '@/shared/validators/log-management';
 import { actionFail } from '@/shared/actions/action-result';
+import prisma from '@/infra/database/prisma';
+import { getAuditActor, runWithAuditActor } from '@/infra/database/audit-context';
+import { writeTransferAuditEvent } from '@/infra/database/audit-events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,6 +19,9 @@ export async function GET(request: Request) {
       // Establish the query before sending HTTP 200; outages return an actionable error.
       let next = await cursor.next();
       let started = false;
+      let recordCount = 0;
+      const actor = getAuditActor();
+      if (!actor) throw new Error('Contexto de auditoria indisponível.');
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async pull(controller) {
@@ -26,9 +32,14 @@ export async function GET(request: Request) {
             }
             if (next) {
               const current = next;
+              recordCount++;
               next = await cursor.next();
               controller.enqueue(encoder.encode(JSON.stringify(current) + (next ? ',' : '')));
             } else {
+              await runWithAuditActor(actor, () => writeTransferAuditEvent(prisma, {
+                action: 'EXPORT', tableName: 'AuditLog', companyId: session.company_id,
+                description: 'Exportação dos logs de auditoria', format: 'JSON', recordCount,
+              }));
               controller.enqueue(encoder.encode(']}'));
               await cursor.close();
               controller.close();

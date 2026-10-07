@@ -38,6 +38,7 @@ try {
     }
     export const getInvestmentFiltersAction = async () => ({ ok: true, data: { filters: [], operators: {}, searchFields: [] } });
     export const listFinancialInstitutionsAction = async () => ({ ok: true, data: { data: [{ id: 'bank', name: 'Banco de teste' }] } });
+    export const auditPreparedExportAction = async input => { (window.__exports ??= []).push(input); return window.__denyExport ? { ok: false, error: 'Auditoria indisponível' } : { ok: true }; };
     export const createInvestmentAction = async input => { window.__created = input; return { ok: true, data: { ...input, id: 'new' } }; };
     export const getColumnPreferencesAction = async () => ({ ok: true, data: JSON.parse(localStorage.getItem('columns') ?? '{"columnOrder":[],"visibleColumns":[],"columnWidths":{}}') });
     export const saveColumnPreferencesAction = async input => { window.__preferences = input; localStorage.setItem('columns', JSON.stringify(input)); return { ok: true, data: input }; };
@@ -55,7 +56,7 @@ try {
   writeFileSync(join(fixture, 'style.css'), css);
   writeFileSync(join(fixture, 'index.html'), '<html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/style.css"/></head><body><div id="root"></div><script type="module" src="/main.tsx"></script></body></html>');
   const mockedModules = ['@/contexts/MessageContext', '@/contexts/PopupContext', '@/contexts/PermissionsContext', '@/contexts/AuthContext', '@/contexts',
-    'next/navigation', 'next/link', '@/server/actions/investment', '@/server/actions/financial-institution', '@/server/actions/user-preferences', '@/server/actions/table-transfer'];
+    'next/navigation', 'next/link', '@/server/actions/investment', '@/server/actions/financial-institution', '@/server/actions/user-preferences', '@/server/actions/table-transfer', '@/server/actions/export-audit'];
   server = await createServer({ configFile: false, root: fixture, esbuild: { jsx: 'automatic' },
     resolve: { alias: [...mockedModules.map(find => ({ find, replacement: join(fixture, 'mocks.tsx') })), { find: '@', replacement: join(root, 'src') }] },
     server: { host: '127.0.0.1', port: 0, fs: { allow: [root] } },
@@ -85,6 +86,18 @@ try {
   await page.getByText('18.998,32', { exact: true }).waitFor();
   assert.deepEqual((await headers()).filter(text => text && text !== 'Jan 2025'), desired);
   if (process.env.INVESTMENTS_UI_SCREENSHOT) await page.screenshot({ path: resolve(process.env.INVESTMENTS_UI_SCREENSHOT), fullPage: true });
+  for (const format of ['XLSX', 'PDF']) {
+    const download = page.waitForEvent('download');
+    await page.getByTitle(format === 'XLSX' ? 'Exportar Excel' : 'Exportar PDF', { exact: true }).click();
+    await download;
+    assert.deepEqual(await page.evaluate(() => window.__exports.at(-1)), { resource: 'investments', format, recordCount: await page.locator('tbody tr').count() });
+  }
+  await page.evaluate(() => { window.__denyExport = true; });
+  const unexpectedDownloads = []; page.on('download', item => unexpectedDownloads.push(item));
+  await page.getByTitle('Exportar Excel', { exact: true }).click();
+  await page.waitForFunction(() => window.__messages?.some(item => item.message === 'Auditoria indisponível'));
+  assert.equal(unexpectedDownloads.length, 0, 'Exportação não deve ignorar falha de auditoria');
+  await page.evaluate(() => { window.__denyExport = false; });
   // Hiding all data columns must leave summary labels/month actions usable,
   // and the explicit empty visibility list must survive reopening/reloading.
   await page.getByRole('button', { name: 'Exibir e ordenar colunas' }).click();

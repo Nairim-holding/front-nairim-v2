@@ -36,6 +36,8 @@ const ACTION_LABELS: Record<string, string> = {
   CREATE: 'Inclusão',
   UPDATE: 'Alteração',
   DELETE: 'Exclusão',
+  EXPORT: 'Exportação',
+  IMPORT: 'Importação',
 };
 
 
@@ -62,6 +64,9 @@ const RECORD_LABEL_FIELDS = [
   'legal_name',
   'contract_number',
   'file_name',
+  'filename',
+  'product',
+  'professional',
   'email',
 ];
 
@@ -124,6 +129,9 @@ const REFERENCE_LOOKUPS: Record<string, (ids: string[]) => Promise<Map<string, s
   tenant_id: (ids) => lookup(prisma.tenant, ids, ['name']),
   agency_id: (ids) => lookup(prisma.agency, ids, ['trade_name', 'legal_name']),
   property_id: (ids) => lookup(prisma.property, ids, ['title']),
+  repair_id: (ids) => lookup(prisma.repair, ids, ['description']),
+  investment_id: (ids) => lookup(prisma.investment, ids, ['product']),
+  adjustment_index_id: (ids) => lookup(prisma.adjustmentIndex, ids, ['description', 'code']),
   property_type_id: (ids) => lookup(prisma.propertyType, ids, ['description', 'name']),
   type_id: (ids) => lookup(prisma.propertyType, ids, ['description', 'name']),
   lease_id: (ids) => lookup(prisma.lease, ids, ['contract_number']),
@@ -246,6 +254,21 @@ function formatAuditNumber(field: string, value: unknown): string | null {
 
 /** Enums gravados no diff — traduzidos para português amigável. */
 const ENUM_LABELS: Record<string, string> = {
+  LABOR: 'Mão de obra',
+  MATERIAL: 'Materiais',
+  REPAIR: 'Reparo',
+  RENOVATION: 'Reforma',
+  STRUCTURAL: 'Estrutural',
+  ELECTRICAL: 'Elétrico',
+  HYDRAULIC: 'Hidráulico',
+  FINISHING: 'Revestimento e acabamento',
+  PLANNED: 'Planejado',
+  IN_PROGRESS: 'Em andamento',
+  CANCELLED: 'Cancelado',
+  BEFORE: 'Antes',
+  AFTER: 'Depois',
+  CONTRIBUTION: 'Aplicação',
+  WITHDRAWAL: 'Resgate',
   // Status e Situação
   PENDING: 'Pendente',
   COMPLETED: 'Concluído',
@@ -317,6 +340,12 @@ const ENUM_LABELS: Record<string, string> = {
 function displayValue(field: string, value: unknown, names: Map<string, string>): unknown {
   if (isEmptyValue(value)) return null;
 
+  if (field === 'record_counts' && typeof value === 'object' && !Array.isArray(value)) {
+    return Object.entries(value as Record<string, number>).map(([model, count]) => `${modelLabel(model)}: ${count}`).join('; ');
+  }
+  if (Array.isArray(value) && field === 'problem_types') {
+    return value.map(problem => ENUM_LABELS[String(problem)] ?? String(problem)).join(', ');
+  }
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
 
   if (typeof value === 'string') {
@@ -708,9 +737,9 @@ export class MongoAuditLogsRepository implements AuditLogsRepository {
     // Snapshots são históricos; não completar com valores atuais do cadastro.
 
     // Garante que TODOS os campos da tabela existam na lista para exibição completa
-    const catalogFields =
-      modelInfo?.fields ??
-      MODEL_FIELDS[log.table_name];
+    const catalogFields = ['EXPORT', 'IMPORT'].includes(log.action)
+      ? undefined
+      : modelInfo?.fields ?? MODEL_FIELDS[log.table_name];
 
     if (catalogFields) {
       for (const field of catalogFields) {

@@ -108,6 +108,7 @@ function LeaseReportsContent() {
 
   const printContext = useMemo(
     () => ({
+      auditResource: 'lease-reports' as const,
       reportTitle: 'Relatório de Locações',
       dateRange: selectionDateRange(months),
       periodLabel,
@@ -161,15 +162,23 @@ function LeaseReportsContent() {
     });
   }, [printContext, dataWithRedemptions]);
 
-  const handleExportExcel = useCallback(() => {
-    if (!exportTableToExcel(tableRef.current, filename)) {
-      showMessage('Gere o relatório antes de exportar.', 'error');
+  const handleExportExcel = useCallback(async () => {
+    try {
+      if (!await exportTableToExcel(tableRef.current, filename, 'lease-reports')) {
+        showMessage('Gere o relatório antes de exportar.', 'error');
+      }
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
     }
   }, [filename, showMessage]);
 
-  const handleExportPDF = useCallback(() => {
-    exportTableToPDF(tableRef.current, filename, printContext);
-  }, [filename, printContext]);
+  const handleExportPDF = useCallback(async () => {
+    try {
+      await exportTableToPDF(tableRef.current, filename, printContext);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
+  }, [filename, printContext, showMessage]);
 
   const canExport = !!data && !isLoading;
 

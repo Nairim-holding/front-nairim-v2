@@ -65,6 +65,7 @@ export async function fetchReportPrintHeaderData(): Promise<ReportPrintHeaderDat
 }
 
 export interface ReportPrintContext {
+  auditResource?: 'financial-reports' | 'lease-reports';
   reportTitle: string;
   dateRange: { from: string; to: string };
   filterLabels: string[];

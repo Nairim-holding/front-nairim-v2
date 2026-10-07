@@ -43,3 +43,15 @@ Verifique `docker logs --tail 20 nairim-logs-worker` e a quantidade pendente em 
 `npx vitest run src/shared/validators/log-management.test.ts src/infra/database/audit-context.test.ts`
 
 `node --test worker/logs/transfer.test.mjs`
+
+## Cobertura de exportação, importação e módulos recentes
+
+A migration `20261007000000_complete_audit_coverage` adiciona as ações `EXPORT` e `IMPORT`, garante um único gatilho por tabela de reparos e inclui valores de índices, notificações, lembretes, favoritos, colunas e layouts. A empresa de valores de índice e canais de contato é resolvida pelo cadastro pai também em tarefas sem sessão. O IP do usuário acompanha as alterações autenticadas.
+
+Aplique as migrations com `npx prisma migrate deploy` **antes de iniciar a nova versão** e gere o cliente Prisma. O script antigo `migrate-logs-database.mjs` aplica somente as duas migrations iniciais de logs e não substitui esta atualização. O worker de logs precisa continuar ativo para que os eventos da fila apareçam no MongoDB e na tela.
+
+Transferências JSON de tabelas registram usuário, empresa, formato, totais por tabela e quantidades incluídas/atualizadas. Importação/restauração e seu evento são confirmados na mesma transação: uma falha reverte ambos. Prévia de importação não gera evento de conclusão. Arquivos, senhas e conteúdo de backups não são copiados para o resumo da operação.
+
+Excel/PDF registram o arquivo preparado antes de entregá-lo ao navegador; esse evento não comprova que o usuário salvou o download. Backup manual, download de backup automático e exportação JSON dos logs também são registrados. A exportação dos logs registra a conclusão do fluxo; cancelar ou falhar a leitura não gera um evento de conclusão. A transferência assíncrona mantém as mesmas garantias de entrega durável e repetição sem duplicação.
+
+Validação adicional em banco descartável: `node scripts/verify-audit-coverage.mjs` (requer o pacote de teste `@electric-sql/pglite`). Verifica os 46 modelos de transferência, eventos novos, reparos/itens/profissionais/mídias, autor/IP, isolamento por empresa, rollback e instalação sem duplicação dos gatilhos. Nenhum ambiente externo é acessado pelo teste.

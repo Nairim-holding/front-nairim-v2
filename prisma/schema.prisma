@@ -1303,6 +1303,8 @@ enum Gender {
 }
 
 enum AuditAction {
+  EXPORT
+  IMPORT
   LOGIN
   LOGIN_FAILED
   CREATE

@@ -32,9 +32,10 @@ test('banco vazio recebe schema atual, auditoria e administrador autenticavel', 
     for (const constraint of ['Repair_problem_types_check', 'RepairItem_kind_check', 'RepairItem_amount_check']) {
       assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM pg_constraint WHERE conname=$1', [constraint])).rows[0].n, 1);
     }
-    for (const table of ['RepairItem', 'RepairProfessional']) {
-      assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM pg_trigger WHERE tgname=\'nairim_audit\' AND tgrelid=$1::regclass', [`"${table}"`])).rows[0].n, 1);
+    for (const table of ['Repair', 'RepairMedia', 'RepairItem', 'RepairProfessional', 'AdjustmentIndexValue', 'LeaseNotification', 'LeaseExpiryReminder', 'Favorite', 'UserColumnPreference', 'UserDashboardLayout']) {
+      assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE p.proname='nairim_write_audit_log' AND t.tgrelid=$1::regclass", [`"${table}"`])).rows[0].n, 1, table);
     }
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typname='AuditAction' AND e.enumlabel IN ('EXPORT', 'IMPORT')")).rows[0].n, 2);
     assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_indexes WHERE indexname IN ('Transaction_reporting_effective_idx', 'Transaction_reporting_event_idx', 'Property_reporting_created_idx', 'Lease_reporting_start_idx')")).rows[0].n, 4);
     assert.equal((await db.query('SELECT COUNT(*)::int AS count FROM "_prisma_migrations"')).rows[0].count, artifacts.migrations.length);
     const config = readBootstrapConfig({

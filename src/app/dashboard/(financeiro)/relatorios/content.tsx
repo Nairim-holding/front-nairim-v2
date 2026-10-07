@@ -14,6 +14,7 @@ import { getDefaultReportDateRange } from './_lib/dateShortcuts';
 import { describeActiveFilters } from './_lib/buildReportQuery';
 import { exportTableToExcel, exportTableToPDF, printReportElement } from '@/lib/reports/exportHelpers';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMessageContext } from '@/contexts/MessageContext';
 import { EMPTY_FILTERS } from './_lib/types';
 import type { ReportFiltersState, ReportGroupBy, ReportKind, ReportRegime, ReportViewHandle, SelectedReport } from './_lib/types';
 
@@ -46,6 +47,7 @@ export default function RelatoriosPageContent() {
 }
 
 function RelatoriosContent() {
+  const { showMessage } = useMessageContext();
   const { companyIds, companies } = useReportingCompanies();
   const scopeKey = JSON.stringify(companyIds);
   const { options, isLoading: isLoadingOptions } = useReportOptions(companyIds);
@@ -80,6 +82,7 @@ function RelatoriosContent() {
 
   const printContext = useMemo(
     () => ({
+      auditResource: 'financial-reports' as const,
       reportTitle,
       dateRange,
       filterLabels: [...(companyIds.length ? [`Empresas: ${companies.filter(c => companyIds.includes(c.id)).map(c => c.name).join(', ')}`] : []), ...describeActiveFilters(filters, options)],
@@ -96,13 +99,21 @@ function RelatoriosContent() {
     );
   }, [printContext]);
 
-  const handleExportExcel = useCallback(() => {
-    exportTableToExcel(activeViewRef.current?.getTableElement() ?? null, filename);
-  }, [filename]);
+  const handleExportExcel = useCallback(async () => {
+    try {
+      await exportTableToExcel(activeViewRef.current?.getTableElement() ?? null, filename, 'financial-reports');
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
+  }, [filename, showMessage]);
 
-  const handleExportPDF = useCallback(() => {
-    exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, printContext, activeViewRef.current?.getSummaryElement?.() ?? null);
-  }, [filename, printContext]);
+  const handleExportPDF = useCallback(async () => {
+    try {
+      await exportTableToPDF(activeViewRef.current?.getTableElement() ?? null, filename, printContext, activeViewRef.current?.getSummaryElement?.() ?? null);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
+  }, [filename, printContext, showMessage]);
 
   const hideTypeFilter = selected.section === 'despesas' || selected.section === 'receitas';
 

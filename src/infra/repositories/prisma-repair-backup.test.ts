@@ -4,7 +4,7 @@ vi.mock('@/infra/database/prisma', () => {
   const client = new Proxy({}, { get(_target, key) {
     if (key === '$transaction') return async (callback: (tx: object) => unknown) => callback(client);
     if (!state.delegates.has(String(key))) state.delegates.set(String(key), Object.fromEntries(
-      ['findMany','findUnique','deleteMany','createMany','count','update','upsert'].map(method => [method, vi.fn().mockResolvedValue(method === 'findMany' ? [] : undefined)]),
+      ['findMany','findUnique','deleteMany','create','createMany','count','update','upsert'].map(method => [method, vi.fn().mockResolvedValue(method === 'findMany' ? [] : undefined)]),
     ));
     return state.delegates.get(String(key));
   } });
@@ -13,7 +13,15 @@ vi.mock('@/infra/database/prisma', () => {
 import prisma from '@/infra/database/prisma';
 import { PrismaBackupRepository } from './prisma-backup-repository';
 import type { BackupPayload } from '@/core/entities/backup';
-const repo = new PrismaBackupRepository();
+import { runWithAuditActor } from '@/infra/database/audit-context';
+const repository = new PrismaBackupRepository();
+const repo = {
+  exportCompany: (...args: Parameters<typeof repository.exportCompany>) => repository.exportCompany(...args),
+  restoreCompany: (...args: Parameters<typeof repository.restoreCompany>) => runWithAuditActor(
+    { id: 'actor', name: 'Usuário', email: 'actor@example.test', company_id: args[0] },
+    () => repository.restoreCompany(...args),
+  ),
+};
 const payload = (data: BackupPayload['data']) => ({ data } as BackupPayload);
 describe('Reparos no backup da empresa', () => {
   beforeEach(() => state.delegates.clear());

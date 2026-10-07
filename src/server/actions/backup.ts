@@ -1,6 +1,8 @@
 'use server';
 
 import { backupUseCases } from '@/infra/factories/backup-factory';
+import prisma from '@/infra/database/prisma';
+import { writeTransferAuditEvent } from '@/infra/database/audit-events';
 import { withTenant } from '@/infra/auth/session';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
@@ -22,6 +24,12 @@ export async function exportBackupAction(): Promise<ActionResult<ExportBackupRes
       const slug = payload.meta.company_slug || 'empresa';
       const stamp = new Date().toISOString().slice(0, 10);
       const filename = `backup-nairim-${slug}-${stamp}.json`;
+      await writeTransferAuditEvent(prisma, {
+        action: 'EXPORT', tableName: 'Backup', companyId: session.company_id,
+        description: 'Exportação do backup da empresa', format: 'JSON',
+        recordCount: Object.values(payload.meta.counts).reduce((sum, count) => sum + count, 0),
+        counts: payload.meta.counts,
+      });
       return { payload, filename };
     }, { role: 'superAdmin' }),
   );
@@ -63,6 +71,13 @@ export async function downloadAutoBackupAction(
       if (!company) throw new NotFoundError('Empresa não encontrada');
       const file = backupUseCases.downloadAuto.execute(company.slug, filename);
       if (!file) throw new NotFoundError('Backup automático não encontrado');
+      const counts = Object.fromEntries(Object.entries((JSON.parse(file.content) as BackupPayload).data)
+        .map(([model, rows]) => [model, Array.isArray(rows) ? rows.length : rows ? 1 : 0]));
+      await writeTransferAuditEvent(prisma, {
+        action: 'EXPORT', tableName: 'Backup', companyId: session.company_id,
+        description: 'Exportação de backup automático', format: 'JSON', counts,
+        recordCount: Object.values(counts).reduce((sum, count) => sum + count, 0),
+      });
       return file;
     }, { role: 'superAdmin' }),
   );

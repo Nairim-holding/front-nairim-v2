@@ -27,10 +27,13 @@ export async function getCenterSummaryAction(raw: Record<string, unknown>) {
         [dateField]: { gte: parseLocalDate(query.startDate), lte: parseLocalDate(query.endDate) },
         ...(descriptions.length ? { OR: descriptions.map(description => ({ description: { contains: description, mode: 'insensitive' as const } })) } : {}),
       }, _sum: { amount: true } });
-    const [centers, categories] = await Promise.all([
-      prisma.center.findMany({ where: { id: { in: totals.flatMap(t => t.center_id ? [t.center_id] : []) } }, select: { id: true, name: true } }),
-      prisma.category.findMany({ where: { id: { in: totals.map(t => t.category_id) } }, select: { id: true, type: true } }),
+    const centerIds = [...new Set(totals.flatMap(total => total.center_id ? [total.center_id] : []))];
+    const [centers, categories, properties] = await Promise.all([
+      prisma.center.findMany({ where: { id: { in: centerIds } }, select: { id: true, name: true, company_id: true, type: true } }),
+      prisma.category.findMany({ where: { id: { in: [...new Set(totals.map(total => total.category_id))] } }, select: { id: true, type: true } }),
+      prisma.property.findMany({ where: { deleted_at: null, OR: [{ center_id: { in: centerIds } }, { debit_center_id: { in: centerIds } }] },
+        select: { id: true, title: true, company_id: true, center_id: true, debit_center_id: true } }),
     ]);
-    return buildCenterSummary(totals.map(t => ({ ...t, amount: Number(t._sum.amount ?? 0) })), centers, categories);
+    return buildCenterSummary(totals.map(t => ({ ...t, amount: Number(t._sum.amount ?? 0) })), centers, categories, properties);
   })));
 }

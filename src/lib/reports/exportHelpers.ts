@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { auditPreparedExport } from '@/lib/audit-export';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportText, reportValueColor, escapeReportHTML, styleReportPDFCell, numberReportPDFPages } from './reportPresentation';
@@ -43,11 +44,12 @@ function stripNonExportNodes(tableEl: HTMLTableElement): HTMLTableElement {
 }
 
 /** Exporta a tabela renderizada (DOM) para Excel — mesmo padrão do Planejamento. */
-export function exportTableToExcel(tableEl: HTMLTableElement | null, filename: string): boolean {
+export async function exportTableToExcel(tableEl: HTMLTableElement | null, filename: string, resource: 'financial-reports' | 'lease-reports'): Promise<boolean> {
   if (!tableEl) return false;
   const worksheet = XLSX.utils.table_to_sheet(stripNonExportNodes(tableEl));
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório');
+  await auditPreparedExport(resource, 'XLSX', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
   XLSX.writeFile(workbook, `${filename}.xlsx`);
   return true;
 }
@@ -136,6 +138,7 @@ export async function exportTableToPDF(tableEl: HTMLTableElement | null, filenam
     });
   }
   numberReportPDFPages(doc);
+  await auditPreparedExport(context.auditResource ?? 'financial-reports', 'PDF', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
   doc.save(`${filename}.pdf`);
   return true;
 }

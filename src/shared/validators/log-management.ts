@@ -11,7 +11,7 @@ export const logSelectionSchema = z.object({
   days: z.coerce.number().int().min(1).max(36500).default(90),
   from: date.optional(),
   to: date.optional(),
-  action: z.enum(['LOGIN', 'LOGIN_FAILED', 'CREATE', 'UPDATE', 'DELETE']).optional(),
+  action: z.enum(['LOGIN', 'LOGIN_FAILED', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'IMPORT']).optional(),
   user_email: z.string().email().max(254).optional(),
   table_name: z.string().trim().min(1).max(60).optional(),
 }).superRefine((value, ctx) => {

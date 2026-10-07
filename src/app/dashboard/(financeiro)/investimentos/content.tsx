@@ -1,5 +1,7 @@
 'use client';
 
+import { auditPreparedExport } from '@/lib/audit-export';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine,
@@ -280,29 +282,39 @@ export default function InvestmentsPageContent() {
     );
   }, [selectedInvestment, showMessage, showPopup, fetchDashboard]);
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const tableEl = tableRef.current?.getTableElement();
     if (!tableEl) return showMessage('Não há dados para exportar', 'error');
-    const worksheet = XLSX.utils.table_to_sheet(tableEl);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Investimentos');
-    XLSX.writeFile(workbook, `investimentos_${dateRange.from}_a_${dateRange.to}.xlsx`);
+    try {
+      const worksheet = XLSX.utils.table_to_sheet(tableEl);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Investimentos');
+      await auditPreparedExport('investments', 'XLSX', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
+      XLSX.writeFile(workbook, `investimentos_${dateRange.from}_a_${dateRange.to}.xlsx`);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
   }, [dateRange, showMessage]);
 
-  const handleExportPDF = useCallback(() => {
+  const handleExportPDF = useCallback(async () => {
     const tableEl = tableRef.current?.getTableElement();
     if (!tableEl) return showMessage('Não há dados para exportar', 'error');
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-    autoTable(doc, {
-      html: tableEl,
-      horizontalPageBreak: true,
-      showFoot: 'lastPage',
-      didParseCell: styleReportPDFCell,
-      styles: { fontSize: 6, cellPadding: 2 },
-      margin: { left: 20, right: 20, bottom: 32 },
-    });
-    numberReportPDFPages(doc);
-    doc.save(`investimentos_${dateRange.from}_a_${dateRange.to}.pdf`);
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      autoTable(doc, {
+        html: tableEl,
+        horizontalPageBreak: true,
+        showFoot: 'lastPage',
+        didParseCell: styleReportPDFCell,
+        styles: { fontSize: 6, cellPadding: 2 },
+        margin: { left: 20, right: 20, bottom: 32 },
+      });
+      numberReportPDFPages(doc);
+      await auditPreparedExport('investments', 'PDF', Array.from(tableEl.tBodies).reduce((sum, body) => sum + body.rows.length, 0));
+      doc.save(`investimentos_${dateRange.from}_a_${dateRange.to}.pdf`);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Erro ao exportar dados.', 'error');
+    }
   }, [dateRange, showMessage]);
 
   const toolbar = (
