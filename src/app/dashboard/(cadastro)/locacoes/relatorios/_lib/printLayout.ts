@@ -44,15 +44,15 @@ export const LEASE_REPORT_TABLE_STYLES = `
   .lease-report-table th { background: #fff !important; color: #000; font-weight: 700; text-align: center; }
   .lease-report-table td { text-align: right; white-space: nowrap; }
   .lease-report-table td:nth-child(1), .lease-report-table td:nth-child(2),
-  .lease-report-table td:nth-child(10), .lease-report-table td:nth-child(11) { text-align: left; }
+  .lease-report-table td:nth-child(13), .lease-report-table td:nth-child(14) { text-align: left; }
   /* Colunas Receita Bruta, Valor Recebido e Parte da Imobiliária saem com
      fundo verde-claro no modelo impresso do cliente. Retenções fica branca
      (só o total da coluna, no rodapé, sai destacado). */
-  .lease-report-table td:nth-child(3), .lease-report-table td:nth-child(4), .lease-report-table td:nth-child(9) {
+  .lease-report-table tbody td:nth-child(4), .lease-report-table tbody td:nth-child(5), .lease-report-table tbody td:nth-child(11) {
     background: #e2efda !important;
   }
-  .lease-report-table tfoot td:nth-child(3), .lease-report-table tfoot td:nth-child(4),
-  .lease-report-table tfoot td:nth-child(8), .lease-report-table tfoot td:nth-child(9) {
+  .lease-report-table tfoot td:nth-child(2), .lease-report-table tfoot td:nth-child(3),
+  .lease-report-table tfoot td:nth-child(9), .lease-report-table tfoot td:nth-child(10) {
     background: #e2efda !important;
   }
   .lease-report-table tfoot td { font-weight: 700; border-top: 2px solid #000 !important; }

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileSpreadsheet, FileText, Printer, RefreshCw, RotateCcw } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
@@ -33,10 +34,10 @@ const NO_CUSTOM_ORDER = '__default__';
  */
 function applyRowOrder(rows: LeaseReportRow[], order: string[]): LeaseReportRow[] {
   if (order.length === 0) return rows;
-  const byId = new Map(rows.map((row) => [row.lease_id, row]));
-  const ordered = order.map((id) => byId.get(id)).filter((row): row is LeaseReportRow => !!row);
-  const orderedIds = new Set(ordered.map((row) => row.lease_id));
-  const rest = rows.filter((row) => !orderedIds.has(row.lease_id));
+  // Preserve previously saved orders keyed by lease, while new orders use row IDs.
+  const seen = new Set<string>();
+  const ordered = order.flatMap(id => rows.filter(row => (row.row_id === id || row.lease_id === id) && !seen.has(row.row_id)).map(row => { seen.add(row.row_id); return row; }));
+  const rest = rows.filter(row => !seen.has(row.row_id));
   return [...ordered, ...rest];
 }
 
@@ -185,6 +186,7 @@ function LeaseReportsContent() {
   return (
     <Section title="Relatório de Locações" action={<ReportingCompanyFilter />}>
       <div className="flex min-w-0 flex-col gap-4 mt-2">
+        <Link href="/dashboard/locacoes/relatorios/atrasadas" className="text-sm text-brand">Relatório de locações atrasadas</Link>
         {/* ── Seleção do período ─────────────────────────────────────────── */}
         <aside className="grid w-full min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
           <fieldset disabled={isLoading} className="min-w-0 space-y-2 disabled:opacity-60">

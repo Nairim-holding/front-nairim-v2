@@ -5,12 +5,14 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMessageContext, usePopupContext } from '@/contexts';
 import {
   deleteInvestmentTransactionAction,
+  updateInvestmentAction,
   listInvestmentTransactionsAction,
 } from '@/server/actions/investment';
 import { INVESTMENT_PRODUCT_TYPE_LABELS } from '@/shared/utils/investment-product-types';
 import Checkbox from '@/components/ui/Checkbox';
-import ModalShell, { InvestmentInfoBox, modalInputClass, modalLabelClass } from './ModalShell';
+import ModalShell, { InvestmentInfoBox, modalLabelClass } from './ModalShell';
 import ContributionFormModal from './ContributionFormModal';
+import InvestmentFormModal from './InvestmentFormModal';
 import { MONTH_NAMES_FULL, formatAmount, formatDateBR, formatMonthHeader } from './format';
 import type { GridMonth, InvestmentRow, InvestmentTransactionEntry } from './types';
 import Select from '@/components/ui/Select';
@@ -60,6 +62,8 @@ export default function ContributionsModal({ investment, year, month, months, on
   const [isLoading, setIsLoading] = useState(false);
   const [editing, setEditing] = useState<InvestmentTransactionEntry | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [editingInitial, setEditingInitial] = useState(false);
+  const [removingInitial, setRemovingInitial] = useState(false);
 
   const sortedMonths = useMemo(() => [...selectedMonths].sort((a, b) => a - b), [selectedMonths]);
 
@@ -120,10 +124,10 @@ export default function ContributionsModal({ investment, year, month, months, on
   const defaultDate = `${selectedYear}-${String(sortedMonths[0]).padStart(2, '0')}-01`;
 
   const years = useMemo(() => {
-    const first = Number(investment.application_date.slice(0, 4));
+    const first = Math.min(Number(investment.application_date.slice(0, 4)), selectedYear, ...investment.months.map(cell => cell.year));
     const last = Math.max(new Date().getFullYear(), year) + 1;
     return Array.from({ length: last - first + 1 }, (_, index) => first + index);
-  }, [investment.application_date, year]);
+  }, [investment.application_date, investment.months, selectedYear, year]);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -183,7 +187,20 @@ export default function ContributionsModal({ investment, year, month, months, on
     [load, onChanged, showMessage, showPopup],
   );
 
-  const renderTransactionsTable = (entries: InvestmentTransactionEntry[]) => (
+  const initialVisible = investment.invested_amount > 0 && (investment.months.some(cell => cell.initial_capital && cell.year === selectedYear && selectedMonths.has(cell.month))
+    || transactions.some(entry => entry.is_initial) || [...multiTransactions.values()].some(entries => entries.some(entry => entry.is_initial)));
+  const removeInitial = () => showPopup('Excluir capital inicial', 'Esta ação zera o Valor Investido do cadastro e remove o capital inicial da grade. Aportes adicionais e saldos digitados serão preservados. Deseja continuar?', async () => {
+    setRemovingInitial(true);
+    try {
+      const result = await updateInvestmentAction(investment.id, { invested_amount: 0 });
+      if (!result.ok) throw new Error(result.error);
+      showMessage('Capital inicial removido.', 'success'); onChanged(); await load();
+    } catch (error) { showMessage(error instanceof Error ? error.message : 'Erro ao remover capital inicial.', 'error'); }
+    finally { setRemovingInitial(false); }
+  });
+  const renderTransactionsTable = (allEntries: InvestmentTransactionEntry[]) => {
+    const entries = allEntries.filter(entry => !entry.is_initial);
+    return (
     <div className="rounded-lg border border-ui-border-soft overflow-hidden">
       <table className="w-full text-sm border-collapse">
         <thead>
@@ -249,7 +266,9 @@ export default function ContributionsModal({ investment, year, month, months, on
       </table>
     </div>
   );
+  };
 
+  if (editingInitial) return <InvestmentFormModal investment={investment} existing={[]} onClose={() => setEditingInitial(false)} onSaved={() => { setEditingInitial(false); onChanged(); void load(); }} />;
   return (
     <>
       <ModalShell title="Gerenciar Aportes e Resgates" onClose={onClose} maxWidth="max-w-4xl">
@@ -260,6 +279,12 @@ export default function ContributionsModal({ investment, year, month, months, on
           institutionLabel={investment.institution_label}
         />
 
+        {initialVisible && <div className="mb-4 rounded-lg border border-ui-border bg-surface-subtle p-3 text-sm text-content">
+          <p className="font-medium">Capital inicial do cadastro: R$ {formatAmount(investment.invested_amount)}</p>
+          <p className="mt-1 text-xs text-content-muted">Esse valor vem do campo Valor Investido. Use as opções abaixo para alterá-lo ou removê-lo.</p>
+          <div className="mt-2 flex gap-3"><button type="button" onClick={() => setEditingInitial(true)} className="text-brand">Editar capital inicial</button>
+            <button type="button" disabled={removingInitial} onClick={removeInitial} className="text-red-600">Excluir capital inicial</button></div>
+        </div>}
         <div className="mb-1 flex items-center justify-between">
           <label className={modalLabelClass}>Selecione um lançamento para editar</label>
           {/* Sem esse atalho, um mês vazio seria um beco sem saída: o "+" da

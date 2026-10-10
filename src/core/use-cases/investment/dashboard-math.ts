@@ -99,7 +99,7 @@ export function resolveInvestmentHistory(
   transactions: { date: string; type: 'CONTRIBUTION' | 'REDEMPTION'; amount: number }[],
   manual: Map<string, number>,
   endMonth: string,
-): SummaryInput {
+): SummaryInput & { initialMonth: string } {
   const applied = new Map<string, number>();
   const initialEntry = transactions.findIndex(tx =>
     tx.type === 'CONTRIBUTION' && tx.date === applicationDate && round2(tx.amount) === round2(initialAmount),
@@ -115,7 +115,7 @@ export function resolveInvestmentHistory(
   }
   applied.set(firstMonth, round2((applied.get(firstMonth) ?? 0) + initialAmount));
   const balances = resolveBalanceSeries(expandMonths(firstMonth, endMonth), applied, manual);
-  return { balances, applied };
+  return { balances, applied, initialMonth: firstMonth };
 }
 
 export interface SummaryRow {

@@ -12,6 +12,7 @@ import { useMessageContext } from "@/contexts/MessageContext";
 import { usePopupContext } from "@/contexts/PopupContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { normalizeResourceKey } from "@/utils/permissionResource";
+import PropertyCloneControl from "../PropertyCloneControl";
 import SkeletonTable from "../TableSkeleton";
 import DynamicFilterModal from "../../filters/DynamicFilterModal";
 import SearchInput from "../../filters/SearchInput";
@@ -112,6 +113,7 @@ export default function DynamicTableManager({
   const canEditPerm = (enableEdit || !!onEdit) && can(permResource, 'edit');
   const canDeletePerm = enableDelete && can(permResource, 'delete');
   const canCreatePerm = enableCreate && can(permResource, 'create');
+  const canSelectPerm = canDeletePerm || (resource === 'properties' && canCreatePerm);
   const visibleRowActions = (rowActions ?? []).filter(
     (action) => !action.action || can(permResource, action.action)
   );
@@ -1122,6 +1124,7 @@ export default function DynamicTableManager({
                     <RefreshCw size={20} className={isLoadingData ? 'animate-spin' : ''} />
                   </button>
                 )}
+                {resource === 'properties' && canCreatePerm && <PropertyCloneControl ids={selectedCheckboxes} onCloned={() => { setSelectedCheckboxes([]); refreshData(); router.refresh(); }} />}
                 {canDeletePerm && (
                   <button
                     type="button"
@@ -1130,7 +1133,7 @@ export default function DynamicTableManager({
                     title={resource === 'leases' ? "Cancelar selecionados" : "Excluir selecionados"}
                     disabled={!selectedCheckboxes.length}
                   >
-                    <Trash2 size={20} color="var(--color-text-muted)" />
+                    <Trash2 size={20} color={selectedCheckboxes.length ? "var(--color-state-error, #dc2626)" : "var(--color-text-muted)"} />
                   </button>
                 )}
               </>
@@ -1199,7 +1202,7 @@ export default function DynamicTableManager({
                     style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                   >
                     <div className={`flex w-full h-full min-h-[26px] items-center px-2 py-1 ${isFirst ? 'justify-start' : 'justify-center'}`}>
-                      {isFirst && canDeletePerm && (
+                      {isFirst && canSelectPerm && (
                         <div className="mr-2 flex shrink-0 items-center justify-center w-4 h-4">
                           <input
                             type="checkbox"

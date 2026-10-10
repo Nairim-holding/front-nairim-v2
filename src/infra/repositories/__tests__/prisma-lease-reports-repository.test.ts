@@ -116,7 +116,10 @@ describe('PrismaLeaseReportsRepository', () => {
     const report = await new PrismaLeaseReportsRepository().getLeaseReport({
       months: [{ year: 2026, month: 5 }, { year: 2026, month: 4 }, { year: 2026, month: 4 }],
     });
-    expect(report.rows[0]).toMatchObject({ has_withholding: true, withholding: 90, net_amount: 1910 });
+    expect(report.rows[0]).toMatchObject({ has_withholding: true, withholding: 90, net_amount: 910 });
+    expect(report.rows).toHaveLength(2);
+    expect(report.rows[1]).toMatchObject({ reference_month: '2026-05', withholding: 0, net_amount: 1000 });
+    expect(report.totals.net_amount).toBe(1910);
     expect(report.withholding).toMatchObject({ base: 1000, total: 90 });
     expect(report.warnings).toHaveLength(1);
     expect(report.months).toHaveLength(2);
@@ -124,4 +127,26 @@ describe('PrismaLeaseReportsRepository', () => {
     expect(report.quarterlyDarf[0].revenue).toBe(2000);
     expect(findMany).toHaveBeenCalledTimes(3);
   });
+});
+
+it('separa três competências recebidas no mesmo mês e prioriza condomínio financeiro sobre o cadastro', async () => {
+  findLeases.mockResolvedValue([{id:'lease',company_id:'a',contract_number:'123',start_date:new Date('2020-01-01'),end_date:new Date('2030-12-31'),canceled_at:null,
+    discount_amount:100,condo_fee:100,agency:{trade_name:'Adiplan'},property:{title:'América, 389',income_tax_withholding:false,agency:null},tenant:{name:'Locatário',cpf:null,cnpj:null}}]);
+  const tx=(month:number,description:string,amount:number,type='INCOME')=>({id:description+month,company_id:'a',lease_id:'lease',description,amount,event_date:new Date(`2026-${String(month).padStart(2,'0')}-01`),effective_date:new Date('2026-09-10'),is_cancellation_charge:false,category:{type}});
+  findMany.mockResolvedValueOnce([tx(6,'Aluguel',1800),tx(7,'Aluguel',1800),tx(8,'Aluguel',1800),tx(6,'Condomínio',120),tx(6,'Pagamento condomínio',500,'EXPENSE')]).mockResolvedValue([]);
+  const report=await new PrismaLeaseReportsRepository().getLeaseReport({months:[{year:2026,month:9}]});
+  expect(report.rows.map(row=>[row.reference_month,row.condominium_income,row.net_amount])).toEqual([['2026-06',120,1820],['2026-07',100,1800],['2026-08',100,1800]]);
+  expect(new Set(report.rows.map(row=>row.row_id)).size).toBe(3);
+  expect(report.totals).toMatchObject({gross_revenue:5400,condominium_income:320,discount_expense:300,net_amount:5420});
+  expect(report.monthlyDarf[0].revenue).toBe(5400);
+});
+
+it('associa recebimento atrasado sem vínculo à locação vigente na competência', async () => {
+  findLeases.mockResolvedValue([{id:'old-lease',company_id:'a',contract_number:'123',start_date:new Date('2020-01-01'),end_date:new Date('2026-06-30'),canceled_at:null,
+    discount_amount:0,condo_fee:0,agency:null,property:{title:'Rua América, 389',income_tax_withholding:false,agency:null},tenant:{name:'Locatário anterior',cpf:null,cnpj:null}}]);
+  findMany.mockResolvedValueOnce([{id:'late-rent',company_id:'a',lease_id:null,description:'Aluguel Rua América, 389',amount:1800,event_date:new Date('2026-06-01'),effective_date:new Date('2026-09-10'),is_cancellation_charge:false,category:{type:'INCOME'}}]).mockResolvedValue([]);
+  const report=await new PrismaLeaseReportsRepository().getLeaseReport({months:[{year:2026,month:9}]});
+  expect(report.rows).toHaveLength(1);
+  expect(report.rows[0]).toMatchObject({lease_id:'old-lease',reference_month:'2026-06',gross_revenue:1800});
+  expect(report.unmatched).toHaveLength(0);
 });

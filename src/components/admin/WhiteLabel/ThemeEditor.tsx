@@ -16,11 +16,16 @@ interface ThemeEditorProps {
 
 export default function ThemeEditor({ values, onChange }: ThemeEditorProps) {
   const [isDark, setIsDark] = useState(false);
+  const [originalColors, setOriginalColors] = useState<Record<string, string>>({});
+  const changeColor = (field: string, value: string) => {
+    setOriginalColors(previous => field in previous ? previous : { ...previous, [field]: typeof values[field] === 'string' ? values[field] : '' });
+    onChange(field, value);
+  };
   const branding = Object.fromEntries(Object.entries(values).filter(([, value]) => typeof value === 'string' && value !== ''));
   const suggestDark = () => {
     const light = Object.fromEntries(COLOR_FIELDS.map(({ key, defaultValue }) => [key,
       isSafeBrandingColor(values[key]) ? values[key] : defaultValue]));
-    Object.entries(generateDarkColorsFromLight(light)).forEach(([key, value]) => onChange(key, value));
+    Object.entries(generateDarkColorsFromLight(light)).forEach(([key, value]) => changeColor(key, value));
   };
 
   return (
@@ -47,7 +52,9 @@ export default function ThemeEditor({ values, onChange }: ThemeEditorProps) {
                   const canInherit = !['bg_color', 'card_color', 'border_color', 'text_color'].includes(key);
                   const fallback = isDark ? (canInherit && isSafeBrandingColor(values[key]) ? values[key] : darkDefault) : defaultValue;
                   return <ColorInput key={field} label={label} value={typeof values[field] === 'string' ? values[field] : ''}
-                    defaultValue={fallback} onChange={value => onChange(field, value)} />;
+                    defaultValue={fallback} onChange={value => changeColor(field, value)}
+                    onReset={() => onChange(field, originalColors[field] ?? '')}
+                    resetDisabled={!(field in originalColors) || values[field] === originalColors[field]} />;
                 })}
               </div>
             </fieldset>

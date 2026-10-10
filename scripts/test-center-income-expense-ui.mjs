@@ -40,7 +40,7 @@ try {
   const cssDirectory=join(root,'.next','static','css');
   writeFileSync(join(fixture,'style.css'),readdirSync(cssDirectory).filter(name=>name.endsWith('.css')).map(name=>readFileSync(join(cssDirectory,name),'utf8')).join('\n'));
   writeFileSync(join(fixture,'index.html'),'<html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/style.css"/></head><body><div id="root"></div><script type="module" src="/main.tsx"></script></body></html>');
-  server=await createServer({configFile:false,root:fixture,esbuild:{jsx:'automatic'},resolve:{alias:[
+  server=await createServer({configFile:false,root:fixture,cacheDir:join(fixture,'vite-cache'),esbuild:{jsx:'automatic'},resolve:{alias:[
     ...['@/contexts/ThemeContext','@/server/actions/center-summary','@/server/actions/financial-transaction','@/components/dashboard/MonthlyIncomeExpenseChart'].map(find=>({find,replacement:join(fixture,'mocks.tsx')})),{find:/^@\/utils$/,replacement:join(fixture,'mocks.tsx')},{find:'@',replacement:join(root,'src')}]},server:{host:'127.0.0.1',port:0,fs:{allow:[root]}}});
   await server.listen(); browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:1440,height:900}});
@@ -52,22 +52,20 @@ try {
       const chart=window.__chart();const option=chart.getOption();
       const income=chart.getModel().getSeriesByIndex(0).getData().getItemLayout(0);
       const expense=chart.getModel().getSeriesByIndex(1).getData().getItemLayout(0);
-      const balance=chart.getModel().getSeriesByIndex(2).getData().getItemLayout(0);
       const next=chart.getModel().getSeriesByIndex(0).getData().getItemLayout(1);
       const lines=chart.getZr().storage.getDisplayList().filter(el=>el.type==='line'&&el.shape.y1===el.shape.y2&&String(el.style.stroke).toLowerCase()===String(option.yAxis[0].splitLine.lineStyle.color).toLowerCase()).map(el=>({y:el.shape.y1,x1:el.shape.x1,x2:el.shape.x2}));
-      return {names:option.yAxis[0].data,income,expense,balance,next,lines,split:option.yAxis[0].splitLine};
+      return {names:option.yAxis[0].data,income,expense,next,lines,split:option.yAxis[0].splitLine};
     });
     assert.equal(geometry.income.x,geometry.expense.x,'Receita e despesa devem começar no mesmo eixo');
     assert.ok(geometry.expense.y>geometry.income.y,'As duas barras do imóvel devem ser adjacentes');
-    assert.ok(geometry.balance.y>geometry.expense.y,'O saldo deve ser a terceira barra do imóvel');
-    assert.ok(geometry.balance.y+geometry.balance.height<geometry.next.y,'O próximo imóvel deve iniciar após o par de barras');
-    assert.ok(geometry.lines.some(line=>line.y>geometry.balance.y+geometry.balance.height&&line.y<geometry.next.y),'Uma linha cinza deve separar os blocos de imóveis');
+    assert.ok(geometry.expense.y+geometry.expense.height<geometry.next.y,'O próximo imóvel deve iniciar após o par de barras');
+    assert.ok(geometry.lines.some(line=>line.y>geometry.expense.y+geometry.expense.height&&line.y<geometry.next.y),'Uma linha cinza deve separar os blocos de imóveis');
     assert.ok(geometry.names.every(name=>!name.endsWith('(CR)')&&!name.endsWith('(DB)')));
     return geometry;
   };
   if(process.env.CENTER_CHART_UI_SCREENSHOT)await page.screenshot({path:resolve(process.env.CENTER_CHART_UI_SCREENSHOT)});
   await verifyPairGeometry();
-  assert.deepEqual(await page.evaluate(()=>window.__chart().getOption().series.map(series=>series.data[0])),[23000,3300,19700]);
+  assert.deepEqual(await page.evaluate(()=>window.__chart().getOption().series.map(series=>series.data[0])),[23000,3300]);
   await page.getByRole('button',{name:'Ver Dados Detalhados',exact:true}).click();
   await page.getByRole('columnheader',{name:'Receitas',exact:true}).waitFor();
   assert.equal(await page.locator('tbody tr').count(),4);
@@ -85,24 +83,21 @@ try {
     else await page.getByRole('columnheader',{name:'Descrição',exact:true}).waitFor();
     await page.waitForFunction(()=>!document.body.innerText.includes('Carregando'));
   };
-  assert.equal(await page.evaluate(()=>window.__chart().getOption().series[2].itemStyle.color),'#86efac');
-  const negative=await page.evaluate(()=>{const chart=window.__chart();const index=chart.getOption().series[2].data.findIndex(value=>value<0);const layout=chart.getModel().getSeriesByIndex(2).getData().getItemLayout(index);return {value:chart.getOption().series[2].data[index],width:layout.width};});
-  assert.ok(negative.value<0&&negative.width<0,'Saldo negativo precisa manter o sinal e a direção da barra');
-  for(const [series,type,total] of [[0,'INCOME','23.000,00'],[1,'EXPENSE','3.300,00'],[2,undefined,'19.700,00']]){
+  for(const [series,type,total] of [[0,'INCOME','23.000,00'],[1,'EXPENSE','3.300,00']]){
     await clickBar(series);
     assert.deepEqual(await page.evaluate(()=>window.__detailCalls.at(-1).query.centerIds),['cr-0','db-0']);
     assert.equal(await page.evaluate(()=>window.__detailCalls.at(-1).query.type),type);
-    assert.equal(await page.evaluate(()=>window.__detailCalls.at(-1).query.net),series===2);
-    assert.equal(await page.locator('tbody tr').count(),series===2?2:1);
+    assert.equal(await page.evaluate(()=>window.__detailCalls.at(-1).query.net),undefined);
+    assert.equal(await page.locator('tbody tr').count(),1);
     const text=await page.locator('tbody').innerText();
     for(const field of ['Predial','Conta principal','Cartão teste','Prestador teste','Concluído'])assert.ok(text.includes(field),field);
     assert.match(await page.locator('tfoot').innerText(),new RegExp(total.replace('.','\\.')));
     await page.getByRole('button',{name:'Fechar modal',exact:true}).click();
   await page.getByRole('button',{name:'Fechar modal',exact:true}).waitFor({state:'detached'});
   }
-  await clickBar(2,3);
+  await clickBar(1,3);
   assert.deepEqual(await page.evaluate(()=>window.__detailCalls.at(-1).query.centerIds),[null]);
-  assert.match(await page.locator('tfoot').innerText(),/-.*100,00/);
+  assert.match(await page.locator('tfoot').innerText(),/200,00/);
   await page.getByRole('button',{name:'Fechar modal',exact:true}).click();
   await page.getByRole('button',{name:'Fechar modal',exact:true}).waitFor({state:'detached'});
   await page.evaluate(()=>window.__detailFailure=true);
@@ -113,8 +108,8 @@ try {
   await page.getByRole('button',{name:'Expandir',exact:true}).click();
   await page.getByRole('button',{name:'Fechar',exact:true}).waitFor();
   await verifyPairGeometry();
-  await clickBar(2);
-  assert.equal(await page.locator('tbody tr').count(),2);
+  await clickBar(0);
+  assert.equal(await page.locator('tbody tr').count(),1);
   await page.getByRole('button',{name:'Fechar modal',exact:true}).click();
   await page.getByRole('button',{name:'Fechar modal',exact:true}).waitFor({state:'detached'});
   if(process.env.CENTER_CHART_UI_SCREENSHOT)await page.screenshot({path:resolve(process.env.CENTER_CHART_UI_SCREENSHOT)});
@@ -122,8 +117,9 @@ try {
   await page.waitForFunction(()=>window.__chart?.()?.getOption().series?.[0]?.data.length===16);
   assert.equal(await page.evaluate(()=>window.__chart().getOption().dataZoom[0].end),75);
   await page.evaluate(()=>window.__chart().dispatchAction({type:'dataZoom',start:25,end:100}));
+  await page.waitForTimeout(1100); // Wait for ECharts to finish moving bars to the zoomed categories.
   await verifyPairGeometry();
-  await clickBar(2);
+  await clickBar(0);
   assert.deepEqual(await page.evaluate(()=>window.__detailCalls.at(-1).query.centerIds),['cr-4','db-4']);
   assert.deepEqual(await page.evaluate(()=>window.__detailCalls.at(-1).filters),{supplier_id:['supplier'],regime:'competencia',status:'COMPLETED'});
   await page.getByRole('button',{name:'Fechar modal',exact:true}).click();
@@ -131,7 +127,7 @@ try {
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.documentElement.scrollWidth<=window.innerWidth);
   assert.deepEqual(errors,[]);
-  console.log('UI aprovada: receita/despesa/saldo por imóvel, valores negativos, clique em barras com lançamentos completos, filtros, Sem centro, divisória cinza entre blocos, totais no detalhe, tela cheia, rolagem e celular.');
+  console.log('UI aprovada: receita/despesa por imóvel, nomes completos, clique em barras com lançamentos completos, filtros, Sem centro, divisória cinza entre blocos, totais no detalhe, tela cheia, rolagem e celular.');
 } finally {
   if(browser)await browser.close();if(server)await server.close();
   const target=realpathSync(fixture);

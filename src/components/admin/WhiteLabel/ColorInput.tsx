@@ -1,6 +1,7 @@
 'use client';
 
 import { useId } from 'react';
+import { RotateCcw } from 'lucide-react';
 import { isSafeBrandingColor } from '@/shared/validators/branding-color';
 
 interface ColorInputProps {
@@ -8,9 +9,11 @@ interface ColorInputProps {
   value: string;
   onChange: (value: string) => void;
   defaultValue?: string;
+  onReset?: () => void;
+  resetDisabled?: boolean;
 }
 
-export default function ColorInput({ label, value, onChange, defaultValue = '#8b5cf6' }: ColorInputProps) {
+export default function ColorInput({ label, value, onChange, defaultValue = '#8b5cf6', onReset, resetDisabled }: ColorInputProps) {
   const id = useId();
   const invalid = Boolean(value) && !isSafeBrandingColor(value);
   const effective = isSafeBrandingColor(value) ? value : defaultValue;
@@ -38,8 +41,13 @@ export default function ColorInput({ label, value, onChange, defaultValue = '#8b
           placeholder={defaultValue}
           maxLength={9}
           spellCheck={false}
-          className="min-w-0 w-full flex-1 h-10 text-content bg-surface border border-ui-border rounded-lg px-3 font-mono text-sm focus:outline-none focus:border-brand"
+          className="min-w-0 max-w-40 flex-1 h-10 text-content bg-surface border border-ui-border rounded-lg px-3 font-mono text-sm focus:outline-none focus:border-brand"
         />
+        {onReset && <button type="button" onClick={onReset} disabled={resetDisabled}
+          aria-label={`Desfazer cor ${label?.toLowerCase() || ''}`} title="Voltar à cor anterior à edição"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-ui-border text-content-secondary hover:bg-surface-subtle disabled:opacity-40">
+          <RotateCcw size={18} />
+        </button>}
       </div>
       {invalid && <p id={`${id}-error`} className="text-xs text-state-error">Use uma cor hexadecimal, como #8b5cf6.</p>}
     </div>

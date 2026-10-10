@@ -15,7 +15,7 @@ import type {
   UpdateInvestmentData,
   UpsertInvestmentTransactionData,
 } from '@/core/entities/investment';
-import { NotFoundError } from '@/core/errors/domain-errors';
+import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
 import {
   buildSummary,
   expandMonths,
@@ -246,7 +246,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
     for (const record of records) {
       const entity = toEntity(record as InvestmentRecord);
       const manual = manualBalanceBy.get(entity.id) ?? new Map<string, number>();
-      const { balances: resolved, applied } = resolveInvestmentHistory(
+      const { balances: resolved, applied, initialMonth } = resolveInvestmentHistory(
         entity.application_date,
         entity.invested_amount,
         transactionsBy.get(entity.id) ?? [],
@@ -264,6 +264,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
           applied: round2(applied.get(key) ?? 0),
           balance: resolved.has(key) ? resolved.get(key)! : null,
           balance_is_manual: manual.has(key),
+          initial_capital: key === initialMonth ? entity.invested_amount : 0,
         };
       });
 
@@ -446,7 +447,8 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
   }
 
   async listTransactions(investmentId: string, year: number, month: number): Promise<InvestmentTransactionEntry[]> {
-    await requireInvestment(investmentId);
+    const investment = await requireInvestment(investmentId);
+    const initial = await prisma.investmentTransaction.findFirst({ where: { investment_id: investmentId, type: 'CONTRIBUTION', date: investment.application_date, amount: investment.invested_amount }, orderBy: [{ created_at: 'asc' }, { id: 'asc' }], select: { id: true } });
     const start = new Date(Date.UTC(year, month - 1, 1));
     const end = new Date(Date.UTC(year, month, 0));
 
@@ -461,6 +463,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       type: row.type,
       date: formatLocalDate(row.date),
       amount: Number(row.amount),
+      is_initial: row.id === initial?.id,
     }));
   }
 
@@ -489,18 +492,24 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
   ): Promise<InvestmentTransactionEntry> {
     const existing = await prisma.investmentTransaction.findUnique({
       where: { id },
-      select: { investment_id: true },
+      select: { investment_id: true, type: true, date: true, amount: true },
     });
     if (!existing) throw new NotFoundError('Aporte não encontrado');
-    await requireInvestment(existing.investment_id);
-
-    const updated = await prisma.investmentTransaction.update({
+    const investment = await requireInvestment(existing.investment_id);
+    const initial = await prisma.investmentTransaction.findFirst({ where: { investment_id: existing.investment_id, type: 'CONTRIBUTION', date: investment.application_date, amount: investment.invested_amount }, orderBy: [{ created_at: 'asc' }, { id: 'asc' }], select: { id: true } });
+    const updated = await prisma.$transaction(async tx => {
+      if (initial?.id === id) {
+        if (data.type === 'REDEMPTION') throw new ValidationError('O capital inicial não pode ser convertido em resgate.');
+        await tx.investment.update({ where: { id: existing.investment_id }, data: { invested_amount: data.amount, application_date: parseLocalDate(data.date) } });
+      }
+      return tx.investmentTransaction.update({
       where: { id },
       data: {
         ...(data.type ? { type: data.type } : {}),
         date: parseLocalDate(data.date),
         amount: data.amount,
       },
+    });
     });
     return {
       id: updated.id,
@@ -514,11 +523,15 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
   async deleteTransaction(id: string): Promise<void> {
     const existing = await prisma.investmentTransaction.findUnique({
       where: { id },
-      select: { investment_id: true },
+      select: { investment_id: true, type: true, date: true, amount: true },
     });
     if (!existing) throw new NotFoundError('Aporte não encontrado');
-    await requireInvestment(existing.investment_id);
-    await prisma.investmentTransaction.delete({ where: { id } });
+    const investment = await requireInvestment(existing.investment_id);
+    const initial = await prisma.investmentTransaction.findFirst({ where: { investment_id: existing.investment_id, type: 'CONTRIBUTION', date: investment.application_date, amount: investment.invested_amount }, orderBy: [{ created_at: 'asc' }, { id: 'asc' }], select: { id: true } });
+    await prisma.$transaction(async tx => {
+      if (initial?.id === id) await tx.investment.update({ where: { id: existing.investment_id }, data: { invested_amount: 0 } });
+      await tx.investmentTransaction.delete({ where: { id } });
+    });
   }
 
   async setMonthBalance(investmentId: string, year: number, month: number, balance: number): Promise<void> {
