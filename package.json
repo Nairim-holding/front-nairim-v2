@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "generate:table-models": "node scripts/generate-table-transfer-models.mjs",
+    "test:correcoes-ui": "node scripts/test-correcoes-ui.mjs",
     "test:repair-ui": "node scripts/test-repair-form-ui.mjs",
     "test:investments-ui": "node scripts/test-investments-ui.mjs",
     "test:table-transfer-ui": "node scripts/test-table-transfer-ui.mjs",

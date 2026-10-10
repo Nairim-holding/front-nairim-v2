@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useMessageContext } from '@/contexts';
+import { useMessageContext, usePopupContext } from '@/contexts';
 import { setInvestmentMonthBalanceAction } from '@/server/actions/investment';
 import { formatCurrencyRealtime, maskMoney } from '@/utils/masks';
 import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
@@ -30,6 +30,7 @@ interface Props {
   month: number;
   /** Saldo atualmente exibido na célula (informado ou herdado). */
   currentBalance: number | null;
+  isManual?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -39,10 +40,12 @@ export default function MonthBalanceModal({
   year,
   month,
   currentBalance,
+  isManual = false,
   onClose,
   onSaved,
 }: Props) {
   const { showMessage } = useMessageContext();
+  const { showPopup } = usePopupContext();
   const [value, setValue] = useState(() => (currentBalance != null ? maskMoney(currentBalance) : ''));
   const [isSaving, setIsSaving] = useState(false);
 
@@ -73,6 +76,15 @@ export default function MonthBalanceModal({
       maxWidth="max-w-md"
       footer={
         <>
+          {isManual && <button type="button" disabled={isSaving} className="mr-auto rounded-lg border border-red-300 px-3 py-2 text-sm text-red-600" onClick={() => showPopup('Excluir saldo informado', `Excluir o saldo de ${formatMonthShort(month, year)}? O mês voltará a usar o saldo anterior e os aportes.`, async () => {
+            setIsSaving(true);
+            try {
+              const result = await setInvestmentMonthBalanceAction({ investment_id: investment.id, year, month, balance: null });
+              if (!result.ok) throw new Error(result.error);
+              showMessage('Saldo informado excluído.', 'success'); onSaved();
+            } catch (error) { showMessage(error instanceof Error ? error.message : 'Erro ao excluir saldo.', 'error'); }
+            finally { setIsSaving(false); }
+          })}>Excluir saldo</button>}
           <ModalCancelButton onClick={onClose} />
           <ModalPrimaryButton onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Salvando…' : 'Salvar'}
@@ -100,7 +112,7 @@ export default function MonthBalanceModal({
         autoFocus
       />
       <p className="mt-2 text-[11px] text-content-muted">
-        Deixe em branco para o mês voltar a herdar o saldo anterior somado ao valor aplicado.
+        {isManual ? 'Este saldo foi informado neste mês. Você pode corrigi-lo ou excluí-lo.' : 'Este valor vem do saldo anterior e dos aportes. Salvar registra um saldo específico para este mês.'}
       </p>
     </ModalShell>
   );

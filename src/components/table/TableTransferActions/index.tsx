@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
-import { Download, Upload, Loader2 } from 'lucide-react';
+import { Download, Upload, Loader2, X } from 'lucide-react';
 import { usePermissions } from '@/contexts/PermissionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -13,6 +13,7 @@ import { TABLE_TRANSFER_MAX_BYTES, transferTablesForPath, type TableTransferImpo
 import { describeActionError } from '@/shared/actions/action-result';
 
 const buttonClass = 'inline-flex items-center gap-2 rounded-lg border border-ui-border bg-surface px-3 py-2 text-sm text-content-secondary hover:bg-surface-subtle disabled:opacity-50';
+const iconClass = 'flex h-10 w-10 items-center justify-center rounded-lg text-content-muted hover:bg-surface-subtle disabled:opacity-50';
 export default function TableTransferActions() {
   const pathname = usePathname();
   const tables = transferTablesForPath(pathname);
@@ -22,6 +23,7 @@ export default function TableTransferActions() {
   const { showPopup } = usePopupContext();
   const [key, setKey] = useState('');
   const [busy, setBusy] = useState(false);
+  const [menu, setMenu] = useState<'export' | 'import' | null>(null);
   const [exportScope, setExportScope] = useState<'current' | 'all'>('current');
   const [importMode, setImportMode] = useState<TableTransferImportMode>('current');
   const [outcomes, setOutcomes] = useState<TableTransferImportOutcome[] | null>(null);
@@ -81,10 +83,28 @@ export default function TableTransferActions() {
   };
   return <div className="flex flex-wrap items-center gap-2" aria-label="Exportação e importação de dados">
     {tables.length > 1 && <select aria-label="Tabela para exportar ou importar" value={table.key} disabled={busy} onChange={event => setKey(event.target.value)} className="max-w-44 rounded-lg border border-ui-border bg-surface px-2 py-2 text-sm text-content-secondary">{tables.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}</select>}
-    {canExport && allowAll && <select aria-label="Empresas para exportar" value={selectedExportScope} disabled={busy} onChange={event => setExportScope(event.target.value as 'current' | 'all')} className="max-w-44 rounded-lg border border-ui-border bg-surface px-2 py-2 text-sm text-content-secondary"><option value="current">Exportar: empresa atual</option><option value="all">Exportar: todas as empresas</option></select>}
-    {canExport && <button type="button" disabled={busy} className={buttonClass} onClick={() => void exportData()} title={`Exportar ${table.label} em JSON`}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}Exportar JSON</button>}
-    {canImport && allowAll && <select aria-label="Destino da importação" value={selectedImportMode} disabled={busy} onChange={event => setImportMode(event.target.value as TableTransferImportMode)} className="max-w-56 rounded-lg border border-ui-border bg-surface px-2 py-2 text-sm text-content-secondary"><option value="current">Importar: empresa atual</option><option value="copy-all">Copiar o cadastro para todas</option><option value="restore-all">Restaurar dados de cada empresa</option></select>}
-    {canImport && <button type="button" disabled={busy} className={buttonClass} onClick={() => fileInput.current?.click()} title={`Importar ${table.label} de outro ambiente`}><Upload size={16} />Importar JSON</button>}
+    {canExport && <button type="button" disabled={busy} className={iconClass} aria-label="Exportar JSON" aria-expanded={allowAll ? menu === 'export' : undefined}
+      onClick={() => allowAll ? setMenu(menu === 'export' ? null : 'export') : void exportData()} title={`Exportar ${table.label} em JSON`}>
+      {busy ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+    </button>}
+    {canImport && <button type="button" disabled={busy} className={iconClass} aria-label="Importar JSON" aria-expanded={allowAll ? menu === 'import' : undefined}
+      onClick={() => allowAll ? setMenu(menu === 'import' ? null : 'import') : fileInput.current?.click()} title={`Importar ${table.label} de outro ambiente`}><Upload size={20} /></button>}
+    {menu && allowAll && createPortal(<div role="dialog" aria-modal="true" aria-label={menu === 'export' ? 'Opções de exportação' : 'Opções de importação'} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4" onKeyDown={event => {
+        if (event.key === 'Escape') setMenu(null);
+        if (event.key === 'Tab') {
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled)'));
+          const first = controls[0], last = controls.at(-1);
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }
+      }}>
+      <div className="w-full max-w-sm rounded-xl border border-ui-border bg-surface p-5 shadow-xl">
+        <div className="mb-4 flex items-center justify-between"><h2 className="font-semibold text-content">{menu === 'export' ? 'Exportar cadastro' : 'Importar cadastro'}</h2><button type="button" aria-label="Fechar opções de transferência" onClick={() => setMenu(null)} className={iconClass}><X size={18} /></button></div>
+        {menu === 'export' ? <select aria-label="Empresas para exportar" value={selectedExportScope} disabled={busy} onChange={event => setExportScope(event.target.value as 'current' | 'all')} className="mb-4 w-full rounded-lg border border-ui-border bg-surface p-2 text-sm text-content"><option value="current">Empresa atual</option><option value="all">Todas as empresas</option></select>
+          : <select aria-label="Destino da importação" value={selectedImportMode} disabled={busy} onChange={event => setImportMode(event.target.value as TableTransferImportMode)} className="mb-4 w-full rounded-lg border border-ui-border bg-surface p-2 text-sm text-content"><option value="current">Empresa atual</option><option value="copy-all">Copiar o cadastro para todas</option><option value="restore-all">Restaurar dados de cada empresa</option></select>}
+        <button type="button" autoFocus disabled={busy} className={buttonClass} onClick={() => { setMenu(null); if (menu === 'export') void exportData(); else fileInput.current?.click(); }}>{menu === 'export' ? 'Baixar JSON' : 'Selecionar arquivo JSON'}</button>
+      </div>
+    </div>, document.body)}
     <input ref={fileInput} type="file" accept=".json,application/json" className="sr-only" aria-label={`Arquivo JSON de ${table.label}`} disabled={busy} onChange={event => { void preview(event.target.files?.[0]); event.target.value = ''; }} />
     {outcomes && createPortal(<div role="dialog" aria-modal="true" aria-labelledby="import-results-title" onKeyDown={event => { if (event.key === 'Escape') { setOutcomes(null); window.location.reload(); } if (event.key === 'Tab') { event.preventDefault(); event.currentTarget.querySelector('button')?.focus(); } }} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4">
       <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl bg-surface p-5 shadow-xl">

@@ -38,7 +38,7 @@ import { matchReportLease, normalizeReportText } from '@/core/entities/lease-rep
  * Camada: infra.
  */
 
-type TransactionKind = 'rent' | 'commission' | 'iptu' | 'penalty' | 'withholding' | 'other';
+type TransactionKind = 'rent' | 'commission' | 'iptu' | 'condominium' | 'penalty' | 'withholding' | 'other';
 
 interface RawLeaseTransaction {
   amount: unknown;
@@ -67,6 +67,7 @@ export function classifyLeaseReportTransaction(tx: RawLeaseTransaction): Transac
   if (tx.is_cancellation_charge && tx.category?.type !== 'EXPENSE') return 'penalty';
   if (tx.category?.type === 'EXPENSE' && description.startsWith('irrf') && description.includes('aluguel')) return 'withholding';
   if (tx.category?.type === 'INCOME') {
+    if (subcategory.includes('condominio') || /^(?:(?:restituicao|recebimento|receita|reembolso) )?condominio\b/.test(description)) return 'condominium';
     if (subcategory === 'restituicao iptu' || description.startsWith('restituicao iptu')) return 'iptu';
     if (description.startsWith('multa') || subcategory.includes('multa')) return 'penalty';
     if (description.includes('aluguel') || subcategory === 'alugueis') return 'rent';
@@ -89,6 +90,8 @@ export function classifyLeaseReportTransaction(tx: RawLeaseTransaction): Transac
 /** Acumulador mutável de uma linha, antes de fechar os totais. */
 interface RowAccumulator {
   lease_id: string;
+  row_id: string;
+  reference_month: string;
   agency_name: string;
   property_title: string;
   tenant_name: string;
@@ -99,6 +102,7 @@ interface RowAccumulator {
   discount_expense: number;
   penalty: number;
   property_tax_refund: number;
+  condominium_income: number;
   agency_share: number;
   withholding: number;
 }
@@ -128,7 +132,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       where: { deleted_at: null },
       select: {
         id: true, company_id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
-        discount_amount: true,
+        discount_amount: true, condo_fee: true,
         agency: { select: { trade_name: true } },
         property: { select: { title: true, income_tax_withholding: true, agency: { select: { trade_name: true } } } },
         tenant: { select: { name: true, cpf: true, cnpj: true } },
@@ -144,7 +148,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
     const selectedTransactions = getReportingCompanyIds() ? await prisma.transaction.findMany({
       where: { deleted_at: null, status: 'COMPLETED', is_transfer: false,
         OR: months.map(reference => ({ effective_date: monthWindow(reference) })) },
-      select: { id: true, company_id: true, effective_date: true, category: { select: { type: true } },
+      select: { id: true, company_id: true, effective_date: true, event_date: true, category: { select: { type: true } },
         subcategory: { select: { name: true } }, amount: true, description: true, is_cancellation_charge: true, lease_id: true },
     }) : [];
     const transactionsByMonth = new Map<string, typeof selectedTransactions>();
@@ -154,19 +158,20 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       list.push(tx); transactionsByMonth.set(key, list);
     }
 
+    const discountCharged = new Set<string>();
+    const recordedCondominium = new Map<string, number>();
     // Uma consulta para todos os meses/empresas; separação linear em memória.
     for (const reference of months) {
       const key = `${reference.year}-${String(reference.month).padStart(2, '0')}`;
       const transactions = getReportingCompanyIds() ? transactionsByMonth.get(key) ?? [] : await prisma.transaction.findMany({
         where: { deleted_at: null, status: 'COMPLETED', is_transfer: false, effective_date: monthWindow(reference) },
-        select: { id: true, company_id: true, effective_date: true, category: { select: { type: true } },
+        select: { id: true, company_id: true, effective_date: true, event_date: true, category: { select: { type: true } },
           subcategory: { select: { name: true } }, amount: true, description: true, is_cancellation_charge: true, lease_id: true },
       });
 
       // Desconto/despesa é valor da locação, não do lançamento: soma uma vez
       // por locação POR MÊS de referência em que ela teve movimento — senão o
       // desconto de um contrato apareceria multiplicado pelo nº de parcelas.
-      const discountCharged = new Set<string>();
       const rentByLease = new Map<string, number>();
       const recordedWithholding = new Map<string, number>();
 
@@ -174,17 +179,20 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         const kind = classifyLeaseReportTransaction(tx);
         if (kind === 'other') continue;
         const lease = tx.lease_id ? leasesById.get(tx.lease_id)
-          : matchReportLease(tx.description, tx.effective_date, leasesByCompany.get(tx.company_id) ?? []);
+          : matchReportLease(tx.description, tx.event_date ?? tx.effective_date, leasesByCompany.get(tx.company_id) ?? []);
         if (!lease || lease.company_id !== tx.company_id) {
           unmatched.push({ id: tx.id, description: tx.description, amount: Number(tx.amount), date: tx.effective_date });
           continue;
         }
 
         const leaseId = lease.id;
-        let row = rows.get(leaseId);
+        const competence = tx.event_date ?? tx.effective_date ?? monthWindow(reference).gte;
+        const referenceMonth = `${competence.getUTCFullYear()}-${String(competence.getUTCMonth() + 1).padStart(2, '0')}`;
+        const rowKey = `${leaseId}::${referenceMonth}`;
+        let row = rows.get(rowKey);
         if (!row) {
           row = {
-            lease_id: leaseId,
+            lease_id: leaseId, row_id: rowKey, reference_month: referenceMonth,
             agency_name: lease.agency?.trade_name ?? lease.property?.agency?.trade_name ?? '—',
             property_title: lease.property?.title ?? '—',
             tenant_name: lease.tenant?.name ?? '—',
@@ -194,11 +202,11 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
             received_amount: 0,
             discount_expense: 0,
             penalty: 0,
-            property_tax_refund: 0,
+            property_tax_refund: 0, condominium_income: 0,
             agency_share: 0,
             withholding: 0,
           };
-          rows.set(leaseId, row);
+          rows.set(rowKey, row);
         }
 
         const amount = Number(tx.amount ?? 0);
@@ -212,8 +220,8 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
             // A consulta inclui somente lançamentos efetivamente concluídos.
             row.received_amount = round2(row.received_amount + amount);
             revenueByMonth.set(key, round2((revenueByMonth.get(key) ?? 0) + amount));
-            rentByLease.set(leaseId, round2((rentByLease.get(leaseId) ?? 0) + amount));
-            const discountKey = `${key}::${leaseId}`;
+            rentByLease.set(rowKey, round2((rentByLease.get(rowKey) ?? 0) + amount));
+            const discountKey = rowKey;
             if (!discountCharged.has(discountKey)) {
               discountCharged.add(discountKey);
               row.discount_expense = round2(row.discount_expense + Number(lease.discount_amount ?? 0));
@@ -226,6 +234,10 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
           case 'iptu':
             row.property_tax_refund = round2(row.property_tax_refund + amount);
             break;
+          case 'condominium':
+            recordedCondominium.set(rowKey, round2((recordedCondominium.get(rowKey) ?? 0) + amount));
+            row.condominium_income = recordedCondominium.get(rowKey)!;
+            break;
           case 'penalty':
             row.penalty = round2(row.penalty + amount);
             row.received_amount = round2(row.received_amount + amount);
@@ -233,14 +245,16 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
             break;
           case 'withholding':
             row.has_withholding = true;
-            recordedWithholding.set(leaseId, round2((recordedWithholding.get(leaseId) ?? 0) + amount));
+            recordedWithholding.set(rowKey, round2((recordedWithholding.get(rowKey) ?? 0) + amount));
             break;
         }
       }
-      for (const leaseId of new Set([...rentByLease.keys(), ...recordedWithholding.keys()])) {
-        const row = rows.get(leaseId)!;
-        const rent = rentByLease.get(leaseId) ?? 0;
-        const recorded = recordedWithholding.get(leaseId);
+      for (const rowKey of new Set([...rentByLease.keys(), ...recordedWithholding.keys()])) {
+        const row = rows.get(rowKey)!;
+        const leaseId = row.lease_id;
+        const rent = rentByLease.get(rowKey) ?? 0;
+        const recorded = recordedWithholding.get(rowKey);
+        if (rentByLease.has(rowKey)) row.condominium_income = recordedCondominium.get(rowKey) ?? Number(leasesById.get(leaseId)?.condo_fee ?? 0);
         const expected = round2(rent * WITHHOLDING_TOTAL_RATE);
         const hasWithholdingThisMonth = recorded !== undefined || leasesById.get(leaseId)?.property.income_tax_withholding === true;
         row.withholding = round2(row.withholding + (recorded ?? (hasWithholdingThisMonth ? expected : 0)));
@@ -271,12 +285,12 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
           received_amount: acc.received_amount,
           discount_expense: acc.discount_expense,
           penalty: acc.penalty,
-          property_tax_refund: acc.property_tax_refund,
+          property_tax_refund: acc.property_tax_refund, condominium_income: acc.condominium_income,
           withholding,
           agency_share: acc.agency_share,
         };
         return {
-          lease_id: acc.lease_id,
+          lease_id: acc.lease_id, row_id: acc.row_id, reference_month: acc.reference_month,
           agency_name: acc.agency_name,
           property_title: acc.property_title,
           tenant_name: acc.tenant_name,
@@ -286,7 +300,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
           net_amount: computeNetAmount(base),
         };
       })
-      .sort((a, b) => a.agency_name.localeCompare(b.agency_name, 'pt-BR') || a.property_title.localeCompare(b.property_title, 'pt-BR'));
+      .sort((a, b) => a.agency_name.localeCompare(b.agency_name, 'pt-BR') || a.property_title.localeCompare(b.property_title, 'pt-BR') || a.reference_month.localeCompare(b.reference_month));
 
     const sum = (pick: (row: LeaseReportRow) => number) => round2(rows.reduce((acc, row) => acc + pick(row), 0));
     const totals = {
@@ -295,6 +309,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       discount_expense: sum((r) => r.discount_expense),
       penalty: sum((r) => r.penalty),
       property_tax_refund: sum((r) => r.property_tax_refund),
+      condominium_income: sum((r) => r.condominium_income),
       withholding: sum((r) => r.withholding),
       agency_share: sum((r) => r.agency_share),
       net_amount: sum((r) => r.net_amount),

@@ -1,4 +1,5 @@
 'use server';
+import { getOverdueLeaseReportData } from '@/server/queries/lease-overdue-report';
 
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import type { LeaseReportResult } from '@/core/entities/lease-report';
@@ -11,4 +12,8 @@ import { getLeaseReportData } from '@/server/queries/lease-report';
  */
 export async function getLeaseReportAction(raw: Record<string, unknown>): Promise<ActionResult<LeaseReportResult>> {
   return runAction(() => getLeaseReportData(raw));
+}
+
+export async function getOverdueLeaseReportAction(raw: Record<string, unknown>) {
+  return runAction(() => getOverdueLeaseReportData(raw));
 }

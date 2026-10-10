@@ -27,6 +27,9 @@ export interface LeaseReportParams {
 /** Uma linha da tabela — uma locação, somada sobre os meses selecionados. */
 export interface LeaseReportRow {
   lease_id: string;
+  row_id: string;
+  /** Competência do lançamento, YYYY-MM. */
+  reference_month: string;
   /** Nome da imobiliária em que o imóvel está locado. */
   agency_name: string;
   /** Nome/identificação do imóvel. */
@@ -41,6 +44,8 @@ export interface LeaseReportRow {
   penalty: number;
   /** Restituição de IPTU (CR). */
   property_tax_refund: number;
+  /** Restituição/receita de condomínio, separada de despesas. */
+  condominium_income: number;
   /** Retenção sobre o aluguel (DB), registrada no financeiro ou indicada no imóvel. */
   withholding: number;
   /** Parte que fica com a imobiliária, i.e. a comissão (DB). */
@@ -169,7 +174,7 @@ export interface InvestmentRedemptionRow {
 export interface LeaseReportResult {
   months: ReferenceMonth[];
   rows: LeaseReportRow[];
-  totals: Omit<LeaseReportRow, 'lease_id' | 'agency_name' | 'property_title' | 'tenant_name' | 'tenant_document' | 'has_withholding'>;
+  totals: Omit<LeaseReportRow, 'lease_id' | 'row_id' | 'reference_month' | 'agency_name' | 'property_title' | 'tenant_name' | 'tenant_document' | 'has_withholding'>;
   withholding: WithholdingSummary;
   monthlyDarf: MonthlyDarfRow[];
   quarterlyDarf: QuarterlyDarfRow[];
@@ -221,9 +226,9 @@ export function monthsOfQuarter({ year, quarter }: Quarter): ReferenceMonth[] {
 }
 
 /** Valor líquido da linha, na fórmula definida pelo cliente. */
-export function computeNetAmount(row: Omit<LeaseReportRow, 'net_amount' | 'lease_id' | 'agency_name' | 'property_title' | 'tenant_name' | 'tenant_document' | 'has_withholding'>): number {
+export function computeNetAmount(row: Pick<LeaseReportRow, 'received_amount' | 'property_tax_refund' | 'discount_expense' | 'withholding' | 'agency_share'> & { gross_revenue?: number; penalty?: number; condominium_income?: number }): number {
   return round2(
-    row.received_amount + row.property_tax_refund
+    row.received_amount + row.property_tax_refund + (row.condominium_income ?? 0)
       - row.discount_expense - row.withholding - row.agency_share,
   );
 }

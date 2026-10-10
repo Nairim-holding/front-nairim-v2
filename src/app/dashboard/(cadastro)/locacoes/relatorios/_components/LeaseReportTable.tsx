@@ -28,6 +28,7 @@ const CURRENCY_LABELS = [
   'Desconto / Despesa',
   'Multa',
   'IPTU',
+  'Condomínio (Receita)',
   'Retenções',
   'Parte da Imobiliária',
   'Valor Líquido',
@@ -58,7 +59,7 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
 
   const handleDrop = (targetId: string) => {
     if (!onReorder || !draggedId || draggedId === targetId) return;
-    const ids = rows.map((row) => row.lease_id);
+    const ids = rows.map((row) => row.row_id);
     const from = ids.indexOf(draggedId);
     const to = ids.indexOf(targetId);
     if (from < 0 || to < 0) return;
@@ -70,12 +71,13 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
 
   return (
     <div className="overflow-x-auto">
-      <table ref={ref} className="lease-report-table w-full min-w-[1000px] table-fixed border-collapse [&_th]:whitespace-normal [&_th]:break-normal [&_th]:px-1.5 [&_td]:whitespace-normal [&_td]:break-words [&_td]:px-1.5 [&_tbody_tr]:text-xs [&_tfoot_tr]:text-xs">
+      <table ref={ref} className="lease-report-table w-full min-w-[1200px] table-fixed border-collapse [&_th]:whitespace-normal [&_th]:break-normal [&_th]:px-1.5 [&_td]:whitespace-normal [&_td]:break-words [&_td]:px-1.5 [&_tbody_tr]:text-xs [&_tfoot_tr]:text-xs">
         <colgroup>
           {onReorder && <col className="no-export" style={{ width: '2%' }} />}
           <col style={{ width: '8%' }} />
           <col style={{ width: '12%' }} />
-          {CURRENCY_LABELS.map((label) => <col key={label} style={{ width: '7.5%' }} />)}
+          <col style={{ width: '6%' }} />
+          {CURRENCY_LABELS.map((label) => <col key={label} style={{ width: '6.5%' }} />)}
           <col style={{ width: '12%' }} />
           <col style={{ width: '8%' }} />
         </colgroup>
@@ -84,6 +86,7 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
             {onReorder && <th className="no-export px-1 py-2" aria-hidden />}
             <th className="px-3 py-2 whitespace-nowrap">Imobiliária</th>
             <th className="px-3 py-2 whitespace-nowrap">Imóvel</th>
+            <th className="px-3 py-2 whitespace-nowrap">Mês/Ano</th>
             {CURRENCY_LABELS.map((label) => (
               <th key={label} className="px-3 py-2 whitespace-nowrap text-right">{label}</th>
             ))}
@@ -95,7 +98,7 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={CURRENCY_LABELS.length + 4 + (onReorder ? 1 : 0)} className="px-3 py-8 text-center text-sm text-content-muted">
+              <td colSpan={CURRENCY_LABELS.length + 5 + (onReorder ? 1 : 0)} className="px-3 py-8 text-center text-sm text-content-muted">
                 Nenhuma locação com movimento no período selecionado.
               </td>
             </tr>
@@ -103,15 +106,15 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
 
           {rows.map((row) => (
             <tr
-              key={row.lease_id}
+              key={row.row_id}
               draggable={!!onReorder}
-              onDragStart={() => setDraggedId(row.lease_id)}
+              onDragStart={() => setDraggedId(row.row_id)}
               onDragEnd={() => { setDraggedId(null); setDragOverId(null); }}
-              onDragOver={(e) => { e.preventDefault(); if (onReorder) setDragOverId(row.lease_id); }}
-              onDrop={(e) => { e.preventDefault(); handleDrop(row.lease_id); setDragOverId(null); }}
+              onDragOver={(e) => { e.preventDefault(); if (onReorder) setDragOverId(row.row_id); }}
+              onDrop={(e) => { e.preventDefault(); handleDrop(row.row_id); setDragOverId(null); }}
               className={`text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle ${
-                dragOverId === row.lease_id && draggedId !== row.lease_id ? 'border-t-2 border-t-brand' : ''
-              } ${draggedId === row.lease_id ? 'opacity-50' : ''}`}
+                dragOverId === row.row_id && draggedId !== row.row_id ? 'border-t-2 border-t-brand' : ''
+              } ${draggedId === row.row_id ? 'opacity-50' : ''}`}
             >
               {onReorder && (
                 <td className="no-export px-1 py-1.5 text-center text-content-muted cursor-grab active:cursor-grabbing" title="Arraste para reordenar">
@@ -129,11 +132,13 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
                   </span>
                 )}
               </td>
+              <td className="px-3 py-1.5 whitespace-nowrap">{row.reference_month.slice(5)}/{row.reference_month.slice(0, 4)}</td>
               <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.gross_revenue)}</td>
               <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.received_amount)}</td>
               <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.discount_expense)}</td>
               <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.penalty)}</td>
               <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.property_tax_refund)}</td>
+              <td className={`px-3 py-1.5 text-right ${CREDIT}`}>{money(row.condominium_income)}</td>
               <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.withholding)}</td>
               <td className={`px-3 py-1.5 text-right ${DEBIT}`}>{money(row.agency_share)}</td>
               <td className={`px-3 py-1.5 text-right ${NET}`}>{money(row.net_amount)}</td>
@@ -146,12 +151,13 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
         {rows.length > 0 && (
           <tfoot>
             <tr className="text-sm font-bold text-content border-t-2 border-ui-border">
-              <td className="px-3 py-2" colSpan={onReorder ? 3 : 2}>Total</td>
+              <td className="px-3 py-2" colSpan={onReorder ? 4 : 3}>Total</td>
               <td className="px-3 py-2 text-right">{money(totals.gross_revenue)}</td>
               <td className="px-3 py-2 text-right">{money(totals.received_amount)}</td>
               <td className="px-3 py-2 text-right">{money(totals.discount_expense)}</td>
               <td className="px-3 py-2 text-right">{money(totals.penalty)}</td>
               <td className="px-3 py-2 text-right">{money(totals.property_tax_refund)}</td>
+              <td className="px-3 py-2 text-right">{money(totals.condominium_income)}</td>
               <td className="px-3 py-2 text-right">{money(totals.withholding)}</td>
               <td className="px-3 py-2 text-right">{money(totals.agency_share)}</td>
               <td className="px-3 py-2 text-right">{money(totals.net_amount)}</td>

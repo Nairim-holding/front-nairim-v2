@@ -1,7 +1,9 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, CopyObjectCommand } from '@aws-sdk/client-s3';
 import { env } from '@/infra/config/env';
 import type { Storage, UploadInput, UploadMediaResult } from '@/core/storage/storage';
 import { ImageConverter } from './image-converter';
+import { randomUUID } from 'node:crypto';
+import { ValidationError } from '@/core/errors/domain-errors';
 
 /**
  * Implementação de {@link Storage} sobre o MinIO self-hosted (S3 compatível).
@@ -108,6 +110,16 @@ export class MinioStorage implements Storage {
       }),
     );
 
+    return this.urlFromKey(key);
+  }
+
+  /** Copy inside the configured bucket so cloned documents have independent files. */
+  async copy(url: string, folder: string): Promise<string> {
+    const source = this.keyFromUrl(url);
+    if (!source) throw new ValidationError('O arquivo do imóvel não pertence ao armazenamento deste ambiente.');
+    const key = `${folder}/${randomUUID()}-${source.split('/').at(-1)}`;
+    await s3Client.send(new CopyObjectCommand({ Bucket: env.MINIO_BUCKET, Key: key,
+      CopySource: `${encodeURIComponent(env.MINIO_BUCKET)}/${source.split('/').map(encodeURIComponent).join('/')}` }));
     return this.urlFromKey(key);
   }
 

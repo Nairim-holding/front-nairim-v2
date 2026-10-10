@@ -20,17 +20,20 @@ try {
   const css=join(root,'.next','static','css');
   writeFileSync(join(fixture,'style.css'),readdirSync(css).filter(name=>name.endsWith('.css')).map(name=>readFileSync(join(css,name),'utf8')).join('\n'));
   writeFileSync(join(fixture,'index.html'),'<html><head><meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="stylesheet" href="/style.css"/></head><body><div id="root"></div><script type="module" src="/main.tsx"></script></body></html>');
-  server=await createServer({configFile:false,root:fixture,esbuild:{jsx:'automatic'},resolve:{alias:[...['next/navigation','@/contexts/AuthContext','@/contexts/PermissionsContext','@/contexts/MessageContext','@/contexts/PopupContext','@/server/actions/table-transfer'].map(find=>({find,replacement:join(fixture,'mocks.tsx')})),{find:'@',replacement:join(root,'src')}]},server:{host:'127.0.0.1',port:0,fs:{allow:[root]}}});
+  server=await createServer({configFile:false,root:fixture,cacheDir:join(fixture,'vite-cache'),esbuild:{jsx:'automatic'},resolve:{alias:[...['next/navigation','@/contexts/AuthContext','@/contexts/PermissionsContext','@/contexts/MessageContext','@/contexts/PopupContext','@/server/actions/table-transfer'].map(find=>({find,replacement:join(fixture,'mocks.tsx')})),{find:'@',replacement:join(root,'src')}]},server:{host:'127.0.0.1',port:0,fs:{allow:[root]}}});
   await server.listen();browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:1280,height:800}});const errors=[];page.on('pageerror',error=>errors.push(error.message));
   const url='http://127.0.0.1:'+server.httpServer.address().port;
   await page.goto(url);
+  await page.getByRole('button',{name:'Exportar JSON',exact:true}).click();
   await page.getByRole('combobox',{name:'Empresas para exportar'}).selectOption('all');
-  const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'Exportar JSON',exact:true}).click();
+  const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar JSON',exact:true}).click();
   const download=await downloading;assert.ok(download.suggestedFilename().includes('todas-empresas'));
   assert.equal(JSON.parse(readFileSync(await download.path(),'utf8')).scope,'all');
   const upload=async(mode,formatVersion)=>{
+    await page.getByRole('button',{name:'Importar JSON',exact:true}).click();
     await page.getByRole('combobox',{name:'Destino da importação'}).selectOption(mode);
+    await page.getByRole('button',{name:'Fechar opções de transferência'}).click();
     await page.getByLabel('Arquivo JSON de Tipos de imóvel').setInputFiles({name:'cadastro.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({meta:{formatVersion}}))});
     await page.waitForFunction(()=>!!window.__popup);
     assert.equal(await page.evaluate(()=>window.__preview.mode),mode);

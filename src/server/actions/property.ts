@@ -1,5 +1,8 @@
 'use server';
 
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { cloneProperties, propertyCloneCompanies } from '@/server/services/property-clone';
 import { propertyUseCases } from '@/infra/factories/property-factory';
 import { createUnifiedPropertySchema, parseUnifiedPropertyUpdate } from '@/shared/validators/property';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
@@ -93,4 +96,16 @@ export async function getPropertyByIdAction(id: string): Promise<ActionResult<Pr
 
 export async function getPropertyFiltersAction(raw: Record<string, unknown>): Promise<ActionResult<Record<string, unknown>>> {
   return runAction(() => getPropertyFiltersData(raw));
+}
+
+export async function getPropertyCloneCompaniesAction() {
+  return runAction(() => withPermission('properties', 'create', session => propertyCloneCompanies(session)));
+}
+export async function clonePropertiesAction(input: Record<string, unknown>) {
+  return runAction(() => withPermission('properties', 'create', session => withPermission('properties', 'view', async () => {
+    const { property_ids, company_ids } = z.object({ property_ids: z.array(z.string().min(1)).min(1).max(50), company_ids: z.array(z.string().min(1)).min(1).max(1000) }).parse(input);
+    const result = await cloneProperties([...new Set(property_ids)], [...new Set(company_ids)], session);
+    revalidatePath('/dashboard/imoveis');
+    return result;
+  })));
 }

@@ -98,6 +98,7 @@ export interface InvestmentTransactionEntry {
   /** YYYY-MM-DD */
   date: string;
   amount: number;
+  is_initial?: boolean;
 }
 
 export interface UpsertInvestmentTransactionData {
@@ -117,6 +118,7 @@ export interface InvestmentMonthCell {
   balance: number | null;
   /** true quando o saldo foi digitado pelo usuário (e não herdado). */
   balance_is_manual: boolean;
+  initial_capital?: number;
 }
 
 /** Linha da grid: um investimento com seus meses. */

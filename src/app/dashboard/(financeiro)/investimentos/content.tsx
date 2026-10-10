@@ -557,6 +557,7 @@ export default function InvestmentsPageContent() {
               year={modal.target.year}
               month={modal.target.month}
               currentBalance={cell?.balance ?? null}
+              isManual={cell?.balance_is_manual ?? false}
               onClose={closeModal}
               onSaved={reloadAndClose}
             />

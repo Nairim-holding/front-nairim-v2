@@ -215,7 +215,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
               </span>
               <span className="pl-4">{formatCell(cell.applied)}</span>
               {/* Aporte novo (+) e gestão dos aportes do mês (lápis). */}
-              <span className="absolute inset-y-0 right-1 hidden items-center gap-0.5 group-hover/cell:flex">
+              <span className="absolute inset-y-0 right-1 hidden items-center gap-0.5 group-hover/cell:flex group-focus-within/cell:flex">
                 <button
                   type="button"
                   onClick={() =>
@@ -253,7 +253,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
           {investment.months.map((cell) => (
             <td
               key={`balance-${cell.year}-${cell.month}`}
-              className={`group/cell relative border-l border-ui-border-soft px-3 py-1 text-[11px] text-right whitespace-nowrap ${
+              className={`group/cell relative border-l border-ui-border-soft pl-3 pr-14 py-1 text-[11px] text-right whitespace-nowrap ${
                 isSelected ? 'bg-brand/5' : 'bg-surface'
               } ${cell.balance_is_manual ? 'text-content font-medium' : 'text-content-secondary'}`}
               title={cell.balance_is_manual ? 'Saldo informado' : 'Saldo herdado do mês anterior + aplicado'}
@@ -262,8 +262,9 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
               <button
                 type="button"
                 onClick={() => onEditBalance({ investmentId: investment.id, year: cell.year, month: cell.month })}
-                className="absolute inset-y-0 right-0 hidden items-center rounded px-1.5 text-[10px] font-medium bg-surface-subtle/80 text-content-secondary backdrop-blur-sm hover:bg-brand hover:text-white group-hover/cell:flex"
+                className="absolute inset-y-0 right-0 inline-flex items-center rounded px-1.5 text-[10px] font-medium bg-surface-subtle/80 text-content-secondary backdrop-blur-sm hover:bg-brand hover:text-white group-hover/cell:flex group-focus-within/cell:flex"
                 title="Editar saldo do mês"
+                aria-label={`Editar saldo ${formatMonthHeader(cell.month, cell.year)} de ${investment.product}`}
               >
                 Editar
               </button>

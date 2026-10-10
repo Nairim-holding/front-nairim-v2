@@ -175,6 +175,7 @@ export default function Aside({
           { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
           { href: "/dashboard/locacoes/atrasadas", icon: BellRing, label: "Alertas de atrasos", resource: resourceForHref("/dashboard/locacoes/atrasadas") },
           { href: "/dashboard/locacoes/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/locacoes/relatorios"), isSeparatorBefore: true },
+          { href: "/dashboard/locacoes/relatorios/atrasadas", icon: FileBarChart2, label: "Relatório de atrasos", resource: "lease-reports" },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       {
