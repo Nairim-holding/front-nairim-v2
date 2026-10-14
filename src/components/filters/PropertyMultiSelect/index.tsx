@@ -8,17 +8,17 @@ export interface PropertyOption {
   title: string;
 }
 
-interface IptuAuditPropertyFilterProps {
+interface PropertyMultiSelectProps {
   options: PropertyOption[];
   selected: string[];
   onChange: (ids: string[]) => void;
 }
 
 /**
- * Filtro de imóveis da Auditoria de IPTU (Tarefa 4.1): seleção de um ou mais
- * imóveis. Nenhum selecionado = todos, que é o comportamento padrão da tela.
+ * Filtro de imóveis (Auditoria de IPTU e ROI): seleção de um ou mais imóveis.
+ * Nenhum selecionado = todos, que é o comportamento padrão das telas.
  */
-export default function IptuAuditPropertyFilter({ options, selected, onChange }: IptuAuditPropertyFilterProps) {
+export default function PropertyMultiSelect({ options, selected, onChange }: PropertyMultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,7 +52,7 @@ export default function IptuAuditPropertyFilter({ options, selected, onChange }:
             ? 'border-brand text-brand bg-brand/5'
             : 'border-ui-border text-content-secondary bg-surface hover:bg-surface-subtle'
         }`}
-        title="Filtrar imóveis considerados na auditoria"
+        title="Filtrar imóveis considerados"
       >
         <Filter size={16} />
         <span className="font-medium whitespace-nowrap">

@@ -175,7 +175,6 @@ export default function Aside({
           { href: "/dashboard/locacoes", icon: Key, label: "Locações", resource: resourceForHref("/dashboard/locacoes") },
           { href: "/dashboard/locacoes/atrasadas", icon: BellRing, label: "Alertas de atrasos", resource: resourceForHref("/dashboard/locacoes/atrasadas") },
           { href: "/dashboard/locacoes/relatorios", icon: FileBarChart2, label: "Relatórios", resource: resourceForHref("/dashboard/locacoes/relatorios"), isSeparatorBefore: true },
-          { href: "/dashboard/locacoes/relatorios/atrasadas", icon: FileBarChart2, label: "Relatório de atrasos", resource: "lease-reports" },
         ] as SubmenuItem[]).filter((sub) => can(sub.resource, 'view')),
       },
       {
@@ -202,7 +201,7 @@ export default function Aside({
         label: "Auditoria",
         submenu: ([
           { href: "/dashboard/financeiro-auditoria", icon: SearchCheck, label: "IPTU", resource: resourceForHref("/dashboard/financeiro-auditoria") },
-          { href: "#", icon: TrendingUp, label: "ROI", disabled: true },
+          { href: "/dashboard/roi", icon: TrendingUp, label: "ROI", resource: resourceForHref("/dashboard/roi") },
           { href: "/dashboard/auditoria", icon: FileClock, label: "Logs", resource: resourceForHref("/dashboard/auditoria") },
         ] as SubmenuItem[]).filter((sub) => sub.disabled === true || can(sub.resource, 'view')),
       },

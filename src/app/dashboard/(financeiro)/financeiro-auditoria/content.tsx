@@ -10,7 +10,7 @@ import IptuAuditSettingsModal from './_components/IptuAuditSettingsModal';
 import IptuAuditTable, { type IptuAuditRow } from './_components/IptuAuditTable';
 import IptuAuditChart from './_components/IptuAuditChart';
 import IptuAuditComparativeChart, { type IptuAuditPeriodPoint } from './_components/IptuAuditComparativeChart';
-import IptuAuditPropertyFilter, { type PropertyOption } from './_components/IptuAuditPropertyFilter';
+import IptuAuditPropertyFilter, { type PropertyOption } from '@/components/filters/PropertyMultiSelect';
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');

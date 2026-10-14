@@ -162,6 +162,7 @@ export function buildPropertySteps({
         { field: 'condo_fee', label: 'Valor Condomínio', type: 'text', placeholder: 'R$ 500,00', mask: 'money', icon: <Building size={20} />, ...ro },
         { field: 'property_tax', label: 'Valor IPTU (Base de Referência)', type: 'text', placeholder: 'R$ 1.200,00', mask: 'money', icon: <FileText size={20} />, ...ro },
         { field: 'market_value', label: 'Valor Venal', type: 'text', placeholder: 'R$ 0,00', mask: 'money', icon: <Dollar size={20} />, ...ro },
+        { field: 'vacancy_months_per_year', label: 'Previsão de Vacância (meses por ano)', type: 'number', placeholder: 'Ex.: 1', min: 0, max: 12, step: 0.5, icon: <Calendar size={20} />, ...ro },
         {
           field: 'status',
           label: 'Status Atual',

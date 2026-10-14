@@ -58,6 +58,7 @@ model Company {
   user_group_permissions  UserGroupPermission[]
   user_access_schedules   UserAccessSchedule[]
   iptu_audit_settings     IptuAuditSettings?
+  roi_settings            RoiSettings?
 }
 
 /// Configuracao global da vitrine desta instalacao, independente da sessao.
@@ -716,6 +717,8 @@ model PropertyValue {
   sale_notes     String?
   sale_date      DateTime?      @db.Date
   purchase_date  DateTime?      @db.Date
+  /// Previsão de meses desocupado por ano, usada no cálculo do ROI.
+  vacancy_months_per_year Decimal? @db.Decimal(4, 2)
   property       Property       @relation(fields: [property_id], references: [id])
 
   @@index([property_id])
@@ -943,11 +946,27 @@ model IptuAuditSettings {
   @@index([company_id])
 }
 
+/// Configuração do ROI por imóvel: qual categoria/subcategoria do Financeiro
+/// alimenta cada linha do cálculo (ITBI, registro, manutenção, aluguel, IPTU,
+/// seguro, comissão). Uma linha por empresa (upsert por company_id).
+/// `lines` = { [linha]: { category_id, subcategory_id } }.
+model RoiSettings {
+  id         String   @id @default(uuid())
+  company_id String   @unique
+  lines      Json     @default("{}")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id])
+
+  @@index([company_id])
+}
+
 model Card {
   id                String            @id @default(uuid())
   company_id        String
   name              String
-  limit             Decimal           @default(0) @db.Decimal(20, 2)
+  limit            Decimal           @default(0) @db.Decimal(20, 2)
   is_active         Boolean           @default(true)
   created_at        DateTime          @default(now())
   updated_at        DateTime          @updatedAt
@@ -1064,6 +1083,9 @@ model Transaction {
   transfer_group_id        String?
   is_transfer              Boolean              @default(false)
   is_cancellation_charge   Boolean              @default(false)
+  /// Lançamento excluído pelo cancelamento da locação (valor que deixou de ser
+  /// recebido). Distingue-o do `deleted_at` usado ao regenerar as parcelas.
+  canceled_at              DateTime?
   card                     Card?                @relation(fields: [card_id], references: [id])
   category                 Category             @relation(fields: [category_id], references: [id])
   center                   Center?              @relation(fields: [center_id], references: [id])

@@ -3066,6 +3066,13 @@
         "list": false,
         "required": false,
         "nullable": true
+      },
+      {
+        "name": "vacancy_months_per_year",
+        "type": "Decimal",
+        "list": false,
+        "required": false,
+        "nullable": true
       }
     ],
     "relations": [
@@ -4107,6 +4114,32 @@
       }
     ]
   },
+  "RoiSettings": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "company_id",
+        "type": "String",
+        "list": false,
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "lines",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": false
+      }
+    ],
+    "relations": []
+  },
   "Card": {
     "fields": [
       {
@@ -4732,6 +4765,13 @@
         "list": false,
         "required": false,
         "nullable": false
+      },
+      {
+        "name": "canceled_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": true
       }
     ],
     "relations": [

@@ -431,6 +431,7 @@ export const ModelName = {
   Category: 'Category',
   Subcategory: 'Subcategory',
   IptuAuditSettings: 'IptuAuditSettings',
+  RoiSettings: 'RoiSettings',
   Card: 'Card',
   Center: 'Center',
   Supplier: 'Supplier',
@@ -465,7 +466,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "publicSiteSettings" | "companyBranding" | "agency" | "property" | "repair" | "repairProfessional" | "repairItem" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
+    modelProps: "company" | "publicSiteSettings" | "companyBranding" | "agency" | "property" | "repair" | "repairProfessional" | "repairItem" | "repairMedia" | "propertyIptu" | "user" | "userAccessSchedule" | "userGroup" | "userGroupPermission" | "auditLogOutbox" | "userColumnPreference" | "userDashboardLayout" | "document" | "owner" | "tenant" | "lease" | "propertyValue" | "propertyType" | "address" | "contact" | "favorite" | "agencyAddress" | "propertyAddress" | "ownerAddress" | "tenantAddress" | "financialInstitution" | "category" | "subcategory" | "iptuAuditSettings" | "roiSettings" | "card" | "center" | "supplier" | "supplierAddress" | "transaction" | "invoice" | "recurringConfig" | "planning" | "planningMonth" | "investment" | "investmentTransaction" | "investmentMonthBalance" | "investmentSettings" | "contactChannel" | "adjustmentIndex" | "adjustmentIndexValue" | "holiday" | "leaseNotification" | "leaseExpiryReminder"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2985,6 +2986,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    RoiSettings: {
+      payload: Prisma.$RoiSettingsPayload<ExtArgs>
+      fields: Prisma.RoiSettingsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RoiSettingsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RoiSettingsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        findFirst: {
+          args: Prisma.RoiSettingsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RoiSettingsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        findMany: {
+          args: Prisma.RoiSettingsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>[]
+        }
+        create: {
+          args: Prisma.RoiSettingsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        createMany: {
+          args: Prisma.RoiSettingsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RoiSettingsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>[]
+        }
+        delete: {
+          args: Prisma.RoiSettingsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        update: {
+          args: Prisma.RoiSettingsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        deleteMany: {
+          args: Prisma.RoiSettingsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RoiSettingsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RoiSettingsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>[]
+        }
+        upsert: {
+          args: Prisma.RoiSettingsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoiSettingsPayload>
+        }
+        aggregate: {
+          args: Prisma.RoiSettingsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRoiSettings>
+        }
+        groupBy: {
+          args: Prisma.RoiSettingsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoiSettingsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RoiSettingsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoiSettingsCountAggregateOutputType> | number
+        }
+      }
+    }
     Card: {
       payload: Prisma.$CardPayload<ExtArgs>
       fields: Prisma.CardFieldRefs
@@ -4901,7 +4976,8 @@ export const PropertyValueScalarFieldEnum = {
   sale_buyer: 'sale_buyer',
   sale_notes: 'sale_notes',
   sale_date: 'sale_date',
-  purchase_date: 'purchase_date'
+  purchase_date: 'purchase_date',
+  vacancy_months_per_year: 'vacancy_months_per_year'
 } as const
 
 export type PropertyValueScalarFieldEnum = (typeof PropertyValueScalarFieldEnum)[keyof typeof PropertyValueScalarFieldEnum]
@@ -5082,6 +5158,17 @@ export const IptuAuditSettingsScalarFieldEnum = {
 export type IptuAuditSettingsScalarFieldEnum = (typeof IptuAuditSettingsScalarFieldEnum)[keyof typeof IptuAuditSettingsScalarFieldEnum]
 
 
+export const RoiSettingsScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  lines: 'lines',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type RoiSettingsScalarFieldEnum = (typeof RoiSettingsScalarFieldEnum)[keyof typeof RoiSettingsScalarFieldEnum]
+
+
 export const CardScalarFieldEnum = {
   id: 'id',
   company_id: 'company_id',
@@ -5181,7 +5268,8 @@ export const TransactionScalarFieldEnum = {
   lease_id: 'lease_id',
   transfer_group_id: 'transfer_group_id',
   is_transfer: 'is_transfer',
-  is_cancellation_charge: 'is_cancellation_charge'
+  is_cancellation_charge: 'is_cancellation_charge',
+  canceled_at: 'canceled_at'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -6015,6 +6103,7 @@ export type GlobalOmitConfig = {
   category?: Prisma.CategoryOmit
   subcategory?: Prisma.SubcategoryOmit
   iptuAuditSettings?: Prisma.IptuAuditSettingsOmit
+  roiSettings?: Prisma.RoiSettingsOmit
   card?: Prisma.CardOmit
   center?: Prisma.CenterOmit
   supplier?: Prisma.SupplierOmit

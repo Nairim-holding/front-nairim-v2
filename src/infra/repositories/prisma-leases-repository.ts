@@ -535,6 +535,9 @@ export class PrismaLeasesRepository implements LeasesRepository {
       const transactionFilter = input.transactionIds === undefined
         ? { status: { not: 'COMPLETED' }, effective_date: { gte: canceledAt } }
         : { id: { in: input.transactionIds.map(String) } };
+      // `canceled_at` marca que o lançamento saiu por cancelamento do contrato
+      // (e não por regeneração das parcelas) — é o que o Histórico Financeiro lê.
+      const removedAt = new Date();
       const deleted = await tx.transaction.updateMany({
         where: {
           ...transactionFilter,
@@ -543,7 +546,7 @@ export class PrismaLeasesRepository implements LeasesRepository {
           deleted_at: null,
           is_cancellation_charge: false,
         },
-        data: { deleted_at: new Date() },
+        data: { deleted_at: removedAt, canceled_at: removedAt },
       });
       const deletedCount = deleted.count;
 

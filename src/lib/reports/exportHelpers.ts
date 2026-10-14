@@ -44,7 +44,7 @@ function stripNonExportNodes(tableEl: HTMLTableElement): HTMLTableElement {
 }
 
 /** Exporta a tabela renderizada (DOM) para Excel — mesmo padrão do Planejamento. */
-export async function exportTableToExcel(tableEl: HTMLTableElement | null, filename: string, resource: 'financial-reports' | 'lease-reports'): Promise<boolean> {
+export async function exportTableToExcel(tableEl: HTMLTableElement | null, filename: string, resource: 'financial-reports' | 'lease-reports' | 'leases' | 'financial-audit'): Promise<boolean> {
   if (!tableEl) return false;
   const worksheet = XLSX.utils.table_to_sheet(stripNonExportNodes(tableEl));
   const workbook = XLSX.utils.book_new();

@@ -34,6 +34,7 @@ export type PropertyValueAvgAggregateOutputType = {
   property_tax: runtime.Decimal | null
   extra_charges: runtime.Decimal | null
   sale_value: runtime.Decimal | null
+  vacancy_months_per_year: runtime.Decimal | null
 }
 
 export type PropertyValueSumAggregateOutputType = {
@@ -44,6 +45,7 @@ export type PropertyValueSumAggregateOutputType = {
   property_tax: runtime.Decimal | null
   extra_charges: runtime.Decimal | null
   sale_value: runtime.Decimal | null
+  vacancy_months_per_year: runtime.Decimal | null
 }
 
 export type PropertyValueMinAggregateOutputType = {
@@ -65,6 +67,7 @@ export type PropertyValueMinAggregateOutputType = {
   sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
+  vacancy_months_per_year: runtime.Decimal | null
 }
 
 export type PropertyValueMaxAggregateOutputType = {
@@ -86,6 +89,7 @@ export type PropertyValueMaxAggregateOutputType = {
   sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
+  vacancy_months_per_year: runtime.Decimal | null
 }
 
 export type PropertyValueCountAggregateOutputType = {
@@ -107,6 +111,7 @@ export type PropertyValueCountAggregateOutputType = {
   sale_notes: number
   sale_date: number
   purchase_date: number
+  vacancy_months_per_year: number
   _all: number
 }
 
@@ -119,6 +124,7 @@ export type PropertyValueAvgAggregateInputType = {
   property_tax?: true
   extra_charges?: true
   sale_value?: true
+  vacancy_months_per_year?: true
 }
 
 export type PropertyValueSumAggregateInputType = {
@@ -129,6 +135,7 @@ export type PropertyValueSumAggregateInputType = {
   property_tax?: true
   extra_charges?: true
   sale_value?: true
+  vacancy_months_per_year?: true
 }
 
 export type PropertyValueMinAggregateInputType = {
@@ -150,6 +157,7 @@ export type PropertyValueMinAggregateInputType = {
   sale_notes?: true
   sale_date?: true
   purchase_date?: true
+  vacancy_months_per_year?: true
 }
 
 export type PropertyValueMaxAggregateInputType = {
@@ -171,6 +179,7 @@ export type PropertyValueMaxAggregateInputType = {
   sale_notes?: true
   sale_date?: true
   purchase_date?: true
+  vacancy_months_per_year?: true
 }
 
 export type PropertyValueCountAggregateInputType = {
@@ -192,6 +201,7 @@ export type PropertyValueCountAggregateInputType = {
   sale_notes?: true
   sale_date?: true
   purchase_date?: true
+  vacancy_months_per_year?: true
   _all?: true
 }
 
@@ -300,6 +310,7 @@ export type PropertyValueGroupByOutputType = {
   sale_notes: string | null
   sale_date: Date | null
   purchase_date: Date | null
+  vacancy_months_per_year: runtime.Decimal | null
   _count: PropertyValueCountAggregateOutputType | null
   _avg: PropertyValueAvgAggregateOutputType | null
   _sum: PropertyValueSumAggregateOutputType | null
@@ -344,6 +355,7 @@ export type PropertyValueWhereInput = {
   sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
+  vacancy_months_per_year?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
 }
 
@@ -366,6 +378,7 @@ export type PropertyValueOrderByWithRelationInput = {
   sale_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_date?: Prisma.SortOrderInput | Prisma.SortOrder
   purchase_date?: Prisma.SortOrderInput | Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrderInput | Prisma.SortOrder
   property?: Prisma.PropertyOrderByWithRelationInput
 }
 
@@ -391,6 +404,7 @@ export type PropertyValueWhereUniqueInput = Prisma.AtLeast<{
   sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
+  vacancy_months_per_year?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   property?: Prisma.XOR<Prisma.PropertyScalarRelationFilter, Prisma.PropertyWhereInput>
 }, "id">
 
@@ -413,6 +427,7 @@ export type PropertyValueOrderByWithAggregationInput = {
   sale_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   sale_date?: Prisma.SortOrderInput | Prisma.SortOrder
   purchase_date?: Prisma.SortOrderInput | Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.PropertyValueCountOrderByAggregateInput
   _avg?: Prisma.PropertyValueAvgOrderByAggregateInput
   _max?: Prisma.PropertyValueMaxOrderByAggregateInput
@@ -442,6 +457,7 @@ export type PropertyValueScalarWhereWithAggregatesInput = {
   sale_notes?: Prisma.StringNullableWithAggregatesFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableWithAggregatesFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableWithAggregatesFilter<"PropertyValue"> | Date | string | null
+  vacancy_months_per_year?: Prisma.DecimalNullableWithAggregatesFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueCreateInput = {
@@ -462,6 +478,7 @@ export type PropertyValueCreateInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   property: Prisma.PropertyCreateNestedOneWithoutValuesInput
 }
 
@@ -484,6 +501,7 @@ export type PropertyValueUncheckedCreateInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUpdateInput = {
@@ -504,6 +522,7 @@ export type PropertyValueUpdateInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   property?: Prisma.PropertyUpdateOneRequiredWithoutValuesNestedInput
 }
 
@@ -526,6 +545,7 @@ export type PropertyValueUncheckedUpdateInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueCreateManyInput = {
@@ -547,6 +567,7 @@ export type PropertyValueCreateManyInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUpdateManyMutationInput = {
@@ -567,6 +588,7 @@ export type PropertyValueUpdateManyMutationInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUncheckedUpdateManyInput = {
@@ -588,6 +610,7 @@ export type PropertyValueUncheckedUpdateManyInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueListRelationFilter = {
@@ -619,6 +642,7 @@ export type PropertyValueCountOrderByAggregateInput = {
   sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrder
 }
 
 export type PropertyValueAvgOrderByAggregateInput = {
@@ -629,6 +653,7 @@ export type PropertyValueAvgOrderByAggregateInput = {
   property_tax?: Prisma.SortOrder
   extra_charges?: Prisma.SortOrder
   sale_value?: Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrder
 }
 
 export type PropertyValueMaxOrderByAggregateInput = {
@@ -650,6 +675,7 @@ export type PropertyValueMaxOrderByAggregateInput = {
   sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrder
 }
 
 export type PropertyValueMinOrderByAggregateInput = {
@@ -671,6 +697,7 @@ export type PropertyValueMinOrderByAggregateInput = {
   sale_notes?: Prisma.SortOrder
   sale_date?: Prisma.SortOrder
   purchase_date?: Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrder
 }
 
 export type PropertyValueSumOrderByAggregateInput = {
@@ -681,6 +708,7 @@ export type PropertyValueSumOrderByAggregateInput = {
   property_tax?: Prisma.SortOrder
   extra_charges?: Prisma.SortOrder
   sale_value?: Prisma.SortOrder
+  vacancy_months_per_year?: Prisma.SortOrder
 }
 
 export type PropertyValueCreateNestedManyWithoutPropertyInput = {
@@ -747,6 +775,7 @@ export type PropertyValueCreateWithoutPropertyInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUncheckedCreateWithoutPropertyInput = {
@@ -767,6 +796,7 @@ export type PropertyValueUncheckedCreateWithoutPropertyInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueCreateOrConnectWithoutPropertyInput = {
@@ -817,6 +847,7 @@ export type PropertyValueScalarWhereInput = {
   sale_notes?: Prisma.StringNullableFilter<"PropertyValue"> | string | null
   sale_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
   purchase_date?: Prisma.DateTimeNullableFilter<"PropertyValue"> | Date | string | null
+  vacancy_months_per_year?: Prisma.DecimalNullableFilter<"PropertyValue"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueCreateManyPropertyInput = {
@@ -837,6 +868,7 @@ export type PropertyValueCreateManyPropertyInput = {
   sale_notes?: string | null
   sale_date?: Date | string | null
   purchase_date?: Date | string | null
+  vacancy_months_per_year?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUpdateWithoutPropertyInput = {
@@ -857,6 +889,7 @@ export type PropertyValueUpdateWithoutPropertyInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUncheckedUpdateWithoutPropertyInput = {
@@ -877,6 +910,7 @@ export type PropertyValueUncheckedUpdateWithoutPropertyInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 export type PropertyValueUncheckedUpdateManyWithoutPropertyInput = {
@@ -897,6 +931,7 @@ export type PropertyValueUncheckedUpdateManyWithoutPropertyInput = {
   sale_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   purchase_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy_months_per_year?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
 
@@ -920,6 +955,7 @@ export type PropertyValueSelect<ExtArgs extends runtime.Types.Extensions.Interna
   sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
+  vacancy_months_per_year?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["propertyValue"]>
 
@@ -942,6 +978,7 @@ export type PropertyValueSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
+  vacancy_months_per_year?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["propertyValue"]>
 
@@ -964,6 +1001,7 @@ export type PropertyValueSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
+  vacancy_months_per_year?: boolean
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["propertyValue"]>
 
@@ -986,9 +1024,10 @@ export type PropertyValueSelectScalar = {
   sale_notes?: boolean
   sale_date?: boolean
   purchase_date?: boolean
+  vacancy_months_per_year?: boolean
 }
 
-export type PropertyValueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "property_id" | "purchase_value" | "market_value" | "rental_value" | "condo_fee" | "property_tax" | "status" | "notes" | "created_at" | "updated_at" | "deleted_at" | "extra_charges" | "sale_value" | "sale_buyer" | "sale_notes" | "sale_date" | "purchase_date", ExtArgs["result"]["propertyValue"]>
+export type PropertyValueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "property_id" | "purchase_value" | "market_value" | "rental_value" | "condo_fee" | "property_tax" | "status" | "notes" | "created_at" | "updated_at" | "deleted_at" | "extra_charges" | "sale_value" | "sale_buyer" | "sale_notes" | "sale_date" | "purchase_date" | "vacancy_months_per_year", ExtArgs["result"]["propertyValue"]>
 export type PropertyValueInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   property?: boolean | Prisma.PropertyDefaultArgs<ExtArgs>
 }
@@ -1023,6 +1062,10 @@ export type $PropertyValuePayload<ExtArgs extends runtime.Types.Extensions.Inter
     sale_notes: string | null
     sale_date: Date | null
     purchase_date: Date | null
+    /**
+     * Previsão de meses desocupado por ano, usada no cálculo do ROI.
+     */
+    vacancy_months_per_year: runtime.Decimal | null
   }, ExtArgs["result"]["propertyValue"]>
   composites: {}
 }
@@ -1465,6 +1508,7 @@ export interface PropertyValueFieldRefs {
   readonly sale_notes: Prisma.FieldRef<"PropertyValue", 'String'>
   readonly sale_date: Prisma.FieldRef<"PropertyValue", 'DateTime'>
   readonly purchase_date: Prisma.FieldRef<"PropertyValue", 'DateTime'>
+  readonly vacancy_months_per_year: Prisma.FieldRef<"PropertyValue", 'Decimal'>
 }
     
 

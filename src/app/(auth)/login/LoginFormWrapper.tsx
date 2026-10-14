@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTokenMaxAgeSeconds } from '@/utils/jwt';
 import { useRateLimit } from '@/hooks/useRateLimit';
@@ -15,7 +14,6 @@ interface LoginFormWrapperProps {
 }
 
 export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) => {
-  const navigation = useRouter();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +85,10 @@ export const LoginFormWrapper = ({ companySlug }: LoginFormWrapperProps = {}) =>
 
       login(data.token, data.user);
 
-      navigation.push(slug ? `/${slug}/dashboard` : '/dashboard');
+      // Navegação dura (como no CompanySwitcher): o layout raiz injeta as cores
+      // da empresa do cookie `company_slug` e não re-renderiza em router.push —
+      // sem recarregar, o sistema abria com o tema da empresa anterior.
+      window.location.assign(slug ? `/${slug}/dashboard` : '/dashboard');
     } catch (err: unknown) {
       let errorMessage = 'Erro ao tentar fazer login. Verifique suas credenciais.';
 

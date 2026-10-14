@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { getCompanyAccessUser, listAccessibleCompanies } from '@/infra/auth/company-access';
 import { companyUseCases } from '@/infra/factories/company-factory';
 import { pickBrandingFields, switchCompanySchema } from '@/shared/validators/company';
@@ -46,11 +47,14 @@ export async function getMyBrandingAction(): Promise<ActionResult<CompanyBrandin
 
 /** Atualiza o branding da PRÓPRIA empresa (admin). Origem: PUT /company/branding. */
 export async function updateBrandingAction(input: Record<string, unknown>): Promise<ActionResult<CompanyBranding>> {
-  return runAction(() =>
-    withTenant((session) => companyUseCases.updateBranding.execute(session.company_id, pickBrandingFields(input)), {
-      role: 'admin',
-    }),
-  );
+  return runAction(async () => {
+    const branding = await withTenant(
+      (session) => companyUseCases.updateBranding.execute(session.company_id, pickBrandingFields(input)),
+      { role: 'admin' },
+    );
+    revalidatePath('/', 'layout');
+    return branding;
+  });
 }
 
 /** Upload de asset da PRÓPRIA empresa (admin). Origem: POST /company/branding/{logo,...}. */
@@ -140,13 +144,17 @@ export async function updateCompanyAction(id: string, input: Record<string, unkn
   return runAction(async () => {
     const session = await requireSession();
     assertSuperAdmin(session);
-    return companyUseCases.update.execute(id, {
+    const updated = await companyUseCases.update.execute(id, {
       name: input.name as string | undefined,
       slug: input.slug as string | undefined,
       is_active: input.is_active as boolean | undefined,
       db_quota_mb: input.db_quota_mb as number | null | undefined,
       ...pickBrandingFields(input),
     });
+    // As cores da marca são injetadas pelo layout raiz; sem revalidar, o tema
+    // novo só aparecia depois de um F5.
+    revalidatePath('/', 'layout');
+    return updated;
   });
 }
 

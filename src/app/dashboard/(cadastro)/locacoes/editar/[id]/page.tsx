@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
 import LeaseCancellationModal from '@/components/domain/leases/LeaseCancellationModal';
+import LeaseFinancialHistoryButton from '@/components/domain/leases/LeaseFinancialHistoryModal/LeaseFinancialHistoryButton';
+import { ReceiptText } from 'lucide-react';
 import { FormStep } from '@/types/types';
 import {
   FileText, Calendar, DollarSign, User, Building,
@@ -740,6 +742,20 @@ export default function EditarLocacaoPage() {
       ],
     });
 
+    baseSteps.push({
+      title: 'Histórico Financeiro',
+      icon: <ReceiptText size={20} />,
+      fields: [
+        {
+          field: 'financial_history_action',
+          label: '',
+          type: 'custom',
+          className: 'col-span-full',
+          render: () => <LeaseFinancialHistoryButton leaseId={id} />,
+        } as any,
+      ],
+    });
+
     // Cancelamento — botão que abre o modal de cancelamento. Fica DEPOIS de Mídias
     // e só para locações ainda não canceladas (a locação cancelada exibe a aba de
     // detalhes do cancelamento acima). Fase 1: apenas abre o formulário do modal.
@@ -781,7 +797,7 @@ export default function EditarLocacaoPage() {
     }
 
     return baseSteps;
-  }, [properties, tenants, agencies, institutionOptions, adjustmentIndexes, loadingData, isCanceled]);
+  }, [properties, tenants, agencies, institutionOptions, adjustmentIndexes, loadingData, isCanceled, id]);
 
   const onSubmitSuccess = (result?: any) => {
     showMessage('Locação atualizada com sucesso!', 'success');

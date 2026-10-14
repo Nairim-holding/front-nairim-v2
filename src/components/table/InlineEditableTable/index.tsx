@@ -694,6 +694,14 @@ export default function InlineEditableTable({
   useEffect(() => {
     onAppliedFiltersChange?.(appliedFilters);
   }, [appliedFilters, onAppliedFiltersChange]);
+
+  // As abas Receitas/Despesas filtram no servidor. Filtrar só a página já
+  // carregada escondia lançamentos que estavam em outras páginas.
+  const tabDataFetcher = useMemo(() => {
+    if (!dataFetcher) return undefined;
+    if (activeTab === 'ALL') return dataFetcher;
+    return (tableState: any) => dataFetcher({ ...tableState, filters: { ...(tableState.filters || {}), type: activeTab } });
+  }, [dataFetcher, activeTab]);
   const {
     state,
     data,
@@ -705,7 +713,12 @@ export default function InlineEditableTable({
     patchRow
   } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
-  }, dataFetcher);
+  }, tabDataFetcher);
+
+  const selectTab = useCallback((tab: 'ALL' | 'INCOME' | 'EXPENSE') => {
+    setActiveTab(tab);
+    updateState({ page: 1 });
+  }, [updateState]);
 
   const dataColumns = useMemo(() => columns.filter(col => col.field !== "actions" && col.type !== "custom"), [columns]);
 
@@ -935,7 +948,7 @@ export default function InlineEditableTable({
     const itemsData = Array.isArray(data.data) ? data.data : Array.isArray(data.items) ? data.items : Array.isArray(data) ? data : [];
     return {
       items: itemsData,
-      meta: data.meta || { page: data.currentPage || 1, limit: state.limit, total: data.total || itemsData.length, totalPages: data.totalPages || 1 }
+      meta: data.meta || { page: data.currentPage || 1, limit: state.limit, total: data.count ?? data.total ?? itemsData.length, totalPages: data.totalPages || 1 }
     };
   }, [data, state.limit]);
 
@@ -1272,11 +1285,18 @@ export default function InlineEditableTable({
   const handleDeleteSelected = useCallback(() => {
     if (!selectedCheckboxes.length) return;
 
+    // Lançamentos gerados por uma locação voltam a ser criados na próxima
+    // edição do contrato — o aviso evita a divergência entre Financeiro e Locações.
+    const leaseLinked = items.filter((item: any) => selectedCheckboxes.includes(String(item.id)) && item.lease_id).length;
+    const leaseWarning = leaseLinked > 0
+      ? ` Atenção: ${leaseLinked === 1 ? '1 lançamento pertence' : `${leaseLinked} lançamentos pertencem`} a um contrato de locação e ${leaseLinked === 1 ? 'será recriado' : 'serão recriados'} como pendente na próxima edição da locação. Para encerrar o contrato, use o cancelamento em Locações.`
+      : '';
+
     showPopup(
       'Remover Registros',
-      selectedCheckboxes.length > 1 
-        ? `Você selecionou ${selectedCheckboxes.length} registros. Tem certeza que deseja removê-los?` 
-        : `Tem certeza que deseja remover o registro selecionado?`,
+      (selectedCheckboxes.length > 1
+        ? `Você selecionou ${selectedCheckboxes.length} registros. Tem certeza que deseja removê-los?`
+        : `Tem certeza que deseja remover o registro selecionado?`) + leaseWarning,
       async () => {
         let successCount = 0;
         let errorCount = 0;
@@ -1305,7 +1325,7 @@ export default function InlineEditableTable({
       },
       () => {}
     );
-  }, [selectedCheckboxes, onRowDelete, showPopup, showMessage, refreshData]);
+  }, [selectedCheckboxes, onRowDelete, showPopup, showMessage, refreshData, items]);
 
   // --- DUPLICAÇÃO EM MASSA ---
   // Cria uma cópia idêntica de cada registro selecionado (mesma data, valor,
@@ -1363,7 +1383,7 @@ export default function InlineEditableTable({
 
   // Exporta para .xlsx todos os registros que casam com o período/filtros/busca
   // atualmente aplicados (não apenas a página em exibição) — pagina internamente
-  // respeitando o limite de 100 registros por requisição do backend.
+  // respeitando o limite de 150 registros por requisição do backend.
   const handleExportExcel = useCallback(async () => {
     if (!meta || meta.total === 0) {
       showMessage('Não há dados para exportar', 'error');
@@ -1372,7 +1392,7 @@ export default function InlineEditableTable({
 
     setIsExporting(true);
     try {
-      const exportLimit = 100;
+      const exportLimit = 150;
       const totalPages = Math.max(1, Math.ceil(meta.total / exportLimit));
       const allItems: any[] = [];
 
@@ -1394,8 +1414,8 @@ export default function InlineEditableTable({
         });
 
         let json: any;
-        if (dataFetcher) {
-          json = await dataFetcher({
+        if (tabDataFetcher) {
+          json = await tabDataFetcher({
             page: p,
             limit: exportLimit,
             search: state.search,
@@ -1469,7 +1489,7 @@ export default function InlineEditableTable({
     } finally {
       setIsExporting(false);
     }
-  }, [meta, state, resource, activeTab, visibleDataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage, dataFetcher]);
+  }, [meta, state, resource, activeTab, visibleDataColumns, getExportCellValue, isEventDate, dateRange, title, showMessage, tabDataFetcher]);
 
   const renderEditableCell = useCallback((item: any, column: ColumnDef, row?: EditingRow) => {
     if (!row?.isEditing) return getCellValue(item, column);
@@ -1670,9 +1690,9 @@ export default function InlineEditableTable({
       {/* Linha 1: Tabs */}
       <div className="flex justify-center sm:justify-start items-center mb-2 mt-2">
         <div className="flex bg-surface-subtle p-1 rounded-lg border border-ui-border-soft">
-          <button onClick={() => setActiveTab('ALL')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'ALL' ? 'bg-surface shadow-sm text-brand' : 'text-content-secondary hover:text-content'}`}>Todos</button>
-          <button onClick={() => setActiveTab('INCOME')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'INCOME' ? 'bg-green-50 border border-green-200 text-green-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Receitas</button>
-          <button onClick={() => setActiveTab('EXPENSE')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'EXPENSE' ? 'bg-red-50 border border-red-200 text-red-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Despesas</button>
+          <button onClick={() => selectTab('ALL')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'ALL' ? 'bg-surface shadow-sm text-brand' : 'text-content-secondary hover:text-content'}`}>Todos</button>
+          <button onClick={() => selectTab('INCOME')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'INCOME' ? 'bg-green-50 border border-green-200 text-green-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Receitas</button>
+          <button onClick={() => selectTab('EXPENSE')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'EXPENSE' ? 'bg-red-50 border border-red-200 text-red-700 shadow-sm' : 'text-content-secondary hover:text-content'}`}>Despesas</button>
         </div>
       </div>
 
@@ -1932,7 +1952,7 @@ export default function InlineEditableTable({
             {meta && meta.total > 0 ? (
               activeTab === 'ALL'
                 ? `Total de registros: ${meta.total} (Exibindo ${tableData.start} a ${tableData.end})`
-                : `Total: ${filteredItems.length} registros de ${activeTab === 'INCOME' ? 'Receitas' : 'Despesas'}`
+                : `Total: ${meta.total} registros de ${activeTab === 'INCOME' ? 'Receitas' : 'Despesas'} (Exibindo ${tableData.start} a ${tableData.end})`
             ) : 'Nenhum registro encontrado'}
           </p>
 

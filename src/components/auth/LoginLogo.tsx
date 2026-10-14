@@ -6,7 +6,9 @@ import { useBranding } from '@/contexts/BrandingContext';
 
 export const LoginLogo = () => {
   const { isDark } = useTheme();
-  const { logoUrl, logoDarkUrl, companyName, primaryColor, secondaryColor } = useBranding();
+  const { logoUrl, logoDarkUrl, companyName, colors } = useBranding();
+  // Cada modo tem a própria paleta da marca (aba "Tema e aparência").
+  const { primary: primaryColor, secondary: secondaryColor } = isDark ? colors.dark : colors.light;
 
   const gradient = `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 84.79%, ${secondaryColor}66 100%)`;
   // Empresa sem logo customizada: não mostra nenhuma logo genérica — só o

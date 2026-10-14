@@ -45,6 +45,10 @@ const valuesSchema = z.object({
   sale_date: z.union([z.string(), z.date()]).nullish(),
   sale_value: z.union([z.number(), z.string()]).nullish(),
   extra_charges: z.union([z.number(), z.string()]).nullish(),
+  vacancy_months_per_year: z.preprocess(
+    value => value === '' || value === undefined || value === null ? null : typeof value === 'string' ? Number(value.replace(',', '.')) : value,
+    z.number({ message: 'Informe a previsão de vacância em meses.' }).min(0, 'A previsão de vacância não pode ser negativa.').max(12, 'A previsão de vacância é de no máximo 12 meses por ano.').nullable(),
+  ).optional(),
 }).superRefine((values, ctx) => {
   if (values.status !== 'SOLD') return;
   if (!values.sale_buyer?.trim()) ctx.addIssue({ code: 'custom', path: ['sale_buyer'], message: 'Informe o comprador.' });

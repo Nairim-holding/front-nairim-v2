@@ -57,10 +57,12 @@ export function resolveAgencyAlertContact(contacts: Array<{
 
 /**
  * Consulta interna já escopada por empresa. Cada lançamento mensal vencido de
- * uma locação vigente vira um alerta próprio; com isso duas competências
- * atrasadas da mesma locação não se escondem uma atrás da outra. Contratos já
- * encerrados ficam fora para não atribuir uma pendência histórica ao contrato
- * atual do mesmo imóvel.
+ * uma locação vira um alerta próprio; com isso duas competências atrasadas da
+ * mesma locação não se escondem uma atrás da outra. Contratos já encerrados
+ * entram sinalizados (`contract_ended`): a pendência continua em aberto e, fora
+ * daqui, só aparecia no Relatório de atrasos. O alerta é sempre do contrato do
+ * próprio lançamento (`lease_id`), nunca do contrato atual do mesmo imóvel.
+ * Contratos cancelados seguem fora.
  */
 export async function findOverdueLeasesForCompany(companyId: string): Promise<OverdueLease[]> {
   const today = todayInSaoPaulo();
@@ -78,7 +80,6 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
           deleted_at: null,
           status: { not: 'CANCELED' },
           start_date: { lte: today },
-          end_date: { gte: today },
         },
       },
     },
@@ -90,6 +91,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
         select: {
           id: true,
           contract_number: true,
+          end_date: true,
           rent_due_day: true,
           overdue_status: true,
           property: {
@@ -204,6 +206,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
       transaction_id: row.id,
       lease_id: lease.id,
       contract_number: lease.contract_number,
+      contract_ended: lease.end_date.getTime() < today.getTime(),
       property_title: lease.property.title,
       tenant_name: lease.tenant.name,
       agency_name: lease.agency?.trade_name || lease.agency?.legal_name || 'Imobiliária não informada',

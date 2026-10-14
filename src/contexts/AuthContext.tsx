@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { getTokenExpiryMs } from '@/utils/jwt';
 import { refreshSessionAction, logoutAction } from '@/server/actions/auth';
@@ -72,13 +71,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: true,
   });
 
-  const navigation = useRouter();
-
   const logout = useCallback(() => {
+    // Fora do login, a saída é por navegação dura: o layout raiz injeta as
+    // cores da empresa e só re-renderiza com um carregamento completo — com
+    // router.push o próximo login herdava o tema da sessão anterior.
+    const onLoginPage = /\/login\/?$/.test(window.location.pathname);
+
     // Limpa a sessão no servidor (Server Action) e no cliente.
-    logoutAction().catch(() => {
-      console.warn('[AuthContext] Falha ao limpar sessão no servidor.');
-    });
+    logoutAction()
+      .catch(() => {
+        console.warn('[AuthContext] Falha ao limpar sessão no servidor.');
+      })
+      .finally(() => {
+        if (!onLoginPage) window.location.assign('/login');
+      });
 
     document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
@@ -91,8 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: false,
       isLoading: false,
     });
-    navigation.push('/login');
-  }, [navigation]);
+  }, []);
 
   const login = (token: string, user: User) => {
     // Cookie de SESSÃO (sem max-age): apagado ao fechar o navegador → reabrir exige login.

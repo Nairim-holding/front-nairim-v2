@@ -168,11 +168,15 @@ body.dark,
 
   --color-purple-50: var(--color-bg-subtle);
   --color-purple-100: var(--color-bg-subtle);
+  --color-purple-200: color-mix(in srgb, var(--color-brand-primary) 25%, var(--color-bg-surface));
+  --color-purple-300: color-mix(in srgb, var(--color-brand-primary) 45%, var(--color-bg-surface));
+  --color-purple-400: color-mix(in srgb, var(--color-brand-primary) 70%, var(--color-bg-surface));
   --color-purple-500: var(--color-brand-primary);
   --color-purple-600: var(--color-brand-primary);
   --color-purple-700: var(--color-brand-primary-hover);
   --color-purple-800: var(--color-brand-primary-hover);
   --color-purple-900: var(--color-brand-primary-hover);
+  --color-purple-950: var(--color-brand-primary-hover);
 
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;

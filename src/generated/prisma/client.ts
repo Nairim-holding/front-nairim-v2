@@ -220,6 +220,14 @@ export type Subcategory = Prisma.SubcategoryModel
  */
 export type IptuAuditSettings = Prisma.IptuAuditSettingsModel
 /**
+ * Model RoiSettings
+ * Configuração do ROI por imóvel: qual categoria/subcategoria do Financeiro
+ * alimenta cada linha do cálculo (ITBI, registro, manutenção, aluguel, IPTU,
+ * seguro, comissão). Uma linha por empresa (upsert por company_id).
+ * `lines` = { [linha]: { category_id, subcategory_id } }.
+ */
+export type RoiSettings = Prisma.RoiSettingsModel
+/**
  * Model Card
  * 
  */
