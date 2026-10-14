@@ -253,7 +253,8 @@ function computeOccurrenceDate(baseDate: Date, index: number, frequency: Recurri
 
 export class PrismaFinancialTransactionsRepository implements TransactionsRepository {
   async list(params: ListTransactionsParams): Promise<PaginatedTransactions> {
-    const take = Math.max(1, Math.min(params.limit, 100));
+    // Mesmo teto do validador e da opção "Exibir 150" da grid.
+    const take = Math.max(1, Math.min(params.limit, 150));
     const skip = (Math.max(1, params.page) - 1) * take;
 
     const where: Record<string, unknown> = {};

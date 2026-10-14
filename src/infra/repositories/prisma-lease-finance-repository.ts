@@ -234,33 +234,39 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
     const completedKeys = new Set(existing.filter((t) => t.status === 'COMPLETED').map((t) => keyOf(t.description, t.installment_number)));
     const pendingIds = existing.filter((t) => t.status !== 'COMPLETED').map((t) => t.id);
 
-    if (pendingIds.length > 0) {
-      await prisma.transaction.updateMany({ where: { id: { in: pendingIds } }, data: { deleted_at: new Date() } });
-    }
-
     // 5. Cria apenas o que não está coberto por uma transação COMPLETED.
     const toCreate = items.filter((it) => !completedKeys.has(keyOf(it.description, it.installment_number)));
 
-    for (const it of toCreate) {
-      await prisma.transaction.create({
-        data: {
-          event_date: it.date,
-          effective_date: it.date,
-          description: it.description,
-          amount: it.amount,
-          status: 'PENDING',
-          category_id: it.category_id,
-          subcategory_id: it.subcategory_id ?? null,
-          financial_institution_id: lease.financial_institution_id,
-          supplier_id: supplierId,
-          center_id: it.center_id ?? null,
-          lease_id: leaseId,
-          installment_number: it.installment_number,
-          total_installments: it.total,
-          company_id: companyId,
-        },
-      });
-    }
+    // Apagar os pendentes e recriar o schedule é uma operação só: sem a
+    // transação, uma falha no meio deixava a locação sem parte dos lançamentos.
+    // `tx` não passa pela extensão multi-tenant — `company_id` vai explícito.
+    const financialInstitutionId = lease.financial_institution_id;
+    await prisma.$transaction(async (tx) => {
+      if (pendingIds.length > 0) {
+        await tx.transaction.updateMany({ where: { id: { in: pendingIds } }, data: { deleted_at: new Date() } });
+      }
+
+      for (const it of toCreate) {
+        await tx.transaction.create({
+          data: {
+            event_date: it.date,
+            effective_date: it.date,
+            description: it.description,
+            amount: it.amount,
+            status: 'PENDING',
+            category_id: it.category_id,
+            subcategory_id: it.subcategory_id ?? null,
+            financial_institution_id: financialInstitutionId,
+            supplier_id: supplierId,
+            center_id: it.center_id ?? null,
+            lease_id: leaseId,
+            installment_number: it.installment_number,
+            total_installments: it.total,
+            company_id: companyId,
+          },
+        });
+      }
+    }, { timeout: 60_000 });
 
     return { generated: toCreate.length };
   }

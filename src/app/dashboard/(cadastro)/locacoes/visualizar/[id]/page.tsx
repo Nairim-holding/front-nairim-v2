@@ -7,6 +7,8 @@ import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
 import DynamicFormManager from '@/components/form/DynamicForm';
 import GuarantorManager from '@/components/domain/guarantors/GuarantorManager';
+import LeaseFinancialHistoryButton from '@/components/domain/leases/LeaseFinancialHistoryModal/LeaseFinancialHistoryButton';
+import { ReceiptText } from 'lucide-react';
 import { FormStep } from '@/types/types';
 import { permanentlyDeleteLeaseAction, getLeaseByIdAction } from '@/server/actions/lease';
 import { listPropertiesAction } from '@/server/actions/property';
@@ -606,6 +608,20 @@ export default function VisualizarLocacaoPage() {
       }
     ];
 
+    baseSteps.push({
+      title: 'Histórico Financeiro',
+      icon: <ReceiptText size={20} />,
+      fields: [
+        {
+          field: 'financial_history_action',
+          label: '',
+          type: 'custom',
+          className: 'col-span-full',
+          render: () => <LeaseFinancialHistoryButton leaseId={id} />,
+        } as any,
+      ],
+    });
+
     if (isCanceled) {
       baseSteps.push({
         title: 'Cancelamento',
@@ -653,7 +669,7 @@ export default function VisualizarLocacaoPage() {
     }
 
     return baseSteps;
-  }, [properties, tenants, loadingData, isCanceled]);
+  }, [properties, tenants, loadingData, isCanceled, id]);
 
   if (loadingData) {
     return (

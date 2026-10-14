@@ -90,7 +90,7 @@ export default function CadastrarAdministradorPage() {
               if (age < 0 || age > 130) return null;
 
               return (
-                <span className="text-sm font-medium text-[#8B5CF6] mt-1.5 inline-block">
+                <span className="text-sm font-medium text-brand mt-1.5 inline-block">
                   Idade: {age} anos
                 </span>
               );

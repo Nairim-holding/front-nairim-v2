@@ -19,6 +19,8 @@ export interface OverdueLease {
   transaction_id: string;
   lease_id: string;
   contract_number: string;
+  /** Contrato já encerrado (fim da vigência anterior a hoje) com pendência em aberto. */
+  contract_ended: boolean;
   property_title: string;
   tenant_name: string;
   agency_name: string;

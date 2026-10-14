@@ -68,12 +68,12 @@ export type Property = Prisma.PropertyModel
 export type Repair = Prisma.RepairModel
 /**
  * Model RepairProfessional
- *
+ * 
  */
 export type RepairProfessional = Prisma.RepairProfessionalModel
 /**
  * Model RepairItem
- *
+ * 
  */
 export type RepairItem = Prisma.RepairItemModel
 /**
@@ -214,6 +214,14 @@ export type Subcategory = Prisma.SubcategoryModel
  * empresa — não há histórico, é config única (upsert por company_id).
  */
 export type IptuAuditSettings = Prisma.IptuAuditSettingsModel
+/**
+ * Model RoiSettings
+ * Configuração do ROI por imóvel: qual categoria/subcategoria do Financeiro
+ * alimenta cada linha do cálculo (ITBI, registro, manutenção, aluguel, IPTU,
+ * seguro, comissão). Uma linha por empresa (upsert por company_id).
+ * `lines` = { [linha]: { category_id, subcategory_id } }.
+ */
+export type RoiSettings = Prisma.RoiSettingsModel
 /**
  * Model Card
  * 

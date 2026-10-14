@@ -198,6 +198,7 @@ export function transformPropertyData(apiResponse: any): Record<string, any> {
     sale_notes:     values.sale_notes ?? '',
     extra_charges:  formatMoney(values.extra_charges ?? ''),
     market_value:   formatMoney(values.market_value ?? ''),
+    vacancy_months_per_year: values.vacancy_months_per_year ?? '',
 
     iptus: data.iptus ?? [],
 
@@ -292,6 +293,10 @@ export function buildPropertyFormData(
     sale_notes:     data.sale_notes || null,
     extra_charges:  parseMoney(data.extra_charges) || 0,
     market_value:   parseMoney(data.market_value) || null,
+    // Vazio = sem previsão (null); 0 é um valor válido ("nunca fica vago").
+    vacancy_months_per_year: data.vacancy_months_per_year === '' || data.vacancy_months_per_year == null
+      ? null
+      : Number(String(data.vacancy_months_per_year).replace(',', '.')),
   }));
 
   fd.append('iptusData', JSON.stringify(data.iptus || []));

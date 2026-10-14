@@ -45,6 +45,8 @@ export interface PropertyValueInput {
   sale_buyer?: string | null;
   sale_notes?: string | null;
   extra_charges?: number | null;
+  /** Previsão de meses desocupado por ano (base do ROI). */
+  vacancy_months_per_year?: number | null;
 }
 
 /** Lançamento de IPTU de um ano. `id` presente = atualiza; ausente = cria. */

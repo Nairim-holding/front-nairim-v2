@@ -10,6 +10,7 @@ import { buildPropertySteps, validateStep, type SelectOption } from '../_lib/pro
 import { buildPropertyFormData } from '../_lib/propertyTransform';
 import { resolvePropertyQuickCreates } from '../_lib/propertyQuickCreate';
 import { createUnifiedPropertyAction } from '@/server/actions/property';
+import PropertyDocumentImport from '../_components/PropertyDocumentImport';
 
 
 interface Props {
@@ -30,6 +31,8 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   const router = useRouter();
 
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  // Dados lidos do PDF do IPTU / Ficha Cadastral, mesclados no formulário.
+  const [prefill, setPrefill] = useState<Record<string, unknown> | null>(null);
   const { handleFieldChange } = usePropertyAddressLookup(showMessage);
 
   const steps = useMemo(
@@ -71,11 +74,13 @@ export default function PropertyCreateForm({ ownerOptions, typeOptions, agencyOp
   return (
     <>
       <DynamicForm
+        headerSlot={<PropertyDocumentImport onApply={setPrefill} />}
         resource="properties"
         title="Imóvel"
         basePath="/dashboard/imoveis"
         mode="create"
         draftKey="form:properties:create"
+        prefill={prefill}
         steps={steps}
         onSubmit={handleSubmit}
         onSubmitSuccess={onSubmitSuccess}

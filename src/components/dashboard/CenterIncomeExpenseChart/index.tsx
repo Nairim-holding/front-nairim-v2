@@ -29,7 +29,7 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
   const buildOption = (): EChartsOption => ({
     tooltip: { confine: true, ...getCustomEchartsTooltipConfig(params => {
       const item = Array.isArray(params) ? params[0] : params; const row = rows[item.dataIndex];
-      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' } ]);
+      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' }, { label: 'Saldo', value: formatCurrency(row?.balance ?? 0), color: (row?.balance ?? 0) < 0 ? '#dc2626' : '#059669' } ]);
     }) }, legend: { top: 0, left: 'center', data: ['Receitas','Despesas'], textStyle: { color: tokens.textMuted } },
     grid: { left: 12, right: 30, top: 38, bottom: rows.length > 12 ? 55 : 20, containLabel: true },
     xAxis: { type: 'value', axisLabel: { color: tokens.textMuted, formatter: (v: number) => formatCurrency(v) }, splitLine: { lineStyle: { color: tokens.borderSoft } } },

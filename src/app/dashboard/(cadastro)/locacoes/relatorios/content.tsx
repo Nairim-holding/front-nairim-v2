@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileSpreadsheet, FileText, Printer, RefreshCw, RotateCcw } from 'lucide-react';
 import Section from '@/components/layout/PageSection';
@@ -11,6 +10,7 @@ import { getLeaseReportAction } from '@/server/actions/lease-report';
 import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/server/actions/user-preferences';
 import { exportTableToExcel, exportTableToPDF, printReportElement } from '@/lib/reports/exportHelpers';
 import { buildRedemptionRows, type InvestmentRedemptionInput, type LeaseReportResult, type LeaseReportRow, type ReferenceMonth } from '@/core/entities/lease-report';
+import LeaseReportsShell from './_components/LeaseReportsShell';
 import MonthSelector from './_components/MonthSelector';
 import LeaseReportTable from './_components/LeaseReportTable';
 import TaxPanels from './_components/TaxPanels';
@@ -185,8 +185,8 @@ function LeaseReportsContent() {
 
   return (
     <Section title="Relatório de Locações" action={<ReportingCompanyFilter />}>
-      <div className="flex min-w-0 flex-col gap-4 mt-2">
-        <Link href="/dashboard/locacoes/relatorios/atrasadas" className="text-sm text-brand">Relatório de locações atrasadas</Link>
+      <LeaseReportsShell>
+      <div className="flex min-w-0 flex-col gap-4">
         {/* ── Seleção do período ─────────────────────────────────────────── */}
         <aside className="grid w-full min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
           <fieldset disabled={isLoading} className="min-w-0 space-y-2 disabled:opacity-60">
@@ -303,6 +303,7 @@ function LeaseReportsContent() {
           )}
         </div>
       </div>
+      </LeaseReportsShell>
     </Section>
   );
 }

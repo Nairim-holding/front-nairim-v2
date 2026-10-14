@@ -52,6 +52,8 @@ export const RESOURCE_ROUTES: { path: string; resource: string }[] = [
   { path: '/dashboard/relatorios', resource: 'financial-reports' },
   // Rota própria (não /dashboard/auditoria — essa já é a trilha de log de sistema).
   { path: '/dashboard/financeiro-auditoria', resource: 'financial-audit' },
+  // ROI por imóvel: mesma diretiva da Auditoria de IPTU (ambos no menu Auditoria).
+  { path: '/dashboard/roi', resource: 'financial-audit' },
   { path: '/dashboard/configuracoes', resource: 'settings' },
   { path: '/dashboard/auditoria', resource: 'audit-logs' },
 ];

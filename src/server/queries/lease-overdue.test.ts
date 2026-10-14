@@ -24,7 +24,7 @@ describe('consulta de alertas de locações', () => {
     mocks.transactionFindMany.mockResolvedValue([]);
   });
 
-  it('considera somente contratos vigentes na data da consulta', async () => {
+  it('inclui contratos encerrados e deixa de fora os cancelados', async () => {
     await findOverdueLeasesForCompany('company-1');
 
     expect(mocks.transactionFindMany).toHaveBeenCalledOnce();
@@ -36,9 +36,29 @@ describe('consulta de alertas de locações', () => {
       deleted_at: null,
       status: { not: 'CANCELED' },
       start_date: { lte: expect.any(Date) },
-      end_date: { gte: expect.any(Date) },
     });
-    expect(leaseWhere.start_date.lte).toEqual(leaseWhere.end_date.gte);
+    expect(leaseWhere).not.toHaveProperty('end_date');
+  });
+
+  it('sinaliza a pendência de contrato já encerrado', async () => {
+    const lease = (id: string, end_date: Date) => ({
+      id, contract_number: id, end_date, rent_due_day: 10, overdue_status: null,
+      property: { title: 'Rua Minas Gerais, 101', addresses: [] },
+      tenant: { name: 'Locatário' }, agency: null,
+    });
+    mocks.transactionFindMany.mockResolvedValue([
+      { id: 'tx-ended', amount: 1100, effective_date: new Date('2024-09-10T00:00:00.000Z'), lease: lease('4169/23', new Date('2024-11-10T00:00:00.000Z')) },
+      { id: 'tx-current', amount: 900, effective_date: new Date('2024-10-10T00:00:00.000Z'), lease: lease('5000/24', new Date('2099-12-31T00:00:00.000Z')) },
+    ]);
+    mocks.notificationFindMany.mockResolvedValue([]);
+    mocks.holidayFindMany.mockResolvedValue([]);
+
+    const result = await findOverdueLeasesForCompany('company-1');
+
+    expect(result.map((item) => [item.transaction_id, item.contract_ended])).toEqual([
+      ['tx-ended', true],
+      ['tx-current', false],
+    ]);
   });
 
   it('usa somente o telefone escolhido para os alertas da imobiliária', () => {

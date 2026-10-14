@@ -84,6 +84,7 @@ export const ModelName = {
   Category: 'Category',
   Subcategory: 'Subcategory',
   IptuAuditSettings: 'IptuAuditSettings',
+  RoiSettings: 'RoiSettings',
   Card: 'Card',
   Center: 'Center',
   Supplier: 'Supplier',
@@ -583,7 +584,8 @@ export const PropertyValueScalarFieldEnum = {
   sale_buyer: 'sale_buyer',
   sale_notes: 'sale_notes',
   sale_date: 'sale_date',
-  purchase_date: 'purchase_date'
+  purchase_date: 'purchase_date',
+  vacancy_months_per_year: 'vacancy_months_per_year'
 } as const
 
 export type PropertyValueScalarFieldEnum = (typeof PropertyValueScalarFieldEnum)[keyof typeof PropertyValueScalarFieldEnum]
@@ -764,6 +766,17 @@ export const IptuAuditSettingsScalarFieldEnum = {
 export type IptuAuditSettingsScalarFieldEnum = (typeof IptuAuditSettingsScalarFieldEnum)[keyof typeof IptuAuditSettingsScalarFieldEnum]
 
 
+export const RoiSettingsScalarFieldEnum = {
+  id: 'id',
+  company_id: 'company_id',
+  lines: 'lines',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type RoiSettingsScalarFieldEnum = (typeof RoiSettingsScalarFieldEnum)[keyof typeof RoiSettingsScalarFieldEnum]
+
+
 export const CardScalarFieldEnum = {
   id: 'id',
   company_id: 'company_id',
@@ -863,7 +876,8 @@ export const TransactionScalarFieldEnum = {
   lease_id: 'lease_id',
   transfer_group_id: 'transfer_group_id',
   is_transfer: 'is_transfer',
-  is_cancellation_charge: 'is_cancellation_charge'
+  is_cancellation_charge: 'is_cancellation_charge',
+  canceled_at: 'canceled_at'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]

@@ -4,7 +4,7 @@ import type { ColumnDef } from '@/types/types';
 
 export const metadata: Metadata = { title: 'Locações' };
 import Section from '@/components/layout/PageSection';
-import DynamicTableManager from '@/components/table/DataTable';
+import LocacoesTable from './_components/LocacoesTable';
 import SkeletonTable from '@/components/table/TableSkeleton';
 
 const COLUMNS: ColumnDef[] = [
@@ -34,13 +34,7 @@ export default function LocacoesPage() {
   return (
     <Section title="Locações">
       <Suspense fallback={<SkeletonTable />}>
-        <DynamicTableManager
-          resource="leases"
-          title="Locações"
-          columns={COLUMNS}
-          basePath="/dashboard/locacoes"
-          autoFocusSearch
-        />
+        <LocacoesTable columns={COLUMNS} />
       </Suspense>
     </Section>
   );

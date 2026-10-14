@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Section from '@/components/layout/PageSection';
 import Form from '@/components/ui/Form';
@@ -50,6 +50,13 @@ interface DynamicFormManagerProps {
   enableDirtyDetection?: boolean;
   /** Step inicial a abrir (útil para abrir em Branding após criar nova empresa) */
   defaultStep?: number;
+  /**
+   * Valores a mesclar no formulário vindos de fora (ex.: dados lidos do PDF do
+   * IPTU). Cada objeto novo é aplicado uma vez, por cima do que já foi digitado.
+   */
+  prefill?: Record<string, any> | null;
+  /** Conteúdo exibido no topo do cartão do formulário, acima das etapas. */
+  headerSlot?: ReactNode;
 }
 
 const DRAFT_STORAGE_PREFIX = `nairim`;
@@ -140,6 +147,8 @@ export default function DynamicFormManager({
   draftKey,
   enableDirtyDetection = true,
   defaultStep = 0,
+  prefill,
+  headerSlot,
 }: DynamicFormManagerProps) {
   const router = useRouter();
   const { showMessage } = useMessageContext();
@@ -288,6 +297,14 @@ export default function DynamicFormManager({
     setDraftHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Preenchimento externo: aplicado depois do rascunho, para que os dados
+  // recém-importados prevaleçam sobre o que estava salvo no rascunho.
+  useEffect(() => {
+    if (!draftHydrated || !prefill || isViewMode) return;
+    setFormValues(prev => ({ ...prev, ...prefill }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill, draftHydrated]);
 
   // Persistência SÍNCRONA pós-hydrate. Sem debounce — a escrita em sessionStorage
   // é barata e elimina perda em reload rápido. Cobre tanto digitação quanto
@@ -1083,6 +1100,7 @@ export default function DynamicFormManager({
             </button>
           </div>
         )}
+        {headerSlot}
         {hasSteps && (
           <ProgressBar
             steps={steps!.map((step, index) => ({

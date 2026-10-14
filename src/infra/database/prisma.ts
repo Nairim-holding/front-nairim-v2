@@ -28,7 +28,7 @@ const TENANT_MODELS = new Set([
   // MIGRATION_STATUS.md — Módulo 13): também têm company_id e precisam do
   // mesmo isolamento automático dos demais.
   'UserGroup', 'UserGroupPermission', 'UserAccessSchedule', 'AuditLogOutbox',
-  'IptuAuditSettings',
+  'IptuAuditSettings', 'RoiSettings',
   // Investimentos: só a raiz tem company_id. InvestmentTransaction e
   // InvestmentMonthBalance são escopados pelo investimento pai, que é
   // sempre resolvido antes por `prisma.investment.findFirst` (já injetado).

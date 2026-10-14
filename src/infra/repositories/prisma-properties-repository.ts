@@ -90,6 +90,7 @@ function serializePropertyValues(values: any[] | undefined): any[] {
     property_tax: v.property_tax != null ? Number(v.property_tax) : v.property_tax,
     sale_value: v.sale_value != null ? Number(v.sale_value) : v.sale_value,
     extra_charges: v.extra_charges != null ? Number(v.extra_charges) : v.extra_charges,
+    vacancy_months_per_year: v.vacancy_months_per_year != null ? Number(v.vacancy_months_per_year) : v.vacancy_months_per_year,
   }));
 }
 
@@ -275,6 +276,8 @@ function buildValueData(values: NonNullable<CreateUnifiedPropertyData['values']>
     sale_notes: values.sale_notes,
     extra_charges: Number(values.extra_charges || 0),
     sale_date: values.sale_date ? new Date(values.sale_date) : null,
+    // `undefined` (campo não enviado) preserva o valor atual no update.
+    ...(values.vacancy_months_per_year !== undefined ? { vacancy_months_per_year: values.vacancy_months_per_year } : {}),
   };
 }
 

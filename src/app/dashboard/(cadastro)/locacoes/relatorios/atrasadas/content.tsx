@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
-import Link from 'next/link';
 import { FileSpreadsheet, FileText, Printer } from 'lucide-react';
+import LeaseReportsShell from '../_components/LeaseReportsShell';
 import Section from '@/components/layout/PageSection';
 import { ReportingCompaniesProvider, ReportingCompanyFilter, useReportingCompanies } from '@/components/reports/ReportingCompanies';
 import { useAuth, useMessageContext } from '@/contexts';
@@ -25,7 +25,7 @@ function ReportContent() {
     if (kind === 'excel') await exportTableToExcel(tableRef.current, filename, 'lease-reports'); else if (kind === 'pdf') await exportTableToPDF(tableRef.current, filename, context); else printReportElement(tableRef.current, context);
   } catch (error) { showMessage(error instanceof Error ? error.message : 'Erro ao exportar.', 'error'); } };
   return <Section title="Relatório de Locações Atrasadas" action={<ReportingCompanyFilter />}>
-    <div className="space-y-4"><Link href="/dashboard/locacoes/relatorios" className="text-sm text-brand">Relatório de recebimentos</Link>
+    <LeaseReportsShell><div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3"><label className="text-sm text-content">Data limite<input type="date" aria-label="Data limite dos atrasos" value={asOf} onChange={event => setAsOf(event.target.value)} className="mt-1 block rounded-lg border border-ui-border bg-surface p-2" /></label>
         <button type="button" onClick={() => void generate()} disabled={busy || !asOf} className="rounded-lg bg-brand px-4 py-2 text-sm text-white disabled:opacity-50">{busy ? 'Gerando…' : 'Gerar relatório'}</button>
         {can('lease-reports','export') && <div className="flex gap-2">{([['excel',FileSpreadsheet,'Exportar Excel'],['pdf',FileText,'Exportar PDF'],['print',Printer,'Imprimir']] as const).map(([kind,Icon,label]) => <button key={kind} type="button" aria-label={label} title={label} disabled={!report || busy} onClick={() => void exportReport(kind)} className="rounded-lg border border-ui-border p-2 text-content-muted disabled:opacity-50"><Icon size={20}/></button>)}</div>}
@@ -36,6 +36,6 @@ function ReportContent() {
         <div className="overflow-auto"><table ref={tableRef} className="w-full min-w-[1000px] text-left text-sm text-content"><thead><tr>{['Imobiliária','Imóvel','Mês/Ano','Contrato','Locatário','Vencimento','Dias em atraso','Valor','Descrição'].map(label => <th key={label} className="border-b border-ui-border p-2">{label}</th>)}</tr></thead>
           <tbody>{report.rows.map(row => <tr key={row.id}>{[row.agency,row.property,row.reference,row.contract,row.tenant,formatDate(row.dueDate),row.daysOverdue,formatCurrency(row.amount),row.description].map((value,index) => <td key={index} className="border-b border-ui-border p-2">{value}</td>)}</tr>)}{!report.rows.length && <tr><td colSpan={9} className="p-6 text-center">Nenhum repasse vencido e pendente até a data selecionada.</td></tr>}</tbody>
           <tfoot><tr><td colSpan={7} className="p-2 font-semibold">Total</td><td className="p-2 font-semibold">{formatCurrency(report.total)}</td><td /></tr></tfoot></table></div></>}
-    </div>
+    </div></LeaseReportsShell>
   </Section>;
 }

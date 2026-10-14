@@ -21,6 +21,8 @@ import {
   getLeaseFiltersData,
   getCancellationPreviewData,
 } from '@/server/queries/lease';
+import { getLeaseFinancialHistoryData, linkTransactionsToLeaseData } from '@/server/queries/lease-financial-history';
+import type { LeaseFinancialHistory } from '@/core/entities/lease-financial-history';
 
 /**
  * Server Actions do módulo Leases. Substituem os endpoints de `/leases`.
@@ -142,6 +144,16 @@ export async function getLeaseByIdAction(id: string): Promise<ActionResult<Lease
 
 export async function getLeaseFiltersAction(raw: Record<string, unknown>): Promise<ActionResult<Record<string, unknown>>> {
   return runAction(() => getLeaseFiltersData(raw));
+}
+
+/** Histórico Financeiro do contrato: lançamentos vinculados, cancelados e sem vínculo. */
+export async function getLeaseFinancialHistoryAction(id: string): Promise<ActionResult<LeaseFinancialHistory>> {
+  return runAction(() => getLeaseFinancialHistoryData(id));
+}
+
+/** Vincula ao contrato lançamentos sugeridos pelo Histórico Financeiro. */
+export async function linkTransactionsToLeaseAction(id: string, transactionIds: string[]): Promise<ActionResult<{ linked: number }>> {
+  return runAction(() => linkTransactionsToLeaseData(id, transactionIds));
 }
 
 /** Prévia dos lançamentos a excluir no cancelamento. Origem: GET /leases/:id/cancellation-preview. */

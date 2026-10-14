@@ -66,6 +66,9 @@ try {
   if(process.env.CENTER_CHART_UI_SCREENSHOT)await page.screenshot({path:resolve(process.env.CENTER_CHART_UI_SCREENSHOT)});
   await verifyPairGeometry();
   assert.deepEqual(await page.evaluate(()=>window.__chart().getOption().series.map(series=>series.data[0])),[23000,3300]);
+  const tooltip=await page.evaluate(()=>window.__chart().getOption().tooltip[0].formatter([{dataIndex:0}]));
+  assert.match(tooltip,/Saldo/,'O tooltip deve trazer o saldo do centro');
+  assert.match(tooltip,/19\.700,00/,'Saldo = receitas - despesas');
   await page.getByRole('button',{name:'Ver Dados Detalhados',exact:true}).click();
   await page.getByRole('columnheader',{name:'Receitas',exact:true}).waitFor();
   assert.equal(await page.locator('tbody tr').count(),4);
