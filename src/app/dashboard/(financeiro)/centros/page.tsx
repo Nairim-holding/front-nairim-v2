@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Section from '@/components/layout/PageSection';
 import { useMessageContext } from '@/contexts/MessageContext';
 import { usePopupContext } from '@/contexts/PopupContext';
-import MultiColumnManager from '@/components/form/MultiColumnManager';
+import MultiColumnManager, { type ManagerColumn } from '@/components/form/MultiColumnManager';
+import CenterExcelImport from '@/components/domain/financial/CenterExcelImport';
 import {
   listCentersAction,
   createFinancialCenterAction,
   updateFinancialCenterAction,
   deleteFinancialCenterAction,
 } from '@/server/actions/financial-center';
+import type { Center } from '@/core/entities/financial-center';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -23,7 +25,7 @@ export default function CentrosPage() {
   const { showPopup } = usePopupContext();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [centers, setCenters] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [centers, setCenters] = useState<Center[]>([]);
   const [transactionType, setTransactionType] = useState<TransactionType>('EXPENSE');
 
   // ─── Data fetching ──────────────────────────────────────────────────────────
@@ -31,9 +33,17 @@ export default function CentrosPage() {
   const fetchCenters = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await listCentersAction({ limit: 100 });
-      if (!result.ok) throw new Error(result.error);
-      setCenters(result.data?.data ?? []);
+      const allCenters: Center[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const result = await listCentersAction({ limit: 100, page, 'sort[name]': 'asc' });
+        if (!result.ok) throw new Error(result.error);
+        allCenters.push(...result.data.data);
+        totalPages = result.data.totalPages;
+        page++;
+      } while (page <= totalPages);
+      setCenters(allCenters);
     } catch {
       showMessage('Erro ao carregar os dados.', 'error');
     } finally {
@@ -48,7 +58,11 @@ export default function CentrosPage() {
   // ─── Computed values ────────────────────────────────────────────────────────
 
   const filteredCenters = useMemo(
-    () => centers.filter((c) => c.type === transactionType),
+    () => centers.filter((c) => c.type === transactionType).map((center): ManagerColumn => ({
+      ...center,
+      created_at: new Date(center.created_at).toISOString(),
+      deleted_at: center.deleted_at ? new Date(center.deleted_at).toISOString() : undefined,
+    })),
     [centers, transactionType],
   );
 
@@ -103,7 +117,8 @@ export default function CentrosPage() {
       <div className="bg-surface p-6 rounded-xl shadow-sm border border-ui-border w-full min-h-[92vh] h-full flex flex-col pb-[10px]">
 
         {/* Seletor Despesa / Receita */}
-        <div className="flex mb-6 rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex rounded-lg overflow-hidden w-fit border border-ui-border bg-surface-subtle">
           {(['EXPENSE', 'INCOME'] as const).map((type) => (
             <button
               key={type}
@@ -117,6 +132,8 @@ export default function CentrosPage() {
               {type === 'EXPENSE' ? 'Despesa' : 'Receita'}
             </button>
           ))}
+        </div>
+        <CenterExcelImport onImported={fetchCenters} />
         </div>
 
         <MultiColumnManager

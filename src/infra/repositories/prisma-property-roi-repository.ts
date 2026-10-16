@@ -4,6 +4,7 @@ import {
   ROI_LINE_KEYS,
   computePropertyRoi,
   leasedMonths,
+  maintenanceCutoffDate,
   missingRoiLines,
   normalizeRoiLines,
   referencePeriodMonths,
@@ -14,11 +15,19 @@ import {
   type RoiLineKey,
   type RoiLines,
   type RoiPropertyRow,
+  type RoiPropertyInput,
   type RoiReport,
   type RoiSettingsView,
   type RoiWarning,
 } from '@/core/entities/property-roi';
-import { ValidationError } from '@/core/errors/domain-errors';
+import {
+  buildRoiOrigin,
+  type RoiMetricKey,
+  type RoiOrigin,
+  type RoiOriginContext,
+  type RoiTransactionOriginSource,
+} from '@/core/entities/property-roi-origin';
+import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
 
 /**
  * Dados do ROI por imóvel. Tenant-scoped: `RoiSettings` está em TENANT_MODELS
@@ -46,12 +55,12 @@ export interface RoiReportParams {
 const isoDate = (date: Date) => date.toISOString().slice(0, 10);
 
 export class PrismaPropertyRoiRepository {
-  private async listCategories(): Promise<RoiCategoryOption[]> {
+  private async listCategories(companyId: string): Promise<RoiCategoryOption[]> {
     const categories = await prisma.category.findMany({
-      where: { deleted_at: null },
+      where: { company_id: companyId, deleted_at: null },
       select: {
         id: true, name: true, type: true,
-        subcategories: { where: { deleted_at: null }, select: { id: true, name: true }, orderBy: { name: 'asc' } },
+        subcategories: { where: { company_id: companyId, deleted_at: null }, select: { id: true, name: true }, orderBy: { name: 'asc' } },
       },
       orderBy: { name: 'asc' },
     });
@@ -66,14 +75,14 @@ export class PrismaPropertyRoiRepository {
   }
 
   async getSettings(companyId: string): Promise<RoiSettingsView> {
-    const categories = await this.listCategories();
+    const categories = await this.listCategories(companyId);
     const { lines, saved } = await this.resolveLines(companyId, categories);
     return { lines, saved, categories };
   }
 
   async saveSettings(companyId: string, raw: unknown): Promise<RoiSettingsView> {
     const lines = normalizeRoiLines(raw);
-    const categories = await this.listCategories();
+    const categories = await this.listCategories(companyId);
     const byId = new Map(categories.map((category) => [category.id, category]));
 
     // As categorias vêm já filtradas pela empresa: um ID de fora não é aceito.
@@ -100,22 +109,32 @@ export class PrismaPropertyRoiRepository {
   }
 
   async getReport(params: RoiReportParams, companyId: string): Promise<RoiReport> {
-    const categories = await this.listCategories();
+    return (await this.buildReport(params, companyId)).report;
+  }
+
+  async getOrigin(params: RoiReportParams & { metric: RoiMetricKey }, companyId: string): Promise<RoiOrigin> {
+    const { report, contexts } = await this.buildReport(params, companyId);
+    return buildRoiOrigin(report, contexts, params.metric);
+  }
+
+  /** O relatório e sua memória de cálculo usam a mesma consulta, filtros e entradas. */
+  private async buildReport(params: RoiReportParams, companyId: string): Promise<{ report: RoiReport; contexts: RoiOriginContext[] }> {
+    const categories = await this.listCategories(companyId);
     const { lines, saved } = await this.resolveLines(companyId, categories);
 
     const allProperties = await prisma.property.findMany({
-      where: { deleted_at: null },
+      where: { company_id: companyId, deleted_at: null },
       select: {
         id: true, title: true, center_id: true, debit_center_id: true,
         values: {
           where: { deleted_at: null },
           orderBy: { created_at: 'desc' },
           take: 1,
-          select: { purchase_value: true, purchase_date: true, vacancy_months_per_year: true },
+          select: { id: true, purchase_value: true, purchase_date: true, vacancy_months_per_year: true },
         },
         leases: {
-          where: { deleted_at: null },
-          select: { start_date: true, end_date: true, canceled_at: true },
+          where: { company_id: companyId, deleted_at: null },
+          select: { id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true },
         },
       },
       orderBy: { title: 'asc' },
@@ -123,6 +142,9 @@ export class PrismaPropertyRoiRepository {
 
     const availableProperties = allProperties.map((property) => ({ id: property.id, title: property.title }));
     const selected = new Set((params.propertyIds ?? []).filter((id) => id.trim() !== ''));
+    if ([...selected].some((id) => !allProperties.some((property) => property.id === id))) {
+      throw new NotFoundError('Imóvel não encontrado.');
+    }
     const considered = selected.size > 0 ? allProperties.filter((property) => selected.has(property.id)) : allProperties;
 
     // Um centro só vale para o ROI quando pertence a um único imóvel — a
@@ -141,6 +163,7 @@ export class PrismaPropertyRoiRepository {
 
     const transactions = centerIds.length === 0 || configured.length === 0 ? [] : await prisma.transaction.findMany({
       where: {
+        company_id: companyId,
         deleted_at: null,
         status: 'COMPLETED',
         is_transfer: false,
@@ -150,14 +173,22 @@ export class PrismaPropertyRoiRepository {
           ...(lines[key].subcategory_id ? { subcategory_id: lines[key].subcategory_id } : {}),
         })),
       },
-      select: { center_id: true, category_id: true, subcategory_id: true, amount: true, effective_date: true },
+      select: {
+        id: true, center_id: true, category_id: true, subcategory_id: true, amount: true,
+        effective_date: true, event_date: true, description: true,
+        category: { select: { id: true, name: true, company_id: true } },
+        subcategory: { select: { id: true, name: true, company_id: true } },
+        center: { select: { id: true, name: true, company_id: true } },
+        financial_institution: { select: { id: true, name: true, company_id: true } },
+      },
+      orderBy: [{ effective_date: 'asc' }, { id: 'asc' }],
     });
 
     // centro → linha → lançamentos datados.
-    const byCenter = new Map<string, Map<RoiLineKey, RoiDatedAmount[]>>();
+    type Entry = RoiDatedAmount & { source: RoiTransactionOriginSource };
+    const byCenter = new Map<string, Map<RoiLineKey, Entry[]>>();
     for (const tx of transactions) {
       if (!tx.center_id) continue;
-      const entry: RoiDatedAmount = { date: isoDate(tx.effective_date), amount: Number(tx.amount) };
       for (const key of configured) {
         const line = lines[key];
         if (tx.category_id !== line.category_id) continue;
@@ -165,7 +196,20 @@ export class PrismaPropertyRoiRepository {
         let centerLines = byCenter.get(tx.center_id);
         if (!centerLines) { centerLines = new Map(); byCenter.set(tx.center_id, centerLines); }
         const list = centerLines.get(key) ?? [];
-        list.push(entry);
+        const ownedReference = (reference: { id: string; name: string; company_id: string } | null) =>
+          reference?.company_id === companyId ? { id: reference.id, name: reference.name } : null;
+        const category = categories.find((candidate) => candidate.id === tx.category_id);
+        const subcategory = category?.subcategories.find((candidate) => candidate.id === tx.subcategory_id);
+        list.push({
+          date: isoDate(tx.effective_date), amount: Number(tx.amount),
+          source: {
+            kind: 'transaction', id: tx.id, date: isoDate(tx.effective_date), eventDate: isoDate(tx.event_date),
+            description: tx.description, amount: Number(tx.amount), lineKeys: [key],
+            category: ownedReference(tx.category) ?? { id: tx.category_id, name: category?.name ?? '' },
+            subcategory: ownedReference(tx.subcategory) ?? (subcategory ? { id: subcategory.id, name: subcategory.name } : null),
+            center: ownedReference(tx.center), institution: ownedReference(tx.financial_institution),
+          },
+        });
         centerLines.set(key, list);
       }
     }
@@ -175,7 +219,7 @@ export class PrismaPropertyRoiRepository {
     const inPeriod = (entry: RoiDatedAmount) => entry.date >= period.from && entry.date <= period.to;
     const sum = (entries: RoiDatedAmount[]) => entries.reduce((total, entry) => total + entry.amount, 0);
 
-    const rows: RoiPropertyRow[] = considered.map((property) => {
+    const contexts: RoiOriginContext[] = considered.map((property) => {
       const value = property.values[0];
       const warnings: RoiWarning[] = [];
       const purchaseValue = value?.purchase_value != null ? Number(value.purchase_value) : null;
@@ -194,17 +238,20 @@ export class PrismaPropertyRoiRepository {
       const income = (key: RoiLineKey) => (incomeCenter ? byCenter.get(incomeCenter)?.get(key) : undefined) ?? [];
       const cost = (key: RoiLineKey) => (costCenter ? byCenter.get(costCenter)?.get(key) : undefined) ?? [];
 
-      const monthsLeased = leasedMonths(property.leases.map((lease) => ({
+      const leaseSources = property.leases.map((lease) => ({
+        kind: 'lease' as const, id: lease.id, contractNumber: lease.contract_number,
         start: isoDate(lease.start_date),
         end: isoDate(lease.end_date),
         canceledAt: lease.canceled_at ? isoDate(lease.canceled_at) : null,
-      })), params.today);
+        consideredEnd: [isoDate(lease.end_date), ...(lease.canceled_at ? [isoDate(lease.canceled_at)] : []), params.today].sort()[0],
+      }));
+      const monthsLeased = leasedMonths(leaseSources, params.today);
       if (monthsLeased === 0) warnings.push('NEVER_LEASED');
 
       const maintenance = splitMaintenance(cost('maintenance'), purchaseDate, period);
       const rentReceived = sum(income('rent'));
 
-      const result = computePropertyRoi({
+      const input: RoiPropertyInput = {
         purchaseValue,
         vacancyMonths: value?.vacancy_months_per_year != null ? Number(value.vacancy_months_per_year) : null,
         monthsLeased,
@@ -217,9 +264,10 @@ export class PrismaPropertyRoiRepository {
         commission: sum(cost('commission').filter(inPeriod)),
         periodicMaintenance: maintenance.periodic,
         periodMonths,
-      });
+      };
+      const result = computePropertyRoi(input);
 
-      return {
+      const row: RoiPropertyRow = {
         ...result,
         propertyId: property.id,
         propertyTitle: property.title,
@@ -228,14 +276,39 @@ export class PrismaPropertyRoiRepository {
         rentReceived: Math.round((rentReceived + Number.EPSILON) * 100) / 100,
         warnings,
       };
+      const cutoff = maintenanceCutoffDate(purchaseDate);
+      const isInitial = (entry: Entry) => cutoff !== null && entry.date <= cutoff;
+      const sources = (entries: Entry[]) => entries.map((entry) => entry.source);
+      return {
+        row, input,
+        propertySource: {
+          kind: 'property', id: property.id, valueId: value?.id ?? null,
+          fields: [
+            { key: 'purchaseValue', label: 'Valor de compra cadastrado', value: purchaseValue, unit: 'currency' },
+            { key: 'purchaseDate', label: 'Data de compra cadastrada', value: purchaseDate, unit: 'date' },
+            { key: 'vacancyMonths', label: 'Vacância prevista por ano', value: input.vacancyMonths, unit: 'months' },
+          ],
+        },
+        leases: leaseSources.filter((lease) => lease.consideredEnd > lease.start),
+        entries: {
+          itbi: sources(cost('itbi')), registry: sources(cost('registry')),
+          initialRenovation: sources(cost('maintenance').filter(isInitial)), rentReceived: sources(income('rent')),
+          iptuAnnual: sources(cost('iptu').filter(inPeriod)), insuranceAnnual: sources(cost('insurance').filter(inPeriod)),
+          commissionAnnual: sources(cost('commission').filter(inPeriod)),
+          maintenanceAnnual: sources(cost('maintenance').filter((entry) => !isInitial(entry) && inPeriod(entry))),
+        },
+      };
     });
 
     return {
-      rows,
-      period: { ...period, months: periodMonths },
-      missingLines: missingRoiLines(lines),
-      usingSuggestedLines: !saved,
-      availableProperties,
+      report: {
+        rows: contexts.map((context) => context.row),
+        period: { ...period, months: periodMonths },
+        missingLines: missingRoiLines(lines),
+        usingSuggestedLines: !saved,
+        availableProperties,
+      },
+      contexts,
     };
   }
 }

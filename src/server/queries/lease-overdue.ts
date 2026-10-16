@@ -4,12 +4,15 @@ import prisma from '@/infra/database/prisma';
 import { withPermission } from '@/infra/auth/session';
 import {
   daysBetween,
+  isLeaseReceivableDue,
   overdueTotal,
   sortOverdueLeases,
   type LeaseNotificationChannel,
   type OverdueLease,
 } from '@/core/entities/lease-overdue';
 import { createDateLocal } from '@/shared/utils/date-utils';
+import { matchReportLease } from '@/core/entities/lease-report-matching';
+import { classifyLeaseReportTransaction } from '@/infra/repositories/prisma-lease-reports-repository';
 import {
   addBusinessDays,
   fromDatabaseDate,
@@ -62,77 +65,80 @@ export function resolveAgencyAlertContact(contacts: Array<{
  * entram sinalizados (`contract_ended`): a pendência continua em aberto e, fora
  * daqui, só aparecia no Relatório de atrasos. O alerta é sempre do contrato do
  * próprio lançamento (`lease_id`), nunca do contrato atual do mesmo imóvel.
- * Contratos cancelados seguem fora.
+ * Dívidas anteriores ao cancelamento continuam visíveis e são sinalizadas.
  */
 export async function findOverdueLeasesForCompany(companyId: string): Promise<OverdueLease[]> {
   const today = todayInSaoPaulo();
+  const leaseWhere = {
+    company_id: companyId,
+    deleted_at: null,
+    start_date: { lte: today },
+  };
+  const leaseSelect = {
+    id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
+    rent_due_day: true, overdue_status: true, status: true,
+    property: {
+      select: {
+        title: true,
+        addresses: {
+          where: { deleted_at: null }, take: 1,
+          select: { address: { select: { city: true, state: true } } },
+        },
+      },
+    },
+    tenant: { select: { name: true } },
+    agency: {
+      select: {
+        trade_name: true, legal_name: true,
+        contacts: {
+          where: { deleted_at: null }, orderBy: { created_at: 'asc' },
+          select: {
+            email: true, cellphone: true, phone: true, whatsapp_notification_phone: true,
+            channels: {
+              where: { deleted_at: null }, orderBy: { display_order: 'asc' },
+              select: { kind: true, value: true },
+            },
+          },
+        },
+      },
+    },
+  } as const;
   const rows = await prisma.transaction.findMany({
     where: {
       company_id: companyId,
       deleted_at: null,
+      canceled_at: null,
       status: 'PENDING',
       effective_date: { lt: today },
-      lease_id: { not: null },
-      description: { startsWith: 'Aluguel', mode: 'insensitive' },
-      lease: {
-        is: {
-          company_id: companyId,
-          deleted_at: null,
-          status: { not: 'CANCELED' },
-          start_date: { lte: today },
-        },
-      },
+      is_transfer: false,
+      is_cancellation_charge: false,
+      category: { type: 'INCOME' },
+      OR: [{ lease_id: null }, { lease: { is: leaseWhere } }],
     },
     select: {
       id: true,
       amount: true,
       effective_date: true,
-      lease: {
-        select: {
-          id: true,
-          contract_number: true,
-          end_date: true,
-          rent_due_day: true,
-          overdue_status: true,
-          property: {
-            select: {
-              title: true,
-              addresses: {
-                where: { deleted_at: null },
-                take: 1,
-                select: { address: { select: { city: true, state: true } } },
-              },
-            },
-          },
-          tenant: { select: { name: true } },
-          agency: {
-            select: {
-              trade_name: true,
-              legal_name: true,
-              contacts: {
-                where: { deleted_at: null },
-                orderBy: { created_at: 'asc' },
-                select: {
-                  email: true,
-                  cellphone: true,
-                  phone: true,
-                  whatsapp_notification_phone: true,
-                  channels: {
-                    where: { deleted_at: null },
-                    orderBy: { display_order: 'asc' },
-                    select: { kind: true, value: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      event_date: true, lease_id: true, description: true, is_cancellation_charge: true,
+      category: { select: { type: true } }, subcategory: { select: { name: true } },
+      lease: { select: leaseSelect },
     },
     orderBy: [{ effective_date: 'asc' }, { created_at: 'asc' }],
   });
 
-  const leaseIds = [...new Set(rows.flatMap((row) => row.lease ? [row.lease.id] : []))];
+  // A base antiga tem receitas sem vínculo explícito. Usa o mesmo casamento
+  // conservador do relatório, sem gravar ou atribuir ao contrato atual do imóvel.
+  // Inclui todos os contratos no casamento para não esconder ambiguidades.
+  const legacyLeases = rows.some((row) => !row.lease_id)
+    ? await prisma.lease.findMany({ where: { company_id: companyId, deleted_at: null }, select: leaseSelect })
+    : [];
+  const resolved = rows.flatMap((row) => {
+    if (classifyLeaseReportTransaction(row) !== 'rent') return [];
+    const lease = row.lease_id ? row.lease : matchReportLease(row.description, row.event_date, legacyLeases);
+    if (!lease || lease.start_date > today || !isLeaseReceivableDue(row.effective_date, lease.canceled_at)) return [];
+    return [{ ...row, lease }];
+  });
+  const leaseIds = [...new Set(resolved.map((row) => row.lease.id))];
   const notices = leaseIds.length === 0 ? [] : await prisma.leaseNotification.findMany({
     where: {
       company_id: companyId,
@@ -151,7 +157,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
 
   const relevantYears = [...new Set([
     today.getUTCFullYear(),
-    ...rows.map((row) => row.effective_date.getUTCFullYear()),
+    ...resolved.map((row) => row.effective_date.getUTCFullYear()),
   ])];
   const registeredHolidays = relevantYears.length === 0 ? [] : await prisma.holiday.findMany({
     where: {
@@ -187,7 +193,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
   }
 
   const result: OverdueLease[] = [];
-  for (const row of rows) {
+  for (const row of resolved) {
     const lease = row.lease;
     if (!lease) continue;
     const agencyContact = resolveAgencyAlertContact(lease.agency?.contacts ?? []);
@@ -198,8 +204,8 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
     const automaticNotificationDate = addBusinessDays(expectedCreditDate, 1, holidays);
     const todayLocal = fromDatabaseDate(today);
     if (todayLocal.getTime() < automaticNotificationDate.getTime()) continue;
-    const month = row.effective_date.getUTCMonth() + 1;
-    const year = row.effective_date.getUTCFullYear();
+    const month = row.event_date.getUTCMonth() + 1;
+    const year = row.event_date.getUTCFullYear();
     const notification = noticesByCompetence.get(`${lease.id}:${year}:${month}`);
 
     result.push({
@@ -207,6 +213,7 @@ export async function findOverdueLeasesForCompany(companyId: string): Promise<Ov
       lease_id: lease.id,
       contract_number: lease.contract_number,
       contract_ended: lease.end_date.getTime() < today.getTime(),
+      contract_canceled: lease.status === 'CANCELED',
       property_title: lease.property.title,
       tenant_name: lease.tenant.name,
       agency_name: lease.agency?.trade_name || lease.agency?.legal_name || 'Imobiliária não informada',

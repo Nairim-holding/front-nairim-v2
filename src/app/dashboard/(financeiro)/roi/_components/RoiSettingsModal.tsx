@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Settings } from 'lucide-react';
 import Select from '@/components/ui/Select';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -25,6 +26,8 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
   const [saved, setSaved] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,17 +38,21 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
         setLines(result.data.lines);
         setSaved(result.data.saved);
       } else {
-        showMessage(result.error ?? 'Erro ao carregar a configuração do ROI.', 'error', 4000);
+        setLoadError(result.error || 'Erro ao carregar a configuração do ROI.');
       }
-      setIsLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoadError('Não foi possível carregar a configuração do ROI. Tente novamente.');
+    }).finally(() => {
+      if (!cancelled) setIsLoading(false);
     });
     return () => { cancelled = true; };
-  }, [showMessage]);
+  }, [loadAttempt]);
 
   const setLine = (key: RoiLineKey, patch: Partial<RoiLines[RoiLineKey]>) =>
     setLines((current) => ({ ...current, [key]: { ...current[key], ...patch } }));
 
   const handleSave = useCallback(async () => {
+    if (!canEdit || isLoading || isSaving || loadError) return;
     setIsSaving(true);
     try {
       const result = await saveRoiSettingsAction({ lines });
@@ -57,23 +64,34 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
     } finally {
       setIsSaving(false);
     }
-  }, [lines, showMessage, onSaved]);
+  }, [canEdit, isLoading, isSaving, loadError, lines, showMessage, onSaved]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-surface rounded-2xl shadow-xl border border-ui-border-soft w-full max-w-3xl max-h-[90vh] flex flex-col">
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div role="dialog" aria-modal="true" aria-labelledby="roi-settings-title" className="bg-surface rounded-2xl shadow-xl border border-ui-border-soft w-full max-w-3xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-ui-border-soft">
           <div className="flex items-center gap-2">
             <Settings size={18} className="text-brand" />
-            <h2 className="text-sm font-semibold text-content">Configurar ROI por Imóvel</h2>
+            <h2 id="roi-settings-title" className="text-sm font-semibold text-content">Configurar ROI por Imóvel</h2>
           </div>
-          <button type="button" onClick={onClose} className="text-content-muted hover:text-content transition-colors" aria-label="Fechar">
+          <button type="button" onClick={onClose} disabled={isSaving} className="text-content-muted hover:text-content disabled:opacity-50 transition-colors" aria-label="Fechar">
             <X size={18} />
           </button>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12 text-content-muted text-sm">Carregando...</div>
+        ) : loadError ? (
+          <div className="px-5 py-6 text-sm">
+            <p role="alert" className="text-red-600">{loadError}</p>
+            <button type="button" className="mt-3 text-brand font-medium" onClick={() => {
+              setLoadError('');
+              setIsLoading(true);
+              setLoadAttempt((attempt) => attempt + 1);
+            }}>Tentar novamente</button>
+          </div>
         ) : (
           <div className="px-5 py-4 flex flex-col gap-4 overflow-y-auto">
             <p className="text-xs text-content-muted">
@@ -95,21 +113,23 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Select
                       label="Categoria"
-                      options={categoryOptions}
+                      options={[{ label: 'Não considerar', value: '' }, ...categoryOptions]}
+                      full
                       searchable
                       value={line.category_id ?? ''}
                       onChange={(value) => setLine(definition.key, { category_id: String(value) || null, subcategory_id: null })}
                       placeholder="Não considerar"
-                      disabled={!canEdit}
+                      disabled={!canEdit || isSaving}
                     />
                     <Select
                       label="Subcategoria (opcional)"
-                      options={subcategoryOptions}
+                      options={[{ label: 'Todas as subcategorias', value: '' }, ...subcategoryOptions]}
+                      full
                       searchable
                       value={line.subcategory_id ?? ''}
                       onChange={(value) => setLine(definition.key, { subcategory_id: String(value) || null })}
                       placeholder="Todas as subcategorias"
-                      disabled={!canEdit || !line.category_id}
+                      disabled={!canEdit || isSaving || !line.category_id}
                     />
                   </div>
                 </div>
@@ -119,14 +139,14 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
         )}
 
         <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-ui-border-soft">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-content-secondary hover:bg-surface-subtle transition-colors">
+          <button type="button" onClick={onClose} disabled={isSaving} className="px-4 py-2 rounded-lg text-sm font-medium text-content-secondary hover:bg-surface-subtle disabled:opacity-50 transition-colors">
             {canEdit ? 'Cancelar' : 'Fechar'}
           </button>
           {canEdit && (
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || isLoading}
+              disabled={isSaving || isLoading || !!loadError}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-brand text-content-inverse hover:bg-brand-hover disabled:opacity-50 transition-colors"
             >
               {isSaving ? 'Salvando...' : 'Salvar'}
@@ -134,6 +154,7 @@ export default function RoiSettingsModal({ canEdit, onClose, onSaved }: RoiSetti
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

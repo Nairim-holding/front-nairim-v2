@@ -189,8 +189,8 @@ export default function OverdueLeasesPage({ initialSummary }: { initialSummary: 
                         <Clock3 size={13} /> {overdueLabel(item.days_overdue)}
                       </span>
                       <span className="text-xs text-content-muted">Contrato {item.contract_number}</span>
-                      {item.contract_ended && (
-                        <span className="inline-flex items-center rounded-full border border-ui-border px-2 py-0.5 text-xs font-medium text-content-secondary">Contrato encerrado</span>
+                      {(item.contract_ended || item.contract_canceled) && (
+                        <span className="inline-flex items-center rounded-full border border-ui-border px-2 py-0.5 text-xs font-medium text-content-secondary">{item.contract_canceled ? 'Pendência anterior ao cancelamento' : 'Contrato encerrado'}</span>
                       )}
                       {item.notification_count > 0 && (
                         <span className="text-xs text-content-muted">

@@ -13,7 +13,7 @@ vi.mock('../property-occupancy', () => ({
 }));
 vi.mock('@/infra/database/prisma', () => {
   const client = {
-    lease: { findFirst: mocks.leaseFind, update: mocks.leaseUpdate },
+    lease: { findFirst: mocks.leaseFind, findUnique: mocks.leaseFind, update: mocks.leaseUpdate },
     transaction: { findMany: mocks.transactionFind, updateMany: mocks.transactionUpdate },
   };
   return { default: { ...client, $transaction: async (fn: (tx: typeof client) => unknown) => fn(client) } };
@@ -75,5 +75,30 @@ describe('cancelamento de locação', () => {
     expect(where.id).toEqual({ in: ['selected'] });
     expect(where).not.toHaveProperty('status');
     expect(where).not.toHaveProperty('effective_date');
+  });
+
+  it('cancelar pela edição também encerra as parcelas futuras sem apagar recebimentos', async () => {
+    await new PrismaLeasesRepository().update(lease.id, { status: 'CANCELED', canceled_at: '2026-09-01' });
+    expect(mocks.transactionUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ lease_id: lease.id, company_id: 'company', status: 'PENDING',
+        is_cancellation_charge: false, effective_date: { gte: new Date('2026-09-01T00:00:00Z') } }),
+      data: { deleted_at: expect.any(Date), canceled_at: expect.any(Date) },
+    }));
+  });
+
+  it('editar contrato cancelado não o reativa implicitamente', async () => {
+    mocks.leaseFind.mockResolvedValue({ ...lease, status: 'CANCELED', canceled_at: new Date('2026-09-01T00:00:00Z') });
+    await new PrismaLeasesRepository().update(lease.id, { rent_amount: 1200 });
+    expect(mocks.leaseUpdate.mock.calls[0][0].data).toMatchObject({ status: 'CANCELED', canceled_at: new Date('2026-09-01T00:00:00Z') });
+    expect(mocks.transactionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('excluir locação também cancela pendentes futuros e preserva o histórico', async () => {
+    await new PrismaLeasesRepository().softDelete(lease.id);
+    expect(mocks.transactionUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ lease_id: lease.id, status: 'PENDING', is_cancellation_charge: false,
+        effective_date: { gte: new Date('2026-09-22T00:00:00Z') } }),
+      data: { deleted_at: expect.any(Date), canceled_at: expect.any(Date) },
+    }));
   });
 });

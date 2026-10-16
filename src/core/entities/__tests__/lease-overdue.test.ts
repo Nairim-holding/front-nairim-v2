@@ -15,6 +15,7 @@ const lease = (overrides: Partial<OverdueLease> = {}): OverdueLease => ({
   lease_id: 'l1',
   contract_number: 'CT-001',
   contract_ended: false,
+  contract_canceled: false,
   property_title: 'Imóvel A',
   tenant_name: 'Inquilino A',
   agency_name: 'Imobiliária A',

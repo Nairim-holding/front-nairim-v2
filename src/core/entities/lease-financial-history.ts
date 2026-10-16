@@ -46,6 +46,7 @@ export interface LeaseFinancialHistory {
   /** Totais das RECEITAS do contrato, por situação. */
   totals: Record<LeaseHistorySituation, LeaseHistoryTotal>;
   candidates: LeaseHistoryCandidate[];
+  warnings?: string[];
 }
 
 export interface LeaseHistorySource {
