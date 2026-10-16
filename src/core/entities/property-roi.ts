@@ -185,6 +185,11 @@ export interface RoiDatedAmount {
   amount: number;
 }
 
+/** Limite inclusivo da reforma inicial, compartilhado com a origem dos valores. */
+export function maintenanceCutoffDate(purchaseDateIso: string | null): string | null {
+  return purchaseDateIso ? toIso(addYears(parseIso(purchaseDateIso), 1)) : null;
+}
+
 /**
  * Divide a manutenção em reforma inicial (até 1 ano após a compra, em qualquer
  * data) e manutenção periódica (depois disso, dentro do período de referência).
@@ -193,7 +198,7 @@ export interface RoiDatedAmount {
 export function splitMaintenance(
   entries: RoiDatedAmount[], purchaseDateIso: string | null, period: { from: string; to: string },
 ): { initial: number; periodic: number } {
-  const cutoff = purchaseDateIso ? toIso(addYears(parseIso(purchaseDateIso), 1)) : null;
+  const cutoff = maintenanceCutoffDate(purchaseDateIso);
   let initial = 0;
   let periodic = 0;
   for (const entry of entries) {
@@ -256,7 +261,8 @@ export interface RoiPropertyResult {
 
 const money = (value: number): number => Math.round((value + Number.EPSILON) * 100) / 100;
 
-export function computePropertyRoi(input: RoiPropertyInput): RoiPropertyResult {
+/** Intermediários sem arredondamento, também usados na memória de cálculo. */
+export function computePropertyRoiUnrounded(input: RoiPropertyInput): RoiPropertyResult {
   const purchaseValue = input.purchaseValue ?? 0;
   const totalInvestment = purchaseValue + input.itbi + input.registry + input.initialRenovation;
 
@@ -278,27 +284,38 @@ export function computePropertyRoi(input: RoiPropertyInput): RoiPropertyResult {
   const paybackYears = totalInvestment > 0 && annualCashFlow > 0 ? totalInvestment / annualCashFlow : null;
 
   return {
-    purchaseValue: money(purchaseValue),
-    itbi: money(input.itbi),
-    registry: money(input.registry),
-    initialRenovation: money(input.initialRenovation),
-    totalInvestment: money(totalInvestment),
-    monthlyRent: money(monthlyRent),
-    grossAnnualRevenue: money(grossAnnualRevenue),
+    purchaseValue,
+    itbi: input.itbi,
+    registry: input.registry,
+    initialRenovation: input.initialRenovation,
+    totalInvestment,
+    monthlyRent,
+    grossAnnualRevenue,
     vacancyMonths,
-    vacancyAmount: money(vacancyAmount),
-    netAnnualRevenue: money(netAnnualRevenue),
-    iptuAnnual: money(iptuAnnual),
-    insuranceAnnual: money(insuranceAnnual),
-    commissionAnnual: money(commissionAnnual),
-    maintenanceAnnual: money(maintenanceAnnual),
-    totalAnnualExpenses: money(totalAnnualExpenses),
-    annualCashFlow: money(annualCashFlow),
+    vacancyAmount,
+    netAnnualRevenue,
+    iptuAnnual,
+    insuranceAnnual,
+    commissionAnnual,
+    maintenanceAnnual,
+    totalAnnualExpenses,
+    annualCashFlow,
     roi: totalInvestment > 0 ? annualCashFlow / totalInvestment : null,
     capRate: purchaseValue > 0 ? annualCashFlow / purchaseValue : null,
     paybackYears,
     paybackMonths: paybackYears === null ? null : paybackYears * 12,
   };
+}
+
+export function computePropertyRoi(input: RoiPropertyInput): RoiPropertyResult {
+  const result = computePropertyRoiUnrounded(input);
+  const currencyKeys = [
+    'purchaseValue', 'itbi', 'registry', 'initialRenovation', 'totalInvestment', 'monthlyRent',
+    'grossAnnualRevenue', 'vacancyAmount', 'netAnnualRevenue', 'iptuAnnual', 'insuranceAnnual',
+    'commissionAnnual', 'maintenanceAnnual', 'totalAnnualExpenses', 'annualCashFlow',
+  ] as const;
+  for (const key of currencyKeys) result[key] = money(result[key]);
+  return result;
 }
 
 // ─── Cenário de valorização e venda (aba 2 da planilha) ──────────────────────

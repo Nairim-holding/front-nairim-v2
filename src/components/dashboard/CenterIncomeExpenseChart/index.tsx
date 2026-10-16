@@ -29,7 +29,7 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
   const buildOption = (): EChartsOption => ({
     tooltip: { confine: true, ...getCustomEchartsTooltipConfig(params => {
       const item = Array.isArray(params) ? params[0] : params; const row = rows[item.dataIndex];
-      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' }, { label: 'Saldo', value: formatCurrency(row?.balance ?? 0), color: (row?.balance ?? 0) < 0 ? '#dc2626' : '#059669' } ]);
+      return buildCustomTooltipHTML(row?.name ?? '', [ { label: 'Receitas', value: formatCurrency(row?.income ?? 0), color: '#059669' }, { label: 'Despesas', value: formatCurrency(row?.expense ?? 0), color: '#dc2626' }, { label: 'Saldo', value: formatCurrency(row?.balance ?? 0), color: (row?.balance ?? 0) < 0 ? '#dc2626' : '#059669', emphasized: true } ]);
     }) }, legend: { top: 0, left: 'center', data: ['Receitas','Despesas'], textStyle: { color: tokens.textMuted } },
     grid: { left: 12, right: 30, top: 38, bottom: rows.length > 12 ? 55 : 20, containLabel: true },
     xAxis: { type: 'value', axisLabel: { color: tokens.textMuted, formatter: (v: number) => formatCurrency(v) }, splitLine: { lineStyle: { color: tokens.borderSoft } } },
@@ -42,6 +42,7 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
   return <ChartCard title="Receitas e despesas por centro" subtitle={`${filters?.regime === 'competencia' ? 'Por competência' : 'Por data efetiva'}, sem transferências`} detailData={rows} detailColumns={[
     { key: 'name', label: 'Centro' }, { key: 'income', label: 'Receitas', format: formatCurrency, summable: true },
     { key: 'expense', label: 'Despesas', format: formatCurrency, summable: true },
+    { key: 'balance', label: 'Saldo', format: formatCurrency, summable: true },
   ]} pointDetailColumns={FINANCIAL_DETAIL_COLUMNS} loadDetailForPoint={point => {
     const row = rows[point.dataIndex];
     if (!row) return Promise.resolve([]);

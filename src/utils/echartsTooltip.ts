@@ -1,11 +1,14 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts';
 import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
+
+type TooltipPoint = Exclude<TooltipComponentFormatterCallbackParams, unknown[]> & { axisValueLabel?: string };
 
 export interface TooltipItem {
   label: string;
   value: number | string;
   color?: string;
   formattedValue?: string;
+  emphasized?: boolean;
 }
 
 /**
@@ -27,7 +30,7 @@ export function buildCustomTooltipHTML(
       const dotColor = item.color ?? '#3b82f6';
 
       return `
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 6px; font-size: 12px; line-height: 1.4;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; ${item.emphasized ? 'background-color: #f1f5f9; border-top: 1px solid #e2e8f0; margin: 8px -12px -8px; padding: 6px 12px;' : 'margin-top: 6px;'} font-size: 12px; line-height: 1.4;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></span>
             <span style="color: #475569; font-weight: 500;">${item.label}</span>
@@ -54,7 +57,7 @@ export function buildCustomTooltipHTML(
  * Configuração padrão de tooltip e axisPointer do ECharts alinhada ao DNA visual (1.C)
  */
 export const getCustomEchartsTooltipConfig = (
-  formatterFn: (params: any) => string
+  formatterFn: (params: TooltipPoint | TooltipPoint[]) => string
 ): NonNullable<EChartsOption['tooltip']> => ({
   trigger: 'axis',
   backgroundColor: 'transparent',
@@ -78,5 +81,5 @@ export const getCustomEchartsTooltipConfig = (
       padding: [4, 8, 4, 8],
     },
   },
-  formatter: formatterFn as any,
+  formatter: formatterFn,
 });

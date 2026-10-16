@@ -38,7 +38,8 @@ import {
   sanitizePropagateFields,
   type PropagatableField,
 } from '@/shared/utils/series-propagation';
-import { NotFoundError } from '@/core/errors/domain-errors';
+import { NotFoundError, ValidationError } from '@/core/errors/domain-errors';
+import { resolveFinancialLeaseLink } from './lease-financial-link';
 
 /**
  * Implementacao Prisma de {@link TransactionsRepository}.
@@ -654,6 +655,14 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async create(data: CreateTransactionData & { company_id?: string }): Promise<Transaction> {
+    const companyId = getCurrentCompanyId();
+    if (!companyId) throw new ValidationError('Contexto de empresa não identificado.');
+    const leaseId = await resolveFinancialLeaseLink(prisma, companyId, {
+      description: data.description ?? '', event_date: parseLocalDate(data.event_date),
+      effective_date: parseLocalDate(data.effective_date), status: data.status || 'PENDING',
+      category_id: data.category_id,
+      subcategory_id: data.subcategory_id,
+    });
     let invoiceId: string | null = null;
     const cardId = data.card_id || null;
 
@@ -686,6 +695,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         center_id: data.center_id || null,
         supplier_id: data.supplier_id || null,
         invoice_id: invoiceId,
+        lease_id: leaseId,
       } as never,
       include: { category: true, financial_institution: true, supplier: true } as never,
     })) as unknown as Transaction;
@@ -703,6 +713,16 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   async update(id: string, data: UpdateTransactionData): Promise<Transaction> {
     const existing = (await prisma.transaction.findUnique({ where: { id, deleted_at: null } })) as any;
     if (!existing) throw new NotFoundError('Lançamento não encontrado');
+    const leaseId = existing.is_transfer ? null : await resolveFinancialLeaseLink(prisma, existing.company_id, {
+      ...existing, description: data.description ?? existing.description,
+      event_date: data.event_date ? parseLocalDate(data.event_date) : existing.event_date,
+      effective_date: data.effective_date ? parseLocalDate(data.effective_date) : existing.effective_date,
+      status: data.status ?? existing.status,
+      category_id: data.category_id ?? existing.category_id,
+      subcategory_id: data.subcategory_id !== undefined ? data.subcategory_id : existing.subcategory_id,
+      category: data.category_id !== undefined ? undefined : existing.category,
+      subcategory: data.subcategory_id !== undefined ? undefined : existing.subcategory,
+    });
 
     const parseFKUpdate = (val: unknown): string | null | undefined => {
       if (val === '' || val === 'null' || val === null) return null;
@@ -723,6 +743,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         card_id: parseFKUpdate(data.card_id),
         center_id: parseFKUpdate(data.center_id),
         supplier_id: parseFKUpdate(data.supplier_id),
+        lease_id: leaseId,
       },
       include: { category: true, financial_institution: true, supplier: true } as never,
     })) as unknown as Transaction;
@@ -852,6 +873,14 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
   }
 
   async restore(id: string): Promise<Transaction> {
+    const existing = await prisma.transaction.findFirst({ where: { id } });
+    if (!existing) throw new NotFoundError('Lançamento não encontrado');
+    if (existing.canceled_at) {
+      throw new ValidationError('Este lançamento foi cancelado junto com a locação. Verifique o Histórico Financeiro antes de restaurá-lo.');
+    }
+    // Restoring a row replaced during synchronization must check its active
+    // replacement too; the edit-only bypass for generated rows does not apply.
+    if (existing.lease_id) await resolveFinancialLeaseLink(prisma, existing.company_id, { ...existing, installment_number: null });
     return (await prisma.transaction.update({
       where: { id },
       data: { deleted_at: null },

@@ -425,18 +425,28 @@ export class PrismaLeasesRepository implements LeasesRepository {
       const existing = await tx.lease.findUnique({ where: { id, deleted_at: null } });
       if (!existing) throw new Error('Lease not found');
 
-      const calculatedStatus = data.status === 'CANCELED' ? 'CANCELED' : determineStatus(new Date(data.end_date || existing.end_date));
+      const calculatedStatus = data.status === 'CANCELED' || (data.status === undefined && existing.status === 'CANCELED')
+        ? 'CANCELED' : determineStatus(new Date(data.end_date || existing.end_date));
+      const cancellationDate = calculatedStatus === 'CANCELED'
+        ? (existing.canceled_at ?? parseLocalDate(data.canceled_at || new Date())) : null;
 
       const updatedLease = await tx.lease.update({
         where: { id },
         data: {
           ...buildLeaseData(data, existing),
           status: calculatedStatus,
-          canceled_at: calculatedStatus === 'CANCELED' && existing.status !== 'CANCELED'
-            ? new Date(data.canceled_at || new Date())
-            : (calculatedStatus === 'CANCELED' ? existing.canceled_at : null),
+          canceled_at: cancellationDate,
         },
       });
+
+      if (calculatedStatus === 'CANCELED' && existing.status !== 'CANCELED') {
+        const removedAt = new Date();
+        await tx.transaction.updateMany({
+          where: { lease_id: id, company_id: existing.company_id, deleted_at: null, status: 'PENDING',
+            is_cancellation_charge: false, effective_date: { gte: cancellationDate } },
+          data: { deleted_at: removedAt, canceled_at: removedAt },
+        });
+      }
 
       await syncPropertyOccupancy(tx, existing.property_id);
       if (data.property_id && data.property_id !== existing.property_id) {
@@ -454,9 +464,16 @@ export class PrismaLeasesRepository implements LeasesRepository {
     if (!existing) return null;
 
     const result = await prisma.$transaction(async (tx: any) => {
+      const canceledAt = existing.canceled_at || occupancyDate();
+      const removedAt = new Date();
       const deletedLease = await tx.lease.update({
         where: { id },
-        data: { deleted_at: new Date(), status: 'CANCELED', canceled_at: existing.canceled_at || new Date() },
+        data: { deleted_at: removedAt, status: 'CANCELED', canceled_at: canceledAt },
+      });
+      await tx.transaction.updateMany({
+        where: { lease_id: id, company_id: existing.company_id, deleted_at: null, status: 'PENDING',
+          is_cancellation_charge: false, effective_date: { gte: canceledAt } },
+        data: { deleted_at: removedAt, canceled_at: removedAt },
       });
 
       await syncPropertyOccupancy(tx, existing.property_id);

@@ -23,3 +23,9 @@ it('recusa data inválida e bloqueia falta de permissão antes de consultar dado
   await expect(getOverdueLeaseReportData({asOf:'2026-10-09'})).rejects.toThrow('Sem permissão');
   expect(mocks.transactions).not.toHaveBeenCalled();
 });
+
+it('não cobra parcelas comuns a partir do cancelamento, mas conserva dívida anterior', async () => {
+  mocks.leases.mockResolvedValue([{ id: 'lease', company_id: 'a', contract_number: '4169/23', start_date: new Date('2023-01-01'), end_date: new Date('2024-12-31'), canceled_at: new Date('2024-10-01'), property: { title: 'Minas Gerais 101', agency: null }, tenant: { name: 'Locatário' } }]);
+  mocks.transactions.mockResolvedValue(['2024-09-10', '2024-10-01', '2024-10-10'].map((day) => ({ id: day, company_id: 'a', lease_id: 'lease', description: 'Aluguel', amount: 1100, event_date: new Date(day), effective_date: new Date(day), category: { type: 'INCOME' }, is_cancellation_charge: false })));
+  expect((await getOverdueLeaseReportData({ asOf: '2026-10-15' })).rows.map((row) => row.id)).toEqual(['2024-09-10']);
+});

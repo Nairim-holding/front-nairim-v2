@@ -69,6 +69,12 @@ try {
   const tooltip=await page.evaluate(()=>window.__chart().getOption().tooltip[0].formatter([{dataIndex:0}]));
   assert.match(tooltip,/Saldo/,'O tooltip deve trazer o saldo do centro');
   assert.match(tooltip,/19\.700,00/,'Saldo = receitas - despesas');
+  const tooltipStyles=await page.evaluate(html=>{
+    const root=document.createElement('div');root.innerHTML=html;
+    const balance=[...root.querySelectorAll('div')].find(el=>el.textContent.trim()==='Saldo')?.parentElement;
+    return {header:root.firstElementChild.firstElementChild.style.backgroundColor,balance:balance?.style.backgroundColor};
+  },tooltip);
+  assert.equal(tooltipStyles.balance,tooltipStyles.header,'Saldo deve ter o mesmo fundo do título');
   await page.getByRole('button',{name:'Ver Dados Detalhados',exact:true}).click();
   await page.getByRole('columnheader',{name:'Receitas',exact:true}).waitFor();
   assert.equal(await page.locator('tbody tr').count(),4);

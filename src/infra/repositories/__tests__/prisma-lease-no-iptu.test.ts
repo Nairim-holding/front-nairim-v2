@@ -62,4 +62,53 @@ describe('locação sem IPTU', () => {
     await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
     expect(mocks.transactionCreate.mock.calls.filter(([args]) => args.data.description.startsWith('Restituição'))).toHaveLength(2);
   });
+
+  it('preserva avulso e parcela sobrepostos sem apagar valores e avisa para revisão', async () => {
+    mocks.transactionFind.mockResolvedValue([
+      { id: 'manual', status: 'COMPLETED', description: 'Recebimento aluguel - Contrato RENEWAL', installment_number: null,
+        event_date: new Date('2026-02-01'), amount: 400, category: { type: 'INCOME' } },
+      { id: 'pending', status: 'PENDING', description: 'Aluguel 1/2', installment_number: 1,
+        event_date: new Date('2026-02-05'), amount: 1000, category: { type: 'INCOME' } },
+    ]);
+    const result = await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    expect(mocks.transactionUpdate).not.toHaveBeenCalled();
+    expect(mocks.transactionCreate.mock.calls.map(([args]) => args.data).filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1000]);
+    expect(result.warning).toContain('Histórico Financeiro');
+  });
+
+  it('não reduz parcela de 1000 para 600 por avulso de 400; excluir o avulso conserva obrigação integral', async () => {
+    const pending = { id: 'pending', status: 'PENDING', description: 'Aluguel do imóvel 1/2', installment_number: 1,
+      event_date: new Date('2026-02-05'), amount: 1000, category: { type: 'INCOME' } };
+    const manual = { id: 'manual', status: 'PENDING', description: 'Aluguel - Contrato RENEWAL', installment_number: null,
+      event_date: new Date('2026-02-01'), amount: 400, category: { type: 'INCOME' } };
+    mocks.transactionFind.mockResolvedValue([pending, manual]);
+    await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    expect(mocks.transactionCreate.mock.calls.map(([args]) => args.data).filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1000]);
+    mocks.transactionCreate.mockClear();
+    mocks.transactionFind.mockResolvedValue([pending]);
+    await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    expect(mocks.transactionCreate.mock.calls.map(([args]) => args.data).filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1000, 1000]);
+  });
+
+  it('alterar aluguel não cria diferença retroativa em competência já quitada', async () => {
+    mocks.leaseFind.mockResolvedValue({ ...lease(), rent_amount: 1100 });
+    mocks.transactionFind.mockResolvedValue([{ id: 'paid', status: 'COMPLETED', description: 'Aluguel do imóvel 1/2', installment_number: 1,
+      event_date: new Date('2026-02-05'), amount: 1000, category: { type: 'INCOME' } }]);
+    await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    expect(mocks.transactionCreate.mock.calls.map(([args]) => args.data).filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1100]);
+  });
+
+  it('não abate despesa de aluguel nem receita de comissão das parcelas contratuais', async () => {
+    mocks.transactionFind.mockResolvedValue([
+      { id: 'expense', status: 'COMPLETED', description: 'Pagamento aluguel - Contrato RENEWAL', installment_number: null,
+        event_date: new Date('2026-02-01'), amount: 1000, category: { type: 'EXPENSE' } },
+      { id: 'income-commission', status: 'COMPLETED', description: 'Comissão - Contrato RENEWAL', installment_number: null,
+        event_date: new Date('2026-02-01'), amount: 100, category: { type: 'INCOME' } },
+    ]);
+    await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    const rows = mocks.transactionCreate.mock.calls.map(([args]) => args.data);
+    expect(rows.filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1000, 1000]);
+    expect(rows.filter((row) => row.description.startsWith('Comissão')).map((row) => row.amount)).toEqual([100, 100]);
+    expect(mocks.transactionUpdate).not.toHaveBeenCalled();
+  });
 });

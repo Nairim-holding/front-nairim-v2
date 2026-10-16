@@ -11,8 +11,9 @@ import { usePermissions } from '@/contexts/PermissionsContext';
 import { getRoiReportAction } from '@/server/actions/property-roi';
 import { exportTableToExcel, exportTableToPDF } from '@/lib/reports/exportHelpers';
 import { ROI_LINE_DEFINITIONS, type RoiReport } from '@/core/entities/property-roi';
+import type { RoiMetricKey } from '@/core/entities/property-roi-origin';
 import RoiTable from './_components/RoiTable';
-import RoiDetail from './_components/RoiDetail';
+import RoiInspectionModal from './_components/RoiInspectionModal';
 import RoiSaleScenario from './_components/RoiSaleScenario';
 import RoiSettingsModal from './_components/RoiSettingsModal';
 import { formatIsoDate } from './_lib/format';
@@ -41,6 +42,7 @@ export default function RoiContent() {
   const { can } = usePermissions();
   const popoverRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  const reportRequest = useRef(0);
 
   const [periodChoice, setPeriodChoice] = useState<string>('last12');
   const [dateRange, setDateRange] = useState(lastTwelveMonths);
@@ -50,7 +52,7 @@ export default function RoiContent() {
   const [availableProperties, setAvailableProperties] = useState<PropertyOption[]>([]);
   const [report, setReport] = useState<RoiReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [inspection, setInspection] = useState<{ propertyIds: string[]; metric: RoiMetricKey | null } | null>(null);
   const [tab, setTab] = useState<Tab>('roi');
 
   useEffect(() => {
@@ -63,6 +65,8 @@ export default function RoiContent() {
   }, [isCalendarOpen]);
 
   const fetchReport = useCallback(async () => {
+    const request = ++reportRequest.current;
+    setInspection(null);
     setIsLoading(true);
     try {
       const result = await getRoiReportAction({
@@ -70,22 +74,24 @@ export default function RoiContent() {
         to: dateRange.to,
         ...(selectedProperties.length > 0 ? { propertyIds: selectedProperties } : {}),
       });
+      if (request !== reportRequest.current) return;
       if (!result.ok) throw new Error(result.error ?? 'Erro ao calcular o ROI.');
       setReport(result.data);
       setAvailableProperties(result.data.availableProperties);
     } catch (error) {
+      if (request !== reportRequest.current) return;
       setReport(null);
       showMessage(error instanceof Error ? error.message : 'Erro ao calcular o ROI.', 'error', 4000);
     } finally {
-      setIsLoading(false);
+      if (request === reportRequest.current) setIsLoading(false);
     }
   }, [dateRange, selectedProperties, showMessage]);
 
   useEffect(() => { void fetchReport(); }, [fetchReport]);
 
   const rows = useMemo(() => report?.rows ?? [], [report]);
-  // Com um único imóvel na grid o detalhamento já abre; com vários, abre o que for clicado.
-  const detailRow = rows.find((row) => row.propertyId === detailId) ?? (rows.length === 1 ? rows[0] : null);
+  const detailRow = inspection?.propertyIds.length === 1 ? rows.find(row => row.propertyId === inspection.propertyIds[0]) ?? null : null;
+  const closeInspection = useCallback(() => setInspection(null), []);
   const periodLabel = `${formatIsoDate(dateRange.from)} a ${formatIsoDate(dateRange.to)}`;
   const missingLabels = (report?.missingLines ?? []).map((key) => ROI_LINE_DEFINITIONS.find((definition) => definition.key === key)?.label ?? key);
 
@@ -205,15 +211,21 @@ export default function RoiContent() {
         {tab === 'roi' ? (
           <>
             <p className="text-xs text-content-muted">
-              Clique em um imóvel para ver como cada valor é calculado. As despesas anuais consideram {periodLabel}; investimento inicial e aluguéis consideram todo o histórico.
+              Clique em um imóvel para abrir o detalhamento ou em um valor para consultar sua origem. As despesas anuais consideram {periodLabel}; investimento inicial e aluguéis consideram todo o histórico.
             </p>
-            <RoiTable ref={tableRef} rows={rows} isLoading={isLoading} selectedId={detailRow?.propertyId ?? null} onSelect={setDetailId} />
-            {!isLoading && detailRow && <RoiDetail row={detailRow} periodLabel={periodLabel} />}
+            <RoiTable ref={tableRef} rows={rows} isLoading={isLoading} selectedId={detailRow?.propertyId ?? null}
+              onSelect={propertyId => setInspection({ propertyIds: [propertyId], metric: null })}
+              onInspect={(propertyIds, metric) => setInspection({ propertyIds, metric })} />
           </>
         ) : (
           <RoiSaleScenario rows={rows} />
         )}
       </div>
+
+      {inspection && report && !isLoading && <RoiInspectionModal
+        key={`${inspection.propertyIds.join(',')}:${inspection.metric ?? 'detail'}`}
+        row={detailRow} propertyIds={inspection.propertyIds} metric={inspection.metric} period={report.period} onClose={closeInspection}
+      />}
 
       {isSettingsOpen && (
         <RoiSettingsModal

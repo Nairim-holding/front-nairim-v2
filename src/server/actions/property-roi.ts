@@ -4,8 +4,9 @@ import { type ActionResult, runAction } from '@/shared/actions/action-result';
 import { withPermission } from '@/infra/auth/session';
 import { prismaPropertyRoiRepository } from '@/infra/repositories/prisma-property-roi-repository';
 import { roiSettingsSchema } from '@/shared/validators/property-roi';
-import { getRoiReportData, getRoiSettingsData } from '@/server/queries/property-roi';
+import { getRoiOriginData, getRoiReportData, getRoiSettingsData } from '@/server/queries/property-roi';
 import type { RoiReport, RoiSettingsView } from '@/core/entities/property-roi';
+import type { RoiOrigin } from '@/core/entities/property-roi-origin';
 
 /**
  * Server Actions do ROI por imóvel.
@@ -30,4 +31,8 @@ export async function getRoiSettingsAction(): Promise<ActionResult<RoiSettingsVi
 
 export async function getRoiReportAction(raw: Record<string, unknown>): Promise<ActionResult<RoiReport>> {
   return runAction(() => getRoiReportData(raw));
+}
+
+export async function getRoiOriginAction(raw: Record<string, unknown>): Promise<ActionResult<RoiOrigin>> {
+  return runAction(() => getRoiOriginData(raw));
 }

@@ -2,6 +2,7 @@ import prisma from '@/infra/database/prisma';
 import type { LeaseFinanceRepository } from '@/core/repositories/lease-finance-repository';
 import type { LeaseScheduleItem, SyncLeaseTransactionsResult } from '@/core/entities/lease';
 import { createDateLocal, parseLocalDate } from '@/shared/utils/date-utils';
+import { leaseMonthlyTransactionKind } from '@/core/entities/lease-transaction-kind';
 
 /**
  * Implementação Prisma de {@link LeaseFinanceRepository}.
@@ -229,13 +230,29 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
       // Encargos de cancelamento (is_cancellation_charge) NÃO fazem parte do
       // schedule gerado — nunca são apagados nem duplicados pelo sync.
       where: { lease_id: leaseId, deleted_at: null, is_cancellation_charge: false },
-      select: { id: true, status: true, description: true, installment_number: true },
+      select: { id: true, status: true, description: true, installment_number: true, event_date: true, amount: true,
+        category: { select: { type: true } }, subcategory: { select: { name: true } } },
     });
-    const completedKeys = new Set(existing.filter((t) => t.status === 'COMPLETED').map((t) => keyOf(t.description, t.installment_number)));
-    const pendingIds = existing.filter((t) => t.status !== 'COMPLETED').map((t) => t.id);
+    // Avulsos não são parcelas geradas. Competências com avulsos da mesma
+    // natureza exigem revisão: preserva seus registros e os gerados existentes,
+    // sem apagar valores ou recalcular retroativamente parcelas quitadas.
+    const manualMonths = new Set(existing.filter((t) => t.installment_number == null)
+      .flatMap((t) => {
+        const kind = leaseMonthlyTransactionKind(t);
+        return kind ? [`${kind}:${t.event_date.toISOString().slice(0, 7)}`] : [];
+      }));
+    const scheduleMonth = (description: string, date: Date) => {
+      const kind = description.startsWith('Aluguel') ? 'rent' : description.startsWith('Comissão') ? 'commission' : null;
+      return kind ? `${kind}:${date.toISOString().slice(0, 7)}` : null;
+    };
+    const generated = existing.filter((t) => t.installment_number != null);
+    const completedKeys = new Set(generated.filter((t) => t.status === 'COMPLETED').map((t) => keyOf(t.description, t.installment_number)));
+    const pendingIds = generated.filter((t) => t.status !== 'COMPLETED'
+      && !manualMonths.has(t.event_date ? scheduleMonth(t.description, t.event_date) ?? '' : '')).map((t) => t.id);
 
     // 5. Cria apenas o que não está coberto por uma transação COMPLETED.
-    const toCreate = items.filter((it) => !completedKeys.has(keyOf(it.description, it.installment_number)));
+    const toCreate = items.filter((it) => !completedKeys.has(keyOf(it.description, it.installment_number))
+      && !manualMonths.has(scheduleMonth(it.description, it.date) ?? ''));
 
     // Apagar os pendentes e recriar o schedule é uma operação só: sem a
     // transação, uma falha no meio deixava a locação sem parte dos lançamentos.
@@ -268,6 +285,7 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
       }
     }, { timeout: 60_000 });
 
-    return { generated: toCreate.length };
+    const needsReview = items.some((item) => manualMonths.has(scheduleMonth(item.description, item.date) ?? ''));
+    return { generated: toCreate.length, ...(needsReview ? { warning: 'Há lançamentos avulsos vinculados a competências da locação. As parcelas desses meses foram preservadas; confira sobreposições no Histórico Financeiro antes de alterá-las.' } : {}) };
   }
 }

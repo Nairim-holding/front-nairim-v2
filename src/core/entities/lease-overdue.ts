@@ -21,6 +21,8 @@ export interface OverdueLease {
   contract_number: string;
   /** Contrato já encerrado (fim da vigência anterior a hoje) com pendência em aberto. */
   contract_ended: boolean;
+  /** Contrato cancelado que ainda possui uma pendência anterior ao cancelamento. */
+  contract_canceled: boolean;
   property_title: string;
   tenant_name: string;
   agency_name: string;
@@ -77,6 +79,12 @@ export function daysBetween(from: Date, to: Date): number {
 /** Vencida se a data já passou — o próprio dia do vencimento não conta. */
 export function isOverdue(dueDate: Date, today: Date = new Date()): boolean {
   return daysBetween(dueDate, today) > 0;
+}
+
+/** Cancelar a locação não quita dívidas anteriores. A partir da data de
+ * cancelamento, as parcelas comuns deixam de ser devidas. */
+export function isLeaseReceivableDue(dueDate: Date, canceledAt: Date | null): boolean {
+  return !canceledAt || daysBetween(dueDate, canceledAt) > 0;
 }
 
 /**

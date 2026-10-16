@@ -21,7 +21,7 @@ vi.mock('@/infra/auth/session', () => ({
 import { getLeaseFinancialHistoryData, linkTransactionsToLeaseData } from './lease-financial-history';
 
 const date = (value: string) => new Date(`${value}T00:00:00.000Z`);
-const lease = { id: 'lease-1', contract_number: '4169/23', status: 'CANCELED', property: { title: 'Rua Minas Gerais, 101' }, tenant: { name: 'Locatário' } };
+const lease = { id: 'lease-1', company_id: 'company', contract_number: '4169/23', status: 'CANCELED', property: { title: 'Rua Minas Gerais, 101' }, tenant: { name: 'Locatário' } };
 const allLeases = [
   { id: 'lease-1', contract_number: '4169/23', start_date: date('2023-11-10'), end_date: date('2024-10-10'), canceled_at: null, property: { title: 'Rua Minas Gerais, 101' } },
   { id: 'lease-2', contract_number: '5000/24', start_date: date('2024-11-10'), end_date: date('2099-01-01'), canceled_at: null, property: { title: 'Rua América, 389' } },
@@ -102,5 +102,36 @@ describe('histórico financeiro da locação', () => {
     stubTransactions([], []);
     expect(await linkTransactionsToLeaseData('lease-1', ['qualquer'])).toEqual({ linked: 0 });
     expect(mocks.transactionUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('recusa vínculo avulso que duplicaria parcela já gerada da competência', async () => {
+    stubTransactions([tx({ id: 'generated' })], [tx({ id: 'manual', installment_number: null })]);
+    await expect(linkTransactionsToLeaseData('lease-1', ['manual'])).rejects.toThrow('Já existe uma parcela');
+    expect(mocks.transactionUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('recusa vínculo de pendência a partir da data de cancelamento', async () => {
+    mocks.leaseFindMany.mockResolvedValue(allLeases.map((item) => item.id === 'lease-1' ? { ...item, canceled_at: date('2024-09-01') } : item));
+    stubTransactions([], [tx({ id: 'manual', installment_number: null })]);
+    await expect(linkTransactionsToLeaseData('lease-1', ['manual'])).rejects.toThrow('a partir do cancelamento');
+    expect(mocks.transactionUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('sinaliza no histórico sobreposição antiga sem alterar seus valores', async () => {
+    stubTransactions([tx({ id: 'generated' }), tx({ id: 'manual', installment_number: null, amount: 400 })], []);
+    const result = await getLeaseFinancialHistoryData('lease-1');
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings?.[0]).toContain('09/2024');
+    expect(result.rows.map((row) => row.amount)).toEqual([1100, 400]);
+    expect(mocks.transactionUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('sinaliza aluguel identificado pela subcategoria mesmo com descrição livre', async () => {
+    stubTransactions([tx({ id: 'generated' }), tx({ id: 'manual', installment_number: null,
+      description: 'Recebimento setembro - Contrato 4169/23', subcategory: { name: 'Aluguéis' } })], []);
+    const result = await getLeaseFinancialHistoryData('lease-1');
+    expect(result.warnings).toHaveLength(1);
+    const query = mocks.transactionFindMany.mock.calls.map(([args]) => args).find((args) => args.where.lease_id === 'lease-1');
+    expect(query.select.subcategory).toEqual({ select: { name: true } });
   });
 });

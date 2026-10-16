@@ -1,8 +1,9 @@
 import 'server-only';
 import { withPermission } from '@/infra/auth/session';
 import { prismaPropertyRoiRepository } from '@/infra/repositories/prisma-property-roi-repository';
-import { roiReportQuerySchema } from '@/shared/validators/property-roi';
+import { roiOriginQuerySchema, roiReportQuerySchema } from '@/shared/validators/property-roi';
 import type { RoiReport, RoiSettingsView } from '@/core/entities/property-roi';
+import type { RoiOrigin } from '@/core/entities/property-roi-origin';
 
 /**
  * Queries (leitura) do ROI por imóvel — para Client Components.
@@ -25,5 +26,12 @@ export async function getRoiReportData(raw: Record<string, unknown>): Promise<Ro
   const { from, to, propertyIds } = roiReportQuerySchema.parse(raw);
   return withPermission('financial-audit', 'view', (session) =>
     prismaPropertyRoiRepository.getReport({ from, to, propertyIds, today: todayInSaoPaulo() }, session.company_id),
+  );
+}
+
+export async function getRoiOriginData(raw: Record<string, unknown>): Promise<RoiOrigin> {
+  const { from, to, propertyIds, metric } = roiOriginQuerySchema.parse(raw);
+  return withPermission('financial-audit', 'view', (session) =>
+    prismaPropertyRoiRepository.getOrigin({ from, to, propertyIds, metric, today: todayInSaoPaulo() }, session.company_id),
   );
 }

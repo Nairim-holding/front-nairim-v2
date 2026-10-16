@@ -4,6 +4,8 @@ import prisma from '@/infra/database/prisma';
 import { withPermission } from '@/infra/auth/session';
 import { NotFoundError } from '@/core/errors/domain-errors';
 import { matchReportLease } from '@/core/entities/lease-report-matching';
+import { leaseMonthlyTransactionKind } from '@/core/entities/lease-transaction-kind';
+import { resolveFinancialLeaseLink } from '@/infra/repositories/lease-financial-link';
 import {
   installmentLabel,
   leaseHistorySituation,
@@ -97,6 +99,7 @@ export async function getLeaseFinancialHistoryData(leaseId: string): Promise<Lea
           id: true, description: true, amount: true, status: true, event_date: true, effective_date: true,
           canceled_at: true, installment_number: true, total_installments: true,
           category: { select: { type: true } },
+          subcategory: { select: { name: true } },
         },
         orderBy: [{ effective_date: 'asc' }, { description: 'asc' }],
       }),
@@ -120,6 +123,11 @@ export async function getLeaseFinancialHistoryData(leaseId: string): Promise<Lea
         canceled: situation === 'CANCELED',
       };
     });
+    const manualMonths = new Set(linked.filter((tx) => tx.installment_number == null && !tx.canceled_at)
+      .map((tx) => `${leaseMonthlyTransactionKind(tx)}:${isoDate(tx.event_date).slice(0, 7)}`));
+    const overlapMonths = [...new Set(linked.filter((tx) => tx.installment_number != null && !tx.canceled_at && leaseMonthlyTransactionKind(tx))
+      .filter((tx) => manualMonths.has(`${leaseMonthlyTransactionKind(tx)}:${isoDate(tx.event_date).slice(0, 7)}`))
+      .map((tx) => isoDate(tx.event_date).slice(0, 7)))];
 
     return {
       lease: {
@@ -132,6 +140,7 @@ export async function getLeaseFinancialHistoryData(leaseId: string): Promise<Lea
       rows,
       totals: summarizeLeaseHistory(rows),
       candidates,
+      warnings: overlapMonths.map((month) => `Há lançamentos avulsos e parcelas geradas da mesma natureza em ${month.slice(5)}/${month.slice(0, 4)}. Confira os valores antes de quitar ou alterar esses lançamentos.`),
     };
   });
 }
@@ -144,13 +153,19 @@ export async function linkTransactionsToLeaseData(leaseId: string, transactionId
   return withPermission('leases', 'edit', async () => {
     const lease = await prisma.lease.findFirst({
       where: { id: leaseId, deleted_at: null },
-      select: { id: true, contract_number: true, property: { select: { title: true } } },
+      select: { id: true, company_id: true, contract_number: true, property: { select: { title: true } } },
     });
     if (!lease) throw new NotFoundError('Locação não encontrada');
 
     const allowed = new Set((await findLeaseHistoryCandidates(lease)).map((candidate) => candidate.id));
     const ids = [...new Set(transactionIds.map(String))].filter((id) => allowed.has(id));
     if (ids.length === 0) return { linked: 0 };
+    const sources = await prisma.transaction.findMany({
+      where: { id: { in: ids }, lease_id: null, deleted_at: null },
+      select: { id: true, description: true, status: true, event_date: true, effective_date: true, installment_number: true,
+        is_cancellation_charge: true, category: { select: { type: true } }, subcategory: { select: { name: true } } },
+    });
+    for (const source of sources) await resolveFinancialLeaseLink(prisma, lease.company_id, source, lease.id);
 
     const result = await prisma.transaction.updateMany({
       where: { id: { in: ids }, lease_id: null, deleted_at: null },

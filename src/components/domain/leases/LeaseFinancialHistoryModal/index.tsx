@@ -123,6 +123,10 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
             ))}
           </div>
 
+          {history.warnings?.map((warning) => (
+            <p key={warning} role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{warning}</p>
+          ))}
+
           <div className="overflow-auto rounded-lg border border-ui-border-soft">
             <table ref={tableRef} className="w-full min-w-[900px] text-left text-sm text-content">
               <thead>
@@ -157,7 +161,7 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
           {!!history.candidates.length && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
               <p className="font-medium">{history.candidates.length} lançamento(s) do Financeiro citam este contrato, mas não estão vinculados a ele</p>
-              <p className="mt-1 text-xs">Sem o vínculo eles não entram neste histórico nem nos alertas de atraso da locação.</p>
+              <p className="mt-1 text-xs">Vincule-os para reunir o histórico do contrato. Os alertas também reconhecem aluguéis antigos quando o contrato pode ser identificado sem ambiguidade.</p>
               <ul className="mt-2 space-y-1">
                 {history.candidates.map((candidate) => (
                   <li key={candidate.id}>
