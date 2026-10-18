@@ -86,3 +86,13 @@ describe('busca de imóveis por crédito de locação', () => {
     expect(mocks.update.mock.calls[0][0].where).not.toHaveProperty('lease_id');
   });
 });
+
+it('inclui o condomínio no valor do repasse e na quitação dos lançamentos', async () => {
+  vi.resetAllMocks();mocks.leases.mockResolvedValue([lease()]);mocks.holidays.mockResolvedValue([]);
+  mocks.transactions.mockResolvedValue([transaction('rent','Aluguel',1000),transaction('commission','Comissão',100),transaction('iptu','Restituição IPTU',100),transaction('condo','Condomínio 1/12 - Contrato lease',150)]);
+  mocks.update.mockResolvedValue({count:4});const repo=new PrismaLeaseCreditReconciliationRepository();const search={...input,credited_amount:1150};
+  const candidates=await repo.search('company',search);
+  expect(candidates[0]).toMatchObject({gross_amount:1000,condominium_income:150,net_amount:1150,amount_matches:true,pending_transaction_ids:['rent','commission','iptu','condo']});
+  expect(await repo.complete('company',{...search,lease_id:'lease'})).toMatchObject({updated_transactions:4});
+  expect(mocks.update.mock.calls[0][0].where.id.in).toContain('condo');
+});

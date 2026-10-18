@@ -153,6 +153,7 @@ export interface LeaseNetComponents {
   gross_amount: number;
   /** Restituição do IPTU (CR). */
   property_tax_refund?: number | null;
+  condominium_income?: number | null;
   /** Desconto do IRRF na fonte (DB). */
   income_tax_withheld?: number | null;
   /** Comissão da imobiliária (DB). */
@@ -161,11 +162,12 @@ export interface LeaseNetComponents {
 
 export const round2 = (value: number): number => Math.round((value + Number.EPSILON) * 100) / 100;
 
-/** Líquido = Bruto + IPTU − IRRF − Comissão. */
+/** Líquido = Bruto + IPTU + Condomínio − IRRF − Comissão. */
 export function computeLeaseNetAmount(components: LeaseNetComponents): number {
   return round2(
     components.gross_amount
       + (components.property_tax_refund ?? 0)
+      + (components.condominium_income ?? 0)
       - (components.income_tax_withheld ?? 0)
       - (components.agency_commission ?? 0),
   );
@@ -197,6 +199,7 @@ export interface CreditCandidate {
   net_amount: number;
   gross_amount: number;
   property_tax_refund: number;
+  condominium_income?: number;
   income_tax_withheld: number;
   agency_commission: number;
   /** Vencimento do aluguel que foi deslocado para a data do crédito. */

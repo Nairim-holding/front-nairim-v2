@@ -255,6 +255,7 @@ export default function LeaseCreditReconciliationModal({ institutions, onClose, 
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
                             <div><span className="block text-content-muted">Aluguel bruto</span><strong className="text-emerald-600">{formatCurrency(candidate.gross_amount)}</strong></div>
                             <div><span className="block text-content-muted">Restituição IPTU</span><strong className="text-emerald-600">{formatCurrency(candidate.property_tax_refund)}</strong></div>
+                            {!!candidate.condominium_income && <div><span className="block text-content-muted">Condomínio</span><strong className="text-emerald-600">{formatCurrency(candidate.condominium_income)}</strong></div>}
                             <div><span className="block text-content-muted">IRRF</span><strong className="text-orange-600">− {formatCurrency(candidate.income_tax_withheld)}</strong></div>
                             <div><span className="block text-content-muted">Comissão</span><strong className="text-orange-600">− {formatCurrency(candidate.agency_commission)}</strong></div>
                             <div><span className="block text-content-muted">Líquido calculado</span><strong className="text-content">{formatCurrency(candidate.net_amount)}</strong></div>
