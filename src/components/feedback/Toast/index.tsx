@@ -2,7 +2,7 @@
 
 import type { MessageType, ToastItem } from '@/hooks/useMessage';
 import { X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const TOAST_STYLES = `
   @keyframes toast-in {
@@ -46,27 +46,37 @@ interface ToastProps {
 
 export default function Toast({ toast, onClose }: ToastProps) {
   const [isFadingOut, setIsFadingOut] = useState(false);
-
-  const dismiss = () => {
+  const [paused, setPaused] = useState(false);
+  const remaining = useRef(toast.duration);
+  const started = useRef(0);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismiss = useCallback(() => {
     setIsFadingOut(true);
-    setTimeout(() => onClose(toast.id), 180);
-  };
-
+    closeTimer.current = setTimeout(() => onClose(toast.id), 180);
+  }, [onClose, toast.id]);
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
   useEffect(() => {
-    const timer = setTimeout(dismiss, toast.duration);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast.id, toast.duration]);
+    if (paused || isFadingOut) return;
+    started.current = Date.now();
+    const timer = setTimeout(dismiss, remaining.current);
+    return () => {
+      clearTimeout(timer);
+      remaining.current = Math.max(0, remaining.current - (Date.now() - started.current));
+    };
+  }, [paused, isFadingOut, dismiss]);
+  const togglePause = () => { if (!isFadingOut) setPaused(value => !value); };
 
   const { bg, text, bar, icon } = TYPE_STYLES[toast.type];
 
   return (
-    <div className={`${bg} border rounded-xl relative overflow-hidden shadow-lg ${isFadingOut ? 'toast-out' : 'toast-in'}`}>
+    <div role="status" onClick={togglePause} className={`${bg} border rounded-xl relative overflow-hidden shadow-lg ${isFadingOut ? 'toast-out' : 'toast-in'}`}>
       <div className="px-4 py-3 flex items-center gap-3">
         {icon}
-        <p className={`text-sm font-medium flex-1 ${text}`}>{toast.text}</p>
+        <button type="button" aria-label={paused ? 'Retomar tempo da mensagem' : 'Pausar tempo da mensagem'} aria-pressed={paused} className={`text-left text-sm font-medium flex-1 ${text}`}>
+          {toast.text}{paused && <span className="mt-1 block text-xs">Pausada · clique para continuar</span>}
+        </button>
         <button
-          onClick={dismiss}
+          onClick={event => { event.stopPropagation(); dismiss(); }}
           className="p-1 hover:bg-black/5 rounded transition-colors"
           aria-label="Fechar"
         >
@@ -75,7 +85,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
       </div>
       <div
         className={`absolute bottom-0 left-0 h-[3px] ${bar}`}
-        style={{ animation: `shrink ${toast.duration}ms linear forwards` }}
+        style={{ animation: `shrink ${toast.duration}ms linear forwards`, animationPlayState: paused || isFadingOut ? 'paused' : 'running' }}
       />
       <style>{TOAST_STYLES}</style>
     </div>

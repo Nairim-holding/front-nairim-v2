@@ -5,6 +5,7 @@ export interface LeaseExpiryAlert {
   propertyTitle: string;
   tenantName: string;
   endDate: string;
+  adjustmentIndexName?: string | null;
   daysRemaining: number;
   canDismiss: boolean;
 }

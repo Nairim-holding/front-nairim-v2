@@ -6,7 +6,7 @@ vi.mock('@/infra/database/prisma', () => ({ default: db }));
 vi.mock('@/infra/auth/session', () => ({ withPermission: async (_resource: string, _action: string, fn: (session: object) => unknown) => fn({ id: 'user', company_id: 'company' }) }));
 import { acknowledgeLeaseExpiryAction, getLeaseExpiryAlertsAction } from './lease-expiry';
 
-const lease = { id: 'lease', end_date: new Date('2026-10-26T00:00:00Z'), property: { title: 'Casa' }, tenant: { name: 'Ana' }, expiry_reminders: [] as object[] };
+const lease = { adjustment_index: { code: 'IPCA' }, id: 'lease', end_date: new Date('2026-10-26T00:00:00Z'), property: { title: 'Casa' }, tenant: { name: 'Ana' }, expiry_reminders: [] as object[] };
 const reminder = { id: 'reminder', end_date: lease.end_date, shown_days: ['2026-09-24', '2026-09-25', '2026-09-26'], acknowledged_on: null, dismissed: false };
 
 describe('expiry notification actions', () => {
@@ -21,7 +21,7 @@ describe('expiry notification actions', () => {
   });
   it('polls without counting a display, then records only visible eligible alerts', async () => {
     const result = await getLeaseExpiryAlertsAction();
-    expect(result).toMatchObject({ ok: true, data: [{ daysRemaining: 30, canDismiss: false }] });
+    expect(result).toMatchObject({ ok: true, data: [{ daysRemaining: 30, canDismiss: false, adjustmentIndexName: 'IPCA' }] });
     expect(db.leaseExpiryReminder.upsert).not.toHaveBeenCalled();
     await getLeaseExpiryAlertsAction(['foreign-lease']);
     expect(db.leaseExpiryReminder.upsert).not.toHaveBeenCalled();

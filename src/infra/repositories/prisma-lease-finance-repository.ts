@@ -4,6 +4,13 @@ import type { LeaseScheduleItem, SyncLeaseTransactionsResult } from '@/core/enti
 import { createDateLocal, parseLocalDate } from '@/shared/utils/date-utils';
 import { leaseMonthlyTransactionKind } from '@/core/entities/lease-transaction-kind';
 
+interface IptuSource {
+  iptu_year?: number | null; tax_due_day?: number | null; property_tax?: unknown; payment_condition?: string | null;
+  property_tax_cash?: unknown; property_tax_first_installment?: unknown; property_tax_second_installment?: unknown;
+  property_tax_cash_due_date?: Date | string | null; property_tax_first_installment_due_date?: Date | string | null;
+  property_tax_second_installment_due_date?: Date | string | null; iptu_installments_count?: number | null;
+  iptu_installments?: unknown; iptu_installments_due_dates?: unknown; contract_number: string;
+}
 /**
  * Implementação Prisma de {@link LeaseFinanceRepository}.
  * Porte fiel de api-nairim-v2/src/services/LeaseFinanceService.ts.
@@ -82,12 +89,12 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
   }
 
   /** Monta as parcelas de IPTU conforme a condição de pagamento da locação. */
-  private buildIptuItems(lease: any, categoryId: string, subcategoryId: string | null, centerId: string | null): LeaseScheduleItem[] {
+  private buildIptuItems(lease: IptuSource, categoryId: string, subcategoryId: string | null, centerId: string | null): LeaseScheduleItem[] {
     const year = lease.iptu_year || new Date().getUTCFullYear();
     const taxDay = lease.tax_due_day || 10;
     const items: { amount: number; date: Date }[] = [];
 
-    const num = (v: any) => (v != null ? Number(v) : 0);
+    const num = (v: unknown) => (v != null ? Number(v) : 0);
     const round2 = (v: number) => Math.round(v * 100) / 100;
     const base = num(lease.property_tax);
 
@@ -121,8 +128,8 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
         // Zero parcelas é uma escolha explícita; valores antigos no
         // detalhamento não podem recriar IPTU já quitado na renovação.
         if (lease.iptu_installments_count != null && Number(lease.iptu_installments_count) === 0) break;
-        const amounts: any[] = Array.isArray(lease.iptu_installments) ? lease.iptu_installments : [];
-        const dueDates: any[] = Array.isArray(lease.iptu_installments_due_dates) ? lease.iptu_installments_due_dates : [];
+        const amounts: unknown[] = Array.isArray(lease.iptu_installments) ? lease.iptu_installments : [];
+        const dueDates: (string | Date | null)[] = Array.isArray(lease.iptu_installments_due_dates) ? lease.iptu_installments_due_dates : [];
         amounts.forEach((a, idx) => {
           const amount = num(a);
           if (amount <= 0) return;
@@ -204,6 +211,11 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
         total: months.length,
         description: `Aluguel do imóvel ${idx + 1}/${months.length} – ${tenantName} – Contrato ${lease.contract_number}`,
       });
+      if (Number(lease.condo_fee) > 0) {
+        items.push({ category_id: propCategoryId, subcategory_id: propSubcategoryId, center_id: creditCenterId,
+          amount: Number(lease.condo_fee), date: this.dueDate(m.year, m.month, lease.condo_due_day || lease.rent_due_day),
+          installment_number: idx + 1, total: months.length, description: `Condomínio ${idx + 1}/${months.length} - Contrato ${lease.contract_number}` });
+      }
       if (commissionAmount > 0) {
         items.push({
           category_id: commissionCategoryId,
@@ -242,7 +254,7 @@ export class PrismaLeaseFinanceRepository implements LeaseFinanceRepository {
         return kind ? [`${kind}:${t.event_date.toISOString().slice(0, 7)}`] : [];
       }));
     const scheduleMonth = (description: string, date: Date) => {
-      const kind = description.startsWith('Aluguel') ? 'rent' : description.startsWith('Comissão') ? 'commission' : null;
+      const kind = description.startsWith('Aluguel') ? 'rent' : description.startsWith('Comissão') ? 'commission' : description.startsWith('Condomínio') ? 'condominium' : null;
       return kind ? `${kind}:${date.toISOString().slice(0, 7)}` : null;
     };
     const generated = existing.filter((t) => t.installment_number != null);

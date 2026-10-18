@@ -263,12 +263,12 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
       title: 'Comissão (Financeiro)',
       icon: <Percent size={20} />,
       fields: [
-        { field: 'commission_category_id', label: 'Categoria da Comissão', type: 'select', required: false, searchable: true, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, className: 'col-span-full' } as any,
+        { field: 'commission_category_id', label: 'Categoria da Comissão', type: 'select', required: true, searchable: true, options: [{ label: 'Nenhuma', value: '' }, ...categoryOptions], icon: <Landmark size={20} />, className: 'col-span-full' } as any,
         {
           field: 'commission_subcategory_id',
           label: 'Subcategoria da Comissão',
           type: 'select',
-          required: false,
+          required: true,
           searchable: true,
           options: (formValues: any) => {
             const categoryId = formValues?.commission_category_id;
@@ -283,7 +283,7 @@ export default function EditarImobiliariaForm({ id, categoryOptions, subcategori
           icon: <Landmark size={20} />,
           className: 'col-span-full',
         } as any,
-        { field: 'commission_percentage', label: '% de Comissão Imobiliária', type: 'number', required: false, placeholder: 'Ex: 7', maxLength: 3, icon: <Percent size={20} /> },
+        { field: 'commission_percentage', label: '% de Comissão Imobiliária', type: 'number', required: true, placeholder: 'Ex: 7', maxLength: 3, icon: <Percent size={20} /> },
       ],
     },
     {

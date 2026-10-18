@@ -26,9 +26,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 const globalForTenant = globalThis as unknown as { tenantStorage?: AsyncLocalStorage<string> };
 
 export const tenantStorage: AsyncLocalStorage<string> =
-  globalForTenant.tenantStorage ?? new AsyncLocalStorage<string>();
+  globalForTenant.tenantStorage ??= new AsyncLocalStorage<string>();
 
-if (process.env.NODE_ENV !== 'production') globalForTenant.tenantStorage = tenantStorage;
 
 /** Retorna o company_id do contexto atual, ou undefined fora de uma request com tenant. */
 export function getCurrentCompanyId(): string | undefined {

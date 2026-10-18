@@ -100,7 +100,7 @@ export default function Aside({
   isPinned = false,
   onTogglePin,
 }: AsideProps) {
-  const [internalIsOpen, setInternalIsOpen] = useState(true);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = propIsOpen ?? internalIsOpen;
   const handleToggle = propOnToggle ?? (() => setInternalIsOpen((prev) => !prev));
 
@@ -129,7 +129,7 @@ export default function Aside({
       // Com o alfinete fixado: o menu permanece sempre visível.
       // O accordion NÃO é fechado aqui: quem manda nele é a rota (ver
       // `openSubmenu`), senão o menu voltaria vazio na página recém-aberta.
-      if (!isPinned) {
+      if (!isPinned && isOpen) {
         handleToggle();
       }
     }
@@ -302,7 +302,7 @@ export default function Aside({
 
         {/* Atalho sempre visível, separado do logo para não ser comprimido. */}
         <div className="relative z-10 px-3 pt-3">
-          <LeaseOverdueBell placement="sidebar" />
+          <LeaseOverdueBell placement="sidebar" onNavigate={() => handleItemClick('/dashboard/locacoes/atrasadas')} />
         </div>
 
         {/* Lista de Navegação */}
@@ -357,6 +357,8 @@ export default function Aside({
                                     <Link
                                       href={subItem.href}
                                       onClick={() => handleItemClick(subItem.href)}
+                                      onContextMenu={() => handleItemClick(subItem.href)}
+                                      onAuxClick={() => handleItemClick(subItem.href)}
                                       className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                                         isSubActive
                                           ? "bg-brand/10 text-brand font-semibold border border-brand/20"
@@ -377,6 +379,8 @@ export default function Aside({
                       <Link
                         href={item.href}
                         onClick={() => handleItemClick(item.href)}
+                        onContextMenu={() => handleItemClick(item.href)}
+                        onAuxClick={() => handleItemClick(item.href)}
                         className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                           isActive
                             ? "bg-brand/10 text-brand font-semibold border border-brand/20"

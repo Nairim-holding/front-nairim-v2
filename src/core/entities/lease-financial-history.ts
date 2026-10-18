@@ -23,6 +23,7 @@ export interface LeaseHistoryRow {
   situationLabel: string;
   /** Lançamento excluído pelo cancelamento do contrato. */
   canceled: boolean;
+  recurring?: boolean;
 }
 
 /** Lançamento sem `lease_id` cuja descrição aponta para este contrato. */

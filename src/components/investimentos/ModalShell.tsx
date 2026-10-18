@@ -16,6 +16,7 @@ interface Props {
   /** Botões do rodapé. Sem rodapé quando ausente. */
   footer?: ReactNode;
   maxWidth?: string;
+  fixedBody?: boolean;
 }
 
 export const modalInputClass =
@@ -58,7 +59,7 @@ export function ModalPrimaryButton({
   );
 }
 
-export default function ModalShell({ title, onClose, children, footer, maxWidth = 'max-w-xl' }: Props) {
+export default function ModalShell({ title, onClose, children, footer, maxWidth = 'max-w-xl', fixedBody = false }: Props) {
   return (
     <div
       className="fixed inset-0 z-[9990] flex items-center justify-center p-4"
@@ -67,8 +68,8 @@ export default function ModalShell({ title, onClose, children, footer, maxWidth 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className={`bg-surface rounded-xl shadow-xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto p-6`}>
-        <div className="flex items-start justify-between mb-5">
+      <div className={`bg-surface rounded-xl shadow-xl w-full ${maxWidth} max-h-[90vh] ${fixedBody ? 'flex h-[90vh] flex-col overflow-hidden' : 'overflow-y-auto'} p-6`}>
+        <div className="flex shrink-0 items-start justify-between mb-5">
           <h2 className="text-base font-semibold text-content">{title}</h2>
           <button
             type="button"
@@ -82,7 +83,7 @@ export default function ModalShell({ title, onClose, children, footer, maxWidth 
 
         {children}
 
-        {footer && <div className="mt-6 flex items-center justify-end gap-2">{footer}</div>}
+        {footer && <div className="mt-6 flex shrink-0 items-center justify-end gap-2">{footer}</div>}
       </div>
     </div>
   );

@@ -40,6 +40,7 @@ interface QuickCreateAutocompleteProps {
    */
   size?: 'sm' | 'md';
   ariaLabel?: string;
+  openOnFocus?: boolean;
 }
 
 const normalize = (s: string) =>
@@ -57,6 +58,7 @@ export default function QuickCreateAutocomplete({
   allowCreate = true,
   size = 'sm',
   ariaLabel,
+  openOnFocus = true,
 }: QuickCreateAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,11 +83,6 @@ export default function QuickCreateAutocomplete({
     const found = flatOptions.find(o => String(o.value) === String(value))?.label;
     return found ?? currentLabel ?? '';
   }, [value, flatOptions, currentLabel]);
-
-  // Sync query with selected label when not editing.
-  useEffect(() => {
-    if (!isOpen) setQuery(selectedLabel);
-  }, [selectedLabel, isOpen]);
 
   const filtered = useMemo(() => {
     const q = normalize(query);
@@ -209,12 +206,13 @@ export default function QuickCreateAutocomplete({
             }
           }}
           onFocus={() => {
-            if (disabled) return;
+            if (disabled || !openOnFocus) return;
             setIsOpen(true);
             setQuery('');
             // Pré-seleciona visualmente o valor já registrado (destaca a opção atual).
             setHighlightedIndex(value ? flatOptions.findIndex(o => String(o.value) === String(value)) : -1);
           }}
+          onClick={() => { if (!disabled && !isOpen) { setIsOpen(true); setQuery(''); } }}
           onBlur={() => {
             // Ao sair por TAB/clique fora, apenas fecha o dropdown — NUNCA limpa o
             // valor. O efeito de sincronização restaura `query = selectedLabel`,
@@ -322,6 +320,7 @@ export default function QuickCreateAutocomplete({
             <button
               type="button"
               role="option"
+              aria-selected={false}
               tabIndex={-1}
               onMouseDown={e => e.preventDefault()}
               onClick={() => commitCreate(query)}

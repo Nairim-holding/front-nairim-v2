@@ -229,6 +229,7 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
             } as any,
             {
               field: 'occupation',
+              required: true,
               label: 'Profissão',
               type: 'text',
               placeholder: 'Profissão',
@@ -237,10 +238,12 @@ export default function CadastrarInquilinoPage({ searchParams }: Props) {
             } as any,
             {
               field: 'marital_status',
+              required: true,
               label: 'Estado Civil',
               type: 'select',
               options: [
-                { value: 'Solteiro(a)', label: 'Solteiro(a)' },
+                { value: 'Solteiro(a)', required: true,
+              label: 'Solteiro(a)' },
                 { value: 'Casado(a)', label: 'Casado(a)' },
                 { value: 'Separado(a) judicialmente', label: 'Separado(a) judicialmente' },
                 { value: 'Divorciado(a)', label: 'Divorciado(a)' },

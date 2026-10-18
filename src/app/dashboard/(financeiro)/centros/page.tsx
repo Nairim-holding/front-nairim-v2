@@ -125,7 +125,7 @@ export default function CentrosPage() {
               onClick={() => setTransactionType(type)}
               className={`px-8 py-2.5 text-sm font-bold transition-all ${
                 transactionType === type
-                  ? 'bg-[var(--color-brand-primary)] text-content-inverse shadow-md'
+                  ? (type === 'EXPENSE' ? 'bg-orange-600 text-white shadow-md' : 'bg-green-700 text-white shadow-md')
                   : 'text-content-secondary hover:text-content'
               }`}
             >

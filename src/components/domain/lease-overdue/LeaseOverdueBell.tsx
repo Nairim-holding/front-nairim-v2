@@ -11,7 +11,7 @@ import LeaseNotificationActions from './LeaseNotificationActions';
 
 const EMPTY: LeaseOverdueSummary = { items: [], total: 0, critical: 0, amount: 0 };
 
-export default function LeaseOverdueBell({ placement = 'floating' }: { placement?: 'floating' | 'sidebar' }) {
+export default function LeaseOverdueBell({ placement = 'floating', onNavigate }: { placement?: 'floating' | 'sidebar'; onNavigate?: () => void }) {
   const [summary, setSummary] = useState<LeaseOverdueSummary>(EMPTY);
   const [open, setOpen] = useState(false);
   const expiry = useLeaseExpiryAlerts(open);
@@ -98,33 +98,35 @@ export default function LeaseOverdueBell({ placement = 'floating' }: { placement
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg p-1 text-content-muted hover:bg-surface-subtle" aria-label="Fechar notificações"><X size={17} /></button>
           </div>
 
-          {expiry.items.length > 0 && <div className="max-h-[40vh] overflow-y-auto border-b border-ui-border-soft"><h3 className="px-4 pt-3 text-sm font-semibold">Locações a vencer</h3><LeaseExpiryList {...expiry} /></div>}
+          <div className="max-h-[min(65vh,600px)] overflow-y-auto">
+          {expiry.items.length > 0 && <div className="bg-surface-subtle/50"><h3 className="px-4 pt-3 text-base font-semibold text-content">Locações a vencer</h3><LeaseExpiryList {...expiry} onNavigate={() => { setOpen(false); onNavigate?.(); }} /></div>}
           {total === 0 ? (
             <div className="p-8 text-center">
               <Bell size={28} className="mx-auto mb-2 text-content-muted" />
               <p className="text-sm font-medium text-content">Tudo em dia</p>
-              <p className="mt-1 text-xs text-content-muted">Os novos atrasos aparecerão aqui automaticamente.</p>
+              <p className="mt-1 text-sm text-content-muted">Os novos atrasos aparecerão aqui automaticamente.</p>
             </div>
           ) : (
-            <div className="max-h-[min(62vh,470px)] overflow-y-auto divide-y divide-ui-border-soft">
+            <div className="space-y-3 bg-surface-subtle/50 p-3">
+              {summary.total > 0 && <h3 className="px-1 text-base font-semibold text-content">Repasses em atraso</h3>}
               {summary.critical > 0 && (
                 <div className="flex items-center gap-2 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 dark:bg-red-950/30 dark:text-red-300">
                   <AlertTriangle size={14} /> {summary.critical} {summary.critical === 1 ? 'repasse está' : 'repasses estão'} há mais de 30 dias em atraso
                 </div>
               )}
               {summary.items.slice(0, 5).map((item) => (
-                <div key={item.transaction_id} className="p-3.5 hover:bg-surface-subtle/50">
+                <div key={item.transaction_id} className="rounded-xl border border-ui-border-soft bg-surface p-3.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/locacoes/visualizar/${encodeURIComponent(item.lease_id)}`}
-                        onClick={() => setOpen(false)}
-                        className="block truncate text-sm font-semibold text-content hover:text-brand hover:underline"
+                        onClick={() => { setOpen(false); onNavigate?.(); }}
+                        className="block text-base font-semibold text-content hover:text-brand hover:underline"
                       >
                         {item.property_title}
                       </Link>
                       <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-content-secondary"><Building2 size={13} />{item.agency_name}</p>
-                      <p className="mt-1 text-xs text-content-muted">Venceu em {formatDate(item.due_date)} · <span className="font-semibold text-red-600 dark:text-red-300">{item.days_overdue} dias</span>{item.contract_canceled ? ' · Pendência anterior ao cancelamento' : item.contract_ended && ' · Contrato encerrado'}</p>
+                      <p className="mt-1 text-sm text-content-muted">Venceu em {formatDate(item.due_date)} · <span className="font-semibold text-red-600 dark:text-red-300">{item.days_overdue} dias</span>{item.contract_canceled ? ' · Pendência anterior ao cancelamento' : item.contract_ended && ' · Contrato encerrado'}</p>
                     </div>
                     <LeaseNotificationActions item={item} compact />
                   </div>
@@ -133,9 +135,10 @@ export default function LeaseOverdueBell({ placement = 'floating' }: { placement
             </div>
           )}
 
+          </div>
           <Link
             href="/dashboard/locacoes/atrasadas"
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); onNavigate?.(); }}
             className="flex items-center justify-between border-t border-ui-border-soft bg-surface-subtle/50 px-4 py-3 text-sm font-semibold text-brand hover:bg-surface-subtle"
           >
             Ver central de alertas

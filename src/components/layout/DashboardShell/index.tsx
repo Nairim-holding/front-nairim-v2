@@ -9,7 +9,7 @@ interface DashboardShellProps {
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -20,15 +20,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
     const savedPinned = localStorage.getItem('nairim.sidebar_pinned');
-    const savedOpen = localStorage.getItem('nairim.sidebar_open');
+
 
     if (savedPinned === 'true') {
       setIsPinned(true);
       setIsOpen(true);
-    } else if (savedOpen !== null) {
-      setIsOpen(savedOpen === 'true');
     } else {
-      setIsOpen(window.innerWidth >= 768);
+      setIsOpen(false);
     }
   }, []);
 

@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { formatCurrency } from '@/utils';
 import { computeSaleScenario, type RoiPropertyRow } from '@/core/entities/property-roi';
+import { maskMoney, formatCurrencyRealtime } from '@/utils/masks';
+import { parseCurrencyFromPTBR } from '@/utils/displayFormatters';
 import { formatRate } from '../_lib/format';
 
 interface RoiSaleScenarioProps {
@@ -16,6 +18,7 @@ const inputClass = 'mt-1 block w-28 rounded-lg border border-ui-border bg-surfac
  * imóvel. As premissas são digitadas na tela e não ficam salvas.
  */
 export default function RoiSaleScenario({ rows }: RoiSaleScenarioProps) {
+  const [purchaseOverrides, setPurchaseOverrides] = useState<Record<string, string>>({});
   const [years, setYears] = useState('5');
   const [appreciation, setAppreciation] = useState('6');
   const [brokerage, setBrokerage] = useState('6');
@@ -27,6 +30,8 @@ export default function RoiSaleScenario({ rows }: RoiSaleScenarioProps) {
   };
 
   const scenarios = useMemo(() => rows
+    .map(row => ({ ...row, totalInvestment: row.totalInvestment - row.purchaseValue + (purchaseOverrides[row.propertyId] === undefined ? row.purchaseValue : parseCurrencyFromPTBR(purchaseOverrides[row.propertyId]) || 0),
+      purchaseValue: purchaseOverrides[row.propertyId] === undefined ? row.purchaseValue : parseCurrencyFromPTBR(purchaseOverrides[row.propertyId]) || 0 }))
     .filter((row) => row.purchaseValue > 0)
     .map((row) => ({
       row,
@@ -39,13 +44,17 @@ export default function RoiSaleScenario({ rows }: RoiSaleScenarioProps) {
         brokerageRate: number(brokerage) / 100,
         capitalGainsTaxRate: number(tax) / 100,
       }),
-    })), [rows, years, appreciation, brokerage, tax]);
+    })), [rows, purchaseOverrides, years, appreciation, brokerage, tax]);
 
   const skipped = rows.length - scenarios.length;
 
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end gap-4 rounded-xl border border-ui-border-soft bg-surface p-4">
+        {rows.map(row => <label key={row.propertyId} className="text-xs text-content-secondary">Valor de Compra{rows.length > 1 ? ` — ${row.propertyTitle}` : ''}
+          <input aria-label={`Valor de Compra — ${row.propertyTitle}`} type="text" inputMode="decimal" value={purchaseOverrides[row.propertyId] ?? maskMoney(row.purchaseValue)}
+            onChange={event => setPurchaseOverrides(previous => ({ ...previous, [row.propertyId]: formatCurrencyRealtime(event.target.value) }))} className={inputClass + ' !w-40'} />
+        </label>)}
         <label className="text-xs text-content-secondary">Anos até a venda
           <input type="number" min="0" step="1" value={years} onChange={(event) => setYears(event.target.value)} className={inputClass} />
         </label>
@@ -59,7 +68,7 @@ export default function RoiSaleScenario({ rows }: RoiSaleScenarioProps) {
           <input type="number" min="0" step="0.1" value={tax} onChange={(event) => setTax(event.target.value)} className={inputClass} />
         </label>
         <p className="max-w-md text-[11px] text-content-muted">
-          Preço projetado = valor de compra × (1 + valorização)^anos. Lucro bruto = preço − corretagem − investimento inicial.
+          Simulação temporária: alterações no valor de compra não são gravadas. Custos adicionais do investimento são mantidos. Preço projetado = valor de compra × (1 + valorização)^anos. Lucro bruto = preço − corretagem − investimento inicial.
           ROI global = (fluxo de caixa anual × anos + lucro líquido da venda) ÷ investimento inicial.
         </p>
       </div>

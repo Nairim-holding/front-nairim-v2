@@ -32,7 +32,7 @@ export function actionFail(error: unknown): ActionFailure {
     return { ok: false, error: error.message, status: error.statusCode, errors: error.errors };
   }
   if (error instanceof ZodError) {
-    const errors = error.issues.map((i) => `${i.path.join('.') || 'campo'}: ${i.message}`);
+    const errors = error.issues.map((i) => `${i.path.map(part => ({ occupation: 'Profissão', marital_status: 'Estado Civil', cpf: 'CPF', cnpj: 'CNPJ' }[String(part)] ?? String(part))).join('.') || 'campo'}: ${i.message}`);
     return { ok: false, error: 'Erro de validação', status: 400, errors };
   }
   const code = (error as { code?: string })?.code;
@@ -60,14 +60,15 @@ export function actionFail(error: unknown): ActionFailure {
  * `s`/`e`/`d` (sign/exponent/digits) + `toNumber` é a assinatura real da
  * instância, estável entre versões e independente de bundling.
  */
-function isDecimalLike(value: any): boolean {
+function isDecimalLike(value: unknown): value is { toNumber: () => number } {
+  const candidate = value as { toNumber?: unknown; s?: unknown; e?: unknown; d?: unknown };
   return (
     typeof value === 'object' &&
     value !== null &&
-    typeof value.toNumber === 'function' &&
-    typeof value.s !== 'undefined' &&
-    typeof value.e !== 'undefined' &&
-    Array.isArray(value.d)
+    typeof candidate.toNumber === 'function' &&
+    typeof candidate.s !== 'undefined' &&
+    typeof candidate.e !== 'undefined' &&
+    Array.isArray(candidate.d)
   );
 }
 
@@ -75,7 +76,7 @@ function sanitizeDecimals<T>(value: T, depth = 0): T {
   if (depth > 8 || value === null || value === undefined || typeof value !== 'object') return value;
   if (value instanceof Date) return value;
   if (isDecimalLike(value)) {
-    return Number((value as any).toNumber ? (value as any).toNumber() : value) as unknown as T;
+    return Number(value.toNumber()) as unknown as T;
   }
   if (Array.isArray(value)) {
     return value.map((item) => sanitizeDecimals(item, depth + 1)) as unknown as T;

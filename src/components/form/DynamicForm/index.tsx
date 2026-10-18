@@ -1030,7 +1030,7 @@ export default function DynamicFormManager({
             className={`${field.className || 'w-full'}`}
           >
             <label className="block text-sm font-medium text-content-secondary mb-1">
-              {field.label}
+              {field.label}{field.required && <span className="text-red-500" aria-hidden="true">*</span>}
             </label>
             <div className="mt-1">
               {field.render ? field.render(value, formValues, (newValue: any) => handleChange(field.field, newValue), handleChange) : null}

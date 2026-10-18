@@ -73,8 +73,9 @@ export const createAgencySchema = z.object({
   state_registration: z.string().nullish(),
   municipal_registration: z.string().nullish(),
   license_number: z.string().nullish(),
-  commission_category_id: z.string().nullish(),
-  commission_subcategory_id: z.string().nullish(),
+  commission_category_id: z.string().min(1, 'Categoria da Comissão é obrigatória'),
+  commission_subcategory_id: z.string().min(1, 'Subcategoria da Comissão é obrigatória'),
+  commission_percentage: z.preprocess(value => value === '' || value === null ? undefined : value, z.coerce.number().min(0).max(100)),
   contacts: contactsSchema.optional(),
   addresses: z.array(addressSchema).optional(),
 }).passthrough();
@@ -86,8 +87,9 @@ export const updateAgencySchema = z.object({
   state_registration: z.string().nullish(),
   municipal_registration: z.string().nullish(),
   license_number: z.string().nullish(),
-  commission_category_id: z.string().nullish(),
-  commission_subcategory_id: z.string().nullish(),
+  commission_category_id: z.string().min(1, 'Categoria da Comissão é obrigatória').optional(),
+  commission_subcategory_id: z.string().min(1, 'Subcategoria da Comissão é obrigatória').optional(),
+  commission_percentage: z.preprocess(value => value === '' || value === null ? undefined : value, z.coerce.number().min(0).max(100)).optional(),
   contacts: contactsSchema.optional(),
   addresses: z.array(addressSchema).optional(),
 }).passthrough();

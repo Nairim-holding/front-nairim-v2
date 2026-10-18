@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { PROPERTY_FINANCIAL_SETUP_ERROR, AGENCY_FINANCIAL_SETUP_ERROR } from '@/shared/validators/lease-financial-setup';
+import QuickRecordField from '@/components/ui/QuickRecordField';
+import { isQuickCreateSentinel, extractQuickCreateName } from '@/components/ui/QuickCreateAutocomplete';
+import { quickCreateRecordAction } from '@/server/actions/quick-record';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -187,17 +191,23 @@ export default function CadastrarLocacaoPage() {
   const handleSubmit = async (data: any) => {
     try {
       if (!data.property_id) throw new Error('Selecione um imóvel para continuar');
-      if (!data.category_display || data.category_display === 'Sem categoria') throw new Error('O imóvel deve ter uma categoria selecionada');
-      if (!data.center_display || data.center_display === 'Sem centro de custo') throw new Error('O imóvel deve ter um centro de custo selecionado');
+      if (!data.category_display || data.category_display === 'Sem categoria') throw new Error(PROPERTY_FINANCIAL_SETUP_ERROR);
+      if (!data.center_display || data.center_display === 'Sem centro de custo') throw new Error(PROPERTY_FINANCIAL_SETUP_ERROR);
       if (!data.agency_id) throw new Error('Selecione uma imobiliária para continuar');
-      if (!data.commission_category_display || data.commission_category_display === 'Sem categoria de comissão') throw new Error('A imobiliária selecionada deve ter uma categoria de comissão');
+      if (!data.commission_category_display || data.commission_category_display === 'Sem categoria de comissão') throw new Error(AGENCY_FINANCIAL_SETUP_ERROR);
       if (!data.financial_institution_id) throw new Error('Selecione a Instituição Financeira na aba Valores da Locação');
 
+      let tenantId = data.tenant_id;
+      if (isQuickCreateSentinel(tenantId)) {
+        const created = await quickCreateRecordAction('tenants', extractQuickCreateName(tenantId));
+        if (!created.ok) throw new Error(created.error);
+        tenantId = created.data.id;
+      }
       const formattedData: any = {
         property_id: data.property_id,
         type_id: data.type_id,
         owner_id: data.owner_id,
-        tenant_id: data.tenant_id,
+        tenant_id: tenantId,
         agency_id: data.agency_id || null,
         financial_institution_id: data.financial_institution_id || null,
         contract_number: data.contract_number,
@@ -299,7 +309,7 @@ export default function CadastrarLocacaoPage() {
           { field: 'owner_id', label: '', type: 'text', hidden: true },
           { field: 'type_display', label: 'Tipo do Imóvel', type: 'text', required: true, icon: <Building size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel primeiro' },
           { field: 'owner_display', label: 'Proprietário', type: 'text', required: true, icon: <User size={20} />, disabled: true, readOnly: true, placeholder: 'Selecione um imóvel primeiro' },
-          { field: 'tenant_id', label: 'Inquilino', type: 'select', required: true, options: loadingData ? [{ label: 'Carregando inquilinos...', value: '' }] : tenants.map((tenant) => ({ label: tenant.name, value: tenant.id })), icon: <User size={20} />, className: 'col-span-full' },
+          { field: 'tenant_id', label: 'Inquilino', type: 'custom', defaultValue: '', required: true, options: loadingData ? [{ label: 'Carregando inquilinos...', value: '' }] : tenants.map((tenant) => ({ label: tenant.name, value: tenant.id })), icon: <User size={20} />, className: 'col-span-full', render: (value, _form, onChange) => <QuickRecordField resource="tenants" label="Inquilino" value={value} onChange={onChange} options={tenants.map(tenant => ({ label: tenant.name, value: tenant.id }))} disabled={loadingData} /> },
           { field: 'agency_id', label: 'Imobiliária', type: 'select', options: [{ label: 'Nenhuma', value: '' }, ...agencies.map((a) => ({ label: a.trade_name, value: a.id }))], icon: <Building size={20} /> },
           { field: 'notes', label: 'Observações Gerais', type: 'textarea', placeholder: 'Observações sobre a locação', rows: 3, icon: <FileText size={20} />, className: 'col-span-full' },
         ],

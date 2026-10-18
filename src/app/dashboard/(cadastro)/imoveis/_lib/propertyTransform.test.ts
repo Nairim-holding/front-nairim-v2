@@ -7,7 +7,7 @@ describe('property sale observation round trip', () => {
     const saleNotes = 'Financiamento aprovado.\nAguardar assinatura da escritura.';
     const form = transformPropertyData({
       title: 'Casa', bedrooms: 2, bathrooms: 1, area_total: 100, furnished: false,
-      tax_registration: '123', owner_id: 'owner', type_id: 'type', notes: 'Detalhes do imóvel',
+      tax_registration: '123', owner_id: 'owner', type_id: 'type', category_id: 'income', subcategory_id: 'rent', center_id: 'credit', debit_center_id: 'debit', iptu_refund_category_id: 'income', iptu_refund_subcategory_id: 'iptu', notes: 'Detalhes do imóvel',
       values: [{ status: 'SOLD', sale_buyer: 'Comprador', sale_value: 450000, sale_date: '2026-09-28',
         notes: 'Condições financeiras', sale_notes: saleNotes }],
     });
