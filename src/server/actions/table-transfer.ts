@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { exportAllTableData, previewAllTableImport, importAllTableData } from '@/server/services/table-transfer-batch';
 import { revalidatePath } from 'next/cache';
-import { withPermission, assertAdmin, assertSuperAdmin } from '@/infra/auth/session';
+import { withPermission, withPermissions, assertAdmin, assertSuperAdmin } from '@/infra/auth/session';
 import { tableTransferRepository } from '@/infra/repositories/prisma-table-transfer-repository';
 import { getTransferTable, TABLE_TRANSFER_MAX_BYTES, type TransferTable, type TableTransferImportResult } from '@/shared/data/table-transfer';
 import { parseTableTransfer } from '@/shared/validators/table-transfer';
@@ -41,19 +41,19 @@ export async function exportTableDataAction(key: string, scope: 'current' | 'all
 export async function previewTableImportAction(key: string, form: FormData) {
   return runAction(async () => {
     const table = tableFor(key);
-    return withPermission(table.resource, 'create', session => withPermission(table.resource, 'edit', async () => {
+    return withPermissions(table.resource, ['create', 'edit'], async session => {
       authorizeSensitive(table, session);
       const mode = z.enum(['current', 'copy-all', 'restore-all']).parse(form.get('mode') ?? 'current');
       if (mode !== 'current') { assertSuperAdmin(session); return previewAllTableImport(table, await readFile(form), mode, session); }
       const { payload } = parseTableTransfer(await readFile(form), key);
       return { label: table.label, counts: payload.meta.counts, total: Object.values(payload.data).reduce((sum, rows) => sum + rows.length, 0), dependencies: payload.meta.dependencies };
-    }));
+    });
   });
 }
 export async function importTableDataAction(key: string, form: FormData) {
   return runAction<TableTransferImportResult>(async () => {
     const table = tableFor(key);
-    return withPermission(table.resource, 'create', session => withPermission(table.resource, 'edit', async () => {
+    return withPermissions(table.resource, ['create', 'edit'], async session => {
       authorizeSensitive(table, session);
       const mode = z.enum(['current', 'copy-all', 'restore-all']).parse(form.get('mode') ?? 'current');
       if (mode !== 'current') {
@@ -66,6 +66,6 @@ export async function importTableDataAction(key: string, form: FormData) {
       const result = await tableTransferRepository.import(table, payload, session.company_id, session.id, session.role === 'SUPER_ADMIN');
       revalidatePath('/dashboard', 'layout');
       return result;
-    }));
+    });
   });
 }

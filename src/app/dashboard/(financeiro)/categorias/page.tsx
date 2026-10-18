@@ -210,7 +210,7 @@ export default function CategoriasPage() {
                       ))}
                     </select>
                     <p className="text-[11px] text-content-muted">
-                      Usada no relatório Demonstrativo (DFC) do Fluxo de Caixa, em Relatórios.
+                      Define em qual grupo as despesas desta categoria aparecem no Demonstrativo (DFC), em Relatórios: Impostos, Despesas Variáveis, Despesas Fixas ou Pessoal. Isso muda os subtotais do DFC, sem alterar o valor ou a quitação dos lançamentos. Sem classificação, o sistema tenta reconhecer o grupo pelo nome; caso não identifique, exibe em Despesas sem classificação.
                     </p>
                   </div>
                 )

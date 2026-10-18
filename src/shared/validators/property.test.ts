@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createUnifiedPropertySchema, parseUnifiedPropertyUpdate } from './property';
 
 const property = { title: 'Imóvel de teste', bedrooms: 0, bathrooms: 0, area_total: 100, furnished: false,
-  tax_registration: '123', owner_id: 'owner', type_id: 'type', values: { status: 'AVAILABLE' } };
+  tax_registration: '123', owner_id: 'owner', type_id: 'type', category_id: 'income', subcategory_id: 'rent', center_id: 'credit', debit_center_id: 'debit', iptu_refund_category_id: 'income', iptu_refund_subcategory_id: 'iptu', values: { status: 'AVAILABLE' } };
 const legacy = { id: 'iptu-2026', year: 2026, payment_condition: 'IN_FULL_15_DISCOUNT', property_tax_cash: 3821.68, property_tax_cash_due_date: null };
 describe('property update with legacy IPTU', () => {
   it('allows changing occupancy without inventing a date for unchanged legacy IPTU', () => {
@@ -33,4 +33,10 @@ describe('sale details', () => {
     }
     expect(createUnifiedPropertySchema.safeParse(property).success).toBe(true);
   });
+});
+
+it('exige os seis vínculos financeiros do imóvel', () => {
+  for (const key of ['category_id','subcategory_id','center_id','debit_center_id','iptu_refund_category_id','iptu_refund_subcategory_id']) {
+    expect(createUnifiedPropertySchema.safeParse({ ...property, [key]: '' }).success).toBe(false);
+  }
 });

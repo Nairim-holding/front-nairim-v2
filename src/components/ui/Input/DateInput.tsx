@@ -44,16 +44,14 @@ export default function DateInput({ id, label, required, value, onChange, onBlur
             emit(edit.text);
           }}
           onKeyDown={(event) => {
+            if (event.key !== 'Backspace' && event.key !== 'Delete') return;
             const start = event.currentTarget.selectionStart ?? 0;
-            if (start !== event.currentTarget.selectionEnd) return;
-            const backward = event.key === 'Backspace' && draft[start - 1] === '/';
-            const forward = event.key === 'Delete' && draft[start] === '/';
-            if (!backward && !forward) return;
+            const end = event.currentTarget.selectionEnd ?? start;
+            const from = start === end && event.key === 'Backspace' ? Math.max(0, start - 1) : start;
+            const to = start === end && event.key === 'Delete' ? Math.min(draft.length, end + 1) : end;
             event.preventDefault();
-            const index = backward ? start - 2 : start + 1;
-            if (index < 0 || index >= draft.length) return;
-            caret.current = backward ? index : start;
-            emit(draft.slice(0, index) + draft.slice(index + 1));
+            caret.current = from;
+            emit(draft.slice(0, from) + draft.slice(to));
           }}
           onBlur={(event) => {
             event.target.setCustomValidity(draft && !isValidIsoDateString(iso) ? 'Informe uma data válida.' : '');

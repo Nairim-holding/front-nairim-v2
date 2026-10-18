@@ -5,6 +5,7 @@
 
 import type { FormFieldDef, FormStep } from '@/types/types';
 import QuickCreateAutocomplete, { isQuickCreateSentinel } from '@/components/ui/QuickCreateAutocomplete';
+import QuickRecordField from '@/components/ui/QuickRecordField';
 import IptuManager from '@/components/domain/financial/IptuManager';
 import PropertyLocationPicker from '@/components/map/PropertyLocationPicker';
 import { parseMoney } from './propertyTransform';
@@ -70,6 +71,7 @@ export function buildPropertySteps({
     label,
     type: readOnly ? 'select' : 'custom',
     defaultValue: '',
+    required: true,
     options,
     icon: <Landmark size={20} />,
     className,
@@ -85,6 +87,7 @@ export function buildPropertySteps({
           ariaLabel={label}
           placeholder={parentField && !formValues?.[parentField] ? 'Selecione uma categoria primeiro' : 'Selecione ou digite para cadastrar...'}
           size="md"
+          openOnFocus={!value}
         />
         {!parentField && field.includes('category_id') && isQuickCreateSentinel(value) && (
           <p className="mt-1 text-xs text-content-muted">Será cadastrada como receita ao salvar o imóvel.</p>
@@ -115,9 +118,9 @@ export function buildPropertySteps({
         { field: 'area_built', label: 'Área Edificada (m²)', type: 'text', required: true, placeholder: 'Área construída', mask: 'metros2', icon: <Ruler size={20} />, ...ro },
         { field: 'frontage', label: 'Testada (m)', type: 'text', required: true, placeholder: 'Testada', mask: 'metros', icon: <Ruler size={20} />, ...ro },
         { field: 'tax_registration', label: 'Registro Fiscal', type: 'text', required: true, placeholder: 'Número do registro fiscal', icon: <FileText size={20} />, className: 'col-span-full', ...ro },
-        { field: 'owner_id', label: 'Proprietário', type: 'select', required: true, options: ownerOptions, icon: <User size={20} />, className: 'col-span-full', ...ro },
-        { field: 'type_id', label: 'Tipo do imóvel', type: 'select', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro },
-        { field: 'agency_id', label: 'Imobiliária', type: 'select', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro },
+        { field: 'owner_id', label: 'Proprietário', type: readOnly ? 'select' : 'custom', defaultValue: '', required: true, options: ownerOptions, icon: <User size={20} />, className: 'col-span-full', ...ro, render: (value, _form, onChange) => <QuickRecordField resource="owners" label="Proprietário" value={value} onChange={onChange} options={ownerOptions} disabled={readOnly} /> },
+        { field: 'type_id', label: 'Tipo do imóvel', type: readOnly ? 'select' : 'custom', defaultValue: '', required: true, searchable: true, options: typeOptions, icon: <Building2 size={20} />, className: 'col-span-full', ...ro, render: (value, _form, onChange) => <QuickRecordField resource="property-types" label="Tipo do imóvel" value={value} onChange={onChange} options={typeOptions} disabled={readOnly} /> },
+        { field: 'agency_id', label: 'Imobiliária', type: readOnly ? 'select' : 'custom', defaultValue: '', required: false, options: agencyOptions, icon: <Building size={20} />, className: 'col-span-full', ...ro, render: (value, _form, onChange) => <QuickRecordField resource="agencies" label="Imobiliária" value={value} onChange={onChange} options={agencyOptions} disabled={readOnly} /> },
         { field: 'furnished', label: 'Mobiliado', type: 'select', required: true, options: [{ label: 'Sim', value: 'true' }, { label: 'Não', value: 'false' }], icon: <Sofa size={20} />, className: 'col-span-full', ...ro },
         // Marca o imóvel cuja locação sofre IRRF — é o que separa as linhas que
         // entram no quadro "Retenções dos Aluguéis" do Relatório de Locações.
@@ -150,8 +153,8 @@ export function buildPropertySteps({
       title: 'Valores e Condições',
       icon: <DollarSign size={20} />,
       fields: [
-        financialField('category_id', 'Categoria (Financeiro)', [{ label: 'Nenhuma', value: '' }, ...categoryOptions]),
-        financialField('subcategory_id', 'Subcategoria (Financeiro)', subcategoryOptionsFor('category_id'), 'category_id'),
+        financialField('category_id', 'Categoria Aluguel (Financeiro)', [{ label: 'Nenhuma', value: '' }, ...categoryOptions]),
+        financialField('subcategory_id', 'Subcategoria Aluguel (Financeiro)', subcategoryOptionsFor('category_id'), 'category_id'),
         financialField('center_id', 'Centro de Custo (Crédito)', [{ label: 'Nenhum', value: '' }, ...creditCenterOptions], undefined, 'col-span-full'),
         financialField('debit_center_id', 'Centro de Custo (Débito)', [{ label: 'Nenhum', value: '' }, ...debitCenterOptions], undefined, 'col-span-full'),
         { field: 'purchase_date', label: 'Data da Compra', type: 'date', icon: <Calendar size={20} />, className: 'col-span-full', ...ro },

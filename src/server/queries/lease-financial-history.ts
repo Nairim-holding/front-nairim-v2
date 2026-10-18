@@ -97,7 +97,7 @@ export async function getLeaseFinancialHistoryData(leaseId: string): Promise<Lea
         where: { lease_id: lease.id, OR: [{ deleted_at: null }, { canceled_at: { not: null } }] },
         select: {
           id: true, description: true, amount: true, status: true, event_date: true, effective_date: true,
-          canceled_at: true, installment_number: true, total_installments: true,
+          canceled_at: true, installment_number: true, total_installments: true, is_recurring: true,
           category: { select: { type: true } },
           subcategory: { select: { name: true } },
         },
@@ -121,6 +121,7 @@ export async function getLeaseFinancialHistoryData(leaseId: string): Promise<Lea
         situation,
         situationLabel: leaseHistorySituationLabel(situation, tx.category.type),
         canceled: situation === 'CANCELED',
+        recurring: !!tx.is_recurring,
       };
     });
     const manualMonths = new Set(linked.filter((tx) => tx.installment_number == null && !tx.canceled_at)

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { beginBrowserSession, claimBrowserSession, endBrowserSession } from '@/utils/browser-session';
 import { getTokenExpiryMs } from '@/utils/jwt';
 import { refreshSessionAction, logoutAction } from '@/server/actions/auth';
 
@@ -89,6 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
     sessionStorage.removeItem('userData');
+    endBrowserSession();
     clearActivity();
 
     setAuthState({
@@ -104,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // The login/switch Server Action already set the credential cookie.
 
     sessionStorage.setItem('userData', JSON.stringify(user));
+    beginBrowserSession(user.id);
     markActivity();
 
     console.log('[AuthContext] Login realizado com sucesso. Token armazenado no cookie de sessão.');
@@ -117,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         const cookies = document.cookie.split('; ');
         const authTokenCookie = cookies.find(row => row.startsWith('authToken='));
@@ -156,13 +159,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // fluxo de troca ainda tem o `userData` da empresa anterior em cache.
           // Sem esta checagem, o app confiava cegamente nesse cache e mostrava
           // dados da empresa errada mesmo com o cookie já correto.
-          let payload: any = null;
+          let payload: User;
           try {
             payload = JSON.parse(atob(token.split('.')[1]));
           } catch {
             logout();
             return;
           }
+
+          if (!await claimBrowserSession(payload.id)) { logout(); return; }
 
           if (!user || user.company_id !== payload.company_id) {
             const restoredUser = {
@@ -208,7 +213,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    checkAuth();
+    void checkAuth();
 
     // Escutar evento de logout forçado (ex: token expirado)
     const handleLogoutEvent = () => {

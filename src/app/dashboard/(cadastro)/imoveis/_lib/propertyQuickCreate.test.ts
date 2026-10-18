@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const actions = vi.hoisted(() => ({ category: vi.fn(), subcategory: vi.fn(), center: vi.fn() }));
+const actions = vi.hoisted(() => ({ category: vi.fn(), subcategory: vi.fn(), center: vi.fn(), record: vi.fn() }));
+vi.mock('@/server/actions/quick-record', () => ({ quickCreateRecordAction: actions.record }));
 vi.mock('@/server/actions/financial-category', () => ({ quickCreateFinancialCategoryAction: actions.category }));
 vi.mock('@/server/actions/financial-subcategory', () => ({ quickCreateFinancialSubcategoryAction: actions.subcategory }));
 vi.mock('@/server/actions/financial-center', () => ({ quickCreateFinancialCenterAction: actions.center }));
@@ -62,4 +63,10 @@ describe('property financial quick create', () => {
       : { debit_center_id: '__new__:Novo' };
     await expect(resolvePropertyQuickCreates(data)).rejects.toThrow('Sem permissão');
   });
+});
+
+it('resolve proprietário, tipo e imobiliária novos antes de enviar os vínculos do imóvel', async () => {
+  actions.record.mockImplementation(async (resource,name)=>({ok:true,data:{id:resource+':'+name}}));
+  const result=await resolvePropertyQuickCreates({owner_id:'__new__:João',type_id:'__new__:Casa',agency_id:'__new__:Imobiliária'});
+  expect(result).toEqual({owner_id:'owners:João',type_id:'property-types:Casa',agency_id:'agencies:Imobiliária'});
 });

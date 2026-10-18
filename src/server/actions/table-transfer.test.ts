@@ -6,6 +6,10 @@ vi.mock('@/infra/auth/session', () => ({
     if (state.denied === action) throw new Error('Permissão recusada');
     return callback({ id: 'actor', company_id: 'destination', role: state.role });
   },
+  withPermissions: async (resource: string, actions: string[], callback: (session: object) => unknown) => {
+    for (const action of actions) { state.permission(resource, action); if (state.denied === action) throw new Error('Permissão recusada'); }
+    return callback({ id: 'actor', company_id: 'destination', role: state.role });
+  },
   assertAdmin: (session: {role: string}) => { if (!['ADMIN', 'SUPER_ADMIN'].includes(session.role)) throw new Error('Administrador necessário'); },
   assertSuperAdmin: (session: {role: string}) => { if (session.role !== 'SUPER_ADMIN') throw new Error('Super administrador necessário'); },
 }));

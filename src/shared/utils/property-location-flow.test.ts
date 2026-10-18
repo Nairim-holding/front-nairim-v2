@@ -4,7 +4,7 @@ import { createUnifiedPropertySchema } from '@/shared/validators/property';
 import { isLocationConfirmed, locationConfirmation, resolveLocation } from './property-location';
 
 const address = { street: 'Rua A', number: '55', city: 'Garça', state: 'SP', district: 'Williams', country: 'Brasil', zip_code: '17404-340', latitude: -22.2128484, longitude: -49.6530038 };
-const property = { title: 'Imóvel', bedrooms: 1, bathrooms: 1, area_total: 50, furnished: false, tax_registration: '1', owner_id: 'owner', type_id: 'type' };
+const property = { title: 'Imóvel', bedrooms: 1, bathrooms: 1, area_total: 50, furnished: false, tax_registration: '1', owner_id: 'owner', type_id: 'type', category_id: 'income', subcategory_id: 'rent', center_id: 'credit', debit_center_id: 'debit', iptu_refund_category_id: 'income', iptu_refund_subcategory_id: 'iptu' };
 
 it('preserves confirmation through form load, serialization, validation and persistence', () => {
   const saved = { ...address, location_confirmation: locationConfirmation(address) };

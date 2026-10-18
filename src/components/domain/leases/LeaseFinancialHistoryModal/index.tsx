@@ -83,7 +83,7 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
   const title = history ? `Histórico Financeiro — Contrato ${history.lease.contract_number}` : 'Histórico Financeiro';
 
   return (
-    <ModalShell title={title} onClose={onClose} maxWidth="max-w-6xl" footer={<ModalCancelButton onClick={onClose}>Fechar</ModalCancelButton>}>
+    <ModalShell title={title} onClose={onClose} maxWidth="max-w-6xl" fixedBody footer={<ModalCancelButton onClick={onClose}>Fechar</ModalCancelButton>}>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!error && !history && (
@@ -93,7 +93,7 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
       )}
 
       {history && (
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <p className="text-sm text-content-secondary">
               {history.lease.property_title} · {history.lease.tenant_name}
@@ -127,12 +127,12 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
             <p key={warning} role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{warning}</p>
           ))}
 
-          <div className="overflow-auto rounded-lg border border-ui-border-soft">
+          <div className="min-h-24 flex-1 overflow-auto rounded-lg border border-ui-border-soft" data-testid="lease-history-scroll">
             <table ref={tableRef} className="w-full min-w-[900px] text-left text-sm text-content">
               <thead>
                 <tr>
                   {['Parcela', 'Descrição', 'Tipo', 'Data do evento', 'Vencimento', 'Valor', 'Situação', 'Cancelado'].map((label) => (
-                    <th key={label} className="border-b border-ui-border bg-surface-subtle p-2 text-xs font-semibold text-content-secondary">{label}</th>
+                    <th key={label} className="sticky top-0 z-10 border-b border-ui-border bg-surface-subtle p-2 text-xs font-semibold text-content-secondary">{label}</th>
                   ))}
                 </tr>
               </thead>
@@ -141,12 +141,12 @@ export default function LeaseFinancialHistoryModal({ leaseId, onClose }: Props) 
                   <tr key={row.id} className={row.canceled ? 'text-content-muted' : ''}>
                     <td className="border-b border-ui-border-soft p-2">{row.installment}</td>
                     <td className="border-b border-ui-border-soft p-2">{row.description}</td>
-                    <td className="border-b border-ui-border-soft p-2">{row.type === 'INCOME' ? 'Receita' : 'Despesa'}</td>
+                    <td className="border-b border-ui-border-soft p-2">{row.type === 'INCOME' ? 'Receita' : 'Despesa'}{row.recurring ? ' Recorrente' : ''}</td>
                     <td className="border-b border-ui-border-soft p-2">{formatDate(row.eventDate)}</td>
                     <td className="border-b border-ui-border-soft p-2">{formatDate(row.dueDate)}</td>
                     <td className={`border-b border-ui-border-soft p-2 ${row.canceled ? 'line-through' : ''}`}>{formatCurrency(row.amount)}</td>
                     <td className="border-b border-ui-border-soft p-2">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${SITUATION_CLASSES[row.situation]}`}>{row.situationLabel}</span>
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${SITUATION_CLASSES[row.situation === 'SETTLED' && row.type === 'EXPENSE' ? 'OVERDUE' : row.situation]}`}>{row.situationLabel}</span>
                     </td>
                     <td className="border-b border-ui-border-soft p-2">{row.canceled ? 'Sim' : 'Não'}</td>
                   </tr>

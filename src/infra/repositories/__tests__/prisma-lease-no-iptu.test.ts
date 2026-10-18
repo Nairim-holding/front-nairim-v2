@@ -112,3 +112,18 @@ describe('locação sem IPTU', () => {
     expect(mocks.transactionUpdate).not.toHaveBeenCalled();
   });
 });
+
+it('gera condomínio mensal no dia próprio, preserva o quitado e não duplica avulsos', async () => {
+  vi.resetAllMocks();
+  mocks.leaseFind.mockResolvedValue({ ...lease(), condo_fee: 150, condo_due_day: 31 });
+  mocks.transactionFind.mockResolvedValue([
+    { id:'paid', status:'COMPLETED', description:'Condomínio 1/2 - Contrato RENEWAL', installment_number:1, event_date:new Date('2026-02-28'), amount:150, category:{type:'INCOME'} },
+    { id:'manual', status:'PENDING', description:'Condomínio - Contrato RENEWAL', installment_number:null, event_date:new Date('2026-03-20'), amount:160, category:{type:'INCOME'} },
+  ]);
+  await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease','company');
+  expect(mocks.transactionCreate.mock.calls.some(([args])=>args.data.description.startsWith('Condomínio'))).toBe(false);
+  mocks.transactionFind.mockResolvedValue([]); mocks.transactionCreate.mockClear();
+  await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease','company');
+  const condo=mocks.transactionCreate.mock.calls.map(([args])=>args.data).filter(row=>row.description.startsWith('Condomínio'));
+  expect(condo.map(row=>[row.amount,row.effective_date.toISOString().slice(0,10),row.center_id])).toEqual([[150,'2026-02-28',null],[150,'2026-03-31',null]]);
+});

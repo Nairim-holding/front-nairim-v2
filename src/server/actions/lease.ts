@@ -1,5 +1,6 @@
 'use server';
 
+import { assertLeaseFinancialSetup } from '@/server/services/lease-financial-setup';
 import { leaseUseCases } from '@/infra/factories/lease-factory';
 import { createLeaseSchema, updateLeaseSchema, validateLeaseBusinessRules } from '@/shared/validators/lease';
 import { type ActionResult, runAction } from '@/shared/actions/action-result';
@@ -46,7 +47,7 @@ export async function createLeaseAction(input: Record<string, unknown>): Promise
     const data = createLeaseSchema.parse(input) as unknown as CreateLeaseData;
     const businessWarnings = validateLeaseBusinessRules(input, false);
 
-    const lease = await withPermissionInput('leases', 'create', input, () => leaseUseCases.create.execute(data));
+    const lease = await withPermissionInput('leases', 'create', input, async () => { await assertLeaseFinancialSetup(data.property_id, data.agency_id); return leaseUseCases.create.execute(data); });
 
     const warnings = [...businessWarnings];
     if (lease.finance_warning) warnings.push(lease.finance_warning);
@@ -64,7 +65,7 @@ export async function updateLeaseAction(id: string, input: Record<string, unknow
     const data = updateLeaseSchema.parse(input) as unknown as UpdateLeaseData;
     const businessWarnings = validateLeaseBusinessRules(input, true);
 
-    const lease = await withPermissionInput('leases', 'edit', input, () => leaseUseCases.update.execute(id, data));
+    const lease = await withPermissionInput('leases', 'edit', input, async () => { const existing = await leaseUseCases.getById.execute(id); await assertLeaseFinancialSetup(data.property_id ?? existing.property_id, data.agency_id === undefined ? existing.agency_id : data.agency_id); return leaseUseCases.update.execute(id, data); });
 
     const warnings = [...businessWarnings];
     if (lease.finance_warning) warnings.push(lease.finance_warning);

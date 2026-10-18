@@ -42,10 +42,12 @@ export function useLeaseExpiryAlerts(displayed: boolean) {
   return { items, busy, acknowledge };
 }
 
-export function LeaseExpiryList({ items, busy, acknowledge }: ReturnType<typeof useLeaseExpiryAlerts>) {
-  return <div className="divide-y divide-ui-border-soft">{items.map(item => <div key={`${item.leaseId}:${item.endDate}`} className="p-4 space-y-2">
-    <Link className="font-semibold text-content hover:text-brand" href={`/dashboard/locacoes/visualizar/${encodeURIComponent(item.leaseId)}`}>{item.propertyTitle}</Link>
-    <p className="text-xs text-content-secondary">{item.tenantName} · término em {item.endDate.split('-').reverse().join('/')}</p>
+export function LeaseExpiryList({ items, busy, acknowledge, onNavigate }: ReturnType<typeof useLeaseExpiryAlerts> & { onNavigate?: () => void }) {
+  return <div className="space-y-3 p-3">{items.map(item => <div key={`${item.leaseId}:${item.endDate}`} className="rounded-xl border border-ui-border-soft bg-surface p-3 space-y-2">
+    <Link onClick={onNavigate} className="text-base font-semibold text-content hover:text-brand" href={`/dashboard/locacoes/visualizar/${encodeURIComponent(item.leaseId)}`}>{item.propertyTitle}</Link>
+    <p className="text-sm text-content-secondary">{item.tenantName}</p>
+    <p className="text-sm text-content-secondary">Vencimento: {item.endDate.split('-').reverse().join('/')}</p>
+    <p className="text-sm text-content-secondary">Índice de reajuste: {item.adjustmentIndexName || 'Não informado'}</p>
     <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{item.daysRemaining === 0 ? 'A locação vence hoje' : `A locação vence em ${item.daysRemaining} ${item.daysRemaining === 1 ? 'dia' : 'dias'}`}</p>
     <div className="flex flex-wrap gap-2">
       <button type="button" disabled={busy !== null} onClick={() => void acknowledge(item, false)} className="rounded-lg border border-ui-border px-3 py-1.5 text-xs hover:bg-surface-subtle disabled:opacity-50">Ciente</button>

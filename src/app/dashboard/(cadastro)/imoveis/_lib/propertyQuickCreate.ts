@@ -2,6 +2,7 @@ import { isQuickCreateSentinel, extractQuickCreateName } from '@/components/ui/Q
 import { quickCreateFinancialCategoryAction } from '@/server/actions/financial-category';
 import { quickCreateFinancialSubcategoryAction } from '@/server/actions/financial-subcategory';
 import { quickCreateFinancialCenterAction } from '@/server/actions/financial-center';
+import { quickCreateRecordAction } from '@/server/actions/quick-record';
 import type { ActionResult } from '@/shared/actions/action-result';
 
 function createdId(result: ActionResult<{ id: string }>, label: string): string {
@@ -14,6 +15,10 @@ function createdId(result: ActionResult<{ id: string }>, label: string): string 
 /** Resolve o cadastro rápido ao salvar, como nos lançamentos. */
 export async function resolvePropertyQuickCreates(data: Record<string, unknown>): Promise<Record<string, unknown>> {
   const resolved = { ...data };
+  for (const [field, resource] of [['owner_id','owners'],['type_id','property-types'],['agency_id','agencies']] as const) {
+    const value = resolved[field];
+    if (typeof value === 'string' && isQuickCreateSentinel(value)) resolved[field] = createdId(await quickCreateRecordAction(resource, extractQuickCreateName(value)), 'o cadastro rápido');
+  }
 
   // Aluguéis e restituições de IPTU são receitas. A categoria precisa existir
   // antes de cadastrar a subcategoria, inclusive quando ambas são novas.

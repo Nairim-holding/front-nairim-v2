@@ -16,7 +16,7 @@ async function findAlerts(companyId: string, userId: string) {
     where: { company_id: companyId, deleted_at: null, status: { not: 'CANCELED' },
       end_date: { gte: today, lte: until }, property: { deleted_at: null },
     },
-    select: { id: true, end_date: true, property: { select: { title: true } }, tenant: { select: { name: true } },
+    select: { id: true, end_date: true, adjustment_index: { select: { code: true } }, property: { select: { title: true } }, tenant: { select: { name: true } },
       expiry_reminders: { where: { user_id: userId, company_id: companyId } },
     },
     orderBy: [{ end_date: 'asc' }, { id: 'asc' }],
@@ -47,7 +47,7 @@ export async function getLeaseExpiryAlertsAction(displayedIds: string[] = []) {
         if (reminder.dismissed || reminder.acknowledged_on === today) continue;
       }
       alerts.push({ leaseId: lease.id, propertyTitle: lease.property.title, tenantName: lease.tenant.name,
-        endDate: lease.end_date.toISOString().slice(0, 10), daysRemaining: expiryDays(lease.end_date),
+        endDate: lease.end_date.toISOString().slice(0, 10), adjustmentIndexName: lease.adjustment_index?.code ?? null, daysRemaining: expiryDays(lease.end_date),
         canDismiss: canDismissExpiry(reminder?.shown_days ?? [], today),
       });
     }

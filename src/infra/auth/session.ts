@@ -141,16 +141,21 @@ export async function withPermission<T>(
   action: PermissionAction,
   fn: (session: DecodedSessionToken) => Promise<T>,
 ): Promise<T> {
+  return withPermissions(resource, [action], fn);
+}
+
+/** Check all permissions without nesting authentication/tenant contexts. */
+export async function withPermissions<T>(resource: string, actions: PermissionAction[], fn: (session: DecodedSessionToken) => Promise<T>): Promise<T> {
   return withTenant(async (session) => {
     if (session.role === 'SUPER_ADMIN') return fn(session);
-    if (['users', 'user-groups'].includes(resource) && action !== 'view' && action !== 'export') {
+    if (['users', 'user-groups'].includes(resource) && actions.some(action => action !== 'view' && action !== 'export')) {
       assertAdmin(session);
     }
 
     const perms = await prismaUserGroupPermissionsRepository.resolveForUser(session.id);
     if (perms === null && ADMIN_ROLES.includes(session.role)) return fn(session);
 
-    if (!perms?.get(resource)?.has(action)) {
+    if (!actions.every(action => perms?.get(resource)?.has(action))) {
       throw new ForbiddenError('Acesso negado. Seu grupo de usuário não tem permissão para esta ação.');
     }
     return fn(session);
