@@ -175,7 +175,7 @@ export class PrismaPropertyRoiRepository {
       },
       select: {
         id: true, center_id: true, category_id: true, subcategory_id: true, amount: true,
-        effective_date: true, event_date: true, description: true,
+        effective_date: true, event_date: true, description: true, lease_id: true, installment_number: true,
         category: { select: { id: true, name: true, company_id: true } },
         subcategory: { select: { id: true, name: true, company_id: true } },
         center: { select: { id: true, name: true, company_id: true } },
@@ -190,6 +190,8 @@ export class PrismaPropertyRoiRepository {
     for (const tx of transactions) {
       if (!tx.center_id) continue;
       for (const key of configured) {
+        // Generated condominium receipts reimburse a charge; they are not rent.
+        if (key === 'rent' && tx.lease_id && tx.installment_number != null && /^Condom[ií]nio \d+\/\d+ - Contrato /i.test(tx.description)) continue;
         const line = lines[key];
         if (tx.category_id !== line.category_id) continue;
         if (line.subcategory_id && tx.subcategory_id !== line.subcategory_id) continue;

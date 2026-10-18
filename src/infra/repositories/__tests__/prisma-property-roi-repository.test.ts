@@ -317,3 +317,10 @@ describe('repositório do ROI por imóvel', () => {
     }
   });
 });
+
+it('não trata condomínio mensal gerado pela locação como aluguel no ROI, mesmo com a categoria compartilhada', async () => {
+  mocks.categoryFindMany.mockResolvedValue(categories); mocks.settingsFindUnique.mockResolvedValue(null); mocks.propertyFindMany.mockResolvedValue([property()]);
+  mocks.transactionFindMany.mockResolvedValue([...spreadsheetTransactions,{...tx('cr-1','rec','alu',150,'2026-05-05'),lease_id:'lease-1',installment_number:1,description:'Condomínio 1/12 - Contrato 4169/23'}]);
+  const report=await new PrismaPropertyRoiRepository().getReport(params,'company');
+  expect(report.rows[0].rentReceived).toBe(26400);
+});

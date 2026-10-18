@@ -16,7 +16,7 @@ import { WITHHOLDING_TOTAL_RATE } from '@/core/entities/lease-report';
 import { createDateLocal } from '@/shared/utils/date-utils';
 import { matchReportLease } from '@/core/entities/lease-report-matching';
 
-type Kind = 'rent' | 'commission' | 'iptu' | 'other';
+type Kind = 'rent' | 'commission' | 'iptu' | 'condominium' | 'other';
 
 const COMBINING_MARKS = /[̀-ͯ]/g;
 
@@ -26,6 +26,7 @@ function normalize(value: string | null | undefined): string {
 
 function kindOf(description: string): Kind {
   const first = normalize(description).split(/\s+/)[0];
+  if (first === 'condominio') return 'condominium';
   if (first === 'aluguel') return 'rent';
   if (first === 'comissao') return 'commission';
   if (first === 'restituicao') return 'iptu';
@@ -179,6 +180,7 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
       const net = computeLeaseNetAmount({
         gross_amount: gross,
         property_tax_refund: iptu,
+        condominium_income: sum('condominium'),
         income_tax_withheld: withholding,
         agency_commission: commission,
       });
@@ -193,6 +195,7 @@ export class PrismaLeaseCreditReconciliationRepository implements LeaseCreditRec
         condo_due_day: lease.condo_due_day,
         gross_amount: gross,
         property_tax_refund: iptu,
+        condominium_income: sum('condominium'),
         income_tax_withheld: withholding,
         agency_commission: commission,
         net_amount: net,
