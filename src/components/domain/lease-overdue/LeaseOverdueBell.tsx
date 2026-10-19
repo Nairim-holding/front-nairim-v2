@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Bell, BellRing, Building2, ChevronRight, X } from 'lucide-react';
 import type { LeaseOverdueSummary } from '@/server/queries/lease-overdue';
 import { getOverdueLeaseAlertsAction } from '@/server/actions/lease-overdue';
@@ -18,6 +19,34 @@ export default function LeaseOverdueBell({ placement = 'floating', onNavigate }:
   const total = summary.total + expiry.items.length;
   const [loaded, setLoaded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 16, left: 12, width: 390, maxHeight: 600 });
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const reposition = () => {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const viewport = window.visualViewport;
+      const height = viewport?.height ?? window.innerHeight;
+      const width = viewport?.width ?? window.innerWidth;
+      const offsetTop = viewport?.offsetTop ?? 0;
+      const offsetLeft = viewport?.offsetLeft ?? 0;
+      const panelWidth = Math.min(390, width - 24);
+      const maxHeight = Math.min(720, height - 32);
+      const desiredLeft = placement === 'sidebar' && width >= 640 ? rect.right + 12 : rect.right - panelWidth;
+      setPosition({ top: offsetTop + Math.max(16, Math.min(rect.top - offsetTop, height - maxHeight - 16)), left: offsetLeft + Math.max(12, Math.min(desiredLeft - offsetLeft, width - panelWidth - 12)), width: panelWidth, maxHeight });
+    };
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    window.visualViewport?.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+      window.visualViewport?.removeEventListener('resize', reposition);
+    };
+  }, [open, placement]);
 
   const refresh = useCallback(async () => {
     const result = await getOverdueLeaseAlertsAction();
@@ -40,7 +69,7 @@ export default function LeaseOverdueBell({ placement = 'floating', onNavigate }:
   useEffect(() => {
     if (!open) return;
     const closeOutside = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) setOpen(false);
+      if (panelRef.current && !panelRef.current.contains(event.target as Node) && !popupRef.current?.contains(event.target as Node)) setOpen(false);
     };
     const closeEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -84,13 +113,12 @@ export default function LeaseOverdueBell({ placement = 'floating', onNavigate }:
         {placement === 'floating' && loaded && total > 0 && <span className="hidden md:inline text-xs font-semibold">{total} alertas de locações</span>}
       </button>
 
-      {open && (
-        <div className={placement === 'sidebar'
-          ? 'fixed left-3 top-[76px] w-[calc(100vw-1.5rem)] max-w-[390px] overflow-hidden rounded-2xl border border-ui-border-soft bg-surface shadow-2xl sm:absolute sm:left-full sm:top-0 sm:ml-3 sm:w-[390px]'
-          : 'absolute right-0 mt-2 w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-ui-border-soft bg-surface shadow-2xl'}>
-          <div className="flex items-start justify-between gap-3 border-b border-ui-border-soft p-4">
+      {open && createPortal(
+        <div ref={popupRef} role="dialog" aria-label="Alertas de locações" style={position} className="fixed z-[10050] flex flex-col overflow-hidden rounded-2xl border border-ui-border-soft bg-surface shadow-2xl">
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-ui-border-soft p-4">
             <div>
               <h2 className="font-semibold text-content">Alertas de locações</h2>
+              <p className="mt-1 text-sm text-content-secondary">{expiry.items.length} {expiry.items.length === 1 ? 'locação a vencer' : 'locações a vencer'}</p>
               <p className="mt-0.5 text-xs text-content-muted">
                 {total === 0 ? 'Nenhuma pendência no momento' : `${formatCurrency(summary.amount)} aguardando repasse`}
               </p>
@@ -98,7 +126,7 @@ export default function LeaseOverdueBell({ placement = 'floating', onNavigate }:
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg p-1 text-content-muted hover:bg-surface-subtle" aria-label="Fechar notificações"><X size={17} /></button>
           </div>
 
-          <div className="max-h-[min(65vh,600px)] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-testid="lease-alerts-scroll">
           {expiry.items.length > 0 && <div className="bg-surface-subtle/50"><h3 className="px-4 pt-3 text-base font-semibold text-content">Locações a vencer</h3><LeaseExpiryList {...expiry} onNavigate={() => { setOpen(false); onNavigate?.(); }} /></div>}
           {total === 0 ? (
             <div className="p-8 text-center">
@@ -139,12 +167,12 @@ export default function LeaseOverdueBell({ placement = 'floating', onNavigate }:
           <Link
             href="/dashboard/locacoes/atrasadas"
             onClick={() => { setOpen(false); onNavigate?.(); }}
-            className="flex items-center justify-between border-t border-ui-border-soft bg-surface-subtle/50 px-4 py-3 text-sm font-semibold text-brand hover:bg-surface-subtle"
+            className="flex shrink-0 items-center justify-between border-t border-ui-border-soft bg-surface-subtle/50 px-4 py-3 text-sm font-semibold text-brand hover:bg-surface-subtle"
           >
             Ver central de alertas
             <ChevronRight size={17} />
           </Link>
-        </div>
+        </div>, document.body
       )}
     </div>
   );

@@ -25,6 +25,8 @@ try {
   const page=await browser.newPage({viewport:{width:1280,height:800}});const errors=[];page.on('pageerror',error=>errors.push(error.message));
   const url='http://127.0.0.1:'+server.httpServer.address().port;
   await page.goto(url);
+  assert.equal(await page.getByRole('button',{name:'Exportar JSON',exact:true}).locator('svg.lucide-upload').count(),1);
+  assert.equal(await page.getByRole('button',{name:'Importar JSON',exact:true}).locator('svg.lucide-download').count(),1);
   await page.getByRole('button',{name:'Exportar JSON',exact:true}).click();
   await page.getByRole('combobox',{name:'Empresas para exportar'}).selectOption('all');
   const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar JSON',exact:true}).click();

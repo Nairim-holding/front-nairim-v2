@@ -2044,9 +2044,49 @@
         "list": false,
         "required": false,
         "nullable": false
+      },
+      {
+        "name": "visible_columns",
+        "type": "Json",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
       }
     ],
-    "relations": []
+    "relations": [
+      {
+        "model": "User",
+        "fields": [
+          "user_id"
+        ],
+        "references": [
+          "id"
+        ]
+      },
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
   },
   "UserDashboardLayout": {
     "fields": [
@@ -4136,9 +4176,33 @@
         "list": false,
         "required": false,
         "nullable": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "list": false,
+        "required": false,
+        "nullable": false
       }
     ],
-    "relations": []
+    "relations": [
+      {
+        "model": "Company",
+        "fields": [
+          "company_id"
+        ],
+        "references": [
+          "id"
+        ]
+      }
+    ]
   },
   "Card": {
     "fields": [

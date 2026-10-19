@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const schema = readFileSync(new URL('../prisma/schema.prisma', import.meta.url), 'utf8');
 const enums = Object.fromEntries([...schema.matchAll(/enum\s+(\w+)\s*\{([^}]+)\}/g)].map(([, name, body]) =>
   [name, body.split('\n').map(line => line.trim().split(/\s/)[0]).filter(value => value && !value.startsWith('//'))]));
-const models = Object.fromEntries([...schema.matchAll(/model\s+(\w+)\s*\{([^}]+)\}/g)].map(([, name, body]) => {
+const models = Object.fromEntries([...schema.matchAll(/^model\s+(\w+)\s*\{([\s\S]*?)^\}/gm)].map(([, name, body]) => {
   const fields = [];
   const relations = [];
   for (const line of body.split('\n')) {

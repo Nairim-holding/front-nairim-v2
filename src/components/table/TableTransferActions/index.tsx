@@ -85,10 +85,10 @@ export default function TableTransferActions() {
     {tables.length > 1 && <select aria-label="Tabela para exportar ou importar" value={table.key} disabled={busy} onChange={event => setKey(event.target.value)} className="max-w-44 rounded-lg border border-ui-border bg-surface px-2 py-2 text-sm text-content-secondary">{tables.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}</select>}
     {canExport && <button type="button" disabled={busy} className={iconClass} aria-label="Exportar JSON" aria-expanded={allowAll ? menu === 'export' : undefined}
       onClick={() => allowAll ? setMenu(menu === 'export' ? null : 'export') : void exportData()} title={`Exportar ${table.label} em JSON`}>
-      {busy ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+      {busy ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
     </button>}
     {canImport && <button type="button" disabled={busy} className={iconClass} aria-label="Importar JSON" aria-expanded={allowAll ? menu === 'import' : undefined}
-      onClick={() => allowAll ? setMenu(menu === 'import' ? null : 'import') : fileInput.current?.click()} title={`Importar ${table.label} de outro ambiente`}><Upload size={20} /></button>}
+      onClick={() => allowAll ? setMenu(menu === 'import' ? null : 'import') : fileInput.current?.click()} title={`Importar ${table.label} de outro ambiente`}><Download size={20} /></button>}
     {menu && allowAll && createPortal(<div role="dialog" aria-modal="true" aria-label={menu === 'export' ? 'Opções de exportação' : 'Opções de importação'} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4" onKeyDown={event => {
         if (event.key === 'Escape') setMenu(null);
         if (event.key === 'Tab') {

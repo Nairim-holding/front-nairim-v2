@@ -286,6 +286,7 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
           license_number: data.license_number,
           commission_category_id: data.commission_category_id || null,
           commission_subcategory_id: data.commission_subcategory_id || null,
+          commission_percentage: data.commission_percentage,
         },
       });
 
@@ -324,8 +325,9 @@ export class PrismaAgenciesRepository implements AgenciesRepository {
           state_registration: data.state_registration,
           municipal_registration: data.municipal_registration,
           license_number: data.license_number,
-          commission_category_id: data.commission_category_id || null,
-          commission_subcategory_id: data.commission_subcategory_id || null,
+          commission_category_id: data.commission_category_id,
+          commission_subcategory_id: data.commission_subcategory_id,
+          commission_percentage: data.commission_percentage,
         },
       });
 
