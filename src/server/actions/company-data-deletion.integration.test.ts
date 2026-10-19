@@ -27,7 +27,7 @@ beforeAll(async () => {
   for (const migration of ['20260908000000_restore_audit_trail','20260911000000_move_logs_to_mongodb','20261007000000_complete_audit_coverage']) await db.exec(readFileSync(`prisma/migrations/${migration}/migration.sql`,'utf8'));
   await db.exec(`INSERT INTO "Company" (id,name,slug,updated_at) VALUES ('a','Empresa A','empresa-a',now()),('b','Empresa B','empresa-b',now()),('c','Empresa C','empresa-c',now());
     INSERT INTO "User" (id,company_id,name,email,password,birth_date,gender,role,updated_at) VALUES ('root','a','Root','root@test.local','test-only','1990-01-01','OTHER','SUPER_ADMIN',now());
-    
+
     DELETE FROM "AuditLogOutbox";
 `);
   await server.start(); state.url = `postgresql://postgres@${server.getServerConn()}/postgres?sslmode=disable`;
