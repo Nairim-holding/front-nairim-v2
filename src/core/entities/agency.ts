@@ -41,6 +41,7 @@ export interface Agency {
   license_number?: string | null;
   commission_category_id?: string | null;
   commission_subcategory_id?: string | null;
+  commission_percentage?: number | null;
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
@@ -59,6 +60,7 @@ export interface CreateAgencyData {
   license_number?: string | null;
   commission_category_id?: string | null;
   commission_subcategory_id?: string | null;
+  commission_percentage?: number | null;
   contacts?: AgencyContactInput[];
   addresses?: AgencyAddressInput[];
 }

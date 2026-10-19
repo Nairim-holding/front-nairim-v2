@@ -68,6 +68,7 @@ export const MODEL_LABELS: Record<string, string> = {
   UserGroup: 'Grupo de Usuário',
   Auth: 'Login',
   Backup: 'Backup da empresa',
+  CompanyData: 'Exclusão de dados da empresa',
 };
 
 export function modelLabel(tableName: string): string {
@@ -98,6 +99,7 @@ export const FIELD_LABELS_PT: Record<string, string> = {
   layout: 'Organização dos gráficos',
   format: 'Formato do arquivo',
   record_count: 'Quantidade de registros',
+  groups: 'Grupos selecionados',
   record_counts: 'Registros por tabela',
   created_count: 'Registros incluídos',
   updated_count: 'Registros atualizados',

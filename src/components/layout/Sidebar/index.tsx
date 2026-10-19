@@ -357,8 +357,7 @@ export default function Aside({
                                     <Link
                                       href={subItem.href}
                                       onClick={() => handleItemClick(subItem.href)}
-                                      onContextMenu={() => handleItemClick(subItem.href)}
-                                      onAuxClick={() => handleItemClick(subItem.href)}
+                                      onAuxClick={(event) => { if (event.button === 1) handleItemClick(subItem.href); }}
                                       className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                                         isSubActive
                                           ? "bg-brand/10 text-brand font-semibold border border-brand/20"
@@ -379,8 +378,7 @@ export default function Aside({
                       <Link
                         href={item.href}
                         onClick={() => handleItemClick(item.href)}
-                        onContextMenu={() => handleItemClick(item.href)}
-                        onAuxClick={() => handleItemClick(item.href)}
+                        onAuxClick={(event) => { if (event.button === 1) handleItemClick(item.href); }}
                         className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                           isActive
                             ? "bg-brand/10 text-brand font-semibold border border-brand/20"

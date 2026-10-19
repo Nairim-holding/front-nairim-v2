@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, DatabaseBackup, Loader2, ShieldAlert, Upload, AlertTriangle, History } from 'lucide-react';
 import LogsSettings from './LogsSettings';
+import DataDeletionSettings from './DataDeletionSettings';
 import Section from '@/components/layout/PageSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
@@ -319,6 +320,7 @@ export default function ConfiguracoesPage() {
         )}
 
         </div>
+        <DataDeletionSettings />
         {isAdmin && <LogsSettings />}
         {/* Modal de confirmação */}
         {showRestoreConfirm && (

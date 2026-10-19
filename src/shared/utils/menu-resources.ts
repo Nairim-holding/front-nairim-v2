@@ -227,7 +227,7 @@ export const MENU_RESOURCES: MenuResource[] = [
     key: 'settings',
     label: 'Configurações',
     group: 'Configurações',
-    actions: ['view', 'edit', 'export'],
+    actions: ['view', 'edit', 'delete', 'export'],
     routes: ['/backup', '/company/branding'],
   },
   {
