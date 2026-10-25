@@ -64,6 +64,7 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
       month: `${MONTH_LABELS_FULL[m.month - 1]}/${m.year}`,
       income: m.income,
       expense: m.expense,
+      balance: m.income - m.expense,
     })),
     [flatMonths]
   );
@@ -73,6 +74,7 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
       { key: 'month', label: 'Mês' },
       { key: 'income', label: 'Receita', format: (v: number) => formatCurrency(v), summable: true },
       { key: 'expense', label: 'Despesa', format: (v: number) => formatCurrency(v), summable: true },
+      { key: 'balance', label: 'Saldo', format: (v: number) => formatCurrency(v), summable: true },
     ],
     []
   );
@@ -87,7 +89,11 @@ export default function MonthlyIncomeExpenseChart({ year: yearProp, years: years
         value: Number(item.value ?? 0),
         color: item.seriesName === 'Receitas' ? tokens.success : tokens.chartSeries[0],
       }));
-      return buildCustomTooltipHTML(header, items);
+      const month = flatMonths[itemsArray[0]?.dataIndex];
+      const balance = month ? month.income - month.expense : 0;
+      return buildCustomTooltipHTML(header, [...items, {
+        label: 'Saldo', value: balance, color: balance < 0 ? tokens.error : tokens.success, emphasized: true,
+      }]);
     }),
     legend: {
       show: false,

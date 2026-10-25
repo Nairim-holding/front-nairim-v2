@@ -68,6 +68,8 @@ try {
   await page.goto('http://127.0.0.1:' + server.httpServer.address().port);
   await page.getByText('18.998,32', { exact: true }).waitFor();
   await page.getByText('94,99%', { exact: true }).waitFor();
+  assert.equal(await page.locator('tbody tr').filter({hasText:'Aplicado'}).count(),2);
+  for(const row of await page.locator('tbody tr').filter({hasText:'Aplicado'}).all())assert.equal((await row.locator('td').last().innerText()).trim(),'0,00');
   await page.getByRole('button', { name: 'Exibir e ordenar colunas' }).click();
   await page.getByRole('checkbox', { name: 'Exibir Observações' }).uncheck();
   const row = label => page.locator('[draggable="true"]').filter({ has: page.getByText(label, { exact: true }) });
@@ -80,7 +82,7 @@ try {
   const headers = () => page.locator('thead tr').last().locator('th').allTextContents();
   assert.deepEqual((await headers()).filter(text => text && text !== 'Jan 2025'), desired);
   assert.deepEqual(await page.locator('tbody tr').first().locator('td').allTextContents(), [
-    '', 'PGBL – Classico IV FIC Renda Fixa', 'Emissor de teste', 'Banco de teste - Principal', '01/01/2030', 'Aplicado', '',
+    '', 'PGBL – Classico IV FIC Renda Fixa', 'Emissor de teste', 'Banco de teste - Principal', '01/01/2030', 'Aplicado', '0,00',
   ]);
   await page.reload();
   await page.getByText('18.998,32', { exact: true }).waitFor();

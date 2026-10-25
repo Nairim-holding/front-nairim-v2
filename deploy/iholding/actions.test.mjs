@@ -13,6 +13,8 @@ const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' 
 test('workflow executa somente iholding e publica front e migrations do mesmo commit', () => {
   assert.deepEqual(workflow.on.push.branches, ['iholding']);
   assert.equal(workflow.jobs.imagem.if, "github.ref == 'refs/heads/iholding'");
+  assert.equal(workflow.jobs.imagem.needs, 'validation');
+  assert.equal(workflow.jobs.validation.uses, './.github/workflows/validation.yml');
   assert.deepEqual(workflow.jobs.imagem.strategy.matrix.include.map(item => item.target), ['runner', 'operations']);
   assert.equal(workflow.jobs.deploy.needs, 'imagem');
   assert.match(workflow.jobs.deploy.steps[0].with.script, /cd \/var\/www\/iholding/);

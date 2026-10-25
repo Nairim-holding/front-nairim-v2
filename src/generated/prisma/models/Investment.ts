@@ -1564,8 +1564,8 @@ export type $InvestmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     liquidity_days: number | null
     liquidity_at_maturity: boolean
     /**
-     * Valor da aplicação inicial. Espelhado como o primeiro InvestmentTransaction
-     * (é ele que alimenta a linha "Aplicado" do mês da aplicação).
+     * Capital inicial, base do rendimento antes do primeiro mês do histórico.
+     * O espelho legado em InvestmentTransaction não integra o Aplicado mensal.
      */
     invested_amount: runtime.Decimal
     notes: string | null

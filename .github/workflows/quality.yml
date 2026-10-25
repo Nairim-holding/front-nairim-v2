@@ -1,0 +1,15 @@
+name: Qualidade
+
+on:
+  pull_request:
+    branches: [main, iholding]
+  push:
+    branches: [iholding]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    uses: ./.github/workflows/validation.yml

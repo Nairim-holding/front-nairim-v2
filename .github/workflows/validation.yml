@@ -1,0 +1,49 @@
+name: Validacao reutilizavel
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+      JWT_SECRET: ci-placeholder-without-production-access
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run generate:table-models
+      - run: npx tsc --noEmit
+      - run: npm test
+      - name: Validar instalação e deploy específicos da iholding
+        if: hashFiles('deploy/iholding/schema.test.mjs') != ''
+        run: node --test deploy/iholding/*.test.mjs
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Regressões visuais dos documentos 48 a 51
+        run: |
+          npm run test:investments-ui
+          npm run test:centers-ui
+          node scripts/test-correcoes49-ui.mjs
+          node scripts/test-correcoes50-ui.mjs
+          npm run test:correcoes51-ui
+      - name: Relatório de dependências (pendências descritas em docs/security-review-2026-10-25.md)
+        if: always()
+        continue-on-error: true
+        run: npm audit --json > security-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit
+          path: security-audit.json
+          retention-days: 14

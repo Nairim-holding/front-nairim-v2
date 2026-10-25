@@ -1,6 +1,7 @@
 import { financialDateField } from '@/core/entities/financial-report';
 import { randomUUID } from 'node:crypto';
 import prisma from '@/infra/database/prisma';
+import { compareStatementOrder } from '@/core/entities/statement-order';
 import { getReportingCompanyIds } from '@/infra/database/reporting-context';
 import { expandReportingFilters } from './reporting-catalog';
 import { consolidatedMonthlySummary, consolidatedAvailableYears, consolidatedExpenseCategories, consolidatedSubcategories } from './consolidated-financial-aggregates';
@@ -307,7 +308,8 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
           if (valB === undefined) valB = b[field];
 
           if (typeof valA === 'number' || (valA instanceof Date)) {
-            return direction === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
+            const comparison = direction === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
+            return comparison || (['event_date', 'effective_date'].includes(field) ? compareStatementOrder(a, b, direction) : 0);
           }
           const strA = normalizeText(String(valA || ''));
           const strB = normalizeText(String(valB || ''));
@@ -315,7 +317,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         });
       } else {
         filtered = filtered.sort(
-          (a, b) => parseLocalDate(b.event_date).getTime() - parseLocalDate(a.event_date).getTime(),
+          (a, b) => parseLocalDate(b.event_date).getTime() - parseLocalDate(a.event_date).getTime() || compareStatementOrder(a, b, 'desc'),
         );
       }
 
@@ -332,6 +334,11 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         }
       });
       if (orderBy.length === 0) orderBy.push({ event_date: 'desc' });
+      const dateOrder = orderBy.find(order => 'event_date' in order || 'effective_date' in order);
+      if (dateOrder) {
+        const direction = (dateOrder.event_date ?? dateOrder.effective_date) as 'asc' | 'desc';
+        orderBy.push({ statement_order: { sort: direction, nulls: direction === 'asc' ? 'first' : 'last' } }, { created_at: direction }, { id: direction });
+      }
 
       const [data, count] = await Promise.all([
         prisma.transaction.findMany({

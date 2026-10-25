@@ -273,7 +273,7 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
     const transactions = await prisma.transaction.findMany({
       where,
       include: INCLUDE_CONFIG,
-      orderBy: [{ [dateField]: 'asc' }, { id: 'asc' }],
+      orderBy: [{ [dateField]: 'asc' }, { statement_order: { sort: 'asc', nulls: 'first' } }, { created_at: 'asc' }, { id: 'asc' }],
     });
 
     const saldoAnterior = await this.computeSaldoAnterior(params, where, dateField, start);

@@ -27,6 +27,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [bankLayout, setBankLayout] = useState(false);
 
   useImperativeHandle(ref, () => ({
     getTableElement: () => tableRef.current,
@@ -68,11 +69,11 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
   }, [data, search]);
 
   const sortedItems = useMemo(() => {
-    if (!sortField) return filteredItems;
+    if (bankLayout || !sortField) return filteredItems;
     const copy = [...filteredItems];
     const value = (item: (typeof copy)[number]): string | number => {
       switch (sortField) {
-        case 'date': return item.effective_date;
+        case 'date': return regime === 'competencia' ? item.event_date : item.effective_date;
         case 'description': return item.description;
         case 'contact': return item.supplier?.name ?? '';
         case 'category': return item.category?.name ?? '';
@@ -90,7 +91,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
       return sortDir === 'asc' ? diff : -diff;
     });
     return copy;
-  }, [filteredItems, sortField, sortDir]);
+  }, [filteredItems, sortField, sortDir, bankLayout, regime]);
 
   const handleSort = useCallback((field: SortField) => {
     setSortField((prev) => {
@@ -112,7 +113,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
   // restrita às colunas que o Extrato de fato usa: Data (efetiva) > Categoria
   // > Subcategoria > Contato > Descrição > Centro > Crédito/Débito/Saldo (o
   // Extrato não tem Instituição/Cartão/Status — não se aplicam a este relatório).
-  const columns: { field: SortField; label: string; align?: 'right' }[] = [
+  const allColumns: { field: SortField; label: string; align?: 'right' }[] = [
     { field: 'date', label: 'Data' },
     { field: 'category', label: 'Categoria' },
     { field: 'subcategory', label: 'Subcategoria' },
@@ -123,6 +124,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
     { field: 'debit', label: 'Débito', align: 'right' },
     { field: 'balance', label: 'Saldo', align: 'right' },
   ];
+  const columns = bankLayout ? allColumns.filter(column => ['date', 'description', 'credit', 'debit', 'balance'].includes(column.field)) : allColumns;
 
   if (isLoading) {
     return (
@@ -138,6 +140,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-content">Extrato</h2>
+        <label className="flex items-center gap-2 text-sm text-content"><input type="checkbox" checked={bankLayout} onChange={event => { setBankLayout(event.target.checked); setSortField(null); }}/>Formato bancário</label>
         {summary && (
           <span className="text-xs text-content-muted">
             Saldo Anterior: <strong className="text-content">{formatCurrency(summary.saldoAnterior)}</strong>
@@ -163,7 +166,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
               {columns.map((c) => (
                 <th
                   key={c.field}
-                  onClick={() => handleSort(c.field)}
+                  onClick={() => { if (!bankLayout) handleSort(c.field); }}
                   className={`px-3 py-2 cursor-pointer select-none whitespace-nowrap ${c.align === 'right' ? 'text-right' : ''}`}
                 >
                   {c.label}
@@ -175,7 +178,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
           <tbody>
             {summary && (
               <tr className="text-sm font-semibold bg-surface-subtle border-b border-ui-border-soft">
-                <td className="px-3 py-2 text-content" colSpan={8}>
+                <td className="px-3 py-2 text-content" colSpan={columns.length - 1}>
                   Saldo Anterior
                 </td>
                 <td className={`px-3 py-2 text-right font-bold ${summary.saldoAnterior < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
@@ -192,12 +195,14 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
             )}
             {sortedItems.map((item) => (
               <tr key={item.id} className="text-sm text-content-secondary border-b border-ui-border-soft/60 hover:bg-surface-subtle">
-                <td className="px-3 py-1.5 whitespace-nowrap">{formatDate(item.effective_date)}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap">{formatDate(regime === 'competencia' ? item.event_date : item.effective_date)}</td>
+                {!bankLayout && <>
                 <td className="px-3 py-1.5">{item.category?.name ?? '-'}</td>
                 <td className="px-3 py-1.5">{item.subcategory?.name ?? '-'}</td>
                 <td className="px-3 py-1.5">{item.supplier?.name ?? '-'}</td>
+                </>}
                 <td className="px-3 py-1.5">{item.description}</td>
-                <td className="px-3 py-1.5">{item.center?.name ?? '-'}</td>
+                {!bankLayout && <td className="px-3 py-1.5">{item.center?.name ?? '-'}</td>}
                 <td className="px-3 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
                   {item.credit > 0 ? formatCurrency(item.credit) : ''}
                 </td>
@@ -218,7 +223,7 @@ const ExtratoView = forwardRef<ReportViewHandle, ExtratoViewProps>(function Extr
           {summary && sortedItems.length > 0 && (
             <tfoot>
               <tr className="text-sm font-semibold bg-surface-subtle border-t-2 border-ui-border">
-                <td className="px-3 py-2 text-content" colSpan={6}>
+                <td className="px-3 py-2 text-content" colSpan={columns.length - 3}>
                   Total do Período
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-emerald-600 dark:text-emerald-400">

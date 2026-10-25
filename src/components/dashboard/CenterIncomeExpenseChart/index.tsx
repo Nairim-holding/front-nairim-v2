@@ -36,7 +36,13 @@ export default function CenterIncomeExpenseChart({ startDate, endDate, filters }
     yAxis: { type: 'category', inverse: true, data: rows.map(row => row.name), axisLabel: { color: tokens.textMuted, width: 360, overflow: 'break', lineHeight: 16, margin: 14 },
       axisTick: { show: false }, axisLine: { show: false },
       splitLine: { show: true, interval: 0, lineStyle: { color: tokens.borderDefault, width: 1 } } },
-    ...(rows.length > 12 ? { dataZoom: [{ type: 'slider' as const, yAxisIndex: 0, right: 0, start: 0, end: Math.min(100,1200/rows.length), filterMode: 'filter' as const }] } : {}),
+    ...(rows.length > 12 ? { dataZoom: [{ type: 'slider' as const, yAxisIndex: 0, right: 0, width: 12,
+      start: 0, end: Math.min(100,1200/rows.length), filterMode: 'filter' as const,
+      showDataShadow: false, showDetail: false, brushSelect: false,
+      backgroundColor: tokens.bgSubtle, borderColor: tokens.borderSoft,
+      fillerColor: 'rgba(148,163,184,0.18)', handleStyle: { color: tokens.textMuted, borderColor: tokens.borderSoft },
+      moveHandleStyle: { color: tokens.textMuted },
+    }] } : {}),
     series: [ { name: 'Receitas', type: 'bar', data: rows.map(row => row.income), itemStyle: { color: '#059669' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' }, { name: 'Despesas', type: 'bar', data: rows.map(row => row.expense), itemStyle: { color: '#dc2626' }, barMaxWidth: 16, barGap: '25%', barCategoryGap: '35%' } ],
   });
   return <ChartCard title="Receitas e despesas por centro" subtitle={`${filters?.regime === 'competencia' ? 'Por competência' : 'Por data efetiva'}, sem transferências`} detailData={rows} detailColumns={[

@@ -17,7 +17,7 @@ import {
 const MONTHS = expandMonths('2024-08', '2025-01');
 
 describe('capital inicial do cadastro', () => {
-  it.each(['2024-08-01', '2025-01-01'])('soma R$ 18.998,32 em janeiro, aplicação em %s e sem aporte inicial', application => {
+  it.each(['2024-12-31', '2025-01-01', '2026-01-01'])('soma R$ 18.998,32 em janeiro, aplicação em %s e sem aporte inicial', application => {
     const pgbl = resolveInvestmentHistory(application, 1137238.76, [], new Map([['2025-01', 1148951.94]]), '2025-01');
     const vgbl = resolveInvestmentHistory(application, 707318.13, [], new Map([['2025-01', 714603.27]]), '2025-01');
     const months = expandMonths('2025-01', '2025-01');
@@ -25,6 +25,8 @@ describe('capital inicial do cadastro', () => {
     expect(buildSummary(months, [vgbl], 0)[0].yield_amount).toBe(7285.14);
     expect(buildSummary(months, [pgbl, vgbl], 0)[0].yield_amount).toBe(18998.32);
     expect(buildSummary(months, [pgbl, vgbl], 20000)[0].independence_degree).toBe(94.99);
+    expect(buildSummary(months, [pgbl, vgbl], 20000)[0].total_applied).toBe(0);
+    expect(pgbl.applied.get('2025-01') ?? 0).toBe(0);
   });
 
   it('conta o aporte automático uma vez e preserva aportes extras e resgates', () => {
@@ -33,7 +35,7 @@ describe('capital inicial do cadastro', () => {
       { date: '2025-01-01', type: 'CONTRIBUTION', amount: 1000 },
       { date: '2025-01-10', type: 'REDEMPTION', amount: 100 },
     ], new Map([['2025-01', 1920]]), '2025-01');
-    expect(history.applied.get('2025-01')).toBe(1900);
+    expect(history.applied.get('2025-01')).toBe(900);
     expect(buildSummary(expandMonths('2025-01', '2025-01'), [history], 0)[0].yield_amount).toBe(20);
   });
 

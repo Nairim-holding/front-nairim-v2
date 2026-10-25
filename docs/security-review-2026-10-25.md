@@ -1,0 +1,43 @@
+# Revisão de segurança — 25/10/2026
+
+Escopo: documento 51, diff implementado, autenticação/permissões, isolamento entre empresas, HTML de gráficos, dependências e configuração declarada do app. Revisão local; nenhuma varredura ativa ou alteração de VPS, firewall, banco, storage ou credenciais de produção foi executada.
+
+## Correções
+
+| Achado | Tratamento e evidência |
+| --- | --- |
+| Textos do banco inseridos em HTML de tooltip sem escape | `src/utils/echartsTooltip.ts` escapa cabeçalho, rótulos, valores e `formattedValue`; cores aceitam apenas representação numérica hexadecimal/RGB. Testes incluem tags, eventos e tentativa de sair do atributo de cor. |
+| Next.js 16.1.3 e Sharp 0.34.x desatualizados | Atualizados para Next.js **16.4.3**, configuração ESLint correspondente e Sharp **0.35.5**. O mantenedor indica correção em Next 16.4.1 e Sharp ≥0.35.5 para o [aviso de otimização de imagens](https://github.com/vercel/next.js/security/advisories/GHSA-2464-fhr4-w9xw). |
+| DOMPurify transitivo do jsPDF | Lock atualizado para **3.4.17**; ver [aviso do mantenedor](https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr). |
+| ECharts antigo | Lock atualizado de 6.0 para **6.1.0**, com regressões dos gráficos e tooltips. |
+| Next.js 13 instalado pelos tipos legados do PWA | Removido `@types/next-pwa`; declaração local estreita em `src/types/next-pwa.d.ts` cobre a configuração usada. A aplicação e o PWA compartilham Next 16.4.3. Não houve downgrade do PWA. |
+| Nova consulta do painel de cartões | Permissão no servidor, empresa da sessão em todas as raízes, seleção validada contra cartões permitidos, relações de categoria/fatura escopadas e subcategoria estrangeira ocultada. Testes de recusa de permissão, troca de empresa e IDs estrangeiros. |
+
+## Verificações e limites
+
+- Sessão: JWT com algoritmo HS256 explícito, validação de conta/grupo em cada sessão e testes de revogação existentes mantidos.
+- Banco: injeção de empresa no Prisma, proteção de criação/edição e ampliação de relatórios somente no contexto autorizado; testes de isolamento fazem parte da validação. Relações filhas sem empresa exigem autorização pelo pai.
+- Login: limitador por conta com cinco falhas, independente do IP fornecido pelo cliente. O estado é local ao processo; múltiplas réplicas precisam de armazenamento compartilhado. As variáveis genéricas `RATE_LIMIT_*` não substituem esse limitador.
+- Cookie `authToken` permanece acessível a JavaScript por coexistência com `authFetch`/backend legado. Mudar para HttpOnly exige migrar os consumidores; risco residual de roubo de sessão em caso de XSS. Não foi feita mudança incompatível silenciosa.
+- Configuração de imagens ainda permite HTTPS de qualquer host. Restringir requer inventariar as origens legítimas de mídia/branding. Não foi comprovada exploração de SSRF nesta revisão.
+- Uploads: limite de Server Actions/proxy permanece 50 MB por causa da restauração e documentos. Isso não substitui restrições do proxy reverso, validação de arquivo e limites por usuário.
+- Docker declara execução como usuário sem root e PWA não faz runtime cache de páginas autenticadas. A configuração efetiva da VPS, exposição de portas, TLS das conexões PostgreSQL/MinIO/Mongo, rotação de segredos e restauração de backups precisam de evidência do ambiente real.
+
+## Dependências pendentes
+
+O primeiro `npm audit` retornou **34** pacotes afetados: 2 críticos, 25 altos, 6 moderados e 1 baixo. Após as atualizações direcionadas e remoção dos tipos legados, o npm informou **27**: **0 críticos**, 22 altos, 4 moderados e 1 baixo. Esses números abrangem ferramentas e dependências transitivas; não equivalem a 27 explorações demonstradas no app.
+
+Persistem avisos em cadeias de build/PWA, Prisma/configuração, ferramentas de teste e bibliotecas como XLSX e Zod. Alguns exigem substituição de biblioteca ou migração de versão principal. `npm audit fix` sem `--force` falhou no npm local com `Cannot read properties of null (reading 'edgesOut')`; não foi usado downgrade automático ou `--force` para mascarar o resultado. A análise completa fica no artefato de auditoria do CI; a primeira execução remota ainda depende da publicação destas alterações.
+
+O workflow publica o relatório como artefato e **não trata a auditoria de dependências como aprovada**: a etapa de audit é informativa enquanto essas pendências existem. Tipos, testes, build e regressões de UI bloqueiam a publicação da main em caso de falha. Proteção de branch/obrigatoriedade de checks nas configurações do GitHub não foi alterada.
+
+## Revisões futuras
+
+Skill versionada: [nairim-security-review](../.agents/skills/nairim-security-review/SKILL.md). Foi criada com apoio da skill `skill-creator`; nenhuma integração externa de segurança foi instalada ou recebeu código/credenciais do projeto. A busca no catálogo não disponibilizou uma ferramenta de Codex Security nesta sessão.
+
+```sh
+npm run test:security
+npm audit --json
+```
+
+Revisar os avisos restantes por cadeia de dependência, atualizar com testes correspondentes e então considerar tornar a auditoria bloqueante. A skill e os testes ajudam a repetir a revisão; não certificam que todo o sistema ou ambiente esteja livre de vulnerabilidades.

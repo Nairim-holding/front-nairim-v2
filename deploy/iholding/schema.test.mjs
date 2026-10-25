@@ -38,6 +38,8 @@ test('banco vazio recebe schema atual, auditoria e administrador autenticavel', 
     assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typname='AuditAction' AND e.enumlabel IN ('EXPORT', 'IMPORT')")).rows[0].n, 2);
     assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_indexes WHERE indexname IN ('Transaction_reporting_effective_idx', 'Transaction_reporting_event_idx', 'Property_reporting_created_idx', 'Lease_reporting_start_idx')")).rows[0].n, 4);
     assert.equal((await db.query('SELECT COUNT(*)::int AS count FROM "_prisma_migrations"')).rows[0].count, artifacts.migrations.length);
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM pg_trigger WHERE tgrelid='\"Transaction\"'::regclass AND tgname='transaction_statement_order' AND tgenabled='O'")).rows[0].n, 1);
+    assert.equal((await db.query("SELECT to_regclass('transaction_statement_order_seq') IS NOT NULL AS ready")).rows[0].ready, true);
     const config = readBootstrapConfig({
       DATABASE_URL: 'postgresql://iholding:test@iholding-postgres:5432/iholding_db',
       NEXT_PUBLIC_COMPANY_SLUG: 'iholding', NEXT_PUBLIC_COMPANY_NAME: 'I Holding',

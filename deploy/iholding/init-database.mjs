@@ -24,6 +24,10 @@ export async function loadInitialSchema(schemaSql) {
   const repairItems = migrations.find(item => item.name === '20261006000000_repair_items_and_professionals')?.sql;
   const reportingIndexes = migrations.find(item => item.name === '20261006010000_reporting_indexes')?.sql;
   const completeAudit = migrations.find(item => item.name === '20261007000000_complete_audit_coverage')?.sql;
+  const statementOrder = migrations.find(item => item.name === '20261025000000_transaction_statement_order')?.sql;
+  // A coluna e o índice já vêm do schema atual; sequência/função/trigger são SQL próprio.
+  const statementObjects = statementOrder?.match(/CREATE SEQUENCE[\s\S]*?(?=\nCREATE INDEX)/)?.[0];
+  if (!statementObjects) throw new Error('Definicoes da sequencia do extrato nao encontradas.');
   if (!restore || !move || !repairs || !repairItems || !reportingIndexes || !completeAudit) throw new Error('Migrations de auditoria/reparos/relatorios nao encontradas.');
 
   // Reutiliza as funcoes SQL originais, sem criar AuditLog antigo ou renomear
@@ -40,7 +44,7 @@ export async function loadInitialSchema(schemaSql) {
   if (!snapshot || !writer || !triggers || repairTriggers?.length !== 2 || checks.length !== 5 || itemTriggers?.length !== 2 || itemChecks.length !== 3) {
     throw new Error('Definicoes SQL de auditoria/reparos mudaram. Revise a inicializacao antes de publicar.');
   }
-  return { schemaSql, auditSql: [snapshot, writer, triggers, ...repairTriggers, ...checks, ...itemTriggers, ...itemChecks, reportingIndexes, completeAudit].join('\n'), migrations };
+  return { schemaSql, auditSql: [snapshot, writer, triggers, ...repairTriggers, ...checks, ...itemTriggers, ...itemChecks, reportingIndexes, completeAudit, statementObjects].join('\n'), migrations };
 }
 
 export async function initializeDatabase(client, artifacts) {
