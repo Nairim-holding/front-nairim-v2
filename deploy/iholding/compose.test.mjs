@@ -17,10 +17,14 @@ const dummyEnv = readFileSync(join(root, '.env.iholding.example'), 'utf8')
 writeFileSync(join(temp, 'config.json'), '{}');
 writeFileSync(envFile, dummyEnv);
 const args = ['--config', temp, 'compose', '--env-file', envFile, '-f', composeFile, 'config'];
+// Variáveis do runner (como JWT_SECRET de build) prevalecem sobre --env-file.
+// O teste deve avaliar somente o arquivo de configuração que ele próprio cria.
+const fixtureEnv = { ...process.env };
+for (const [, key] of dummyEnv.matchAll(/^([A-Z][A-Z0-9_]*)=/gm)) delete fixtureEnv[key];
 
 test('Compose resolve isolamento, conexoes internas, rotas e volumes sem motor Docker', () => {
   try {
-    const config = JSON.parse(execFileSync('docker', [...args, '--format', 'json'], { encoding: 'utf8' }));
+    const config = JSON.parse(execFileSync('docker', [...args, '--format', 'json'], { encoding: 'utf8', env: fixtureEnv }));
     assert.equal(config.name, 'iholding');
     for (const service of Object.values(config.services)) {
       assert.ok(!service.ports?.length, 'nenhum servico deve publicar porta na VPS');
@@ -53,7 +57,7 @@ test('Compose resolve isolamento, conexoes internas, rotas e volumes sem motor D
     assert.equal(config.services['iholding-storage-init'].image, 'iholding-mc:2025-08-13');
 
     writeFileSync(envFile, dummyEnv.replace(/^JWT_SECRET=.*$/m, 'JWT_SECRET='));
-    assert.throws(() => execFileSync('docker', [...args, '--quiet'], { encoding: 'utf8', stdio: 'pipe' }), /Configure JWT_SECRET/);
+    assert.throws(() => execFileSync('docker', [...args, '--quiet'], { encoding: 'utf8', stdio: 'pipe', env: fixtureEnv }), /Configure JWT_SECRET/);
   } finally {
     // Caminho criado por mkdtemp, sempre dentro do diretorio temporario.
     rmSync(temp, { recursive: true, force: true });
