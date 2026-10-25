@@ -98,16 +98,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # Verifica todos os bancos antes de substituir qualquer container.
-            for service in front-nairim front-nairim-test front-nairim-homolog; do
-              container=$(docker compose --profile test --profile homolog ps -q "$service")
-              if [ -z "$container" ]; then
-                echo "Deploy interrompido: container atual de $service indisponivel para verificar a migracao."
-                exit 1
-              fi
-              echo "Verificando migracao do extrato em $service"
-              docker exec -i -w /app "$container" node --input-type=module < scripts/check-statement-order-migration.mjs
-            done
+            # Aplica e verifica a migration aditiva antes de substituir containers.
+            bash scripts/migrate-statement-order.sh
 
             # O token do GitHub só autentica o pull da imagem neste deploy.
             trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
