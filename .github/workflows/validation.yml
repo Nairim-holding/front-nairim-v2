@@ -23,6 +23,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run generate:table-models
+      - run: npm run build:seed-test2 -- --check
       - run: npx tsc --noEmit
       - run: npm test
       - name: Validar instalação e deploy específicos da iholding
@@ -30,6 +31,7 @@ jobs:
         run: node --test deploy/iholding/*.test.mjs
       - run: node --test scripts/migrate-statement-order.test.mjs
       - run: npm run build
+      - run: node --test scripts/seed-test2-runtime.test.mjs
       - run: npx playwright install --with-deps chromium
       - name: Regressões visuais dos documentos 48 a 51
         run: |

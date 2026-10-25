@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { readFileSync } from 'node:fs';
+import bcrypt from 'bcryptjs';
 import { assertTest2Url, demoId, seedTest2, TEST_DATABASE } from '../../../scripts/seed-test2.mjs';
 
 let schema: string;
@@ -39,6 +40,7 @@ it('popula relações reais, gera dados do ano e permite repetir preservando alt
   const {rows:[company]}=await db.query<{id:string}>('SELECT id FROM "Company"');
   const adminId=demoId(company.id,'admin');
   const {rows:[original]}=await db.query<{password:string}>('SELECT password FROM "User" WHERE id=$1',[adminId]);
+  expect(await bcrypt.compare(options.adminPassword,original.password)).toBe(true);
   const propertyId=demoId(company.id,'property-0');
   await db.query('UPDATE "Property" SET title=$1 WHERE id=$2',['Editado pelo usuário',propertyId]);
   const second=await seedTest2(client,{...options,adminPassword:'other-fixture-password'});

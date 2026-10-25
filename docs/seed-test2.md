@@ -1,6 +1,6 @@
 # Popular o banco do Teste 2 na VPS
 
-Script: `scripts/seed-test2.mjs`. Usa `pg` e `bcryptjs` que já estão no container da aplicação; não exige Prisma, npm install ou Node no host.
+Script: `scripts/seed-test2.mjs`. Usa o `pg` do container e inclui o `bcryptjs` empacotado no próprio arquivo. Não exige Prisma, bcryptjs instalado, npm install ou Node no host. Funciona no container atual, sem esperar a publicação de uma imagem nova.
 
 ## Executar
 
@@ -52,8 +52,15 @@ O JSON final mostra banco, empresa, ano e quantidade de novos registros por tabe
 ## Validação
 
 ```bash
+npm run build:seed-test2 -- --check
 npx vitest run src/infra/repositories/seed-test2.integration.test.ts
 npx tsc --noEmit
+# Após npm run build, conferir o runtime sem bcrypt instalado:
+node --test scripts/seed-test2-runtime.test.mjs
 ```
 
 Testes com PostgreSQL embarcado e schema real: destino proibido, relacionamentos, auditoria, sequência do extrato, repetição, preservação de senha/edições/configurações, empresa isolada e rollback. O seed não é executado pelo deploy e não foi aplicado na VPS por esta tarefa: a execução é o comando manual acima.
+
+O arquivo executável é gerado a partir de `scripts/seed-test2.source.mjs` com `npm run build:seed-test2`. Registre também o arquivo gerado ao alterar a fonte. O CI verifica se ele está atualizado e testa via stdin num ambiente isolado que contém apenas pg e suas dependências, sem bcryptjs. A criação de senha é conferida com bcrypt compatível com o login do sistema. A licença da biblioteca acompanha o arquivo gerado.
+
+O erro `Cannot find package 'bcryptjs' imported from /app/[eval1]` da primeira versão ocorria antes de conectar ao banco. A versão empacotada corrige esse caso; basta atualizar o checkout com git pull e repetir o comando de execução.
