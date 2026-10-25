@@ -8,7 +8,7 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec(`CREATE TABLE "Transaction" (id text PRIMARY KEY, status text NOT NULL, amount numeric, financial_institution_id text, effective_date date);
     INSERT INTO "Transaction" VALUES ('legacy','COMPLETED',10,'bank','2026-10-25');`);
-  schemaBefore = (await db.query(preflightSql)).rows[0];
+  schemaBefore = (await db.query<Record<string, unknown>>(preflightSql)).rows[0];
   await db.exec(readFileSync('prisma/migrations/20261025000000_transaction_statement_order/migration.sql', 'utf8'));
 }, 30000);
 afterAll(async () => { await db?.close(); });
