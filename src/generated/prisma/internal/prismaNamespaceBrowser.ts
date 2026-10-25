@@ -877,7 +877,8 @@ export const TransactionScalarFieldEnum = {
   transfer_group_id: 'transfer_group_id',
   is_transfer: 'is_transfer',
   is_cancellation_charge: 'is_cancellation_charge',
-  canceled_at: 'canceled_at'
+  canceled_at: 'canceled_at',
+  statement_order: 'statement_order'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]

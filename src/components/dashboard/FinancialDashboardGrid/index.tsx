@@ -18,8 +18,7 @@ import CenterIncomeExpenseChart from '@/components/dashboard/CenterIncomeExpense
 import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
 import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 import {
-  AvgRentalWidget, TotalRentalWidget, TaxFeeWidget, AcquisitionWidget,
-  VacancyGaugeWidget, VacancyMonthsWidget,
+  AvgRentalWidget, TotalRentalWidget, TaxFeeWidget,
 } from './LegacyPortfolioWidgets';
 import { FinancialWidgetProps } from './types';
 
@@ -29,9 +28,6 @@ export const WIDGET_LABELS: Record<string, string> = {
   'widget-11': 'Ticket Médio da Locação',
   'widget-12': 'Valor Total de Aluguel do Portfólio',
   'widget-13': 'Total de Impostos e Taxas',
-  'widget-14': 'Valor Total de Aquisição do Portfólio',
-  'widget-15': 'Índice de Vacância Financeira',
-  'widget-16': 'Total da Vacância em Meses',
   'widget-1': 'Receitas e Despesas',
   'widget-2': '% Despesas em Relação às Receitas',
   'widget-7': 'Despesas: Realizado VS Planejado',
@@ -69,18 +65,12 @@ const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | n
   'widget-11': AvgRentalWidget,
   'widget-12': TotalRentalWidget,
   'widget-13': TaxFeeWidget,
-  'widget-14': AcquisitionWidget,
-  'widget-15': VacancyGaugeWidget,
-  'widget-16': VacancyMonthsWidget,
 };
 
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-11', x: 0, y: 0, w: 4, h: 3 },
   { i: 'widget-12', x: 4, y: 0, w: 4, h: 3 },
   { i: 'widget-13', x: 8, y: 0, w: 4, h: 3 },
-  { i: 'widget-14', x: 0, y: 3, w: 4, h: 3 },
-  { i: 'widget-16', x: 4, y: 3, w: 4, h: 3 },
-  { i: 'widget-15', x: 8, y: 3, w: 4, h: 3 },
   { i: 'widget-1', x: 0, y: 6, w: 8, h: 8 },
   { i: 'widget-2', x: 8, y: 6, w: 4, h: 8 },
   { i: 'widget-7', x: 0, y: 14, w: 6, h: 8 },

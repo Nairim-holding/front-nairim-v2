@@ -6,7 +6,9 @@
 
 ## Rendimento mensal
 
-O capital inicial vem do campo **Valor investido**. O aporte automático correspondente, quando existe, é contado uma única vez. Os demais aportes e resgates permanecem no cálculo.
+O capital inicial vem do campo **Valor investido (saldo inicial)** e serve como base do rendimento. O aporte automático legado correspondente é desconsiderado em **Aplicado**, evitando duplicidade. Os demais aportes e resgates permanecem no cálculo.
+
+**Aplicado** e **Total aplicado** mostram apenas aportes líquidos do mês (aportes menos resgates), sem incluir o capital inicial. Sem movimentos no mês, o total aplicado é R$ 0,00.
 
 Rendimento do mês = saldo final − saldo anterior − aportes líquidos do mês.
 
@@ -19,6 +21,8 @@ Exemplo de janeiro de 2025:
 | PGBL – Classico IV FIC Renda Fixa | R$ 1.137.238,76 | R$ 1.148.951,94 | R$ 11.713,18 |
 | VGBL – Classico IV FIC Renda Fixa | R$ 707.318,13 | R$ 714.603,27 | R$ 7.285,14 |
 | Total | | | **R$ 18.998,32** |
+
+Com referência de independência financeira de R$ 20.000,00, o grau é **94,99%**. Os exemplos acima pressupõem ausência de aportes e resgates em janeiro.
 
 Estas alterações de investimentos não exigem nova migração de banco.
 

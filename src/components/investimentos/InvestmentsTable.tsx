@@ -213,7 +213,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
                   className="!w-3.5 !h-3.5"
                 />
               </span>
-              <span className="pl-4">{formatCell(cell.applied)}</span>
+              <span className="pl-4">{formatCell(cell.applied) || '0,00'}</span>
               {/* Aporte novo (+) e gestão dos aportes do mês (lápis). */}
               <span className="absolute inset-y-0 right-1 hidden items-center gap-0.5 group-hover/cell:flex group-focus-within/cell:flex">
                 <button

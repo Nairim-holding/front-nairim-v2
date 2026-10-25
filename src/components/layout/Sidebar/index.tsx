@@ -255,6 +255,7 @@ export default function Aside({
 
       {/* Painel do Sidebar — Moldura com borda visível e cor interna clara (Modelo de Referência) */}
       <aside
+        onContextMenuCapture={event => event.stopPropagation()}
         className={`fixed top-3 left-3 bottom-3 z-[1000] w-[260px] bg-surface border border-ui-border-soft rounded-2xl shadow-xl flex flex-col transition-all duration-300 ease-in-out ${
           isOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "-translate-x-[290px] opacity-0 pointer-events-none"
         }`}
@@ -356,7 +357,7 @@ export default function Aside({
                                   ) : (
                                     <Link
                                       href={subItem.href}
-                                      onClick={() => handleItemClick(subItem.href)}
+                                      onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) handleItemClick(subItem.href); }}
                                       onAuxClick={(event) => { if (event.button === 1) handleItemClick(subItem.href); }}
                                       className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                                         isSubActive
@@ -377,7 +378,7 @@ export default function Aside({
                     ) : (
                       <Link
                         href={item.href}
-                        onClick={() => handleItemClick(item.href)}
+                        onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) handleItemClick(item.href); }}
                         onAuxClick={(event) => { if (event.button === 1) handleItemClick(item.href); }}
                         className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                           isActive

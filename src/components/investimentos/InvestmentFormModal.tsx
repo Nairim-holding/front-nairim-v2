@@ -414,7 +414,7 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
         </div>
 
         <div>
-          <FieldLabel required>Valor investido</FieldLabel>
+          <FieldLabel required>Valor investido (saldo inicial)</FieldLabel>
           <input
             type="text"
             inputMode="numeric"
@@ -423,6 +423,7 @@ export default function InvestmentFormModal({ investment, existing, onClose, onS
             className={modalInputClass}
             placeholder="0,00"
           />
+          <p className="mt-1 text-xs text-content-muted">Capital inicial usado como base do rendimento. Não entra em Aplicado; registre aportes e resgates do mês separadamente.</p>
         </div>
       </div>
 

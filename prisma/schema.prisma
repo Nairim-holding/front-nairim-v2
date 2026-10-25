@@ -1077,6 +1077,9 @@ model Transaction {
   /// Lançamento excluído pelo cancelamento da locação (valor que deixou de ser
   /// recebido). Distingue-o do `deleted_at` usado ao regenerar as parcelas.
   canceled_at              DateTime?
+  /// Ordem de confirmação registrada pelo banco ao concluir o lançamento.
+  /// Registros antigos sem sequência usam data de criação como desempate.
+  statement_order          Int?
   card                     Card?                @relation(fields: [card_id], references: [id])
   category                 Category             @relation(fields: [category_id], references: [id])
   center                   Center?              @relation(fields: [center_id], references: [id])
@@ -1106,6 +1109,7 @@ model Transaction {
   @@index([lease_id])
   @@index([transfer_group_id])
   @@index([company_id])
+  @@index([financial_institution_id, effective_date, statement_order], map: "Transaction_statement_order_idx")
 }
 
 model Invoice {
@@ -1237,8 +1241,8 @@ model Investment {
   /// Prazo de resgate em dias. Nulo quando `liquidity_at_maturity` é true.
   liquidity_days           Int?
   liquidity_at_maturity    Boolean               @default(false)
-  /// Valor da aplicação inicial. Espelhado como o primeiro InvestmentTransaction
-  /// (é ele que alimenta a linha "Aplicado" do mês da aplicação).
+  /// Capital inicial, base do rendimento antes do primeiro mês do histórico.
+  /// O espelho legado em InvestmentTransaction não integra o Aplicado mensal.
   invested_amount          Decimal               @db.Decimal(20, 2)
   notes                    String?
   /// Ordem de exibição na grid (modal "Editar Ordem de Visualização").

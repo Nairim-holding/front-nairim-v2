@@ -4800,6 +4800,13 @@
         "list": false,
         "required": false,
         "nullable": true
+      },
+      {
+        "name": "statement_order",
+        "type": "Int",
+        "list": false,
+        "required": false,
+        "nullable": true
       }
     ],
     "relations": [

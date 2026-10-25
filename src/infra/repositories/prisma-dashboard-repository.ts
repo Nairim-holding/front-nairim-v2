@@ -57,7 +57,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
     const [properties, prevProperties, leases, currentRentTransactions, previousRentTransactions] = await Promise.all([
       prisma.property.findMany({
         where: {
-          created_at: { gte: period.current.start, lte: period.current.end },
+          created_at: { lte: period.current.end },
           deleted_at: null,
         },
         include: {
@@ -75,7 +75,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       }),
       prisma.property.findMany({
         where: {
-          created_at: { gte: period.previous.start, lte: period.previous.end },
+          created_at: { lte: period.previous.end },
           deleted_at: null,
         },
         include: {
@@ -169,7 +169,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       : 0;
 
     const activeRentalData = properties
-      .filter((p) => toNum(p.values[0]?.rental_value) > 0 && p.values[0]?.status === 'AVAILABLE')
+      .filter((p) => toNum(p.values[0]?.rental_value) > 0 && p.values[0]?.status !== 'SOLD')
       .map((p) => ({
         id: p.id,
         title: p.title,
@@ -182,7 +182,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
           : null,
       }));
     const prevTotalRent = prevProperties.reduce(
-      (acc, p) => acc + (p.values[0]?.status === 'AVAILABLE' ? toNum(p.values[0]?.rental_value) : 0),
+      (acc, p) => acc + (p.values[0]?.status !== 'SOLD' ? toNum(p.values[0]?.rental_value) : 0),
       0,
     );
 

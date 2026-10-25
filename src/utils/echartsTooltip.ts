@@ -1,5 +1,5 @@
 import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts';
-import { formatCurrency } from '@/components/dashboard/MonthlyIncomeExpenseChart';
+import { getThemeTokens } from '@/utils/getThemeTokens';
 
 type TooltipPoint = Exclude<TooltipComponentFormatterCallbackParams, unknown[]> & { axisValueLabel?: string };
 
@@ -11,6 +11,12 @@ export interface TooltipItem {
   emphasized?: boolean;
 }
 
+export const escapeTooltipText = (value: string): string => value.replace(/[&<>"']/g, character => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[character]!);
+
+const safeColor = (value: string, fallback: string) => /^(#[0-9a-f]{3,8}|rgba?\([\d.,%\s]+\))$/i.test(value) ? value : fallback;
+
 /**
  * Cria a string HTML do tooltip padronizado para o Dashboard (1.C)
  * - Cabeçalho com fundo destacado (cinza/lavanda) e texto em negrito centralizado
@@ -21,30 +27,36 @@ export function buildCustomTooltipHTML(
   headerText: string,
   items: TooltipItem[]
 ): string {
+  const tokens = getThemeTokens();
+  const surface = safeColor(tokens.bgSurface, '#ffffff');
+  const header = safeColor(tokens.bgSubtle, '#f1f5f9');
+  const border = safeColor(tokens.borderSoft, '#e2e8f0');
+  const text = safeColor(tokens.textPrimary, '#0f172a');
+  const muted = safeColor(tokens.textSecondary, '#475569');
   const itemsHTML = items
     .map((item) => {
       const valStr =
         item.formattedValue ??
-        (typeof item.value === 'number' ? formatCurrency(item.value) : String(item.value));
+        (typeof item.value === 'number' ? item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : String(item.value));
 
-      const dotColor = item.color ?? '#3b82f6';
+      const dotColor = safeColor(item.color ?? '#3b82f6', '#3b82f6');
 
       return `
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; ${item.emphasized ? 'background-color: #f1f5f9; border-top: 1px solid #e2e8f0; margin: 8px -12px -8px; padding: 6px 12px;' : 'margin-top: 6px;'} font-size: 12px; line-height: 1.4;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; ${item.emphasized ? `background-color: ${header}; border-top: 1px solid ${border}; margin: 8px -12px -8px; padding: 6px 12px;` : 'margin-top: 6px;'} font-size: 12px; line-height: 1.4;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></span>
-            <span style="color: #475569; font-weight: 500;">${item.label}</span>
+            <span style="color: ${muted}; font-weight: 500;">${escapeTooltipText(item.label)}</span>
           </div>
-          <span style="color: #0f172a; font-weight: 700; font-family: system-ui, -apple-system, sans-serif;">${valStr}</span>
+          <span style="color: ${text}; font-weight: 700; font-family: system-ui, -apple-system, sans-serif;">${escapeTooltipText(valStr)}</span>
         </div>
       `;
     })
     .join('');
 
   return `
-    <div style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; min-width: 170px; padding: 0;">
-      <div style="background-color: #f1f5f9; padding: 6px 12px; text-align: center; font-weight: 700; font-size: 12px; color: #1e293b; border-bottom: 1px solid #e2e8f0;">
-        ${headerText}
+    <div style="background-color: ${surface}; border-radius: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05); border: 1px solid ${border}; overflow: hidden; min-width: 170px; padding: 0;">
+      <div style="background-color: ${header}; padding: 6px 12px; text-align: center; font-weight: 700; font-size: 12px; color: ${text}; border-bottom: 1px solid ${border};">
+        ${escapeTooltipText(headerText)}
       </div>
       <div style="padding: 8px 12px;">
         ${itemsHTML}

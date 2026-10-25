@@ -63,4 +63,12 @@ describe('ticket médio da locação', () => {
       },
     });
   });
+  it('inclui imóveis antigos e alugados na carteira sem contar imóveis vendidos', async () => {
+    const property = (id: string, status: string, rental: number) => ({ id, title:id, type:null, agency:null, leases:[], values:[{status,rental_value:rental,property_tax:100,condo_fee:50}] });
+    mocks.propertyFind.mockResolvedValueOnce([property('occupied','RENTED',1000),property('available','AVAILABLE',2000),property('sold','SOLD',5000)]).mockResolvedValueOnce([]);
+    const result = await new PrismaDashboardRepository().getFinancial(new Date('2026-09-01'), new Date('2026-09-30'));
+    expect(mocks.propertyFind.mock.calls[0][0].where.created_at).toEqual({lte:new Date('2026-09-30')});
+    expect(result.totalRentalActive.result).toBe(3000);
+    expect(result.totalPropertyTaxAndCondoFee.result).toBe(450);
+  });
 });

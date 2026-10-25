@@ -62,9 +62,10 @@ export function resolveBalanceSeries(
   months: GridMonth[],
   applied: Map<string, number>,
   manual: Map<string, number>,
+  openingBalance: number | null = null,
 ): Map<string, number | null> {
   const resolved = new Map<string, number | null>();
-  let running: number | null = null;
+  let running: number | null = openingBalance;
 
   for (const { year, month } of months) {
     const key = monthKey(year, month);
@@ -88,11 +89,13 @@ export interface SummaryInput {
   balances: Map<string, number | null>;
   /** Aplicado por mês do mesmo investimento. */
   applied: Map<string, number>;
+  /** Capital do cadastro antes do primeiro mês da série; não é aporte. */
+  opening?: { month: string; amount: number };
 }
 
-/** O cadastro fornece o capital inicial mesmo sem o aporte automático antigo.
- * Substituímos uma transação correspondente para contar esse capital uma vez,
- * preservando os demais aportes, resgates e saldos informados. */
+/** O cadastro fornece a base inicial, separada do fluxo mensal.
+ * Ignora um espelho legado correspondente ao capital inicial e preserva
+ * os demais aportes, resgates e saldos informados. */
 export function resolveInvestmentHistory(
   applicationDate: string,
   initialAmount: number,
@@ -113,9 +116,8 @@ export function resolveInvestmentHistory(
     const signed = tx.type === 'REDEMPTION' ? -tx.amount : tx.amount;
     applied.set(key, round2((applied.get(key) ?? 0) + signed));
   }
-  applied.set(firstMonth, round2((applied.get(firstMonth) ?? 0) + initialAmount));
-  const balances = resolveBalanceSeries(expandMonths(firstMonth, endMonth), applied, manual);
-  return { balances, applied, initialMonth: firstMonth };
+  const balances = resolveBalanceSeries(expandMonths(firstMonth, endMonth), applied, manual, initialAmount > 0 ? initialAmount : null);
+  return { balances, applied, initialMonth: firstMonth, opening: { month: firstMonth, amount: initialAmount } };
 }
 
 export interface SummaryRow {
@@ -150,7 +152,8 @@ export function buildSummary(
 
     for (const investment of investments) {
       totalBalance += investment.balances.get(key) ?? 0;
-      previousBalance += investment.balances.get(prevKey) ?? 0;
+      previousBalance += investment.balances.get(prevKey)
+        ?? (investment.opening?.month === key ? investment.opening.amount : 0);
       totalApplied += investment.applied.get(key) ?? 0;
     }
 

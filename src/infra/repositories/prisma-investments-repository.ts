@@ -242,11 +242,12 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
     const investments: InvestmentRow[] = [];
     const balanceSeries = new Map<string, Map<string, number | null>>();
     const appliedSeries = new Map<string, Map<string, number>>();
+    const openingSeries = new Map<string, { month: string; amount: number }>();
 
     for (const record of records) {
       const entity = toEntity(record as InvestmentRecord);
       const manual = manualBalanceBy.get(entity.id) ?? new Map<string, number>();
-      const { balances: resolved, applied, initialMonth } = resolveInvestmentHistory(
+      const { balances: resolved, applied, initialMonth, opening } = resolveInvestmentHistory(
         entity.application_date,
         entity.invested_amount,
         transactionsBy.get(entity.id) ?? [],
@@ -255,6 +256,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       );
       balanceSeries.set(entity.id, resolved);
       appliedSeries.set(entity.id, applied);
+      if (opening) openingSeries.set(entity.id, opening);
 
       const cells: InvestmentMonthCell[] = months.map(({ year, month }) => {
         const key = monthKey(year, month);
@@ -281,6 +283,7 @@ export class PrismaInvestmentsRepository implements InvestmentsRepository {
       investments.map((investment) => ({
         balances: balanceSeries.get(investment.id) ?? new Map<string, number | null>(),
         applied: appliedSeries.get(investment.id) ?? new Map<string, number>(),
+        opening: openingSeries.get(investment.id),
       })),
       independenceBase,
     );
