@@ -28,6 +28,7 @@ jobs:
       - name: Validar instalação e deploy específicos da iholding
         if: hashFiles('deploy/iholding/schema.test.mjs') != ''
         run: node --test deploy/iholding/*.test.mjs
+      - run: node --test scripts/migrate-statement-order.test.mjs
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - name: Regressões visuais dos documentos 48 a 51
