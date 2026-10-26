@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import NumericCard from '@/components/charts/MetricCard';
 import { MetricResponse, MetricWithData } from '@/types/types';
-import { formatCurrencyFixed, formatCurrencyRounded } from '@/utils/displayFormatters';
+import { formatCurrencyFixed } from '@/utils/displayFormatters';
 import {
   COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_TAX_FEE, COLS_ACQUISITION,
   COLS_FINANCIAL_VACANCY_GAUGE, COLS_VACANCY_MONTHS,
@@ -44,6 +44,7 @@ function useMetricGetter(metrics: MetricResponse | null) {
 
 interface LegacyWidgetProps {
   metrics: MetricResponse | null;
+  periodLabel?: string;
 }
 
 export function AvgRentalWidget({ metrics }: LegacyWidgetProps) {
@@ -64,37 +65,39 @@ export function AvgRentalWidget({ metrics }: LegacyWidgetProps) {
   );
 }
 
-export function TotalRentalWidget({ metrics }: LegacyWidgetProps) {
+export function TotalRentalWidget({ metrics, periodLabel }: LegacyWidgetProps) {
   const get = useMetricGetter(metrics);
   const value = useMemo(() => formatCurrencyFixed(metrics?.totalRentalActive?.result), [metrics]);
   return (
     <LegacyWidgetWrapper>
       <NumericCard
         value={value}
-        label="Valor Total de Aluguel do Portfólio"
+        label={`Valor Total de Aluguel do Portfólio${periodLabel ? ` — ${periodLabel}` : ''}`}
         variation={String(get('totalRentalActive').variation)}
         positive={get('totalRentalActive').isPositive}
         detailData={get('totalRentalActive').data}
         detailColumns={COLS_TOTAL_RENTAL}
         dragHandleClassName={DRAG_HANDLE_CLASS}
+        openDetailsOnCardClick
       />
     </LegacyWidgetWrapper>
   );
 }
 
-export function TaxFeeWidget({ metrics }: LegacyWidgetProps) {
+export function TaxFeeWidget({ metrics, periodLabel }: LegacyWidgetProps) {
   const get = useMetricGetter(metrics);
-  const value = useMemo(() => formatCurrencyRounded(metrics?.totalPropertyTaxAndCondoFee?.result), [metrics]);
+  const value = useMemo(() => formatCurrencyFixed(metrics?.totalPropertyTaxAndCondoFee?.result), [metrics]);
   return (
     <LegacyWidgetWrapper>
       <NumericCard
         value={value}
-        label="Total de Impostos e Taxas (Mensal Est.)"
+        label={`Total de Impostos e Taxas (Mensal Est.)${periodLabel ? ` — ${periodLabel}` : ''}`}
         variation={String(get('totalPropertyTaxAndCondoFee').variation)}
         positive={get('totalPropertyTaxAndCondoFee').isPositive}
         detailData={get('totalPropertyTaxAndCondoFee').data}
         detailColumns={COLS_TAX_FEE}
         dragHandleClassName={DRAG_HANDLE_CLASS}
+        openDetailsOnCardClick
       />
     </LegacyWidgetWrapper>
   );

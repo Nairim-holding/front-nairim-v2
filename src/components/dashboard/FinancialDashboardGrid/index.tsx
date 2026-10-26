@@ -16,19 +16,20 @@ import ResumoDespesasChart from '@/components/dashboard/ResumoDespesasChart';
 import YearlyIncomeExpenseChart from '@/components/dashboard/YearlyIncomeExpenseChart';
 import CenterIncomeExpenseChart from '@/components/dashboard/CenterIncomeExpenseChart';
 import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
-import PeriodFinancialCard from './PeriodFinancialCard';
+import DashboardDemonstrativoWidget from './DashboardDemonstrativoWidget';
 import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 import {
-  AvgRentalWidget,
+  AvgRentalWidget, TotalRentalWidget, TaxFeeWidget,
 } from './LegacyPortfolioWidgets';
 import { FinancialWidgetProps } from './types';
+import { formatPeriodLabel } from '@/utils/periodRange';
 
 // Tarefa 10 (29/07/26): rótulos para o modal "Personalizar Gráficos".
 export const WIDGET_LABELS: Record<string, string> = {
   'widget-20': 'Receitas e Despesas por Centro',
   'widget-11': 'Ticket Médio da Locação',
-  'widget-12': 'Valor Total dos Aluguéis',
-  'widget-13': 'Valor Total dos Impostos',
+  'widget-12': 'Valor Total de Aluguel do Portfólio',
+  'widget-13': 'Total de Impostos e Taxas',
   'widget-1': 'Receitas e Despesas',
   'widget-2': '% Despesas em Relação às Receitas',
   'widget-7': 'Despesas: Realizado VS Planejado',
@@ -39,6 +40,7 @@ export const WIDGET_LABELS: Record<string, string> = {
   'widget-17': 'Resumo das Receitas',
   'widget-18': 'Resumo das Despesas',
   'widget-19': 'Receitas VS Despesas por Ano',
+  'widget-21': 'Demonstrativo Financeiro',
 };
 
 // Widgets com gráfico real já conectado. Todos recebem o mesmo período
@@ -57,15 +59,16 @@ const REAL_WIDGETS: Record<string, ComponentType<FinancialWidgetProps>> = {
   'widget-17': ResumoReceitasChart,
   'widget-18': ResumoDespesasChart,
   'widget-19': YearlyIncomeExpenseChart,
-  'widget-12': (props) => <PeriodFinancialCard {...props} kind="rent" />,
-  'widget-13': (props) => <PeriodFinancialCard {...props} kind="taxes" />,
+  'widget-21': DashboardDemonstrativoWidget,
 };
 
 // Widgets que já existiam no financeiro antes desta etapa (cards de portfólio da
 // aba Financeiro) — precisam de `metrics` vindo de fora, diferente dos widgets
 // acima, que buscam os próprios dados.
-const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | null }>> = {
+const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | null; periodLabel?: string }>> = {
   'widget-11': AvgRentalWidget,
+  'widget-12': TotalRentalWidget,
+  'widget-13': TaxFeeWidget,
 };
 
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
@@ -83,6 +86,7 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
   { i: 'widget-18', x: 6, y: 41, w: 6, h: 8 },
   { i: 'widget-19', x: 0, y: 49, w: 12, h: 9 },
   { i: 'widget-20', x: 0, y: 58, w: 12, h: 10 },
+  { i: 'widget-21', x: 0, y: 68, w: 12, h: 18 },
 ];
 
 /** Corrige layouts já salvos por usuários com a altura antiga destes widgets. */
@@ -116,7 +120,7 @@ export default function FinancialDashboardGrid({
   filters,
   visibleWidgetIds: visibleWidgetIdsProp,
 }: FinancialDashboardGridProps) {
-  const ownVisibility = useWidgetVisibility(resource, ALL_WIDGET_IDS);
+  const ownVisibility = useWidgetVisibility(resource, ALL_WIDGET_IDS, ['widget-21']);
   const visibleWidgetIds = visibleWidgetIdsProp ?? ownVisibility.visibleWidgetIds;
   const isExternallyControlled = visibleWidgetIdsProp !== undefined;
 
@@ -136,7 +140,10 @@ export default function FinancialDashboardGrid({
 
       const LegacyWidget = LEGACY_WIDGETS[id];
       if (LegacyWidget) {
-        return { body: <LegacyWidget metrics={legacyMetrics} />, framed: false };
+        return {
+          body: <LegacyWidget metrics={legacyMetrics} periodLabel={formatPeriodLabel(startDate, endDate)} />,
+          framed: false,
+        };
       }
 
       return null;

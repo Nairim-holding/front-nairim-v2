@@ -71,9 +71,9 @@ export default function DashboardWidgetGrid({
       .map((item) => (normalizeItem ? normalizeItem(item) : item));
     const present = new Set(known.map((item) => item.i));
     const bottom = known.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-    const missing = defaultLayout
-      .filter((d) => !present.has(d.i))
-      .map((d) => ({ ...d, y: bottom + d.y }));
+    const missingDefaults = defaultLayout.filter((d) => !present.has(d.i));
+    const firstMissingY = Math.min(...missingDefaults.map((item) => item.y));
+    const missing = missingDefaults.map((item) => ({ ...item, y: bottom + item.y - firstMissingY }));
     return [...known, ...missing];
   }, [layout, knownIds, defaultLayout, normalizeItem]);
 
