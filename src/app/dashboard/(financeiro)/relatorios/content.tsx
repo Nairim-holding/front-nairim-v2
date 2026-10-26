@@ -15,7 +15,7 @@ import { describeActiveFilters } from './_lib/buildReportQuery';
 import { exportTableToExcel, exportTableToPDF, printReportElement } from '@/lib/reports/exportHelpers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageContext } from '@/contexts/MessageContext';
-import { EMPTY_FILTERS } from './_lib/types';
+import { DEFAULT_REPORT_FILTERS } from './_lib/types';
 import type { ReportFiltersState, ReportGroupBy, ReportKind, ReportRegime, ReportViewHandle, SelectedReport } from './_lib/types';
 
 const DESPESAS_LABELS: Record<ReportGroupBy, { title: string; groupColumnLabel: string }> = {
@@ -57,8 +57,8 @@ function RelatoriosContent() {
   const [dateRange, setDateRange] = useState(() => getDefaultReportDateRange());
   const [regime, setRegime] = useState<ReportRegime>('caixa');
   const [reportKind, setReportKind] = useState<ReportKind>('sintetico');
-  const [filterSelection, setFilterSelection] = useState({ scopeKey, filters: EMPTY_FILTERS });
-  const filters = filterSelection.scopeKey === scopeKey ? filterSelection.filters : EMPTY_FILTERS;
+  const [filterSelection, setFilterSelection] = useState({ scopeKey, filters: DEFAULT_REPORT_FILTERS });
+  const filters = filterSelection.scopeKey === scopeKey ? filterSelection.filters : DEFAULT_REPORT_FILTERS;
   const setFilters = useCallback((filters: ReportFiltersState) => setFilterSelection({ scopeKey, filters }), [scopeKey]);
   const scopedFilters = useMemo(() => ({ ...filters, company_ids: companyIds }), [filters, companyIds]);
 

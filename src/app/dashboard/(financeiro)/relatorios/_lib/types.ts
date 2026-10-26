@@ -86,6 +86,12 @@ export const EMPTY_FILTERS: ReportFiltersState = {
   status: 'all',
 };
 
+/** Filtros iniciais dos Relatórios: lançamentos concluídos por padrão. */
+export const DEFAULT_REPORT_FILTERS: ReportFiltersState = {
+  ...EMPTY_FILTERS,
+  status: 'COMPLETED',
+};
+
 export type ReportSection = 'despesas' | 'receitas' | 'fluxo';
 export type FluxoItemKey = 'extrato' | 'income-expense' | 'demonstrativo';
 

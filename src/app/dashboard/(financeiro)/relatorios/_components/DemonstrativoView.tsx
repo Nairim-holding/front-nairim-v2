@@ -82,7 +82,9 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
   const tableRef = useRef<HTMLTableElement>(null);
   const [data, setData] = useState<DfcResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [groupBy, setGroupBy] = useState<DfcGroupBy>('day');
+  // O demonstrativo abre a receita/despesa por categoria (subcategoria) para
+  // que Aluguéis, Restituição de IPTU, Impostos etc. fiquem visíveis no +.
+  const groupBy: DfcGroupBy = 'subcategory';
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
@@ -114,7 +116,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
     return () => {
       cancelled = true;
     };
-  }, [dateRange.from, dateRange.to, regime, filters, groupBy]);
+  }, [dateRange.from, dateRange.to, regime, filters]);
 
   const toggleLine = (key: string) => {
     setExpanded((prev) => {
@@ -153,24 +155,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-sm font-semibold text-content">Demonstrativo de Resultado Financeiro do Caixa</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-content-muted">Agrupar por:</span>
-          <div className="flex rounded-md border border-ui-border overflow-hidden">
-            {(['day', 'subcategory'] as DfcGroupBy[]).map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setGroupBy(g)}
-                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                  groupBy === g ? 'bg-brand text-content-inverse' : 'bg-surface text-content-secondary hover:bg-surface-subtle'
-                }`}
-              >
-                {g === 'day' ? 'Dia' : 'Categoria'}
-              </button>
-            ))}
-          </div>
-        </div>
+        <h2 className="text-sm font-semibold text-content">Demonstrativo Financeiro — Regime de {regime === 'caixa' ? 'Caixa' : 'Competência'}</h2>
       </div>
 
       {data.unclassifiedExpenseTotal > 0 && (

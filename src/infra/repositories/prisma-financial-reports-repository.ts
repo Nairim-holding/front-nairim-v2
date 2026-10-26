@@ -380,7 +380,8 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
     const unclassifiedTxns = expenseTxns.filter((t) => !dfcGroupOf(t.category));
 
     const sumOf = (list: RawTransaction[]) => list.reduce((sum, t) => sum + Number(t.amount), 0);
-    const groupsOf = (list: RawTransaction[]) => buildGroups(list, groupBy, dateField);
+    const groupsOf = (list: RawTransaction[]) =>
+      buildGroups(list, groupBy, dateField).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 
     const receitaBruta = sumOf(incomeTxns);
     const devolucoes = 0;
