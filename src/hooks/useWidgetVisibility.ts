@@ -12,11 +12,12 @@ import { getColumnPreferencesAction, saveColumnPreferencesAction } from '@/serve
  * nova. `resource` fica prefixado para não colidir com preferências de coluna
  * de outras telas (ex.: `financial-transaction`).
  */
-export function useWidgetVisibility(tabResource: string, allWidgetIds: string[]) {
+export function useWidgetVisibility(tabResource: string, allWidgetIds: string[], newlyAddedWidgetIds: string[] = []) {
   const resource = `dashboard-widgets-${tabResource}`;
   const [visibleWidgetIds, setVisibleWidgetIdsState] = useState<string[] | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const allIdsKey = allWidgetIds.join(',');
+  const newIdsKey = newlyAddedWidgetIds.join(',');
 
   useEffect(() => {
     let cancelled = false;
@@ -29,7 +30,12 @@ export function useWidgetVisibility(tabResource: string, allWidgetIds: string[])
         // escondeu todos os widgets". Só respeita uma seleção não-vazia.
         const savedIds = result.ok ? result.data?.visibleColumns : null;
         const saved = Array.isArray(savedIds) && savedIds.length > 0 ? savedIds : null;
-        if (!cancelled) setVisibleWidgetIdsState(saved ?? allWidgetIds);
+        if (!cancelled) {
+          const visible = saved
+            ? [...new Set([...saved, ...newlyAddedWidgetIds])]
+            : allWidgetIds;
+          setVisibleWidgetIdsState(visible);
+        }
       } catch (error) {
         console.error('[useWidgetVisibility] Erro ao carregar preferência de gráficos:', error);
         if (!cancelled) setVisibleWidgetIdsState(allWidgetIds);
@@ -40,7 +46,7 @@ export function useWidgetVisibility(tabResource: string, allWidgetIds: string[])
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resource, allIdsKey]);
+  }, [resource, allIdsKey, newIdsKey]);
 
   const setVisibleWidgetIds = useCallback((ids: string[]) => {
     setVisibleWidgetIdsState(ids);

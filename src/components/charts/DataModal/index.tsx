@@ -223,6 +223,7 @@ export default function DataModal({ isOpen, onClose, title, data, columns, group
       {isOpen && (
         <motion.div
           className="fixed inset-0 bg-black/70 z-[9990] flex justify-center items-center p-4"
+          onClick={(event) => event.stopPropagation()}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

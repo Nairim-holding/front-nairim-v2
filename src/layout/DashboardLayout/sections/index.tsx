@@ -141,7 +141,7 @@ export function FinancialSection({
   }, [setAppliedFilters]);
 
   // Tarefa 10 (29/07/26): botão "Personalizar Gráficos" ao lado do Filtro.
-  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('financeiro-v5', FINANCIAL_WIDGET_IDS);
+  const { visibleWidgetIds, setVisibleWidgetIds } = useWidgetVisibility('financeiro-v5', FINANCIAL_WIDGET_IDS, ['widget-21']);
 
   return (
     <SectionShell>
