@@ -16,9 +16,10 @@ import ResumoDespesasChart from '@/components/dashboard/ResumoDespesasChart';
 import YearlyIncomeExpenseChart from '@/components/dashboard/YearlyIncomeExpenseChart';
 import CenterIncomeExpenseChart from '@/components/dashboard/CenterIncomeExpenseChart';
 import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
+import PeriodFinancialCard from './PeriodFinancialCard';
 import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 import {
-  AvgRentalWidget, TotalRentalWidget, TaxFeeWidget,
+  AvgRentalWidget,
 } from './LegacyPortfolioWidgets';
 import { FinancialWidgetProps } from './types';
 
@@ -26,8 +27,8 @@ import { FinancialWidgetProps } from './types';
 export const WIDGET_LABELS: Record<string, string> = {
   'widget-20': 'Receitas e Despesas por Centro',
   'widget-11': 'Ticket Médio da Locação',
-  'widget-12': 'Valor Total de Aluguel do Portfólio',
-  'widget-13': 'Total de Impostos e Taxas',
+  'widget-12': 'Valor Total dos Aluguéis',
+  'widget-13': 'Valor Total dos Impostos',
   'widget-1': 'Receitas e Despesas',
   'widget-2': '% Despesas em Relação às Receitas',
   'widget-7': 'Despesas: Realizado VS Planejado',
@@ -56,6 +57,8 @@ const REAL_WIDGETS: Record<string, ComponentType<FinancialWidgetProps>> = {
   'widget-17': ResumoReceitasChart,
   'widget-18': ResumoDespesasChart,
   'widget-19': YearlyIncomeExpenseChart,
+  'widget-12': (props) => <PeriodFinancialCard {...props} kind="rent" />,
+  'widget-13': (props) => <PeriodFinancialCard {...props} kind="taxes" />,
 };
 
 // Widgets que já existiam no financeiro antes desta etapa (cards de portfólio da
@@ -63,8 +66,6 @@ const REAL_WIDGETS: Record<string, ComponentType<FinancialWidgetProps>> = {
 // acima, que buscam os próprios dados.
 const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | null }>> = {
   'widget-11': AvgRentalWidget,
-  'widget-12': TotalRentalWidget,
-  'widget-13': TaxFeeWidget,
 };
 
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = [

@@ -772,6 +772,12 @@ export class MongoAuditLogsRepository implements AuditLogsRepository {
           const rawOld = displayValue(field, fullOldValues[field], names);
           const rawNew = displayValue(field, fullNewValues[field], names);
 
+          // Na ação Alteração mantemos todas as linhas do cadastro para dar
+          // contexto, mas só mostramos o Valor Novo dos campos que mudaram.
+          // Comparar os valores já formatados também trata datas e decimais
+          // equivalentes do mesmo modo que o usuário os enxerga.
+          const hasChanged = JSON.stringify(rawOld) !== JSON.stringify(rawNew);
+
           // Se for um UUID cru sem tradução, não exibe ao usuário
           const isRawUuidOld = typeof rawOld === 'string' && UUID_RE.test(rawOld.trim());
           const isRawUuidNew = typeof rawNew === 'string' && UUID_RE.test(rawNew.trim());
@@ -788,7 +794,7 @@ export class MongoAuditLogsRepository implements AuditLogsRepository {
             field,
             label: fieldLabel(field),
             old_value: isRawUuidOld ? null : rawOld,
-            new_value: isRawUuidNew ? null : rawNew,
+            new_value: isRawUuidNew || (log.action === 'UPDATE' && !hasChanged) ? null : rawNew,
           };
         })
         .filter((f): f is { field: string; label: string; old_value: unknown; new_value: unknown } => f !== null),

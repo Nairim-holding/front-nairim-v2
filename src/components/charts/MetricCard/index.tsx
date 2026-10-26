@@ -40,6 +40,8 @@ interface NumericCardProps {
   detailTotalLabel?: string;
   /** Quando informado, o título vira a alça de arrastar (mesmo padrão do ChartCard: a barra do título é a alça, sem ícone flutuante sobre o texto). */
   dragHandleClassName?: string;
+  /** Abre o detalhamento ao clicar no card inteiro (mantém o ícone como atalho). */
+  openDetailsOnCardClick?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -90,6 +92,7 @@ export default function NumericCard({
   detailGroupBy,
   detailTotalLabel,
   dragHandleClassName,
+  openDetailsOnCardClick = false,
 }: NumericCardProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -187,10 +190,16 @@ export default function NumericCard({
   const hasDetailData = !!detailColumns && detailColumns.length > 0;
 
   return (
-    <div className="p-4 bg-surface rounded-lg shadow-chart border border-ui-border-strong flex flex-col justify-start items-start relative group hover:shadow-lg transition-all duration-300 flex-grow min-w-[300px]">
-      {hasDetailData && (
+    <div
+      className={`p-4 bg-surface rounded-lg shadow-chart border border-ui-border-strong flex flex-col justify-start items-start relative group hover:shadow-lg transition-all duration-300 flex-grow min-w-[300px] ${openDetailsOnCardClick ? 'cursor-pointer' : ''}`}
+      onClick={openDetailsOnCardClick ? openDetailModal : undefined}
+      onKeyDown={openDetailsOnCardClick ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openDetailModal(); } } : undefined}
+      role={openDetailsOnCardClick ? 'button' : undefined}
+      tabIndex={openDetailsOnCardClick ? 0 : undefined}
+    >
+      {hasDetailData && !openDetailsOnCardClick && (
         <button
-          onClick={openDetailModal}
+          onClick={(e) => { e.stopPropagation(); openDetailModal(); }}
           onMouseDown={(e) => e.stopPropagation()}
           className="absolute top-3 right-3 p-2 rounded-full bg-surface-subtle hover:bg-surface-subtle transition z-10"
           title="Ver detalhes"

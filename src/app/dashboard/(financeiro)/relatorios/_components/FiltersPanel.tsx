@@ -6,7 +6,7 @@ import {
   ListFilter, CircleDot, CopyCheck, CopyX,
 } from 'lucide-react';
 import type { ReportFiltersState, ReportOptions, ReportTypeFilter, ReportStatusFilter } from '../_lib/types';
-import { EMPTY_FILTERS } from '../_lib/types';
+import { DEFAULT_REPORT_FILTERS } from '../_lib/types';
 
 interface FiltersPanelProps {
   filters: ReportFiltersState;
@@ -413,7 +413,7 @@ export default function FiltersPanel({ filters, onChange, onClose, options, hide
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => onChange(EMPTY_FILTERS)}
+              onClick={() => onChange(DEFAULT_REPORT_FILTERS)}
               className="px-4 py-2 border border-ui-border rounded-lg text-sm font-medium hover:bg-surface-subtle transition-colors"
             >
               Limpar tudo
