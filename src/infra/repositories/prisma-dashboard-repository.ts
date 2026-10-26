@@ -107,10 +107,16 @@ export class PrismaDashboardRepository implements DashboardRepository {
           effective_date: { gte: period.current.start, lte: period.current.end },
         },
         select: {
-          amount: true, company_id: true, description: true, effective_date: true, lease_id: true,
+          amount: true, company_id: true, description: true, event_date: true, effective_date: true, lease_id: true,
+          status: true,
           is_cancellation_charge: true,
-          category: { select: { type: true } },
+          category: { select: { name: true, type: true } },
           subcategory: { select: { name: true } },
+          financial_institution: { select: { name: true } },
+          card: { select: { name: true } },
+          supplier: { select: { trade_name: true, legal_name: true } },
+          center: { select: { name: true } },
+          lease: { select: { tenant: { select: { name: true } }, agency: { select: { trade_name: true } } } },
         },
       }),
       prisma.transaction.findMany({
@@ -136,7 +142,13 @@ export class PrismaDashboardRepository implements DashboardRepository {
       const list = leasesByCompany.get(lease.company_id) ?? [];
       list.push(lease); leasesByCompany.set(lease.company_id, list);
     }
-    const grossByProperty = (transactions: typeof currentRentTransactions) => {
+    type DashboardRentalTransaction = Parameters<typeof classifyLeaseReportTransaction>[0] & {
+      amount: unknown;
+      company_id: string;
+      effective_date: Date;
+      lease_id: string | null;
+    };
+    const grossByProperty = (transactions: DashboardRentalTransaction[]) => {
       const totals = new Map<string, number>();
       for (const transaction of transactions) {
         if (classifyLeaseReportTransaction(transaction) !== 'rent') continue;
@@ -168,21 +180,27 @@ export class PrismaDashboardRepository implements DashboardRepository {
       ? [...previousGrossByProperty.values()].reduce((sum, value) => sum + value, 0) / previousGrossByProperty.size
       : 0;
 
-    const activeRentalData = properties
-      .filter((p) => toNum(p.values[0]?.rental_value) > 0 && p.values[0]?.status !== 'SOLD')
-      .map((p) => ({
-        id: p.id,
-        title: p.title,
-        rentalValue: toNum(p.values[0]?.rental_value),
-        status: p.values[0]?.status,
-        type: p.type?.description,
-        agency: p.agency ? { tradeName: p.agency.trade_name } : null,
-        leaseInfo: p.leases[0]
-          ? { contractNumber: p.leases[0].contract_number, tenantName: p.leases[0].tenant?.name }
-          : null,
+    const rentalTransactions = currentRentTransactions
+      .filter((transaction) => classifyLeaseReportTransaction(transaction) === 'rent')
+      .map((transaction) => ({
+        eventDate: transaction.event_date,
+        effectiveDate: transaction.effective_date,
+        category: transaction.category.name,
+        subcategory: transaction.subcategory?.name ?? null,
+        institution: transaction.financial_institution.name,
+        card: transaction.card?.name ?? null,
+        contact: transaction.supplier?.trade_name
+          ?? transaction.supplier?.legal_name
+          ?? transaction.lease?.agency?.trade_name
+          ?? transaction.lease?.tenant?.name
+          ?? null,
+        description: transaction.description,
+        center: transaction.center?.name ?? null,
+        amount: toNum(transaction.amount),
+        status: transaction.status,
       }));
-    const prevTotalRent = prevProperties.reduce(
-      (acc, p) => acc + (p.values[0]?.status !== 'SOLD' ? toNum(p.values[0]?.rental_value) : 0),
+    const prevTotalRent = previousRentTransactions.reduce(
+      (acc, transaction) => acc + (classifyLeaseReportTransaction(transaction) === 'rent' ? toNum(transaction.amount) : 0),
       0,
     );
 
@@ -267,9 +285,9 @@ export class PrismaDashboardRepository implements DashboardRepository {
         avgRentalData,
       ),
       totalRentalActive: calcVariation(
-        activeRentalData.reduce((acc, p) => acc + p.rentalValue, 0),
+        rentalTransactions.reduce((acc, transaction) => acc + transaction.amount, 0),
         prevTotalRent,
-        activeRentalData,
+        rentalTransactions,
       ),
       totalAcquisitionValue: calcVariation(
         acquisitionData.reduce((acc, p) => acc + p.purchaseValue, 0),

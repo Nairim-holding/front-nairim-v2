@@ -7,7 +7,6 @@ import {
   formatPercent,
   formatSqm,
   formatAgency,
-  formatLeaseInfo,
   formatLastLeaseInfo,
   formatMissingDocs,
   formatPropertyList,
@@ -31,12 +30,17 @@ export const COLS_AVG_RENTAL = [
 ];
 
 export const COLS_TOTAL_RENTAL = [
-  col("title",       "Imóvel",          { width: "250px" }),
-  col("type",        "Tipo",            { width: "120px" }),
-  col("status",      "Status",          { width: "100px", format: formatStatus }),
-  col("rentalValue", "Valor do Aluguel",{ width: "150px", format: formatCurrency, summable: true }),
-  col("agency",      "Imobiliária",     { width: "200px", format: (v: any) => v?.tradeName || "-" }),
-  col("leaseInfo",   "Contrato Ativo",  { width: "300px", format: formatLeaseInfo }),
+  col("eventDate",     "Data Evento",  { width: "130px", format: formatDate }),
+  col("effectiveDate", "Data Efetiva", { width: "130px", format: formatDate }),
+  col("category",      "Categoria",    { width: "140px" }),
+  col("subcategory",   "Subcategoria", { width: "150px" }),
+  col("institution",   "Instituição",  { width: "150px" }),
+  col("card",          "Cartão",       { width: "120px" }),
+  col("contact",       "Contato",      { width: "180px" }),
+  col("description",   "Descrição",    { width: "300px" }),
+  col("center",        "Centro",       { width: "180px" }),
+  col("amount",        "Valor",        { width: "130px", format: formatCurrency, summable: true }),
+  col("status",        "Status",       { width: "110px", format: (v: string) => ({ COMPLETED: "Concluído", PENDING: "Pendente", CANCELED: "Cancelado" }[v] ?? v ?? "-") }),
 ];
 
 export const COLS_TAX_FEE = [
