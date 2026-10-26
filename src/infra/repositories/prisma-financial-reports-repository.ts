@@ -361,7 +361,19 @@ export class PrismaFinancialReportsRepository implements FinancialReportsReposit
 
     const transactions = (await prisma.transaction.findMany({
       where,
-      include: { ...INCLUDE_CONFIG, category: { select: { id: true, name: true, type: true, dfc_group: true } } },
+      // Seleciona apenas os campos usados pelo DFC. Algumas bases ainda não
+      // receberam Transaction.statement_order; o select implícito do Prisma
+      // tentava ler essa coluna e impedia a exibição de todo o demonstrativo.
+      select: {
+        id: true,
+        description: true,
+        amount: true,
+        event_date: true,
+        effective_date: true,
+        status: true,
+        ...INCLUDE_CONFIG,
+        category: { select: { id: true, name: true, type: true, dfc_group: true } },
+      },
     })) as RawTransaction[];
 
     const incomeTxns = transactions.filter((t) => t.category?.type === 'INCOME');
