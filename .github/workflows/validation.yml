@@ -37,7 +37,7 @@ jobs:
           node scripts/test-correcoes49-ui.mjs
           node scripts/test-correcoes50-ui.mjs
           npm run test:correcoes51-ui
-      - name: Relatório de dependências (pendências descritas em docs/security-review-2026-10-25.md)
+      - name: Relatório de dependências (pendências descritas em docs/plataforma/seguranca/revisao-2026-10-25.md)
         if: always()
         continue-on-error: true
         run: npm audit --json > security-audit.json

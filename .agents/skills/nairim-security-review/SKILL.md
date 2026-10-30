@@ -15,4 +15,4 @@ Comece pelo diff e pelos fluxos envolvidos. Trace a requisição desde Server Ac
 
 Use `npm run test:security` para regressões de sessão, permissão, tenant e HTML; complemente com um teste que reproduza cada falha encontrada. Execute `npm test`, build e os testes de interface afetados após as correções. Os testes simulados não comprovam as configurações efetivas de produção.
 
-Documente os achados com caminho, entrada, impacto, correção, evidência e pendências. Registre a data e a contagem do audit, sem equiparar vulnerabilidade de pacote a exploração demonstrada. Use `docs/security-review-2026-10-25.md` como histórico inicial e `docs/correcoes-51-2026-10-21.md` para a implantação da sequência do extrato.
+Documente os achados com caminho, entrada, impacto, correção, evidência e pendências. Registre a data e a contagem do audit, sem equiparar vulnerabilidade de pacote a exploração demonstrada. Use `docs/plataforma/seguranca/revisao-2026-10-25.md` como histórico inicial e `docs/correcoes-51-2026-10-21.md` para a implantação da sequência do extrato.
