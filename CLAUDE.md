@@ -112,7 +112,7 @@ import { propertyService } from "@/services/property-service"
 - Unstyled or Tailwind-based, props-driven
 
 **Feature Components** (`src/components/domain/`):
-- Domain-specific like `ContactManager`, `HouseRentals`, `ApartmentRentals`
+- Domain-specific like `ContactManager`, `PropertyList`, `PropertyDetail`
 - Higher complexity, tied to app logic
 
 **Form Handling**:
@@ -124,7 +124,6 @@ import { propertyService } from "@/services/property-service"
 - `useTableData`: List/table queries with pagination, sorting
 - `useOptimizedTableData`: Memo-optimized variant  
 - `useFetchItem`: Single item fetching (create/edit flows)
-- `useCepLookup`: CEP-to-address lookup (async with rate limiting)
 
 **Navigation & State**:
 - Auth state: `useAuth()` hook + `AuthContext`
