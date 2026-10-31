@@ -6,7 +6,7 @@ import {
   type LeaseReportResult,
   type WithholdingTax,
 } from '@/core/entities/lease-report';
-import { quarterLabel } from './referencePeriod';
+import { monthShortLabel, quarterLabel } from './referencePeriod';
 
 /**
  * HTML de impressão do Relatório de Locações, reproduzindo o modelo impresso
@@ -24,7 +24,7 @@ import { quarterLabel } from './referencePeriod';
  * vindo do DOM (`tableRef`), só ganha o CSS de planilha via `extraStyles`.
  */
 
-const TAX_LABELS: Record<WithholdingTax, string> = { pis: 'PIS', cofins: 'COFINS', irpj: 'IRPI', csll: 'CSLL' };
+const TAX_LABELS: Record<WithholdingTax, string> = { pis: 'PIS', cofins: 'COFINS', irpj: 'IRPJ', csll: 'CSLL' };
 
 const percent = (rate: number) => `${(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 const money = (value: number) => formatCurrency(value);
@@ -98,83 +98,113 @@ function withholdingBlock(data: LeaseReportResult): string {
   `;
 }
 
-/** Quadro 2 — DARF mensal (Faturamento de Aluguéis) + A Pagar com dedução da retenção. */
+/**
+ * Quadro 2 — Faturamento de Aluguéis (DARF mensal): uma tabela por mês, com o
+ * faturamento, a alíquota, o imposto mensal e o a pagar com dedução da retenção,
+ * como na planilha do cliente.
+ */
 function monthlyDarfBlock(data: LeaseReportResult): string {
-  const pis = data.monthlyDarf.filter((r) => r.tax === 'pis');
-  const cofins = data.monthlyDarf.filter((r) => r.tax === 'cofins');
-  const revenue = pis[0]?.revenue ?? cofins[0]?.revenue ?? 0;
-  const totalDarf = data.monthlyDarf.reduce((sum, r) => sum + r.darf, 0);
-  const totalPayable = data.monthlyDarf.reduce((sum, r) => sum + r.payable, 0);
-
-  return `
+  const showMonth = data.months.length > 1;
+  return data.months.map((reference) => {
+    const rows = data.monthlyDarf.filter((r) => r.reference.year === reference.year && r.reference.month === reference.month);
+    const revenue = rows[0]?.revenue ?? 0;
+    return `
     <div class="lrs-row">
       <div>
         <table>
-          <caption class="lrs-block-title">FATURAMENTO ALUGUÉIS</caption>
-          <thead><tr><th>IMPOSTOS MENSAL</th><th>PIS</th><th>COFINS</th></tr></thead>
+          <thead>
+            <tr>
+              <th>FATURAMENTO ALUGUÉIS${showMonth ? ` — ${esc(monthShortLabel(reference))}` : ''}</th>
+              <th>${money(revenue)}</th>
+              <th>IMPOSTOS MENSAL</th>
+              <th>IMPOSTOS A PAGAR C/ DEDUÇÃO DA RETENÇÃO</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>DARF PIS MENSAL</td><td colspan="2" class="cell-green">${money(pis[0]?.darf ?? 0)}</td></tr>
-            <tr><td>DARF COFINS MENSAL</td><td colspan="2" class="cell-green">${money(cofins[0]?.darf ?? 0)}</td></tr>
+            ${rows.map((row) => `
+            <tr>
+              <td>DARF ${TAX_LABELS[row.tax]} MENSAL</td>
+              <td>${percent(row.rate)}</td>
+              <td class="cell-green">${money(row.darf)}</td>
+              <td class="cell-green cell-total">${money(row.payable)}</td>
+            </tr>`).join('')}
           </tbody>
         </table>
       </div>
-      <div>
-        <table>
-          <caption class="lrs-block-title">IMPOSTOS A PAGAR C/ DEDUÇÃO DA RETENÇÃO</caption>
-          <thead><tr><th>ALÍQUOTA</th><th>TOTAL</th></tr></thead>
-          <tbody>
-            <tr><td>Faturamento: ${money(revenue)}</td><td class="cell-green cell-total">${money(totalPayable)}</td></tr>
-            <tr><td>DARF do mês</td><td>${money(totalDarf)}</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
+    </div>`;
+  }).join('');
 }
 
-/** Quadro 3 — Resgate de Aplicações Financeiras + DARF trimestral. */
+/**
+ * Quadro 3 — Aplicações Financeiras Trimestral (rendimento e IR retido digitados
+ * na tela) e Faturamento Trimestral (DARF CSLL/IRPJ sobre o trimestre inteiro).
+ * O a pagar do trimestre soma o imposto do rendimento resgatado e desconta a
+ * retenção dos aluguéis.
+ */
 function quarterlyBlock(data: LeaseReportResult, redemptionRows: InvestmentRedemptionRow[]): string {
-  const quarters = data.quarters;
-  const totalPayable = data.quarterlyDarf.reduce((sum, r) => sum + r.payable, 0);
+  const redemptionOf = (q: { year: number; quarter: number }, tax: 'csll' | 'irpj') =>
+    redemptionRows.find((r) => r.reference.year === q.year && r.reference.quarter === q.quarter && r.tax === tax);
 
-  const redemptionRowsHTML = quarters.map((q) => {
-    const csll = redemptionRows.find((r) => r.reference.year === q.year && r.reference.quarter === q.quarter && r.tax === 'csll');
+  const applications = data.quarters.map((q) => {
+    const csll = redemptionOf(q, 'csll');
+    const irpj = redemptionOf(q, 'irpj');
     return `
-      <tr>
-        <td>${esc(quarterLabel(q))}</td>
-        <td>${money(csll?.income ?? 0)}</td>
-        <td>${csll?.tax_withheld ? money(csll.tax_withheld) : '-'}</td>
-      </tr>
-    `;
+            <tr>
+              <td>DARF CSLL TRIME.</td>
+              <td rowspan="2">${esc(quarterLabel(q))}</td>
+              <td rowspan="2">${money(csll?.income ?? 0)}</td>
+              <td rowspan="2">${csll?.tax_withheld ? money(csll.tax_withheld) : '-'}</td>
+              <td>${percent(csll?.rate ?? 0.09)}</td>
+              <td class="cell-green cell-total">${money(csll?.payable ?? 0)}</td>
+            </tr>
+            <tr>
+              <td>DARF IRPJ TRIME.</td>
+              <td>${percent(irpj?.rate ?? 0.15)}</td>
+              <td class="cell-green cell-total">${money(irpj?.payable ?? 0)}</td>
+            </tr>`;
   }).join('');
 
-  const darfRowsHTML = data.quarterlyDarf.map((row) => `
-    <tr>
-      <td>DARF ${TAX_LABELS[row.tax]} TRIME.</td>
-      <td class="cell-green cell-total">${money(row.payable)}</td>
-    </tr>
-  `).join('');
+  const revenueTables = data.quarters.map((q) => {
+    const rows = data.quarterlyDarf.filter((r) => r.reference.year === q.year && r.reference.quarter === q.quarter);
+    return `
+    <div class="lrs-row">
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>FATURAMENTO TRIMESTRAL${data.quarters.length > 1 ? ` — ${esc(quarterLabel(q))}` : ''}</th>
+              <th>${money(rows[0]?.revenue ?? 0)}</th>
+              <th>IMPOSTOS TRIMESTRAL</th>
+              <th>IMPOSTOS A PAGAR C/ APLICAÇÃO FINANCEIRA E RETENÇÃO</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+            <tr>
+              <td>DARF ${TAX_LABELS[row.tax]} TRIME.</td>
+              <td>${percent(row.rate)}</td>
+              <td class="cell-green">${money(row.darf)}</td>
+              <td class="cell-green cell-total">${money(row.payable + (redemptionOf(q, row.tax)?.payable ?? 0))}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
 
   return `
     <div class="lrs-row">
       <div>
         <table>
-          <caption class="lrs-block-title">APLICAÇÕES FINANCEIRAS TRIMESTRAIS</caption>
-          <thead><tr><th>PERÍODO</th><th>RENDIMENTO</th><th>IR RETIDO</th></tr></thead>
-          <tbody>${redemptionRowsHTML}</tbody>
-        </table>
-      </div>
-      <div>
-        <table>
-          <caption class="lrs-block-title">IMPOSTOS A PAGAR C/ APLICAÇÃO FINANCEIRA</caption>
-          <thead><tr><th>DARF TRIMESTRAL</th><th>TOTAL</th></tr></thead>
-          <tbody>
-            ${darfRowsHTML}
-            <tr><td class="cell-total">TOTAL</td><td class="cell-green cell-total">${money(totalPayable)}</td></tr>
-          </tbody>
+          <caption class="lrs-block-title">APLICAÇÕES FINANCEIRAS TRIMESTRAL</caption>
+          <thead>
+            <tr><th>DARF</th><th>PERÍODO</th><th>RENDIMENTO</th><th>IR RETIDO</th><th>ALÍQUOTA</th><th>TOTAL</th></tr>
+          </thead>
+          <tbody>${applications}</tbody>
         </table>
       </div>
     </div>
+    ${revenueTables}
   `;
 }
 

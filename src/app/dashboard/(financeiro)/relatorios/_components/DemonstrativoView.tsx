@@ -10,36 +10,50 @@ import type { ReportKind, ReportFiltersState, ReportGroupRow, ReportItemRow, Rep
 
 const STATUS_LABEL: Record<string, string> = { PENDING: 'Pendente', COMPLETED: 'Concluído' };
 
-/**
- * Linha compacta de lançamento dentro do DFC. Mantém a estrutura de 3 colunas
- * físicas da tabela (ícone/rótulo/valor) em vez de abrir 11 colunas como nos
- * demais relatórios — evita desalinhar as linhas de Linha/Grupo acima — mas
- * ainda expõe todos os campos do lançamento pedidos no features.md.
- */
-function DfcItemRow({ item }: { item: ReportItemRow }) {
-  const meta = [
-    item.category?.name,
-    item.subcategory?.name,
-    item.financialInstitution?.name,
-    item.card?.name,
-    item.supplier?.name,
-    item.center?.name,
-    STATUS_LABEL[item.status] ?? item.status,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+const ITEM_COLUMNS = ['Competência', 'Data efetiva', 'Descrição', 'Valor', 'Tipo', 'Categoria', 'Subcategoria', 'Conta', 'Cartão', 'Contato', 'Centro', 'Status'];
+/** Colunas físicas da tabela: 1 (expandir) + as 12 colunas dos demais blocos do Resumo. */
+const TABLE_COLUMNS = 1 + ITEM_COLUMNS.length;
 
+const dash = (value?: string | null) => value || '-';
+
+function formatPct(value: number): string {
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+}
+
+/** Cabeçalho das colunas dos lançamentos, exibido ao abrir um grupo. */
+function DfcItemHeader() {
+  return (
+    <tr className="text-[10px] uppercase tracking-wide text-content-muted bg-surface-subtle border-b border-ui-border-soft/60">
+      <th className="px-3 py-1.5"></th>
+      {ITEM_COLUMNS.map((label) => (
+        <th key={label} className={`px-2 py-1.5 font-semibold whitespace-nowrap ${label === 'Valor' ? 'text-right' : 'text-left'}`}>{label}</th>
+      ))}
+    </tr>
+  );
+}
+
+/**
+ * Lançamento dentro do DFC, nas mesmas 12 colunas dos demais blocos do Resumo
+ * (Competência, Data efetiva, Descrição, Valor, Tipo, Categoria, Subcategoria,
+ * Conta, Cartão, Contato, Centro, Status). São células da mesma tabela, sem
+ * tabela aninhada, para a exportação Excel/PDF continuar lendo o DOM.
+ */
+function DfcItemRow({ item, type }: { item: ReportItemRow; type: string }) {
   return (
     <tr className="text-xs text-content-secondary border-b border-ui-border-soft/40 hover:bg-surface-subtle">
       <td className="px-3 py-1.5"></td>
-      <td className="px-3 py-1.5 pl-10">
-        <div className="text-content-secondary">{item.description}</div>
-        <div className="text-[11px] text-content-muted">
-          Evento {formatDate(item.event_date)} · Efetiva {formatDate(item.effective_date)}
-          {meta ? ` · ${meta}` : ''}
-        </div>
-      </td>
-      <td className="px-3 py-1.5 text-right align-top whitespace-nowrap">{formatCurrency(item.amount)}</td>
+      <td className="px-2 py-1.5 whitespace-nowrap">{formatDate(item.event_date)}</td>
+      <td className="px-2 py-1.5 whitespace-nowrap">{formatDate(item.effective_date)}</td>
+      <td className="px-2 py-1.5 min-w-[240px]">{item.description}</td>
+      <td className="px-2 py-1.5 text-right whitespace-nowrap">{formatCurrency(item.amount)}</td>
+      <td className="px-2 py-1.5 whitespace-nowrap">{type}</td>
+      <td className="px-2 py-1.5">{dash(item.category?.name)}</td>
+      <td className="px-2 py-1.5">{dash(item.subcategory?.name)}</td>
+      <td className="px-2 py-1.5">{dash(item.financialInstitution?.name)}</td>
+      <td className="px-2 py-1.5">{dash(item.card?.name)}</td>
+      <td className="px-2 py-1.5">{dash(item.supplier?.name)}</td>
+      <td className="px-2 py-1.5">{dash(item.center?.name)}</td>
+      <td className="px-2 py-1.5 whitespace-nowrap">{STATUS_LABEL[item.status] ?? item.status}</td>
     </tr>
   );
 }
@@ -68,6 +82,8 @@ interface DemonstrativoViewProps {
   regime: ReportRegime;
   reportKind: ReportKind;
   filters: ReportFiltersState;
+  /** Oculta o título interno quando o cartão que hospeda a tabela já mostra um. */
+  hideTitle?: boolean;
 }
 
 function formatSigned(value: number, sign: 1 | -1): string {
@@ -76,7 +92,7 @@ function formatSigned(value: number, sign: 1 | -1): string {
 }
 
 const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(function DemonstrativoView(
-  { dateRange, regime, filters, reportKind },
+  { dateRange, regime, filters, reportKind, hideTitle },
   ref
 ) {
   const tableRef = useRef<HTMLTableElement>(null);
@@ -152,11 +168,21 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
     );
   }
 
+  // % comprometido em relação à Receita Bruta. Na linha de Resultado mostra o
+  // total das despesas sobre a receita (acima de 100% = gastou mais do que faturou).
+  const receitaBruta = data.lines.find((line) => line.key === 'receita_bruta')?.total ?? 0;
+  const totalDespesas = data.lines
+    .filter((line) => line.kind === 'line' && line.sign < 0)
+    .reduce((sum, line) => sum + Math.abs(line.total), 0);
+  const pctOf = (value: number): string => (receitaBruta > 0 ? formatPct((Math.abs(value) / receitaBruta) * 100) : '—');
+
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-sm font-semibold text-content">Demonstrativo Financeiro — Regime de {regime === 'caixa' ? 'Caixa' : 'Competência'}</h2>
-      </div>
+      {!hideTitle && (
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-sm font-semibold text-content">Demonstrativo Financeiro — Regime de {regime === 'caixa' ? 'Caixa' : 'Competência'}</h2>
+        </div>
+      )}
 
       {data.unclassifiedExpenseTotal > 0 && (
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/40 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
@@ -197,7 +223,16 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
       )}
 
       <div className="bg-surface border border-ui-border-soft rounded-lg overflow-x-auto">
-        <table ref={tableRef} className="w-full border-collapse">
+        <table ref={tableRef} className="w-full border-collapse min-w-[1100px]">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-wide text-content-muted border-b border-ui-border-soft/60">
+              <th className="px-3 py-1.5 w-8"></th>
+              <th colSpan={3} className="px-3 py-1.5 text-left font-semibold">Demonstrativo</th>
+              <th className="px-2 py-1.5 text-right font-semibold">Valor</th>
+              <th className="px-2 py-1.5 text-right font-semibold">%</th>
+              <th colSpan={TABLE_COLUMNS - 5}></th>
+            </tr>
+          </thead>
           <tbody>
             {data.lines.map((line) => {
               const isExpandable = line.kind === 'line';
@@ -234,13 +269,21 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                         </button>
                       )}
                     </td>
-                    <td className={`px-3 py-2 text-sm ${line.kind === 'line' ? 'text-content-secondary' : `font-bold ${line.kind === 'final' ? valueColor : 'text-content'}`}`}>
+                    <td colSpan={3} className={`px-3 py-2 text-sm ${line.kind === 'line' ? 'text-content-secondary' : `font-bold ${line.kind === 'final' ? valueColor : 'text-content'}`}`}>
                       {line.kind === 'final' ? '= ' : line.kind === 'subtotal' ? '→ ' : ''}
                       {line.kind === 'final' ? `Resultado (${line.total < 0 ? 'Prejuízo' : 'Lucro'})` : line.label}
                     </td>
-                    <td className={`px-3 py-2 text-sm text-right whitespace-nowrap font-semibold ${valueColor}`}>
+                    <td className={`px-2 py-2 text-sm text-right whitespace-nowrap font-semibold ${valueColor}`}>
                       {formatSigned(line.total, line.sign)}
                     </td>
+                    <td className={`px-2 py-2 text-sm text-right whitespace-nowrap ${valueColor}`}>
+                      {line.kind === 'line' && line.sign < 0
+                        ? pctOf(line.total)
+                        : line.kind === 'final'
+                          ? (receitaBruta > 0 ? formatPct((totalDespesas / receitaBruta) * 100) : '—')
+                          : ''}
+                    </td>
+                    <td colSpan={TABLE_COLUMNS - 5}></td>
                   </tr>
                   {isOpen &&
                     line.groups.map((g) => {
@@ -261,10 +304,13 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                                 </button>
                               )}
                             </td>
-                            <td className="px-3 py-1.5 pl-6">{g.label}</td>
-                            <td className="px-3 py-1.5 text-right whitespace-nowrap">{formatCurrency(g.total)}</td>
+                            <td colSpan={3} className="px-3 py-1.5 pl-6">{g.label}</td>
+                            <td className="px-2 py-1.5 text-right whitespace-nowrap">{formatCurrency(g.total)}</td>
+                            <td className="px-2 py-1.5 text-right whitespace-nowrap">{line.sign < 0 ? pctOf(g.total) : ''}</td>
+                            <td colSpan={TABLE_COLUMNS - 5}></td>
                           </tr>
-                          {isGroupOpen && g.items.map((item) => <DfcItemRow key={item.id} item={item} />)}
+                          {isGroupOpen && g.items.length > 0 && <DfcItemHeader />}
+                          {isGroupOpen && g.items.map((item) => <DfcItemRow key={item.id} item={item} type={line.sign < 0 ? 'Despesa' : 'Receita'} />)}
                         </Fragment>
                       );
                     })}

@@ -19,8 +19,9 @@ import WidgetPersonalizer from '@/components/dashboard/WidgetPersonalizer';
 import DashboardDemonstrativoWidget from './DashboardDemonstrativoWidget';
 import { useWidgetVisibility } from '@/hooks/useWidgetVisibility';
 import {
-  AvgRentalWidget, TotalRentalWidget, TaxFeeWidget,
+  AvgRentalWidget, TotalRentalWidget,
 } from './LegacyPortfolioWidgets';
+import TaxesWidget from './TaxesWidget';
 import { FinancialWidgetProps } from './types';
 import { formatPeriodLabel } from '@/utils/periodRange';
 
@@ -68,7 +69,6 @@ const REAL_WIDGETS: Record<string, ComponentType<FinancialWidgetProps>> = {
 const LEGACY_WIDGETS: Record<string, ComponentType<{ metrics: MetricResponse | null; periodLabel?: string }>> = {
   'widget-11': AvgRentalWidget,
   'widget-12': TotalRentalWidget,
-  'widget-13': TaxFeeWidget,
 };
 
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = [
@@ -135,6 +135,15 @@ export default function FinancialDashboardGrid({
           framed: true,
           // Este card tem dropdown de categoria, que precisa escapar do cartão.
           overflowVisible: id === 'widget-10',
+        };
+      }
+
+      // Impostos e Taxas vem dos lançamentos (linha Impostos do Demonstrativo),
+      // não mais da estimativa por imóvel; tem moldura própria (NumericCard).
+      if (id === 'widget-13') {
+        return {
+          body: <TaxesWidget key={String(filters?.regime ?? 'caixa')} year={year} years={years} startDate={startDate} endDate={endDate} filters={filters} />,
+          framed: false,
         };
       }
 

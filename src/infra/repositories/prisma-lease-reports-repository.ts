@@ -132,7 +132,7 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       where: { deleted_at: null },
       select: {
         id: true, company_id: true, contract_number: true, start_date: true, end_date: true, canceled_at: true,
-        discount_amount: true, condo_fee: true,
+        discount_amount: true, condo_fee: true, property_id: true, tenant_id: true,
         agency: { select: { trade_name: true } },
         property: { select: { title: true, income_tax_withholding: true, agency: { select: { trade_name: true } } } },
         tenant: { select: { name: true, cpf: true, cnpj: true } },
@@ -188,11 +188,22 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
         const leaseId = lease.id;
         const competence = tx.event_date ?? tx.effective_date ?? monthWindow(reference).gte;
         const referenceMonth = `${competence.getUTCFullYear()}-${String(competence.getUTCMonth() + 1).padStart(2, '0')}`;
-        const rowKey = `${leaseId}::${referenceMonth}`;
+        // Uma linha por imóvel, inquilino e competência: a retenção de IRRF pode
+        // estar vinculada a outro contrato do mesmo inquilino no mesmo imóvel
+        // (renovação) e não pode virar uma segunda linha do imóvel.
+        const rowKey = `${lease.property_id}::${lease.tenant_id}::${referenceMonth}`;
         let row = rows.get(rowKey);
+        // O contrato que recebeu o aluguel identifica a linha; sem aluguel no
+        // mês, vale o contrato do primeiro lançamento.
+        if (row && kind === 'rent' && row.lease_id !== leaseId) {
+          row.lease_id = leaseId;
+          row.row_id = `${leaseId}::${referenceMonth}`;
+          row.agency_name = lease.agency?.trade_name ?? lease.property?.agency?.trade_name ?? row.agency_name;
+          row.has_withholding = row.has_withholding || lease.property?.income_tax_withholding === true;
+        }
         if (!row) {
           row = {
-            lease_id: leaseId, row_id: rowKey, reference_month: referenceMonth,
+            lease_id: leaseId, row_id: `${leaseId}::${referenceMonth}`, reference_month: referenceMonth,
             agency_name: lease.agency?.trade_name ?? lease.property?.agency?.trade_name ?? '—',
             property_title: lease.property?.title ?? '—',
             tenant_name: lease.tenant?.name ?? '—',
@@ -334,7 +345,9 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       return (['pis', 'cofins'] as const).map((tax) => {
         const darf = round2(revenue * MONTHLY_DARF_RATES[tax]);
         const withheld = round2(withheldBase * WITHHOLDING_RATES[tax]);
-        return { reference, tax, rate: MONTHLY_DARF_RATES[tax], revenue, darf, withheld, payable: round2(Math.max(darf - withheld, 0)) };
+        // O a pagar subtrai os valores sem arredondar (como a planilha): 199,536 − 144,624 = 54,91.
+        const payable = round2(Math.max(revenue * MONTHLY_DARF_RATES[tax] - withheldBase * WITHHOLDING_RATES[tax], 0));
+        return { reference, tax, rate: MONTHLY_DARF_RATES[tax], revenue, darf, withheld, payable };
       });
     });
 
@@ -373,7 +386,8 @@ export class PrismaLeaseReportsRepository implements LeaseReportsRepository {
       (['csll', 'irpj'] as const).forEach((tax) => {
         const darf = round2(revenue * QUARTERLY_DARF_RATES[tax]);
         const withheld = round2(withheldBase * WITHHOLDING_RATES[tax]);
-        quarterlyDarf.push({ reference, tax, rate: QUARTERLY_DARF_RATES[tax], revenue, darf, withheld, payable: round2(Math.max(darf - withheld, 0)) });
+        const payable = round2(Math.max(revenue * QUARTERLY_DARF_RATES[tax] - withheldBase * WITHHOLDING_RATES[tax], 0));
+        quarterlyDarf.push({ reference, tax, rate: QUARTERLY_DARF_RATES[tax], revenue, darf, withheld, payable });
       });
     }
 

@@ -151,7 +151,10 @@ const LeaseReportTable = forwardRef<HTMLTableElement, LeaseReportTableProps>(fun
         {rows.length > 0 && (
           <tfoot>
             <tr className="text-sm font-bold text-content border-t-2 border-ui-border">
-              <td className="px-3 py-2" colSpan={onReorder ? 4 : 3}>Total</td>
+              {/* A coluna de arrastar (no-export) é removida da impressão/exportação;
+                  se o "Total" a abrangesse, os totais saíam uma coluna adiante. */}
+              {onReorder && <td className="no-export" />}
+              <td className="px-3 py-2" colSpan={3}>Total</td>
               <td className="px-3 py-2 text-right">{money(totals.gross_revenue)}</td>
               <td className="px-3 py-2 text-right">{money(totals.received_amount)}</td>
               <td className="px-3 py-2 text-right">{money(totals.discount_expense)}</td>
