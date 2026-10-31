@@ -1,5 +1,10 @@
 # Meus investimentos — Histórico
 
+### 2026-10-31 — Verificação do item 4 das correções 53
+- **Arquivos:** `src/infra/repositories/prisma-investments-repository.test.ts`; documentação do módulo.
+- **Razão:** confirmar os exemplos do documento e a continuidade dos cálculos nos meses subsequentes.
+- **Impacto:** teste adicional seleciona apenas fevereiro e usa janeiro como saldo anterior, sem repetir o capital inicial em Aplicado. A regra existente e o teste de interface reproduzem R$ 18.998,32 e 94,99% em janeiro.
+
 Atualize aqui a cada alteração no módulo. Mais recente primeiro.
 
 ### 2026-10-21 — Capital inicial (correções 51)

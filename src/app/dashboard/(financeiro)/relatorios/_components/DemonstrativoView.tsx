@@ -110,9 +110,11 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setIsLoading(true);
       try {
         const raw = buildReportActionParams({ from: dateRange.from, to: dateRange.to, regime, filters });
         raw.groupBy = groupBy;
@@ -230,7 +232,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
               <th colSpan={3} className="px-3 py-1.5 text-left font-semibold">Demonstrativo</th>
               <th className="px-2 py-1.5 text-right font-semibold">Valor</th>
               <th className="px-2 py-1.5 text-right font-semibold">%</th>
-              <th colSpan={TABLE_COLUMNS - 5}></th>
+              <th colSpan={TABLE_COLUMNS - 6}></th>
             </tr>
           </thead>
           <tbody>
@@ -283,7 +285,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                           ? (receitaBruta > 0 ? formatPct((totalDespesas / receitaBruta) * 100) : '—')
                           : ''}
                     </td>
-                    <td colSpan={TABLE_COLUMNS - 5}></td>
+                    <td colSpan={TABLE_COLUMNS - 6}></td>
                   </tr>
                   {isOpen &&
                     line.groups.map((g) => {
@@ -307,7 +309,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                             <td colSpan={3} className="px-3 py-1.5 pl-6">{g.label}</td>
                             <td className="px-2 py-1.5 text-right whitespace-nowrap">{formatCurrency(g.total)}</td>
                             <td className="px-2 py-1.5 text-right whitespace-nowrap">{line.sign < 0 ? pctOf(g.total) : ''}</td>
-                            <td colSpan={TABLE_COLUMNS - 5}></td>
+                            <td colSpan={TABLE_COLUMNS - 6}></td>
                           </tr>
                           {isGroupOpen && g.items.length > 0 && <DfcItemHeader />}
                           {isGroupOpen && g.items.map((item) => <DfcItemRow key={item.id} item={item} type={line.sign < 0 ? 'Despesa' : 'Receita'} />)}

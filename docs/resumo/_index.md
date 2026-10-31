@@ -15,6 +15,7 @@ Tela inicial do sistema (`/dashboard`, ou `/<slug-da-empresa>/dashboard`). Mostr
 | Telas | `src/components/domain/dashboard/DashboardClient`, `src/layout/DashboardLayout`, `src/components/dashboard/*` |
 
 ## Arquivos desta pasta
+- [correcoes53.md](correcoes53.md) — conferência do documento 53 e testes de regressão
 - [domain.md](domain.md) — métricas, regras de cálculo e erros
 - [actions.md](actions.md) — Server Actions usadas pela tela
 - [queries.md](queries.md) — leituras no servidor

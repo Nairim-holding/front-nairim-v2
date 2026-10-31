@@ -45,6 +45,9 @@ export default function TaxesWidget({ startDate, endDate, filters }: FinancialWi
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoading(true);
       try {
         const raw = buildReportActionParams({ from: startDate, to: endDate, regime, filters: toReportFilters(filters) });
         raw.groupBy = 'subcategory';

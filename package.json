@@ -6,6 +6,7 @@
     "build:seed-test2": "node scripts/build-seed-test2.mjs",
     "test": "vitest run --maxWorkers=2",
     "test:correcoes51-ui": "node scripts/test-correcoes51-ui.mjs",
+    "test:correcoes53-ui": "node scripts/test-correcoes53-ui.mjs",
     "test:security": "vitest run src/infra/auth/security.test.ts src/infra/database/tenant-security.test.ts src/infra/repositories/permissions-security.test.ts src/infra/security/login-rate-limiter.test.ts src/utils/echartsTooltip.test.ts src/server/queries/credit-card-dashboard.test.ts",
     "generate:table-models": "node scripts/generate-table-transfer-models.mjs",
     "test:correcoes-ui": "node scripts/test-correcoes-ui.mjs",

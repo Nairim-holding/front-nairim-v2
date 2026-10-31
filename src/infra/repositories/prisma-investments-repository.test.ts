@@ -23,6 +23,23 @@ beforeEach(() => {
 });
 
 describe('investimentos no repositório', () => {
+  it('usa o saldo de janeiro ao selecionar somente fevereiro (correções 53)', async () => {
+    const pgbl = { ...record, application_date: new Date('2024-12-31') };
+    const vgbl = { ...pgbl, id: 'vgbl', product: 'VGBL', invested_amount: 707318.13 };
+    db.investment.findMany.mockResolvedValue([pgbl, vgbl]);
+    db.investmentSettings.findUnique.mockResolvedValue({ independence_reference_amount: 20000 });
+    db.investmentTransaction.findMany.mockResolvedValue([pgbl, vgbl].map(row => ({
+      investment_id: row.id, type: 'CONTRIBUTION', date: row.application_date, amount: row.invested_amount,
+    })));
+    db.investmentMonthBalance.findMany.mockResolvedValue([
+      { investment_id: 'pgbl', year: 2025, month: 1, balance: 1148951.94 },
+      { investment_id: 'vgbl', year: 2025, month: 1, balance: 714603.27 },
+      { investment_id: 'pgbl', year: 2025, month: 2, balance: 1149951.94 },
+      { investment_id: 'vgbl', year: 2025, month: 2, balance: 716603.27 },
+    ]);
+    const result = await repo.getDashboard({ startMonth: '2025-02', endMonth: '2025-02' });
+    expect(result.summary[0]).toMatchObject({ yield_amount: 3000, independence_degree: 15, total_applied: 0 });
+  });
   it.each([false, true])('retorna R$ 18.998,32 em janeiro com aportes iniciais presentes=%s', async initialTransactions => {
     const vgbl = { ...record, id: 'vgbl', product: 'VGBL', invested_amount: 707318.13 };
     db.investmentSettings.findUnique.mockResolvedValue({ independence_reference_amount: 20000 });

@@ -2,6 +2,11 @@
 
 Atualize aqui a cada alteração no Resumo. Mais recente primeiro.
 
+### 2026-10-31 — Complemento e verificação das correções 53
+- **Arquivos:** `DemonstrativoView.tsx`, `TaxesWidget.tsx`, `scripts/test-correcoes53-ui.mjs` e documentação do módulo.
+- **Razão:** conferir o commit `881fd81` contra o documento 53 e corrigir o desalinhamento entre as linhas sintéticas e os detalhes.
+- **Impacto:** tabela com 13 colunas físicas; carregamento do card ao trocar filtros; regressão de arraste persistido, tela cheia, percentuais e detalhes. Catálogo do widget de impostos atualizado para sua fonte DFC.
+
 ### 2026-10-30 — Correções de 28/10 (Demonstrativo e Impostos)
 - **Demonstrativo (widget-21):** agora é arrastável como os demais (usa `ChartCard`: a barra do título é a alça) e tem botão **Expandir** em tela cheia.
 - Ao abrir um grupo (+), os lançamentos aparecem nas mesmas 12 colunas dos demais blocos (Competência, Data efetiva, Descrição, Valor, Tipo, Categoria, Subcategoria, Conta, Cartão, Contato, Centro, Status), em células da mesma tabela (a exportação Excel/PDF continua lendo o DOM).

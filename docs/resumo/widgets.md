@@ -9,7 +9,7 @@ Todos respeitam período, regime, filtros avançados e empresas selecionadas da 
 |---|---|---|---|
 | widget-11 | Ticket Médio da Locação | `NumericCard` | `FinancialMetrics.averageRentalTicket` |
 | widget-12 | Valor Total de Aluguel do Portfólio | `NumericCard` | `totalRentalActive` |
-| widget-13 | Total de Impostos e Taxas (Mensal Est.) | `NumericCard` | `totalPropertyTaxAndCondoFee` |
+| widget-13 | Total de Impostos e Taxas | `TaxesWidget` / `NumericCard` | linha `impostos` de `getDemonstrativoReportAction`, com período, regime e filtros do Resumo |
 | widget-1 | Receitas e Despesas | `MonthlyIncomeExpenseChart` | `getMonthlySummaryMultiAction` |
 | widget-2 | % Despesas em Relação às Receitas | `ExpenseRatioChart` | `getMonthlySummaryAction` |
 | widget-20 | Receitas e Despesas por Centro | `CenterIncomeExpenseChart` | `getCenterSummaryAction` |

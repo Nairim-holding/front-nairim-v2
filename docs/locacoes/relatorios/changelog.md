@@ -1,5 +1,10 @@
 # Relatórios de locações — Histórico
 
+### 2026-10-31 — Total trimestral consistente na tela e impressão
+- **Arquivos:** `src/app/dashboard/(cadastro)/locacoes/relatorios/_components/TaxPanels.tsx`, `_lib/tax-panels.test.ts`.
+- **Razão:** o layout impresso do commit `881fd81` incluía o imposto da aplicação, mas o quadro da tela mostrava somente o DARF dos aluguéis após retenção.
+- **Impacto:** o total trimestral da tela soma a aplicação correspondente ao mesmo ano, trimestre e imposto, seguindo a impressão; teste com e sem aplicações.
+
 Atualize aqui a cada alteração no módulo. Mais recente primeiro.
 
 ### 2026-10-30 — Correções de 28/10
