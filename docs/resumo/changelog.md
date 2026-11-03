@@ -2,6 +2,11 @@
 
 Atualize aqui a cada alteração no Resumo. Mais recente primeiro.
 
+### 2026-11-03 — Percentuais das receitas (correções 54)
+- **Arquivos:** `DemonstrativoView.tsx`, `scripts/test-correcoes53-ui.mjs`, `correcoes54.md`.
+- **Razão:** receitas e seus grupos expandidos ainda não exibiam o percentual em relação à Receita Bruta.
+- **Impacto:** Receita Bruta 100,00%; demais receitas calculadas sobre a mesma base, com travessão quando a base é zero. Mesma regra no Resumo e nos relatórios financeiros.
+
 ### 2026-10-31 — Complemento e verificação das correções 53
 - **Arquivos:** `DemonstrativoView.tsx`, `TaxesWidget.tsx`, `scripts/test-correcoes53-ui.mjs` e documentação do módulo.
 - **Razão:** conferir o commit `881fd81` contra o documento 53 e corrigir o desalinhamento entre as linhas sintéticas e os detalhes.

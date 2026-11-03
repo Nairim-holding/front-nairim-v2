@@ -1,5 +1,10 @@
 # Meus investimentos — Histórico
 
+### 2026-11-03 — Consistência das recargas (correções 54)
+- **Arquivos:** `src/app/dashboard/(financeiro)/investimentos/content.tsx`, `scripts/test-investments-ui.mjs`.
+- **Razão:** uma consulta antiga podia chegar depois da mais recente e substituir seus indicadores.
+- **Impacto:** somente a última consulta atualiza dados, erro e carregamento; requisições invalidadas na troca de filtros ou desmontagem são ignoradas. Regressão de respostas fora de ordem e exemplos numéricos do documento.
+
 ### 2026-10-31 — Verificação do item 4 das correções 53
 - **Arquivos:** `src/infra/repositories/prisma-investments-repository.test.ts`; documentação do módulo.
 - **Razão:** confirmar os exemplos do documento e a continuidade dos cálculos nos meses subsequentes.

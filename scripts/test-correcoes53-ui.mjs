@@ -20,6 +20,12 @@ try {
       groups: key === 'impostos' ? [{ key: 'tax', label: 'Tributo de teste', total, items: [item] }] : [] });
     export async function getDemonstrativoReportAction(raw) {
       window.__query = raw;
+      if (window.__receitas54) {
+        const revenue = line('receita_bruta','Receita Bruta',window.__zeroRevenue ? 0 : 32024.75,1);
+        revenue.groups = [['Aluguéis',31827.91],['Entrada de Recursos',1.19],['Rendimentos Aplicação',104.39],['Restituição IPTU',91.26]]
+          .map(([label,total])=>({key:label,label,total:window.__zeroRevenue ? 0 : total,items:[]}));
+        return {ok:true,data:{groupBy:'subcategory',unclassifiedExpenseTotal:0,lines:[revenue]}};
+      }
       return { ok: true, data: { groupBy: 'subcategory', unclassifiedExpenseTotal: 0, lines: [
         line('receita_bruta','Receita Bruta',31920.36,1), line('impostos','Impostos',10993),
         line('variaveis','Despesas Variáveis',28397.11), line('fixas','Despesas Fixas',3411.64),
@@ -84,8 +90,21 @@ try {
   await tax.getByText(/10\.993/).first().click();
   await page.getByText('Imposto de teste',{exact:true}).waitFor();
   assert.deepEqual(await page.locator('table').last().locator('thead th').allTextContents(), headers.slice(1));
+  await page.getByRole('button',{name:'Fechar',exact:true}).click();
+  await page.evaluate(()=>{window.__receitas54=true;});
+  await dfc.getByLabel('Expandir',{exact:true}).click();
+  await page.locator('table').last().getByText('100,00%',{exact:true}).waitFor();
+  const expanded = page.locator('table').last();
+  await expanded.locator('tbody').getByTitle('Expandir',{exact:true}).click();
+  for (const [label,pct] of [['Aluguéis','99,39%'],['Entrada de Recursos','0,00%'],['Rendimentos Aplicação','0,33%'],['Restituição IPTU','0,28%']]) {
+    assert.match(await expanded.locator('tr').filter({hasText:label}).innerText(),new RegExp(pct));
+  }
+  await page.getByTitle('Fechar',{exact:true}).click();
+  await page.evaluate(()=>{window.__zeroRevenue=true;});
+  await dfc.getByLabel('Expandir',{exact:true}).click();
+  await page.locator('table').last().getByText('—',{exact:true}).waitFor();
   assert.deepEqual(errors,[]);
-  console.log('Correções 53 aprovadas: percentuais, 13 colunas, impostos, arraste persistido e tela cheia.');
+  console.log('Correções 53 e 54 aprovadas: receitas/despesas, base zero, detalhes, impostos, arraste e tela cheia.');
 } finally {
   await browser?.close(); await server?.close(); rmSync(fixture,{recursive:true,force:true});
 }

@@ -27,13 +27,18 @@ try {
       { id: 'vgbl', product: 'VGBL – Classico IV FIC Renda Fixa', invested_amount: 707318.13, final: 714603.27 },
     ].map(p => ({ ...p, company_id: 'company', financial_institution_id: 'bank', financial_institution_name: 'Banco de teste',
       institution_label: 'Banco de teste - Principal', partition: 'Principal', issuer: 'Emissor de teste', product_type: 'PREVIDENCIA',
-      application_date: '2024-01-01', maturity_date: '2030-01-01', liquidity_days: 0, liquidity_at_maturity: false,
+      application_date: '2024-12-31', maturity_date: '2030-01-01', liquidity_days: 0, liquidity_at_maturity: false,
       notes: 'Observação de teste', display_order: 1, liquidated_at: null, is_active: true }));
     export async function getInvestmentDashboardAction() {
+      const stale = window.__holdNextDashboard;
+      if (stale) {
+        window.__holdNextDashboard = false;
+        await new Promise(resolve => { window.__releaseDashboard = resolve; });
+      }
       const months = expandMonths('2025-01', '2025-01');
       const histories = products.map(p => resolveInvestmentHistory(p.application_date, p.invested_amount, [], new Map([['2025-01', p.final]]), '2025-01'));
       return { ok: true, data: { start_month: '2025-01', end_month: '2025-01', months,
-        summary: buildSummary(months, histories, 20000), investments: products.map(p => ({ ...p, months: [{ year: 2025, month: 1, applied: 0, balance: p.final, balance_is_manual: true }] })),
+        summary: buildSummary(months, histories, 20000).map(row => stale ? { ...row, yield_amount: -99999 } : row), investments: products.map(p => ({ ...p, months: [{ year: 2025, month: 1, applied: 0, balance: p.final, balance_is_manual: true }] })),
         planned_expenses_current_month: 0, independence_reference_amount: 20000, independence_base: 20000 } };
     }
     export const getInvestmentFiltersAction = async () => ({ ok: true, data: { filters: [], operators: {}, searchFields: [] } });
@@ -112,6 +117,10 @@ try {
   assert.equal(await page.locator('input[type="checkbox"]:checked').count(), 0);
   for (const label of desired) await page.getByRole('checkbox', { name: 'Exibir ' + label }).check();
   await page.getByRole('button', { name: 'Concluir', exact: true }).click();
+  // Uma recarga antiga não pode substituir o resultado após salvar e recarregar.
+  await page.evaluate(() => { window.__holdNextDashboard = true; });
+  await page.getByRole('button', { name: 'Recarregar', exact: true }).click();
+  await page.waitForFunction(() => Boolean(window.__releaseDashboard));
   await page.getByRole('button', { name: 'Novo investimento' }).click();
   // Copy the existing product's required fields while keeping the default zero.
   await page.locator('[tabindex="0"]').first().click();
@@ -120,6 +129,13 @@ try {
   assert.match(await page.getByPlaceholder('0,00', { exact: true }).inputValue(), /0,00/);
   await page.getByRole('button', { name: 'Criar', exact: true }).click();
   await page.waitForFunction(() => Boolean(window.__created));
+  await page.getByText('18.998,32', { exact: true }).waitFor();
+  await page.evaluate(async () => {
+    window.__releaseDashboard();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  assert.equal(await page.getByText('-99.999,00', { exact: true }).count(), 0);
+  await page.getByText('18.998,32', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => window.__created.invested_amount), 0);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'A página deve conter a rolagem horizontal dentro da tabela');

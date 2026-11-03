@@ -1,5 +1,10 @@
 # Relatórios financeiros — Histórico
 
+### 2026-11-03 — Percentuais de receita no Demonstrativo
+- **Arquivos:** `src/app/dashboard/(financeiro)/relatorios/_components/DemonstrativoView.tsx`.
+- **Razão:** atender ao item 1 do documento 54.
+- **Impacto:** linhas de receita e grupos mostram o percentual sobre a Receita Bruta, inclusive 100,00% na própria Receita Bruta; base zero mostra travessão.
+
 ### 2026-10-31 — Alinhamento do Demonstrativo (correções 53)
 - **Arquivos:** `src/app/dashboard/(financeiro)/relatorios/_components/DemonstrativoView.tsx`.
 - **Razão:** as linhas sintéticas tinham uma coluna física excedente em relação aos lançamentos expandidos.

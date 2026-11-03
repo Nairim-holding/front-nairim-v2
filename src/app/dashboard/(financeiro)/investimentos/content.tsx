@@ -99,8 +99,11 @@ export default function InvestmentsPageContent() {
 
   useEffect(() => {
     let cancelled = false;
-    setColumnsReady(false);
-    setIsColumnsOpen(false);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setColumnsReady(false);
+      setIsColumnsOpen(false);
+    });
     getColumnPreferencesAction('investments').then(result => {
       if (cancelled) return;
       if (!result.ok) {
@@ -170,8 +173,11 @@ export default function InvestmentsPageContent() {
 
   const { filters: dynamicFilters } = useDynamicFilters('/investments/filters', appliedFilters, filtersFetcher);
   const activeFilterCount = Object.keys(appliedFilters).length;
+  const dashboardRequest = useRef(0);
+  const invalidateDashboard = useCallback(() => { ++dashboardRequest.current; }, []);
 
   const fetchDashboard = useCallback(async () => {
+    const request = ++dashboardRequest.current;
     setIsLoading(true);
     try {
       // A grid é mensal; o filtro é por dia (mesmo CalendarPicker de
@@ -181,19 +187,23 @@ export default function InvestmentsPageContent() {
         endMonth: toMonthOf(dateRange.to),
         ...appliedFilters,
       });
+      if (request !== dashboardRequest.current) return;
       if (!result.ok) throw new Error(result.errors?.join('; ') || result.error);
       setData(result.data);
     } catch (error) {
+      if (request !== dashboardRequest.current) return;
       showMessage(error instanceof Error ? error.message : 'Erro ao carregar os investimentos', 'error');
       setData(null);
     } finally {
-      setIsLoading(false);
+      if (request === dashboardRequest.current) setIsLoading(false);
     }
   }, [dateRange.from, dateRange.to, appliedFilters, showMessage]);
 
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    let active = true;
+    queueMicrotask(() => { if (active) void fetchDashboard(); });
+    return () => { active = false; invalidateDashboard(); };
+  }, [fetchDashboard, invalidateDashboard]);
 
   useEffect(() => {
     if (!isCalendarOpen) return;

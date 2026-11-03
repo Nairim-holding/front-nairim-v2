@@ -279,7 +279,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                       {formatSigned(line.total, line.sign)}
                     </td>
                     <td className={`px-2 py-2 text-sm text-right whitespace-nowrap ${valueColor}`}>
-                      {line.kind === 'line' && line.sign < 0
+                      {line.kind === 'line'
                         ? pctOf(line.total)
                         : line.kind === 'final'
                           ? (receitaBruta > 0 ? formatPct((totalDespesas / receitaBruta) * 100) : '—')
@@ -308,7 +308,7 @@ const DemonstrativoView = forwardRef<ReportViewHandle, DemonstrativoViewProps>(f
                             </td>
                             <td colSpan={3} className="px-3 py-1.5 pl-6">{g.label}</td>
                             <td className="px-2 py-1.5 text-right whitespace-nowrap">{formatCurrency(g.total)}</td>
-                            <td className="px-2 py-1.5 text-right whitespace-nowrap">{line.sign < 0 ? pctOf(g.total) : ''}</td>
+                            <td className="px-2 py-1.5 text-right whitespace-nowrap">{pctOf(g.total)}</td>
                             <td colSpan={TABLE_COLUMNS - 6}></td>
                           </tr>
                           {isGroupOpen && g.items.length > 0 && <DfcItemHeader />}
