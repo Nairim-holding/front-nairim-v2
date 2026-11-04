@@ -6,7 +6,7 @@ import NumericCard from '@/components/charts/MetricCard';
 import { MetricResponse, MetricWithData } from '@/types/types';
 import { formatCurrencyFixed } from '@/utils/displayFormatters';
 import {
-  COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_TAX_FEE, COLS_ACQUISITION,
+  COLS_AVG_RENTAL, COLS_TOTAL_RENTAL, COLS_ACQUISITION,
   COLS_FINANCIAL_VACANCY_GAUGE, COLS_VACANCY_MONTHS,
 } from '@/lib/columns';
 
@@ -77,25 +77,6 @@ export function TotalRentalWidget({ metrics, periodLabel }: LegacyWidgetProps) {
         positive={get('totalRentalActive').isPositive}
         detailData={get('totalRentalActive').data}
         detailColumns={COLS_TOTAL_RENTAL}
-        dragHandleClassName={DRAG_HANDLE_CLASS}
-        openDetailsOnCardClick
-      />
-    </LegacyWidgetWrapper>
-  );
-}
-
-export function TaxFeeWidget({ metrics, periodLabel }: LegacyWidgetProps) {
-  const get = useMetricGetter(metrics);
-  const value = useMemo(() => formatCurrencyFixed(metrics?.totalPropertyTaxAndCondoFee?.result), [metrics]);
-  return (
-    <LegacyWidgetWrapper>
-      <NumericCard
-        value={value}
-        label={`Total de Impostos e Taxas (Mensal Est.)${periodLabel ? ` — ${periodLabel}` : ''}`}
-        variation={String(get('totalPropertyTaxAndCondoFee').variation)}
-        positive={get('totalPropertyTaxAndCondoFee').isPositive}
-        detailData={get('totalPropertyTaxAndCondoFee').data}
-        detailColumns={COLS_TAX_FEE}
         dragHandleClassName={DRAG_HANDLE_CLASS}
         openDetailsOnCardClick
       />

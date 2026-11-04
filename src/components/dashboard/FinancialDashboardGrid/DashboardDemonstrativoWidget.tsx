@@ -1,5 +1,6 @@
 'use client';
 
+import ChartCard from '@/components/dashboard/ChartCard';
 import DemonstrativoView from '@/app/dashboard/(financeiro)/relatorios/_components/DemonstrativoView';
 import type { ReportFiltersState, ReportStatusFilter } from '@/app/dashboard/(financeiro)/relatorios/_lib/types';
 import type { FinancialWidgetProps } from './types';
@@ -16,7 +17,7 @@ function valuesOf(value: unknown): string[] {
   return [value];
 }
 
-function toReportFilters(filters: Record<string, unknown> | undefined): ReportFiltersState {
+export function toReportFilters(filters: Record<string, unknown> | undefined): ReportFiltersState {
   const source = filters ?? {};
   const status = source.status;
   const reportStatus: ReportStatusFilter = status === 'PENDING' || status === 'all' ? status : 'COMPLETED';
@@ -33,17 +34,26 @@ function toReportFilters(filters: Record<string, unknown> | undefined): ReportFi
   };
 }
 
-/** Demonstrativo do Financeiro, usando o mesmo período, regime e filtros do dashboard. */
+/**
+ * Demonstrativo do Financeiro, usando o mesmo período, regime e filtros do dashboard.
+ * Usa o ChartCard como os demais blocos: a barra do título é a alça de arrastar
+ * (o usuário escolhe a posição no Resumo) e há o botão Expandir em tela cheia.
+ */
 export default function DashboardDemonstrativoWidget({ startDate, endDate, filters }: FinancialWidgetProps) {
   const regime = filters?.regime === 'competencia' ? 'competencia' : 'caixa';
   return (
-    <div className="h-full overflow-auto">
-      <DemonstrativoView
-        dateRange={{ from: startDate, to: endDate }}
-        regime={regime}
-        reportKind="sintetico"
-        filters={toReportFilters(filters)}
-      />
-    </div>
+    <ChartCard title={`Demonstrativo Financeiro — Regime de ${regime === 'caixa' ? 'Caixa' : 'Competência'}`}>
+      {({ isFullscreen }) => (
+        <div className={isFullscreen ? 'flex-1 overflow-auto' : 'absolute inset-0 overflow-auto'}>
+          <DemonstrativoView
+            hideTitle
+            dateRange={{ from: startDate, to: endDate }}
+            regime={regime}
+            reportKind="sintetico"
+            filters={toReportFilters(filters)}
+          />
+        </div>
+      )}
+    </ChartCard>
   );
 }

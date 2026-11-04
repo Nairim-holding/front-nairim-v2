@@ -258,7 +258,7 @@ const InvestmentsTable = forwardRef<InvestmentsTableHandle, Props>(function Inve
               } ${cell.balance_is_manual ? 'text-content font-medium' : 'text-content-secondary'}`}
               title={cell.balance_is_manual ? 'Saldo informado' : 'Saldo herdado do mês anterior + aplicado'}
             >
-              <span>{cell.balance === null ? '' : formatCell(cell.balance)}</span>
+              <span>{cell.balance === null ? '' : formatCell(cell.balance) || '0,00'}</span>
               <button
                 type="button"
                 onClick={() => onEditBalance({ investmentId: investment.id, year: cell.year, month: cell.month })}

@@ -173,7 +173,7 @@ const TaxPanels = forwardRef<HTMLDivElement, TaxPanelsProps>(function TaxPanels(
               <th className={`${TH} text-right`}>Faturamento</th>
               <th className={`${TH} text-right`}>%</th>
               <th className={`${TH} text-right`}>Imposto Trimestral</th>
-              <th className={`${TH} text-right`}>A Pagar (ded. retenção)</th>
+              <th className={`${TH} text-right`}>A Pagar (c/ aplicação e retenção)</th>
             </tr>
           </thead>
           <tbody>
@@ -187,7 +187,7 @@ const TaxPanels = forwardRef<HTMLDivElement, TaxPanelsProps>(function TaxPanels(
                 <td className={`${TD} text-right`}>{formatCurrency(row.revenue)}</td>
                 <td className={`${TD} text-right`}>{percent(row.rate)}</td>
                 <td className={`${TD} text-right`}>{formatCurrency(row.darf)}</td>
-                <td className={`${TD} text-right font-bold text-content`}>{formatCurrency(row.payable)}</td>
+                <td className={`${TD} text-right font-bold text-content`}>{formatCurrency(row.payable + (redemptionRows.find((redemption) => redemption.reference.year === row.reference.year && redemption.reference.quarter === row.reference.quarter && redemption.tax === row.tax)?.payable ?? 0))}</td>
               </tr>
             ))}
           </tbody>

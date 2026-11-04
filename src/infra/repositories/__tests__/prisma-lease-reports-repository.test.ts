@@ -11,7 +11,7 @@ import { runWithReportingCompanies } from '@/infra/database/reporting-context';
 
 describe('PrismaLeaseReportsRepository', () => {
   it('batches 100 companies and keeps matching contract numbers within each company', async () => {
-    const lease = (company_id: string) => ({ company_id, id: `lease-${company_id}`, contract_number: '123', start_date: new Date('2020-01-01'), end_date: new Date('2030-12-31'), canceled_at: null, discount_amount: null, agency: { trade_name: company_id }, property: { title: company_id, income_tax_withholding: false, agency: null }, tenant: { name: company_id, cpf: null, cnpj: null } });
+    const lease = (company_id: string) => ({ company_id, id: `lease-${company_id}`, contract_number: '123', start_date: new Date('2020-01-01'), end_date: new Date('2030-12-31'), canceled_at: null, discount_amount: null, property_id: `prop-${company_id}`, tenant_id: `ten-${company_id}`, agency: { trade_name: company_id }, property: { title: company_id, income_tax_withholding: false, agency: null }, tenant: { name: company_id, cpf: null, cnpj: null } });
     findLeases.mockResolvedValue([lease('a'), lease('b')]);
     findMany.mockResolvedValue([
       { id: 'tx-a', company_id: 'a', description: 'Aluguel Contrato 123', amount: 1000, effective_date: new Date('2025-01-10'), category: { type: 'INCOME' } },
@@ -25,7 +25,7 @@ describe('PrismaLeaseReportsRepository', () => {
     findMany.mockReset();
     findLeases.mockReset();
     findLeases.mockResolvedValue([{
-      id: 'lease-rafael-55', contract_number: '123', start_date: new Date('2020-01-01'),
+      id: 'lease-rafael-55', property_id: 'prop-rafael', tenant_id: 'ten-1', contract_number: '123', start_date: new Date('2020-01-01'),
       end_date: new Date('2030-12-31'), canceled_at: null, discount_amount: null,
       agency: { trade_name: 'Imobiliária' },
       property: { title: 'AV. DR. RAFAEL PAES DE BARROS, 55', income_tax_withholding: true, agency: null },
@@ -130,7 +130,7 @@ describe('PrismaLeaseReportsRepository', () => {
 });
 
 it('separa três competências recebidas no mesmo mês e prioriza condomínio financeiro sobre o cadastro', async () => {
-  findLeases.mockResolvedValue([{id:'lease',company_id:'a',contract_number:'123',start_date:new Date('2020-01-01'),end_date:new Date('2030-12-31'),canceled_at:null,
+  findLeases.mockResolvedValue([{id:'lease',company_id:'a',property_id:'p',tenant_id:'t',contract_number:'123',start_date:new Date('2020-01-01'),end_date:new Date('2030-12-31'),canceled_at:null,
     discount_amount:100,condo_fee:100,agency:{trade_name:'Adiplan'},property:{title:'América, 389',income_tax_withholding:false,agency:null},tenant:{name:'Locatário',cpf:null,cnpj:null}}]);
   const tx=(month:number,description:string,amount:number,type='INCOME')=>({id:description+month,company_id:'a',lease_id:'lease',description,amount,event_date:new Date(`2026-${String(month).padStart(2,'0')}-01`),effective_date:new Date('2026-09-10'),is_cancellation_charge:false,category:{type}});
   findMany.mockResolvedValueOnce([tx(6,'Aluguel',1800),tx(7,'Aluguel',1800),tx(8,'Aluguel',1800),tx(6,'Condomínio',120),tx(6,'Pagamento condomínio',500,'EXPENSE')]).mockResolvedValue([]);
@@ -149,4 +149,22 @@ it('associa recebimento atrasado sem vínculo à locação vigente na competênc
   expect(report.rows).toHaveLength(1);
   expect(report.rows[0]).toMatchObject({lease_id:'old-lease',reference_month:'2026-06',gross_revenue:1800});
   expect(report.unmatched).toHaveLength(0);
+});
+
+it('junta em uma só linha a retenção de IRRF vinculada a outro contrato do mesmo imóvel e inquilino', async () => {
+  const base = { company_id: 'a', start_date: new Date('2020-01-01'), end_date: new Date('2030-12-31'), canceled_at: null, discount_amount: null, condo_fee: 0,
+    property_id: 'p55', tenant_id: 'trt', agency: { trade_name: 'Residência' }, property: { title: 'Dr. Rafael, 55', income_tax_withholding: false, agency: null }, tenant: { name: 'TRT', cpf: null, cnpj: '1' } };
+  findLeases.mockResolvedValue([{ ...base, id: 'old', contract_number: '64/2025' }, { ...base, id: 'new', contract_number: '65/2026' }]);
+  const tx = (id: string, lease_id: string, description: string, amount: number, type: string) => ({
+    id, company_id: 'a', lease_id, description, amount, is_cancellation_charge: false,
+    event_date: new Date('2026-09-10T00:00:00Z'), effective_date: new Date('2026-09-10T00:00:00Z'), category: { type } });
+  findMany.mockResolvedValueOnce([
+    tx('irrf', 'old', 'IRRF retido Aluguel', 2102.61, 'EXPENSE'),
+    tx('rent', 'new', 'Aluguel do imóvel', 22249.89, 'INCOME'),
+  ]).mockResolvedValue([]);
+  const report = await new PrismaLeaseReportsRepository().getLeaseReport({ months: [{ year: 2026, month: 9 }] });
+  expect(report.rows).toHaveLength(1);
+  expect(report.rows[0]).toMatchObject({ lease_id: 'new', gross_revenue: 22249.89, withholding: 2102.61, has_withholding: true });
+  expect(report.withholding.base).toBe(22249.89);
+  expect(report.withholding.amounts.pis).toBe(144.62);
 });
