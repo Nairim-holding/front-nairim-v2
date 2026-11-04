@@ -23,6 +23,21 @@ beforeEach(() => {
 });
 
 describe('investimentos no repositório', () => {
+  it('preserva a base dos dois produtos com zeros legados anteriores à aplicação (#54)', async () => {
+    const pgbl = { ...record, application_date: new Date('2024-12-31') };
+    const vgbl = { ...pgbl, id: 'vgbl', invested_amount: 707318.13 };
+    db.investment.findMany.mockResolvedValue([pgbl, vgbl]);
+    db.investmentSettings.findUnique.mockResolvedValue({ independence_reference_amount: 20000 });
+    db.investmentMonthBalance.findMany.mockResolvedValue([
+      { investment_id: 'pgbl', year: 2024, month: 7, balance: 0 },
+      { investment_id: 'vgbl', year: 2024, month: 1, balance: 0 },
+      { investment_id: 'pgbl', year: 2025, month: 1, balance: 1148951.94 },
+      { investment_id: 'vgbl', year: 2025, month: 1, balance: 714603.27 },
+    ]);
+    const result = await repo.getDashboard({ startMonth: '2025-01', endMonth: '2025-02' });
+    expect(result.summary[0]).toMatchObject({ yield_amount: 18998.32, independence_degree: 94.99, total_balance: 1863555.21, total_applied: 0 });
+    expect(result.summary[1]).toMatchObject({ yield_amount: 0, total_balance: 1863555.21 });
+  });
   it('usa o saldo de janeiro ao selecionar somente fevereiro (correções 53)', async () => {
     const pgbl = { ...record, application_date: new Date('2024-12-31') };
     const vgbl = { ...pgbl, id: 'vgbl', product: 'VGBL', invested_amount: 707318.13 };

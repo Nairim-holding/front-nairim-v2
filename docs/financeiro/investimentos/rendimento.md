@@ -14,6 +14,8 @@ Rendimento do mês = saldo final − saldo anterior − aportes líquidos do mê
 
 No primeiro mês do histórico, o valor investido é a base inicial. Nos meses seguintes, o cálculo usa o saldo anterior, incluindo saldos informados fora do período selecionado.
 
+Meses com saldo zero anteriores à aplicação não antecipam o início do histórico nem apagam o capital inicial. Um saldo não zero ou movimento efetivo anterior continua sendo considerado. Zero informado a partir do início efetivo do histórico é preservado e aparece como **0,00** na tabela; não equivale a saldo ausente e pode representar perda integral. Para herdar o mês anterior, o registro manual deve estar ausente.
+
 Exemplo de janeiro de 2025:
 
 | Produto | Valor investido | Saldo final | Rendimento |

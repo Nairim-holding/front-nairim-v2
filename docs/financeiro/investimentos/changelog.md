@@ -1,5 +1,13 @@
 # Meus investimentos — Histórico
 
+### 2026-11-04 — Base inicial com meses legados zerados (#54)
+
+**Arquivos:** `src/core/use-cases/investment/dashboard-math.ts`, `src/components/investimentos/InvestmentsTable.tsx` e testes de cálculo/repositório.
+
+**Razão:** zeros anteriores à aplicação iniciavam o histórico antecipadamente e sobrescreviam o capital inicial, fazendo o primeiro saldo positivo aparecer integralmente como rendimento. O zero também era apresentado como célula vazia.
+
+**Impacto:** zeros anteriores não iniciam o histórico; movimentos e saldos não zero anteriores continuam considerados. Zero informado durante o histórico permanece válido e visível como `0,00`. Sem alterações de banco ou migrações.
+
 ### 2026-11-03 — Consistência das recargas (correções 54)
 - **Arquivos:** `src/app/dashboard/(financeiro)/investimentos/content.tsx`, `scripts/test-investments-ui.mjs`.
 - **Razão:** uma consulta antiga podia chegar depois da mais recente e substituir seus indicadores.

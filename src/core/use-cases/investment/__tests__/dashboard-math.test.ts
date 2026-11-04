@@ -17,6 +17,18 @@ import {
 const MONTHS = expandMonths('2024-08', '2025-01');
 
 describe('capital inicial do cadastro', () => {
+  it('não deixa zeros anteriores à aplicação apagarem o capital inicial', () => {
+    const history = resolveInvestmentHistory('2024-12-31', 1137238.76, [], new Map([
+      ['2024-07', 0], ['2025-01', 1148951.94], ['2025-02', 0],
+    ]), '2025-02');
+    expect(history.balances.has('2024-07')).toBe(false);
+    expect(history.balances.get('2024-12')).toBe(1137238.76);
+    const summary = buildSummary(expandMonths('2025-01', '2025-02'), [history], 20000);
+    expect(summary[0].yield_amount).toBe(11713.18);
+    // Zero informado após a aplicação é um saldo real, não uma ausência.
+    expect(summary[1].yield_amount).toBe(-1148951.94);
+    expect(history.balances.get('2025-02')).toBe(0);
+  });
   it.each(['2024-12-31', '2025-01-01', '2026-01-01'])('soma R$ 18.998,32 em janeiro, aplicação em %s e sem aporte inicial', application => {
     const pgbl = resolveInvestmentHistory(application, 1137238.76, [], new Map([['2025-01', 1148951.94]]), '2025-01');
     const vgbl = resolveInvestmentHistory(application, 707318.13, [], new Map([['2025-01', 714603.27]]), '2025-01');

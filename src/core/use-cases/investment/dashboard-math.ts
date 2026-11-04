@@ -108,11 +108,13 @@ export function resolveInvestmentHistory(
     tx.type === 'CONTRIBUTION' && tx.date === applicationDate && round2(tx.amount) === round2(initialAmount),
   );
   let firstMonth = applicationDate.slice(0, 7);
-  for (const key of manual.keys()) if (key < firstMonth) firstMonth = key;
+  // Importações antigas contêm meses zerados antes da aplicação. Esses
+  // placeholders não iniciam o histórico nem consomem o capital do cadastro.
+  for (const [key, amount] of manual) if (amount !== 0 && key < firstMonth) firstMonth = key;
   for (const [index, tx] of transactions.entries()) {
     if (index === initialEntry) continue;
     const key = tx.date.slice(0, 7);
-    if (key < firstMonth) firstMonth = key;
+    if (tx.amount !== 0 && key < firstMonth) firstMonth = key;
     const signed = tx.type === 'REDEMPTION' ? -tx.amount : tx.amount;
     applied.set(key, round2((applied.get(key) ?? 0) + signed));
   }
