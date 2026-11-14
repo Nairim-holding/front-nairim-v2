@@ -2,6 +2,14 @@
 
 Atualize aqui a cada alteração no módulo. Mais recente primeiro.
 
+### 2026-11-13 — Créditos a maior de aluguel
+
+**Arquivo**  `src/core/entities/lease-transaction-kind.ts`.
+
+**Razão**  Um complemento de aluguel pode ocorrer na mesma competência da parcela contratual.
+
+**Impacto**  A sincronização e os avisos de sobreposição do Histórico Financeiro tratam esses créditos como complementos e continuam considerando a parcela integral.
+
 ### 2026-10-17 — Condomínio e validação financeira
 - Geração mensal inclui condomínio; conciliação o considera no líquido e na quitação dos repasses.
 - Servidor valida os vínculos financeiros do imóvel e da imobiliária antes de salvar.

@@ -2,7 +2,7 @@
 // hooks/useOptimizedTableData.ts
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 interface TableState {
   page: number;
@@ -21,8 +21,10 @@ export const useOptimizedTableData = (
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestVersion = useRef(0);
 
   const fetchData = useCallback(async () => {
+    const version = ++requestVersion.current;
     setIsLoading(true);
     setError(null);
     
@@ -31,17 +33,19 @@ export const useOptimizedTableData = (
         throw new Error(`useOptimizedTableData: fetcher ausente para ${resource} — dados requerem Server Action`);
       }
       const result = await fetcher(state);
-      setData(result);
+      if (version === requestVersion.current) setData(result);
     } catch (err) {
+      if (version !== requestVersion.current) return;
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       console.error(`❌ Erro ao carregar dados de ${resource}:`, err);
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) setIsLoading(false);
     }
   }, [state, resource, fetcher]);
 
   useEffect(() => {
     fetchData();
+    return () => { requestVersion.current += 1; };
   }, [fetchData]);
 
   const updateState = useCallback((updates: Partial<TableState>) => {

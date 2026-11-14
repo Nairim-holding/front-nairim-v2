@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Section from '@/components/layout/PageSection';
-import InlineEditableTable from '@/components/table/InlineEditableTable';
+import InlineEditableTable, { type InlineEditableTableHandle } from '@/components/table/InlineEditableTable';
 import TransferDestinationModal from '@/components/domain/financial/TransferDestinationModal';
 import LeaseCreditReconciliationModal from '@/components/domain/financial/LeaseCreditReconciliationModal';
 import { SearchCheck } from 'lucide-react';
@@ -127,7 +127,7 @@ export default function LancamentosPage() {
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isCreditReconciliationOpen, setIsCreditReconciliationOpen] = useState(false);
-  const [tableRefreshKey, setTableRefreshKey] = useState(0);
+  const tableRef = useRef<InlineEditableTableHandle>(null);
 
   // Categorias internas de transferência (is_system + nome). Quando o lançamento
   // usa uma delas, ao salvar abrimos o modal pedindo a conta de destino.
@@ -669,7 +669,7 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
   return (
     <Section title={pageTitle} fill>
       <InlineEditableTable
-        key={tableRefreshKey}
+        ref={tableRef}
         resource="financial-transaction"
         title="Lançamentos"
         columns={columns}
@@ -725,7 +725,7 @@ const stateToRawListParams = (state: any): Record<string, unknown> => {
           onClose={() => setIsCreditReconciliationOpen(false)}
           onCompleted={(updated) => {
             setIsCreditReconciliationOpen(false);
-            setTableRefreshKey((current) => current + 1);
+            tableRef.current?.refresh();
             showMessage(`${updated} lançamento${updated === 1 ? '' : 's'} concluído${updated === 1 ? '' : 's'} com sucesso.`, 'success');
           }}
         />

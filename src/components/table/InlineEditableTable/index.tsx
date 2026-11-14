@@ -4,7 +4,7 @@
 
 import { auditPreparedExport } from "@/lib/audit-export";
 
-import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, useImperativeHandle, type ReactNode, type Ref } from "react";
 import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
@@ -486,7 +486,12 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
   );
 }
 
+export interface InlineEditableTableHandle {
+  refresh: () => void;
+}
+
 interface InlineEditableTableProps {
+  ref?: Ref<InlineEditableTableHandle>;
   resource: string;
   title: string;
   columns: ColumnDef[];
@@ -636,6 +641,7 @@ function AttachmentHoverPreview({ transactionId, children }: { transactionId: st
 }
 
 export default function InlineEditableTable({
+  ref,
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 150, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
@@ -689,7 +695,7 @@ export default function InlineEditableTable({
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   
-  const { filters: dynamicFilters, searchFields, isLoading: isLoadingFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher);
+  const { filters: dynamicFilters, isLoading: isLoadingFilters, refetch: refreshFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher);
 
   useEffect(() => {
     onAppliedFiltersChange?.(appliedFilters);
@@ -714,6 +720,13 @@ export default function InlineEditableTable({
   } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
   }, tabDataFetcher);
+
+  useImperativeHandle(ref, () => ({
+    refresh() {
+      refreshData();
+      void refreshFilters();
+    },
+  }), [refreshData, refreshFilters]);
 
   const selectTab = useCallback((tab: 'ALL' | 'INCOME' | 'EXPENSE') => {
     setActiveTab(tab);
@@ -1682,7 +1695,7 @@ export default function InlineEditableTable({
   // Só a primeira carga troca a tela pelo skeleton. Revalidações posteriores
   // (salvar, filtrar, pesquisar) mantêm a árvore montada — desmontá-la recriava
   // o campo de pesquisa no DOM, derrubando o foco e o que estava sendo digitado.
-  if (isLoadingFilters || isInitialLoading) return <SkeletonTable />;
+  if ((isLoadingFilters && dynamicFilters.length === 0) || isInitialLoading) return <SkeletonTable />;
   if (!Array.isArray(displayItems)) return <div className="flex justify-center items-center my-3"><div className="bg-surface-subtle py-4 px-6 rounded-sm text-content-secondary">Erro ao carregar dados</div></div>;
 
   return (

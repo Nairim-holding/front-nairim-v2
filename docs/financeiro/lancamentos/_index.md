@@ -21,6 +21,6 @@ Lançamentos financeiros (receitas, despesas, transferências, parcelamentos e r
 3. **Parcelamento** e **recorrência** geram séries (`createInstallmentsAction`, `createRecurrenceAction`); editar com `propagate_fields` propaga campos escolhidos pela série.
 4. Anexos: PDF, JPG ou PNG, até um limite por lançamento (`MAX_TRANSACTION_ATTACHMENTS`).
 5. **Ordem do extrato**: a migration `20261025000000_transaction_statement_order` cria `Transaction.statement_order` (sequência + trigger). O banco atribui a ordem ao inserir como concluído ou ao mudar Pendente → Concluído (inclusive lote, fatura e conciliação); editar valor preserva; reabrir e concluir atribui nova posição. Empate de data: sequência, criação, ID. Lançamentos anteriores ficam sem sequência (vêm primeiro na mesma data).
-6. Novo lançamento que repete parcela gerada da mesma natureza e competência é recusado; restaurar parcela substituída não pode duplicar a substituta ativa.
+6. A validação recusa lançamentos que repetem parcela gerada da mesma natureza e competência. Créditos descritos como entrada a maior ou complemento de aluguel podem ser vinculados ao contrato como avulsos.
 7. Conciliação de crédito de locação (`searchLeaseCreditCandidatesAction`, `completeLeaseCreditReconciliationAction`) inclui o condomínio no líquido e na quitação dos repasses.
 8. Feriados (`Holiday`, escopo por estado) alimentam dias úteis dos alertas de atraso. Cadastro rápido de categoria, subcategoria, centro, cartão, contato.

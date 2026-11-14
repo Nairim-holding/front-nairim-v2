@@ -32,6 +32,26 @@ describe('vínculo de locação ao operar somente no Financeiro', () => {
     await expect(new PrismaFinancialTransactionsRepository().create({ ...data, description: 'Recebimento setembro - Contrato 4169/23', subcategory_id: 'rent' })).rejects.toThrow('Já existe uma parcela');
     expect(mocks.create).not.toHaveBeenCalled();
   });
+  it('permite criar e editar crédito a maior com o contrato na descrição', async () => {
+    mocks.subcategory.mockResolvedValue({ name: 'Aluguéis' });
+    mocks.findMany.mockResolvedValue([{ description: 'Aluguel do imóvel 1/12', category: { type: 'INCOME' } }]);
+    const description = 'Entrada a maior aluguel – Inquilino de teste – Contrato 4169/23';
+    const repository = new PrismaFinancialTransactionsRepository();
+    const created = await repository.create({ ...data, amount: 20, subcategory_id: 'rent', description });
+    expect(created).toMatchObject({ amount: 20, description, lease_id: 'lease' });
+    expect(created.installment_number).toBeUndefined();
+
+    const existing = {
+      ...created, company_id: 'company', description: 'Entrada a maior aluguel', lease_id: null,
+      event_date: new Date(data.event_date), effective_date: new Date(data.effective_date),
+    };
+    mocks.find.mockResolvedValue(existing);
+    mocks.update.mockImplementation(async ({ data }) => ({
+      ...existing,
+      ...Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)),
+    }));
+    expect(await repository.update(created.id, { description })).toMatchObject({ amount: 20, description, lease_id: 'lease' });
+  });
   it('não confunde despesa de aluguel com a receita gerada do contrato', async () => {
     mocks.category.mockResolvedValue({ type: 'EXPENSE' });
     const result = await new PrismaFinancialTransactionsRepository().create({ ...data, description: 'Pagamento aluguel - Contrato 4169/23' });

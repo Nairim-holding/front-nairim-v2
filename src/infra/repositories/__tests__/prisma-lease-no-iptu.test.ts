@@ -90,6 +90,20 @@ describe('locação sem IPTU', () => {
     expect(mocks.transactionCreate.mock.calls.map(([args]) => args.data).filter((row) => row.description.startsWith('Aluguel')).map((row) => row.amount)).toEqual([1000, 1000]);
   });
 
+  it('mantém a geração integral da parcela na competência de um complemento de aluguel', async () => {
+    mocks.transactionFind.mockResolvedValue([{
+      id: 'extra', status: 'COMPLETED', description: 'Complemento de aluguel - Contrato RENEWAL',
+      installment_number: null, event_date: new Date('2026-02-05'), amount: 20,
+      category: { type: 'INCOME' }, subcategory: { name: 'Aluguéis' },
+    }]);
+    const result = await new PrismaLeaseFinanceRepository().syncLeaseTransactions('lease', 'company');
+    const rent = mocks.transactionCreate.mock.calls.map(([args]) => args.data)
+      .filter((row) => row.description.startsWith('Aluguel'));
+    expect(rent.map((row) => row.amount)).toEqual([1000, 1000]);
+    expect(result.warning).toBeUndefined();
+    expect(mocks.transactionUpdate).not.toHaveBeenCalled();
+  });
+
   it('alterar aluguel não cria diferença retroativa em competência já quitada', async () => {
     mocks.leaseFind.mockResolvedValue({ ...lease(), rent_amount: 1100 });
     mocks.transactionFind.mockResolvedValue([{ id: 'paid', status: 'COMPLETED', description: 'Aluguel do imóvel 1/2', installment_number: 1,
