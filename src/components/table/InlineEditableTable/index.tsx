@@ -22,6 +22,7 @@ import InvoiceModal from "@/components/modals/InvoiceModal";
 import TransactionAttachmentsModal from "@/components/domain/financial/TransactionAttachmentsModal";
 import { getTransactionDocumentsAction } from "@/server/actions/financial-transaction";
 import type { TransactionDocument } from "@/core/entities/financial-transaction";
+import { normalizeReportText } from "@/core/entities/lease-report-matching";
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
 import { maskMoney, formatCurrencyRealtime } from "@/utils/masks";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
@@ -1522,26 +1523,44 @@ export default function InlineEditableTable({
     );
 
     switch (column.field) {
-      case 'description':
+      case 'description': {
+        const description = typeof val === 'string' ? val.trim() : '';
+        const normalizedDescription = normalizeReportText(description);
+        const canMarkExtraRentCredit = resource === 'financial-transaction'
+          && row.data.installment_number == null
+          && formOptions.incomeCategories.some(({ value }) => value === row.data.category_id)
+          && /^aluguel\b.*\bcontrato\s+[a-z0-9]/.test(normalizedDescription);
         return renderWrapper(
-          <textarea
-            value={val || ''}
-            onChange={e => upd(e.target.value)}
-            // Enter salva a linha, como nos demais campos. Nenhuma variação de
-            // Enter insere quebra: o textarea gravaria um \n real na descrição.
-            onKeyDown={e => {
-              if (e.key !== 'Enter') return;
-              e.preventDefault();
-              if (!e.shiftKey) saveEditingRow(row.id);
-            }}
-            disabled={dis}
-            rows={1}
-            className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
-            placeholder="Descrição..."
-            style={{ minWidth: '120px', width: '100%' }}
-            tabIndex={0}
-          />
+          <>
+            <textarea
+              value={val || ''}
+              onChange={e => upd(e.target.value)}
+              // Enter salva a linha e evita gravar uma quebra de linha na descrição.
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (!e.shiftKey) saveEditingRow(row.id);
+              }}
+              disabled={dis}
+              rows={1}
+              className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
+              placeholder="Descrição..."
+              style={{ minWidth: '120px', width: '100%' }}
+              tabIndex={0}
+            />
+            {canMarkExtraRentCredit && (
+              <button
+                type="button"
+                disabled={dis}
+                onClick={() => upd(`Entrada a maior – ${description}`)}
+                className="px-1 pb-1 text-[11px] text-brand underline disabled:opacity-50"
+              >
+                Marcar como crédito a maior
+              </button>
+            )}
+          </>
         );
+      }
       case 'amount': {
         // Mantém string formatada no estado durante digitação, parseia no blur
         const displayValue = typeof val === 'string' ? val : (typeof val === 'number' && val > 0 ? maskMoney(val) : '');
@@ -1690,7 +1709,7 @@ export default function InlineEditableTable({
       default:
         return renderWrapper(<input type="text" value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} />);
     }
-  }, [getCellValue, updateEditingRow, formOptions, activeTab, saveEditingRow]);
+  }, [getCellValue, updateEditingRow, formOptions, activeTab, saveEditingRow, resource]);
 
   // Só a primeira carga troca a tela pelo skeleton. Revalidações posteriores
   // (salvar, filtrar, pesquisar) mantêm a árvore montada — desmontá-la recriava

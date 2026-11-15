@@ -2,6 +2,16 @@
 
 Atualize aqui a cada alteração no módulo. Mais recente primeiro.
 
+### 2026-11-15 — Resumo Financeiro e crédito a maior (correções 56)
+
+**Arquivos**  `src/components/domain/financial/SummaryPanel/index.tsx`, `src/components/table/InlineEditableTable/index.tsx` e `src/infra/repositories/prisma-financial-transactions-repository.ts`.
+
+**Razão**  O painel exibia apenas pendências em Previsto, subtraía novamente as baixas e usava esse resultado na previsão de fechamento.
+
+**Impacto**  Previsto soma concluídos e pendentes dentro do período, filtros e pesquisa. A previsão de fechamento soma ao saldo das contas a diferença entre receitas e despesas previstas.
+
+Ao colar a descrição de um aluguel em uma receita avulsa, a tabela oferece **Marcar como crédito a maior**. A opção conserva a descrição do contrato e identifica o crédito como avulso.
+
 ### 2026-11-13 — Conciliação e crédito a maior (correções 55)
 
 **Arquivos**  `src/app/dashboard/(financeiro)/lancamentos/page.tsx`, `src/components/table/InlineEditableTable/index.tsx`, `src/hooks/useOptimizedTableData.ts` e `src/core/entities/lease-transaction-kind.ts`.

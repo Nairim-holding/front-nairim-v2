@@ -34,10 +34,15 @@ describe('vínculo de locação ao operar somente no Financeiro', () => {
   });
   it('permite criar e editar crédito a maior com o contrato na descrição', async () => {
     mocks.subcategory.mockResolvedValue({ name: 'Aluguéis' });
-    mocks.findMany.mockResolvedValue([{ description: 'Aluguel do imóvel 1/12', category: { type: 'INCOME' } }]);
-    const description = 'Entrada a maior aluguel – Inquilino de teste – Contrato 4169/23';
+    const originalDescription = 'Aluguel do imóvel 15/24 – Inquilino de teste – Contrato 4169/23';
+    mocks.findMany.mockResolvedValue([{ description: originalDescription, category: { type: 'INCOME' } }]);
     const repository = new PrismaFinancialTransactionsRepository();
-    const created = await repository.create({ ...data, amount: 20, subcategory_id: 'rent', description });
+    const extraCredit = { ...data, amount: 20, subcategory_id: 'rent' };
+    await expect(repository.create({ ...extraCredit, description: originalDescription })).rejects.toThrow('Já existe uma parcela');
+    expect(mocks.create).not.toHaveBeenCalled();
+
+    const description = `Entrada a maior – ${originalDescription}`;
+    const created = await repository.create({ ...extraCredit, description });
     expect(created).toMatchObject({ amount: 20, description, lease_id: 'lease' });
     expect(created.installment_number).toBeUndefined();
 
