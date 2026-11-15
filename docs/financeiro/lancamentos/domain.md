@@ -39,7 +39,7 @@
 - **Parcelamento** e **recorrência** geram séries (`createInstallmentsAction`, `createRecurrenceAction`); editar com `propagate_fields` propaga campos escolhidos pela série.
 - Anexos: PDF, JPG ou PNG, até um limite por lançamento (`MAX_TRANSACTION_ATTACHMENTS`).
 - **Ordem do extrato**: a migration `20261025000000_transaction_statement_order` cria `Transaction.statement_order` (sequência + trigger). O banco atribui a ordem ao inserir como concluído ou ao mudar Pendente → Concluído (inclusive lote, fatura e conciliação); editar valor preserva; reabrir e concluir atribui nova posição. Empate de data: sequência, criação, ID. Lançamentos anteriores ficam sem sequência (vêm primeiro na mesma data).
-- Novo lançamento que repete parcela gerada da mesma natureza e competência é recusado; restaurar parcela substituída não pode duplicar a substituta ativa.
+- A validação recusa lançamentos que repetem parcela gerada da mesma natureza e competência, inclusive ao restaurar uma parcela substituída. Receitas com descrição iniciada por “Entrada a maior”, “Recebimento a maior”, “Valor a maior” ou “Complemento de aluguel” podem ser vinculadas como avulsas, inclusive com a subcategoria Aluguéis.
 - Conciliação de crédito de locação (`searchLeaseCreditCandidatesAction`, `completeLeaseCreditReconciliationAction`) inclui o condomínio no líquido e na quitação dos repasses.
 - Feriados (`Holiday`, escopo por estado) alimentam dias úteis dos alertas de atraso. Cadastro rápido de categoria, subcategoria, centro, cartão, contato.
 

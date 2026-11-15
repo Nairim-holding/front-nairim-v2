@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
- * Valores já calculados (período + filtros aplicados na grid). Todos opcionais:
- * enquanto o backend não fornecer os números (Fase 2), o painel exibe "—".
- * Transferências (is_transfer) NÃO entram em Receitas/Despesas; entram apenas
- * no "Saldo da(s) conta(s)" (reuso do saldo acumulado da Etapa 5).
+ * Valores do período e dos filtros aplicados na grid. Transferências
+ * compõem apenas o saldo acumulado das contas.
  */
 export interface SummaryData {
   /** Receitas (créditos) com status Pendente. */
@@ -27,7 +25,7 @@ interface Props {
   from?: string;
   /** Fim do período exibido na grid (YYYY-MM-DD). */
   to?: string;
-  /** Valores agregados. Ausente na Fase 1 (mostra placeholders). */
+  /** Valores agregados da consulta de lançamentos. */
   summary?: SummaryData | null;
 }
 
@@ -87,19 +85,12 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
 export default function SummaryPanel({ from, to, summary }: Props) {
   const [open, setOpen] = useState(false);
 
-  // Derivações (Fase 2 alimenta `summary`; aqui já ficam prontas).
   const s = summary ?? null;
   const totalReceber = s ? s.receitasPrevisto + s.receitasRecebido : null;
   const totalPagar = s ? s.despesasPrevisto + s.despesasPago : null;
-  const resumoPrevisto = s && totalReceber != null && totalPagar != null ? totalReceber - totalPagar : null;
-  const faltaReceber = s ? s.receitasPrevisto - s.receitasRecebido : null;
-  const faltaPagar = s ? s.despesasPrevisto - s.despesasPago : null;
-  // "Previsto restante" é só o que ainda falta se realizar (pendente), não o
-  // resumo previsto inteiro — esse já inclui o que foi recebido/pago, e o
-  // saldo da conta abaixo já reflete isso. Usá-lo aqui contaria em dobro.
-  const previstoRestante = s && faltaReceber != null && faltaPagar != null ? faltaReceber - faltaPagar : null;
-  const saldoContas = s ? s.saldoContas : null;
-  const previsaoFechamento = s && saldoContas != null && previstoRestante != null ? saldoContas + previstoRestante : null;
+  const resumoPrevisto = totalReceber != null && totalPagar != null ? totalReceber - totalPagar : null;
+  const saldoContas = s?.saldoContas ?? null;
+  const previsaoFechamento = saldoContas != null && resumoPrevisto != null ? saldoContas + resumoPrevisto : null;
 
   return (
     <>
@@ -155,22 +146,22 @@ export default function SummaryPanel({ from, to, summary }: Props) {
 
             {/* Bloco Receitas */}
             <Block title="Receitas">
-              <ValueRow label="Previsto" value={s ? s.receitasPrevisto : null} tone="income" />
-              <ValueRow label="Recebido" value={s ? s.receitasRecebido : null} tone="income" />
-              <ValueRow label="Falta Receber" value={faltaReceber} tone="auto" />
+              <ValueRow label="Previsto" value={totalReceber} tone="income" />
+              <ValueRow label="Recebido" value={s?.receitasRecebido} tone="income" />
+              <ValueRow label="Falta a Receber" value={s?.receitasPrevisto} tone="auto" />
             </Block>
 
             {/* Bloco Despesas */}
             <Block title="Despesas">
-              <ValueRow label="Previsto" value={s ? s.despesasPrevisto : null} tone="expense" />
-              <ValueRow label="Pago" value={s ? s.despesasPago : null} tone="expense" />
-              <ValueRow label="Falta Pagar" value={faltaPagar} tone="auto" />
+              <ValueRow label="Previsto" value={totalPagar} tone="expense" />
+              <ValueRow label="Pago" value={s?.despesasPago} tone="expense" />
+              <ValueRow label="Falta a Pagar" value={s?.despesasPrevisto} tone="auto" />
             </Block>
 
             {/* Bloco Resultado */}
             <Block title="Resultado">
               <ValueRow label="Saldo da(s) conta(s)" value={saldoContas} tone="auto" />
-              <ValueRow label="Previsto restante" value={previstoRestante} tone="auto" />
+              <ValueRow label="Previsto Restante" value={resumoPrevisto} tone="auto" />
               <div className="my-1 border-t border-ui-border-soft" />
               <ValueRow label="Previsão de Fechamento" value={previsaoFechamento} tone="auto" strong />
             </Block>

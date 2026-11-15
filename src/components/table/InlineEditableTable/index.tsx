@@ -4,7 +4,7 @@
 
 import { auditPreparedExport } from "@/lib/audit-export";
 
-import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, useImperativeHandle, type ReactNode, type Ref } from "react";
 import { Filter, Trash2, Copy, Edit2, Save, X, Plus, Calendar, ChevronDown, Check, CreditCard, DollarSign, Settings2, RefreshCw, FileSpreadsheet, Paperclip, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useMessageContext } from "@/contexts/MessageContext";
@@ -22,6 +22,7 @@ import InvoiceModal from "@/components/modals/InvoiceModal";
 import TransactionAttachmentsModal from "@/components/domain/financial/TransactionAttachmentsModal";
 import { getTransactionDocumentsAction } from "@/server/actions/financial-transaction";
 import type { TransactionDocument } from "@/core/entities/financial-transaction";
+import { normalizeReportText } from "@/core/entities/lease-report-matching";
 import { formatCurrency, formatDate, parseCurrencyFromPTBR } from "@/utils/displayFormatters";
 import { maskMoney, formatCurrencyRealtime } from "@/utils/masks";
 import { useOptimizedTableData } from "@/hooks/useOptimizedTableData";
@@ -486,7 +487,12 @@ function CustomSelect({ value, onChange, options = [], disabled, placeholder = "
   );
 }
 
+export interface InlineEditableTableHandle {
+  refresh: () => void;
+}
+
 interface InlineEditableTableProps {
+  ref?: Ref<InlineEditableTableHandle>;
   resource: string;
   title: string;
   columns: ColumnDef[];
@@ -636,6 +642,7 @@ function AttachmentHoverPreview({ transactionId, children }: { transactionId: st
 }
 
 export default function InlineEditableTable({
+  ref,
   resource, title, columns, autoFocusSearch = true, defaultSort = {}, defaultLimit = 150, enableCreate = true, enableDelete = true,
   formOptions = { categories: [], incomeCategories: [], expenseCategories: [], institutions: [], cards: [], centers: [], suppliers: [], subcategories: {} },
   showTotals = true, summaryPanel = false, onRowSave, onRowCreate, onRowDelete, onRowDuplicate, enableDuplicate = false, onColumnsChange, onColumnWidthsChange, savedColumnWidths, visibleColumns, onVisibilityChange,
@@ -689,7 +696,7 @@ export default function InlineEditableTable({
   const { showMessage } = useMessageContext();
   const { showPopup } = usePopupContext();
   
-  const { filters: dynamicFilters, searchFields, isLoading: isLoadingFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher);
+  const { filters: dynamicFilters, isLoading: isLoadingFilters, refetch: refreshFilters } = useDynamicFilters(`/${resource}/filters`, appliedFilters, filtersFetcher);
 
   useEffect(() => {
     onAppliedFiltersChange?.(appliedFilters);
@@ -714,6 +721,13 @@ export default function InlineEditableTable({
   } = useOptimizedTableData(resource, {
     page: 1, limit: defaultLimit, search: "", sort: defaultSort, filters: {}
   }, tabDataFetcher);
+
+  useImperativeHandle(ref, () => ({
+    refresh() {
+      refreshData();
+      void refreshFilters();
+    },
+  }), [refreshData, refreshFilters]);
 
   const selectTab = useCallback((tab: 'ALL' | 'INCOME' | 'EXPENSE') => {
     setActiveTab(tab);
@@ -1509,26 +1523,44 @@ export default function InlineEditableTable({
     );
 
     switch (column.field) {
-      case 'description':
+      case 'description': {
+        const description = typeof val === 'string' ? val.trim() : '';
+        const normalizedDescription = normalizeReportText(description);
+        const canMarkExtraRentCredit = resource === 'financial-transaction'
+          && row.data.installment_number == null
+          && formOptions.incomeCategories.some(({ value }) => value === row.data.category_id)
+          && /^aluguel\b.*\bcontrato\s+[a-z0-9]/.test(normalizedDescription);
         return renderWrapper(
-          <textarea
-            value={val || ''}
-            onChange={e => upd(e.target.value)}
-            // Enter salva a linha, como nos demais campos. Nenhuma variação de
-            // Enter insere quebra: o textarea gravaria um \n real na descrição.
-            onKeyDown={e => {
-              if (e.key !== 'Enter') return;
-              e.preventDefault();
-              if (!e.shiftKey) saveEditingRow(row.id);
-            }}
-            disabled={dis}
-            rows={1}
-            className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
-            placeholder="Descrição..."
-            style={{ minWidth: '120px', width: '100%' }}
-            tabIndex={0}
-          />
+          <>
+            <textarea
+              value={val || ''}
+              onChange={e => upd(e.target.value)}
+              // Enter salva a linha e evita gravar uma quebra de linha na descrição.
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (!e.shiftKey) saveEditingRow(row.id);
+              }}
+              disabled={dis}
+              rows={1}
+              className={`${inputClasses} resize-none overflow-hidden !h-[24px] text-xs`}
+              placeholder="Descrição..."
+              style={{ minWidth: '120px', width: '100%' }}
+              tabIndex={0}
+            />
+            {canMarkExtraRentCredit && (
+              <button
+                type="button"
+                disabled={dis}
+                onClick={() => upd(`Entrada a maior – ${description}`)}
+                className="px-1 pb-1 text-[11px] text-brand underline disabled:opacity-50"
+              >
+                Marcar como crédito a maior
+              </button>
+            )}
+          </>
         );
+      }
       case 'amount': {
         // Mantém string formatada no estado durante digitação, parseia no blur
         const displayValue = typeof val === 'string' ? val : (typeof val === 'number' && val > 0 ? maskMoney(val) : '');
@@ -1677,12 +1709,12 @@ export default function InlineEditableTable({
       default:
         return renderWrapper(<input type="text" value={val || ''} onChange={e => upd(e.target.value)} disabled={dis} className={inputClasses} />);
     }
-  }, [getCellValue, updateEditingRow, formOptions, activeTab, saveEditingRow]);
+  }, [getCellValue, updateEditingRow, formOptions, activeTab, saveEditingRow, resource]);
 
   // Só a primeira carga troca a tela pelo skeleton. Revalidações posteriores
   // (salvar, filtrar, pesquisar) mantêm a árvore montada — desmontá-la recriava
   // o campo de pesquisa no DOM, derrubando o foco e o que estava sendo digitado.
-  if (isLoadingFilters || isInitialLoading) return <SkeletonTable />;
+  if ((isLoadingFilters && dynamicFilters.length === 0) || isInitialLoading) return <SkeletonTable />;
   if (!Array.isArray(displayItems)) return <div className="flex justify-center items-center my-3"><div className="bg-surface-subtle py-4 px-6 rounded-sm text-content-secondary">Erro ao carregar dados</div></div>;
 
   return (

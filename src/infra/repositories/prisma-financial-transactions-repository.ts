@@ -285,6 +285,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     });
 
     let transactions: any[] = [];
+    let searchMatches: Pick<Transaction, 'category' | 'is_transfer' | 'amount' | 'status'>[] | undefined;
     let total = 0;
 
     if ((params.search ?? '').trim()) {
@@ -293,6 +294,7 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
         include: INCLUDE_CONFIG as never,
       })) as unknown as any[];
       let filtered = filterTransactionsBySearch(allTransactions, params.search ?? '');
+      searchMatches = filtered;
       total = filtered.length;
 
       const sortEntries = Object.entries(params.sortOptions);
@@ -381,17 +383,19 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
     };
 
     const sumByTypeStatus = async (
-      scope: Record<string, unknown>,
       type: 'INCOME' | 'EXPENSE',
       status: 'PENDING' | 'COMPLETED',
     ): Promise<number> => {
-      const { status: scopeStatus, ...rest } = scope;
+      if (searchMatches) {
+        return searchMatches.reduce((sum, transaction) =>
+          !transaction.is_transfer && transaction.category?.type === type && transaction.status === status
+            ? sum + Number(transaction.amount) : sum, 0);
+      }
       const result = await prisma.transaction.aggregate({
         where: {
-          ...rest,
-          category: { ...(rest.category ?? {}), type },
+          ...where,
           NOT: { is_transfer: true },
-          AND: [...(scopeStatus ? [{ status: scopeStatus }] : []), { status }],
+          AND: [{ category: { type }, status }],
         } as never,
         _sum: { amount: true },
       });
@@ -421,10 +425,10 @@ export class PrismaFinancialTransactionsRepository implements TransactionsReposi
       sumByType(where, 'EXPENSE'),
       sumByType(accumulatedWhere, 'INCOME'),
       sumByType(accumulatedWhere, 'EXPENSE'),
-      sumByTypeStatus(where, 'INCOME', 'PENDING'),
-      sumByTypeStatus(where, 'INCOME', 'COMPLETED'),
-      sumByTypeStatus(where, 'EXPENSE', 'PENDING'),
-      sumByTypeStatus(where, 'EXPENSE', 'COMPLETED'),
+      sumByTypeStatus('INCOME', 'PENDING'),
+      sumByTypeStatus('INCOME', 'COMPLETED'),
+      sumByTypeStatus('EXPENSE', 'PENDING'),
+      sumByTypeStatus('EXPENSE', 'COMPLETED'),
     ]);
 
     const totals: TransactionTotals = {
