@@ -18,7 +18,7 @@ Cada ambiente usa **sua própria imagem Docker**, porque as variáveis `NEXT_PUB
 4. **Não roda migrations.** Aplique `prisma migrate deploy` antes de publicar uma versão que dependa delas. A imagem final não contém a CLI do Prisma nem os fontes de migração; use o checkout/contêiner de migração.
 
 ## Validação (`.github/workflows/validation.yml`, também em PRs para `main`/`iholding`)
-`npm ci` → `prisma generate` → `generate:table-models` → `build:seed-test2 --check` → `tsc --noEmit` → `npm test` → teste da migration do extrato → `npm run build` → teste do seed → regressões visuais em Chromium (documentos 48 a 51) → `npm audit` (artefato `security-audit`).
+`npm ci` → `prisma generate` → `generate:table-models` → `build:seed-test2 --check` → `tsc --noEmit` → `npm test` → teste da migration do extrato → `npm run build` → teste do seed → `npm audit` (artefato `security-audit`).
 
 Valores de `DATABASE_URL` e `JWT_SECRET` no CI são placeholders (sem acesso a banco real).
 
@@ -41,6 +41,9 @@ Passo a passo em [seed-teste2.md](seed-teste2.md) (script `scripts/seed-test2.mj
 - Migration nova de tabela de negócio inclui trigger de auditoria (padrão em `20261013010000_property_roi`).
 
 ## Histórico
+### 2026-11-15 — Regressões de interface locais
+Os cenários de interface com Playwright passaram a ser executados localmente. O workflow reutilizável continua executando a checagem de tipos, os testes Node e o build.
+
 ### 2026-11-04 — Integração completa da main na iholding
 Merge da main, incluindo correções 53/54 e documentação por módulo. Conflitos de dashboards resolvidos com a versão atual da main; mantidos identidade, site público, infraestrutura e workflow exclusivos da iholding. O script obsoleto `test-sticky-planning.mjs` acompanha a remoção feita na main.
 

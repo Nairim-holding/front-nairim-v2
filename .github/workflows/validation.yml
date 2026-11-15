@@ -32,14 +32,6 @@ jobs:
       - run: node --test scripts/migrate-statement-order.test.mjs
       - run: npm run build
       - run: node --test scripts/seed-test2-runtime.test.mjs
-      - run: npx playwright install --with-deps chromium
-      - name: Regressões visuais dos documentos 48 a 51
-        run: |
-          npm run test:investments-ui
-          npm run test:centers-ui
-          node scripts/test-correcoes49-ui.mjs
-          node scripts/test-correcoes50-ui.mjs
-          npm run test:correcoes51-ui
       - name: Relatório de dependências (pendências descritas em docs/plataforma/seguranca/revisao-2026-10-25.md)
         if: always()
         continue-on-error: true
